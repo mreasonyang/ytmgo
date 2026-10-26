@@ -1,0 +1,24 @@
+{
+  "name": "ytmgo",
+  "identifier": "si.kyun.ytmgo",
+  "version": "0.2.1",
+  "out": "build",
+  "icon": "resources/icon.png",
+  "macos": {
+    "minimumSystemVersion": "12.0",
+    "signingIdentity": "-",
+    "infoPlist": {
+      "CFBundleDisplayName": "ytmgo",
+      "NSHighResolutionCapable": true
+    }
+  },
+  "linux": {
+    "comment": "YouTube Music desktop client powered by MyGo",
+    "categories": [
+      "AudioVideo",
+      "Audio",
+      "Player"
+    ],
+    "webview": true
+  }
+}

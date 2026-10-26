@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="theme-color" content="#141416">
+  <title>ytmgo · 让音乐发生</title>
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="主导航">
+      <a class="brand" href="#home" aria-label="ytmgo 首页"><svg viewBox="0 0 34 34" aria-hidden="true"><rect x="1" y="1" width="32" height="32" rx="11" fill="currentColor"/><path d="M13 10.5 25 17 13 23.5Z" fill="#191719"/><path d="M8.5 12v10" stroke="#191719" stroke-width="2.2" stroke-linecap="round"/></svg><span>ytm<span class="brand-go">go</span><span class="brand-dot">.</span></span></a>
+      <div class="sidebar-kicker">你的音乐，自在发生</div>
+      <nav class="main-nav">
+        <button class="nav-item active" data-nav="home" aria-label="首页" title="首页" aria-current="page"><span data-icon="home"></span><span>首页</span></button>
+        <button class="nav-item" data-nav="discover" aria-label="发现音乐" title="发现音乐"><span data-icon="compass"></span><span>发现音乐</span></button>
+        <button class="nav-item" data-nav="liked" aria-label="我的收藏" title="我的收藏"><span data-icon="heart"></span><span>我的收藏</span><span id="liked-count" class="nav-count">0</span></button>
+      </nav>
+      <div class="library-heading"><span>本地歌单</span><button id="create-local-playlist" class="icon-button small" data-action="create-playlist" aria-label="创建本地歌单" title="创建本地歌单"><span data-icon="plus"></span></button></div>
+      <div id="playlist-nav" class="playlist-nav"><p class="sidebar-empty">把喜欢的声音<br>留在自己的歌单里。</p></div>
+      <button id="create-playlist" class="new-playlist" data-action="create-playlist" aria-label="创建歌单" title="创建歌单"><span data-icon="plus"></span><span>创建歌单</span></button>
+      <div class="sidebar-footer"><div class="connection-mark"><i></i><span>YouTube Music</span></div><span class="local-note">独立客户端 · 本地收藏</span><span class="version">ytmgo / 0.1.5</span></div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <form id="search-form" class="search-box" role="search"><span data-icon="search"></span><input id="search-input" type="search" placeholder="搜索歌曲、歌手或专辑" autocomplete="off" aria-label="搜索歌曲、歌手或专辑"><kbd>⌘ K</kbd><button class="search-submit" type="submit" aria-label="开始搜索"><span data-icon="arrow-right"></span></button></form>
+        <label class="appearance-control"><span data-icon="sun"></span><select id="appearance-select" aria-label="外观模式" title="外观模式"><option value="system">跟随系统</option><option value="light">浅色模式</option><option value="dark">深色模式</option></select></label>
+      </header>
+      <main id="main-content" tabindex="-1" aria-label="音乐内容"></main>
+    </div>
+
+    <aside class="listening-room" aria-label="播放器与播放队列">
+      <div class="room-heading"><div><span class="eyebrow">ON AIR</span><h2>此刻，听见</h2></div><span class="live-indicator" id="live-indicator"><i></i>待播放</span></div>
+      <div id="now-artwork" class="now-artwork" role="img" aria-label="尚未选择歌曲"><div id="artwork-empty"><div class="vinyl"><div class="vinyl-label"><span data-icon="music"></span></div></div><p>下一首心动，从这里开始</p></div></div>
+      <div id="video-stage" class="video-stage" hidden aria-hidden="true"><div id="youtube-mount"></div></div>
+      <div class="now-view-controls"><span><span data-icon="headphones"></span>YouTube Music</span><button id="video-toggle" data-action="toggle-video" aria-controls="video-stage" aria-expanded="false" disabled>显示视频</button></div>
+      <div class="now-meta"><div class="now-title-line"><h3 id="now-title">让音乐发生</h3><button id="now-like" class="icon-button" data-action="like-current" aria-label="收藏当前歌曲" disabled><span data-icon="heart"></span></button></div><p id="now-artist">选择一首歌，给此刻一个节奏。</p></div>
+      <div id="player-notice" class="player-notice" role="status" hidden></div>
+      <a id="official-link" class="official-link" href="https://music.youtube.com/" target="_blank" rel="noopener noreferrer"><span>在 YouTube Music 打开</span><span data-icon="external"></span></a>
+      <div class="queue-heading"><h3>接下来</h3><span id="queue-count">0 首</span><button class="icon-button small" data-action="queue" aria-label="展开完整播放队列" title="完整播放队列"><span data-icon="queue"></span></button></div>
+      <div id="queue-preview" class="queue-preview"><div class="queue-empty"><span data-icon="queue"></span><p>好音乐，总值得期待</p><span>播放一首歌，或将歌曲加入队列。</span></div></div>
+      <div class="room-footer">GOOD MUSIC. YOUR SPACE.</div>
+    </aside>
+
+    <footer class="transport" aria-label="播放控制">
+      <div class="transport-track"><div id="transport-cover" class="transport-cover"><span data-icon="music"></span></div><div class="transport-meta"><strong id="transport-title">还没有播放音乐</strong><span id="transport-artist">发现你的下一首喜欢</span></div><button id="transport-like" class="icon-button" data-action="like-current" aria-label="收藏当前歌曲" disabled><span data-icon="heart"></span></button></div>
+      <div class="transport-center"><div class="transport-buttons"><button id="shuffle-button" class="icon-button" data-action="shuffle" aria-label="开启随机播放" title="随机播放" aria-pressed="false"><span data-icon="shuffle"></span></button><button id="previous-button" class="icon-button" data-action="previous" aria-label="上一首" title="上一首" disabled><span data-icon="previous"></span></button><button id="play-button" class="play-button" data-action="toggle" aria-label="播放" title="播放 / 暂停（空格）"><span data-icon="play"></span></button><button id="next-button" class="icon-button" data-action="next" aria-label="下一首" title="下一首" disabled><span data-icon="next"></span></button><button id="repeat-button" class="icon-button" data-action="repeat" aria-label="开启列表循环" title="循环播放" aria-pressed="false"><span data-icon="repeat"></span><span id="repeat-one" hidden>1</span></button></div><div class="timeline"><time id="elapsed-time">0:00</time><input id="progress" type="range" min="0" max="100" value="0" step="0.1" aria-label="播放进度" disabled><time id="duration-time">0:00</time></div></div>
+      <div class="transport-extra"><button id="mute-button" class="icon-button" data-action="mute" aria-label="静音" title="静音"><span data-icon="volume"></span></button><input id="volume" type="range" min="0" max="100" value="70" aria-label="音量"><span class="transport-divider"></span><button id="queue-button" class="icon-button" data-action="queue" aria-label="展开播放队列" title="播放队列" aria-expanded="false"><span data-icon="queue"></span></button></div>
+    </footer>
+  </div>
+  <section id="queue-drawer" class="queue-drawer" aria-label="完整播放队列" hidden><div class="drawer-heading"><div><span class="eyebrow">UP NEXT</span><h2>播放队列 <span id="drawer-count">0</span></h2></div><button class="icon-button" data-action="queue" aria-label="关闭播放队列"><span data-icon="close"></span></button></div><div id="queue-full"></div><button id="clear-queue" class="text-button" data-action="clear-queue">清除待播歌曲</button></section>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="playlist-dialog" aria-labelledby="dialog-title"><form id="playlist-form"><div class="dialog-heading"><div><span class="eyebrow">YOUR COLLECTION</span><h2 id="dialog-title">创建你的歌单</h2></div><button class="icon-button" type="button" data-action="close-dialog" aria-label="关闭弹窗"><span data-icon="close"></span></button></div><p id="dialog-description">把属于同一种心情的歌，放在一起。</p><div id="playlist-options"></div><div id="playlist-name-field"><label for="playlist-name">歌单名称（最多 80 字）</label><input id="playlist-name" maxlength="160" placeholder="例如：下班路上" autocomplete="off"></div><button id="playlist-submit" class="primary-button" type="submit"><span data-icon="plus"></span>创建歌单</button><p id="playlist-feedback" class="dialog-feedback" role="alert"></p><p class="dialog-footnote">歌单保存在本机，不会同步到 YouTube 账号。</p></form></dialog>
+  <dialog id="delete-dialog" aria-labelledby="delete-title"><div class="dialog-heading"><div><span class="eyebrow">LOCAL PLAYLIST</span><h2 id="delete-title">删除这个歌单？</h2></div><button class="icon-button" data-action="cancel-delete" aria-label="关闭删除确认"><span data-icon="close"></span></button></div><p id="delete-description"></p><p id="delete-feedback" class="dialog-feedback" role="alert"></p><div class="dialog-buttons"><button class="secondary-button" data-action="cancel-delete">保留歌单</button><button class="primary-button" data-action="confirm-delete">删除歌单</button></div></dialog>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

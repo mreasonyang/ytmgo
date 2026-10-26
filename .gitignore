@@ -1,0 +1,16 @@
+/build/
+/.mygo/
+/dist/
+/.DS_Store
+/ytmgo
+*.log
+/evidence/
+/.env
+/.env.*
+!/.env.example
+*.db
+*.sqlite
+*.sqlite3
+*.binarycookies
+*.dmg
+*.app/

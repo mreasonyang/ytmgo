@@ -8,21 +8,40 @@ import (
 	"time"
 
 	"github.com/egoist/mygo"
+	"ytmgo/internal/language"
 	"ytmgo/internal/navigation"
+	"ytmgo/locales"
 )
 
-func musicPreload(mode string) string {
-	css, _ := assets.ReadFile("web/music.css")
-	js, _ := assets.ReadFile("web/music.js")
-	encodedCSS, _ := json.Marshal(string(css))
+// musicPreload assembles the shell from web/shell/bundle.json: every script
+// shares one closure (in manifest order) and receives the stylesheet and the
+// saved appearance and its localized messages as arguments. web/shell/bundle.mjs mirrors this for tests.
+func musicPreload(mode string, text shellI18N) string {
+	var manifest struct{ Styles, Scripts []string }
+	raw, _ := assets.ReadFile("web/shell/bundle.json")
+	_ = json.Unmarshal(raw, &manifest)
+	var styles, scripts strings.Builder
+	for _, name := range manifest.Styles {
+		data, _ := assets.ReadFile("web/shell/" + name)
+		styles.Write(data)
+		styles.WriteByte('\n')
+	}
+	for _, name := range manifest.Scripts {
+		data, _ := assets.ReadFile("web/shell/" + name)
+		scripts.WriteString("/* " + name + " */\n")
+		scripts.Write(data)
+		scripts.WriteByte('\n')
+	}
+	encodedStyles, _ := json.Marshal(styles.String())
 	encodedMode, _ := json.Marshal(mode)
-	return strings.NewReplacer("YTMGO_STYLES", string(encodedCSS), "YTMGO_APPEARANCE", string(encodedMode)).Replace(string(js))
+	encodedI18N, _ := json.Marshal(text)
+	return "(function ytmgoShell(STYLES, APPEARANCE, I18N) {\n'use strict';\n" + scripts.String() + "\n})(" + string(encodedStyles) + ", " + string(encodedMode) + ", " + string(encodedI18N) + ");\n"
 }
 
 func musicUserAgentSuffix() string {
 	// Declare WebKit compatibility while retaining the engine's default UA.
 	// Bare WKWebView otherwise receives the deprecated-browser page.
-	suffix := "ytmgo/0.2.1"
+	suffix := "ytmgo/" + version
 	if runtime.GOOS == "darwin" {
 		suffix = "Version/17.0 Safari/605.1.15 " + suffix
 	}
@@ -36,15 +55,16 @@ func (a *desktop) openMusic() {
 	}
 	a.setSignedIn(false)
 	a.window = mygo.NewWindow(mygo.WindowOptions{
-		Title: "ytmgo", Width: 1440, Height: 940, MinWidth: 1000, MinHeight: 720,
-		BackgroundColor: "light-dark(#ecebe7, #101614)", StateKey: "main",
-		Page: mygo.PageOptions{PreloadScript: musicPreload(a.service.Appearance()), UserAgentSuffix: musicUserAgentSuffix(), DevTools: mygo.DevToolsAuto},
+		// The shell is responsive down to a phone-width compact layout.
+		Title: locales.AppName(), Width: 1440, Height: 940, MinWidth: 380, MinHeight: 640,
+		BackgroundColor: "light-dark(#e7e7ea, #050506)", StateKey: "main",
+		Page: mygo.PageOptions{PreloadScript: musicPreload(a.prefs.Appearance(), newShellI18N(mygo.App.Locale(), language.Load(a.languagePath))), UserAgentSuffix: musicUserAgentSuffix(), DevTools: mygo.DevToolsAuto},
 	})
 	w := a.window
 	p := w.Page()
 	p.OnPageTitleUpdated(func(e *mygo.TitleEvent) {
 		e.PreventDefault()
-		w.SetTitle(strings.ReplaceAll(e.Title, "YouTube Music", "ytmgo"))
+		w.SetTitle(strings.ReplaceAll(e.Title, locales.ServiceName(), locales.AppName()))
 	})
 	p.OnWillNavigate(func(e *mygo.NavigateEvent) {
 		if a.logoutBlocked {
@@ -61,12 +81,17 @@ func (a *desktop) openMusic() {
 			a.requestSignOut()
 			return
 		}
+		if choice, ok := navigation.LanguageAction(e.URL, p.URL()); ok {
+			e.PreventDefault()
+			a.setLanguage(choice)
+			return
+		}
 		if mode, ok := navigation.AppearanceAction(e.URL, p.URL()); ok {
 			e.PreventDefault()
 			go func() {
-				saved, err := a.service.SetAppearance(mode)
+				saved, err := a.prefs.SetAppearance(mode)
 				if err != nil {
-					saved = a.service.Appearance()
+					saved = a.prefs.Appearance()
 				}
 				a.syncMusicAppearance(saved)
 			}()
@@ -101,18 +126,18 @@ func (a *desktop) openMusic() {
 	})
 	p.SetPermissionHandler(func(mygo.PermissionRequest) bool { return false })
 	p.OnWillDownload(func(e *mygo.DownloadEvent) { e.PreventDefault() })
-	p.OnDOMReady(func() { a.syncMusicAppearance(a.service.Appearance()) })
+	p.OnDOMReady(func() { a.syncMusicAppearance(a.prefs.Appearance()) })
 	p.OnDidFailLoad(func(e *mygo.LoadError) {
 		// Cancellation is normal during redirects. Never log account URLs/errors.
 		if e.Code == -999 || e.Code == -3 || w.IsDestroyed() || a.logoutBlocked {
 			return
 		}
 		go func() {
-			result, _ := mygo.Dialog.Message(mygo.MessageOptions{Parent: w, Title: "ytmgo", Message: "暂时无法加载音乐服务", Detail: "请检查网络连接后重试。账号会话和音乐库不会被清除。", Buttons: []string{"重试", "回到首页", "稍后"}})
+			result, _ := mygo.Dialog.Message(mygo.MessageOptions{Parent: w, Title: locales.AppName(), Message: locales.LoadErrorMessage(), Detail: locales.LoadErrorDetail(), Buttons: []string{locales.ButtonRetry(), locales.ButtonGoHome(), locales.ButtonLater()}})
 			if result.Button == 0 {
 				p.Reload()
 			} else if result.Button == 1 {
-				p.LoadURL(navigation.Home)
+				p.LoadURL(navigation.Home + "?hl=" + language.ServiceLanguage(mygo.App.Locale()))
 			}
 		}()
 	})
@@ -121,7 +146,7 @@ func (a *desktop) openMusic() {
 			return
 		}
 		go func() {
-			result, _ := mygo.Dialog.Message(mygo.MessageOptions{Parent: w, Title: "ytmgo", Message: "音乐界面意外停止", Detail: "重新加载后可继续使用。", Buttons: []string{"重新加载", "稍后"}})
+			result, _ := mygo.Dialog.Message(mygo.MessageOptions{Parent: w, Title: locales.AppName(), Message: locales.CrashMessage(), Detail: locales.CrashDetail(), Buttons: []string{locales.ButtonReload(), locales.ButtonLater()}})
 			if result.Button == 0 {
 				p.LoadURL(navigation.Home)
 			}
@@ -133,7 +158,7 @@ func (a *desktop) openMusic() {
 			w.Hide()
 		}
 	})
-	p.LoadURL(navigation.Home + "?hl=zh-CN")
+	p.LoadURL(navigation.Home + "?hl=" + language.ServiceLanguage(mygo.App.Locale()))
 }
 
 // A separate first-party login window shares the runtime's persistent session.
@@ -152,14 +177,14 @@ func (a *desktop) openAccount(raw string) {
 		return
 	}
 	w := mygo.NewWindow(mygo.WindowOptions{
-		Title: "Google 登录 · ytmgo", Width: 980, Height: 760, MinWidth: 760, MinHeight: 640,
+		Title: locales.LoginWindowTitle(), Width: 980, Height: 760, MinWidth: 760, MinHeight: 640,
 		Page: mygo.PageOptions{UserAgentSuffix: musicUserAgentSuffix()},
 	})
 	a.account = w
 	p := w.Page()
 	p.OnPageTitleUpdated(func(e *mygo.TitleEvent) {
 		e.PreventDefault()
-		w.SetTitle("Google 登录 · ytmgo")
+		w.SetTitle(locales.LoginWindowTitle())
 	})
 	p.OnWillNavigate(func(e *mygo.NavigateEvent) {
 		if a.logoutBlocked {
@@ -202,7 +227,7 @@ func (a *desktop) openAccount(raw string) {
 			return
 		}
 		go func() {
-			result, _ := mygo.Dialog.Message(mygo.MessageOptions{Parent: w, Title: "Google 登录", Message: "登录页面暂时无法加载", Detail: "请检查网络后重试，也可以关闭此窗口，稍后从主界面重新登录。", Buttons: []string{"重试", "稍后"}})
+			result, _ := mygo.Dialog.Message(mygo.MessageOptions{Parent: w, Title: locales.LoginErrorTitle(), Message: locales.LoginErrorMessage(), Detail: locales.LoginErrorDetail(), Buttons: []string{locales.ButtonRetry(), locales.ButtonLater()}})
 			if result.Button == 0 && !w.IsDestroyed() {
 				p.Reload()
 			}

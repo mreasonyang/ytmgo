@@ -20,11 +20,7 @@ func main() {
 		return
 	}
 	root := os.Args[1]
-	css, err := os.ReadFile(filepath.Join(root, "web/music.css"))
-	if err != nil {
-		return
-	}
-	js, err := os.ReadFile(filepath.Join(root, "web/music.js"))
+	css, js, err := shellSources(root)
 	if err != nil {
 		return
 	}
@@ -32,10 +28,14 @@ func main() {
 	if err != nil {
 		return
 	}
-	encoded, _ := json.Marshal(string(css))
-	preload := strings.NewReplacer("YTMGO_STYLES", string(encoded), "YTMGO_APPEARANCE", `"dark"`).Replace(string(js))
+	encoded, _ := json.Marshal(css)
+	text, err := shellText(root, "en")
+	if err != nil {
+		return
+	}
+	preload := "(function ytmgoShell(STYLES, APPEARANCE, I18N) {\n'use strict';\n" + js + "\n})(" + string(encoded) + `, "dark", ` + text + ");\n"
 	mygo.App.WhenReady(func() {
-		w := mygo.NewWindow(mygo.WindowOptions{Title: "ytmgo UI Audit", Width: 1440, Height: 940, MinWidth: 1000, MinHeight: 720, Page: mygo.PageOptions{PreloadScript: preload, UserAgentSuffix: "Version/17.0 Safari/605.1.15 ytmgo-ui-audit"}})
+		w := mygo.NewWindow(mygo.WindowOptions{Title: "ytmgo UI Audit", Width: 1440, Height: 940, MinWidth: 380, MinHeight: 640, Page: mygo.PageOptions{PreloadScript: preload, UserAgentSuffix: "Version/17.0 Safari/605.1.15 ytmgo-ui-audit"}})
 		p := w.Page()
 		p.OnPageTitleUpdated(func(e *mygo.TitleEvent) { e.PreventDefault() })
 		p.OnWillNavigate(func(e *mygo.NavigateEvent) {
@@ -60,13 +60,12 @@ func main() {
 			entry("Dark", func() { eval(`window.ytmgoSetAppearance('dark')`) }),
 			entry("Light", func() { eval(`window.ytmgoSetAppearance('light')`) }),
 			entry("Reload stylesheet", func() {
-				data, err := os.ReadFile(filepath.Join(root, "web/music.css"))
-				if err == nil {
-					value, _ := json.Marshal(string(data))
-					eval(`document.getElementById('ytmgo-music-style').textContent=` + string(value))
+				if styles, _, err := shellSources(root); err == nil {
+					value, _ := json.Marshal(styles)
+					eval(`document.getElementById('ytmgo-shell-style').textContent=` + string(value))
 				}
 			}),
-			entry("Wide window", func() { w.SetSize(1440, 940) }), entry("Minimum window", func() { w.SetSize(1000, 720) }),
+			entry("Wide window", func() { w.SetSize(1440, 940) }), entry("Medium window", func() { w.SetSize(1100, 800) }), entry("Compact window", func() { w.SetSize(420, 860) }),
 		}}}))
 		mux := http.NewServeMux()
 		mux.HandleFunc("/snapshot", func(rw http.ResponseWriter, r *http.Request) {
@@ -95,4 +94,57 @@ func main() {
 		_ = p.LoadURL("https://music.youtube.com/")
 	})
 	_ = mygo.App.Run()
+}
+
+// shellSources mirrors musicPreload(): manifest-ordered styles and scripts,
+// read from disk so stylesheet edits can be reloaded without rebuilding.
+func shellSources(root string) (string, string, error) {
+	var manifest struct{ Styles, Scripts []string }
+	raw, err := os.ReadFile(filepath.Join(root, "web/shell/bundle.json"))
+	if err != nil {
+		return "", "", err
+	}
+	if err = json.Unmarshal(raw, &manifest); err != nil {
+		return "", "", err
+	}
+	var styles, scripts strings.Builder
+	for _, name := range manifest.Styles {
+		data, err := os.ReadFile(filepath.Join(root, "web/shell", name))
+		if err != nil {
+			return "", "", err
+		}
+		styles.Write(data)
+		styles.WriteByte('\n')
+	}
+	for _, name := range manifest.Scripts {
+		data, err := os.ReadFile(filepath.Join(root, "web/shell", name))
+		if err != nil {
+			return "", "", err
+		}
+		scripts.WriteString("/* " + name + " */\n")
+		scripts.Write(data)
+		scripts.WriteByte('\n')
+	}
+	return styles.String(), scripts.String(), nil
+}
+
+// shellText builds the shell's I18N argument from a catalog on disk. Shell
+// messages are plain strings with {name} slots, so no formatting is needed.
+func shellText(root, locale string) (string, error) {
+	raw, err := os.ReadFile(filepath.Join(root, "locales", locale+".json"))
+	if err != nil {
+		return "", err
+	}
+	var catalog map[string]any
+	if err = json.Unmarshal(raw, &catalog); err != nil {
+		return "", err
+	}
+	messages := map[string]string{}
+	for key, value := range catalog {
+		if text, ok := value.(string); ok && strings.HasPrefix(key, "shell") {
+			messages[key] = text
+		}
+	}
+	payload, err := json.Marshal(map[string]any{"locale": locale, "script": "latn", "choice": "system", "languages": []map[string]string{{"tag": locale, "name": locale}}, "messages": messages})
+	return string(payload), err
 }

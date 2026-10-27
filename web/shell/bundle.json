@@ -1,0 +1,26 @@
+{
+  "styles": [
+    "tokens.css",
+    "base.css",
+    "shell.css",
+    "playerbar.css",
+    "nowplaying.css",
+    "overlays.css",
+    "canvas.css"
+  ],
+  "scripts": [
+    "core.js",
+    "i18n.js",
+    "icons.js",
+    "store.js",
+    "bridge.js",
+    "slider.js",
+    "sidebar.js",
+    "topbar.js",
+    "playerbar.js",
+    "nowplaying.js",
+    "overlays.js",
+    "keyboard.js",
+    "main.js"
+  ]
+}

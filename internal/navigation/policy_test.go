@@ -56,37 +56,6 @@ func TestExternalNavigation(t *testing.T) {
 	}
 }
 
-func TestEmbeddedPlayerNavigation(t *testing.T) {
-	const origin = "https://si.kyun.ytmgo"
-	const valid = "https://www.youtube.com/embed/60HN1rIvht4?autoplay=1&controls=1&enablejsapi=1&origin=https%3A%2F%2Fsi.kyun.ytmgo&widgetid=1"
-	if !EmbeddedPlayer(valid, origin, false) {
-		t.Fatal("automatic official player was blocked")
-	}
-	if EmbeddedPlayer(valid, origin, true) {
-		t.Fatal("user-followed navigation must stay external")
-	}
-	for _, raw := range []string{
-		"http://www.youtube.com/embed/60HN1rIvht4?enablejsapi=1&origin=" + origin,
-		"https://www.youtube.com.evil.example/embed/60HN1rIvht4?enablejsapi=1&origin=" + origin,
-		"https://www.youtube.com:443/embed/60HN1rIvht4?enablejsapi=1&origin=" + origin,
-		"https://user@www.youtube.com/embed/60HN1rIvht4?enablejsapi=1&origin=" + origin,
-		"https://www.youtube.com/watch?v=60HN1rIvht4&enablejsapi=1&origin=" + origin,
-		"https://www.youtube.com/embed/short?enablejsapi=1&origin=" + origin,
-		"https://www.youtube.com/embed/60HN1rIvht4/extra?enablejsapi=1&origin=" + origin,
-		"https://www.youtube.com/embed/%36%30HN1rIvht4?enablejsapi=1&origin=" + origin,
-		"https://www.youtube.com/embed/60HN1rIvht4?origin=" + origin,
-		"https://www.youtube.com/embed/60HN1rIvht4?enablejsapi=1&origin=https://example.org",
-		valid + "&origin=https://example.org",
-		valid + "&enablejsapi=0",
-		valid + "#fragment",
-		valid + "&invalid=%zz",
-	} {
-		if EmbeddedPlayer(raw, origin, false) {
-			t.Errorf("unexpected frame navigation allowed: %q", raw)
-		}
-	}
-}
-
 func TestMusicAccountNavigation(t *testing.T) {
 	for _, raw := range []string{Home, "https://music.youtube.com/library", "https://accounts.google.com/ServiceLogin?continue=https%3A%2F%2Fmusic.youtube.com", "https://accounts.youtube.com/accounts/SetSID", "https://consent.youtube.com/m", "https://www.youtube.com/signin?action_handle_signin=true", "https://www.youtube.com/logout"} {
 		if !MusicPage(raw) {
@@ -114,5 +83,21 @@ func TestAppearanceOriginAndActions(t *testing.T) {
 		if _, ok := AppearanceAction(action, Home); ok {
 			t.Errorf("invalid action allowed: %s", action)
 		}
+	}
+}
+
+func TestLanguageAction(t *testing.T) {
+	for raw, want := range map[string]string{"ytmgo://language/system": "system", "ytmgo://language/zh-Hant": "zh-Hant", "ytmgo://language/ja": "ja"} {
+		if got, ok := LanguageAction(raw, Home); !ok || got != want {
+			t.Errorf("%s: got %q %v", raw, got, ok)
+		}
+	}
+	for _, raw := range []string{"ytmgo://language/fr", "ytmgo://language/zh-hant", "ytmgo://language/ja?x=1", "ytmgo://language/", "ytmgo://appearance/dark"} {
+		if _, ok := LanguageAction(raw, Home); ok {
+			t.Errorf("accepted %s", raw)
+		}
+	}
+	if _, ok := LanguageAction("ytmgo://language/ja", "https://accounts.google.com/"); ok {
+		t.Error("sign-in pages must not change the language")
 	}
 }

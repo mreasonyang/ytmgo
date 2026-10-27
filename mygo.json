@@ -1,7 +1,7 @@
 {
   "name": "ytmgo",
   "identifier": "si.kyun.ytmgo",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "out": "build",
   "icon": "resources/icon.png",
   "macos": {
@@ -20,5 +20,9 @@
       "Player"
     ],
     "webview": true
+  },
+  "i18n": {
+    "dir": "locales",
+    "source": "en"
   }
 }

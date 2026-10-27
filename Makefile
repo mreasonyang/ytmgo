@@ -8,7 +8,8 @@ build:
 
 test:
 	go test ./...
-	node --test web/*test.mjs
+	node --test web/shell/*.test.mjs
 
 check: test
 	go vet ./...
+	go tool mygo i18n check

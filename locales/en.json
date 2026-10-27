@@ -1,0 +1,659 @@
+{
+  "@@locale": "en",
+  "appName": "ytmgo",
+  "@appName": {
+    "description": "The product name. Do not translate."
+  },
+  "serviceName": "YouTube Music",
+  "@serviceName": {
+    "description": "The music service's product name. Do not translate."
+  },
+  "menuFile": "File",
+  "@menuFile": {
+    "description": "Menu bar: the File menu."
+  },
+  "menuShowApp": "Show ytmgo",
+  "@menuShowApp": {
+    "description": "File menu: bring the main window forward."
+  },
+  "menuPlayback": "Playback",
+  "@menuPlayback": {
+    "description": "Menu bar: the Playback menu."
+  },
+  "menuPlayPause": "Play / Pause",
+  "@menuPlayPause": {
+    "description": "Playback menu item."
+  },
+  "menuNext": "Next",
+  "@menuNext": {
+    "description": "Playback menu: next track."
+  },
+  "menuPrevious": "Previous",
+  "@menuPrevious": {
+    "description": "Playback menu: previous track."
+  },
+  "menuLike": "Like / Unlike",
+  "@menuLike": {
+    "description": "Playback menu: toggle the like on the current track."
+  },
+  "menuVolumeUp": "Volume Up",
+  "@menuVolumeUp": {
+    "description": "Playback menu item."
+  },
+  "menuVolumeDown": "Volume Down",
+  "@menuVolumeDown": {
+    "description": "Playback menu item."
+  },
+  "menuMute": "Mute",
+  "@menuMute": {
+    "description": "Playback menu item."
+  },
+  "menuView": "View",
+  "@menuView": {
+    "description": "Menu bar: the View menu."
+  },
+  "menuSearch": "Search",
+  "@menuSearch": {
+    "description": "View menu: focus the search field."
+  },
+  "menuHome": "Home",
+  "@menuHome": {
+    "description": "View menu: go to Home."
+  },
+  "menuExplore": "Explore",
+  "@menuExplore": {
+    "description": "View menu: go to Explore."
+  },
+  "menuLibrary": "Library",
+  "@menuLibrary": {
+    "description": "View menu: go to the Library."
+  },
+  "menuPanel": "Now Playing Panel",
+  "@menuPanel": {
+    "description": "View menu: show or hide the now-playing side panel."
+  },
+  "menuLyrics": "Lyrics",
+  "@menuLyrics": {
+    "description": "View menu: show lyrics in the side panel."
+  },
+  "menuImmersive": "Immersive Mode",
+  "@menuImmersive": {
+    "description": "View menu: full-window now-playing view."
+  },
+  "menuSidebar": "Sidebar",
+  "@menuSidebar": {
+    "description": "View menu: collapse or expand the sidebar."
+  },
+  "menuLanguage": "Language",
+  "@menuLanguage": {
+    "description": "View menu: submenu listing interface languages."
+  },
+  "menuLanguageSystem": "Match System",
+  "@menuLanguageSystem": {
+    "description": "Language submenu: follow the system's preferred languages."
+  },
+  "menuAccount": "Account",
+  "@menuAccount": {
+    "description": "Menu bar: the Account menu."
+  },
+  "menuSignIn": "Sign In to Google",
+  "@menuSignIn": {
+    "description": "Account menu, signed out."
+  },
+  "menuManageAccount": "Manage Account",
+  "@menuManageAccount": {
+    "description": "Account menu, signed in."
+  },
+  "menuSignOut": "Sign Out and Clear Local Account Data…",
+  "@menuSignOut": {
+    "description": "Account menu: opens a confirmation."
+  },
+  "menuHelp": "Help",
+  "@menuHelp": {
+    "description": "Menu bar: the Help menu."
+  },
+  "menuShortcuts": "Keyboard Shortcuts",
+  "@menuShortcuts": {
+    "description": "Help menu item."
+  },
+  "menuAbout": "About ytmgo",
+  "@menuAbout": {
+    "description": "Help menu item."
+  },
+  "trayOpen": "Open ytmgo",
+  "@trayOpen": {
+    "description": "Tray menu item."
+  },
+  "trayQuit": "Quit ytmgo",
+  "@trayQuit": {
+    "description": "Tray menu item."
+  },
+  "aboutMessage": "ytmgo · {version}",
+  "@aboutMessage": {
+    "description": "About dialog headline.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "0.3.0"
+      }
+    }
+  },
+  "aboutDetail": "An independent music client built with MyGo.\nMusic and accounts are provided by YouTube Music.\n\nGlobal play / pause: ⌘ / Ctrl + Shift + Space\nClosing the window keeps music playing; press ⌘ / Ctrl + Q to quit.",
+  "@aboutDetail": {
+    "description": "About dialog body."
+  },
+  "buttonOK": "OK",
+  "@buttonOK": {
+    "description": "Dialog button."
+  },
+  "buttonCancel": "Cancel",
+  "@buttonCancel": {
+    "description": "Dialog button."
+  },
+  "buttonRetry": "Retry",
+  "@buttonRetry": {
+    "description": "Dialog button."
+  },
+  "buttonLater": "Later",
+  "@buttonLater": {
+    "description": "Dialog button: dismiss for now."
+  },
+  "buttonGoHome": "Go to Home",
+  "@buttonGoHome": {
+    "description": "Dialog button: load the Home page."
+  },
+  "buttonReload": "Reload",
+  "@buttonReload": {
+    "description": "Dialog button."
+  },
+  "linkErrorTitle": "Open Link",
+  "@linkErrorTitle": {
+    "description": "Dialog title when a link cannot be opened."
+  },
+  "linkErrorMessage": "Brave Browser couldn't be opened",
+  "@linkErrorMessage": {
+    "description": "Dialog message: the preferred browser is missing."
+  },
+  "linkErrorDetail": "Install or open Brave, then try again.",
+  "@linkErrorDetail": {
+    "description": "Dialog detail."
+  },
+  "loadErrorMessage": "The music service couldn't be loaded",
+  "@loadErrorMessage": {
+    "description": "Dialog message: network failure."
+  },
+  "loadErrorDetail": "Check your connection and try again. Your session and library are kept.",
+  "@loadErrorDetail": {
+    "description": "Dialog detail."
+  },
+  "crashMessage": "The music view stopped unexpectedly",
+  "@crashMessage": {
+    "description": "Dialog message: the page process crashed."
+  },
+  "crashDetail": "Reload to continue.",
+  "@crashDetail": {
+    "description": "Dialog detail."
+  },
+  "loginWindowTitle": "Google Sign-In · ytmgo",
+  "@loginWindowTitle": {
+    "description": "Title of the sign-in window."
+  },
+  "loginErrorTitle": "Google Sign-In",
+  "@loginErrorTitle": {
+    "description": "Dialog title."
+  },
+  "loginErrorMessage": "The sign-in page couldn't be loaded",
+  "@loginErrorMessage": {
+    "description": "Dialog message."
+  },
+  "loginErrorDetail": "Check your connection and try again, or close this window and sign in later from the main window.",
+  "@loginErrorDetail": {
+    "description": "Dialog detail."
+  },
+  "signOutTitle": "Sign Out",
+  "@signOutTitle": {
+    "description": "Confirmation dialog title."
+  },
+  "signOutMessage": "Sign out and clear local account data?",
+  "@signOutMessage": {
+    "description": "Confirmation dialog question."
+  },
+  "signOutDetail": "Playback stops, the sign-in window closes, and ytmgo clears every account's sign-in state, cookies, web storage and cache on this device.\nYour appearance and language settings and your cloud library are kept. Other browsers stay signed in.",
+  "@signOutDetail": {
+    "description": "Confirmation dialog detail."
+  },
+  "signOutConfirm": "Sign Out and Clear",
+  "@signOutConfirm": {
+    "description": "Destructive confirmation button."
+  },
+  "accountWindowTitle": "Account · ytmgo",
+  "@accountWindowTitle": {
+    "description": "Title of the sign-out progress window."
+  },
+  "logoutEyebrow": "ytmgo · Account",
+  "@logoutEyebrow": {
+    "description": "Small label above the sign-out status."
+  },
+  "logoutBusyTitle": "Signing out",
+  "@logoutBusyTitle": {
+    "description": "Sign-out status title."
+  },
+  "logoutBusyDetail": "Clearing local account data. This takes a moment…",
+  "@logoutBusyDetail": {
+    "description": "Sign-out status detail."
+  },
+  "logoutBusyLabel": "Working",
+  "@logoutBusyLabel": {
+    "description": "Accessible name of the progress spinner."
+  },
+  "logoutFailedTitle": "Clearing isn't finished",
+  "@logoutFailedTitle": {
+    "description": "Sign-out status title after a failure."
+  },
+  "logoutFailedDetail": "Try again. The music view stays closed until clearing finishes; your settings are kept.",
+  "@logoutFailedDetail": {
+    "description": "Sign-out failure detail."
+  },
+  "logoutRetry": "Retry Clearing",
+  "@logoutRetry": {
+    "description": "Button after a failed sign-out."
+  },
+  "logoutDoneTitle": "Signed out",
+  "@logoutDoneTitle": {
+    "description": "Sign-out status title after success."
+  },
+  "logoutDoneDetail": "Sign-in state, cookies, web storage and cache for every account in this app are cleared. Your settings and cloud library are kept.",
+  "@logoutDoneDetail": {
+    "description": "Sign-out success detail."
+  },
+  "logoutContinue": "Back to Home",
+  "@logoutContinue": {
+    "description": "Button after a successful sign-out."
+  },
+  "appearanceSaveError": "The appearance setting couldn't be saved. Try again later.",
+  "@appearanceSaveError": {
+    "description": "Error when saving the appearance fails."
+  },
+  "shellBrandName": "ytmgo",
+  "@shellBrandName": {
+    "description": "The product wordmark in the sidebar. Do not translate."
+  },
+  "shellNavMain": "Main navigation",
+  "@shellNavMain": {
+    "description": "Accessible name of the navigation landmark."
+  },
+  "shellNavHome": "Home",
+  "@shellNavHome": {
+    "description": "Sidebar / tab bar destination."
+  },
+  "shellNavExplore": "Explore",
+  "@shellNavExplore": {
+    "description": "Sidebar / tab bar destination."
+  },
+  "shellNavLibrary": "Library",
+  "@shellNavLibrary": {
+    "description": "Sidebar / tab bar destination."
+  },
+  "shellNavSearch": "Search",
+  "@shellNavSearch": {
+    "description": "Tab bar destination (compact windows)."
+  },
+  "shellBrandHome": "ytmgo Home",
+  "@shellBrandHome": {
+    "description": "Accessible name of the logo button."
+  },
+  "shellSidebarCollapse": "Collapse sidebar",
+  "@shellSidebarCollapse": {
+    "description": "Icon button."
+  },
+  "shellSidebarExpand": "Expand sidebar",
+  "@shellSidebarExpand": {
+    "description": "Icon button."
+  },
+  "shellLibraryTitle": "Your Library",
+  "@shellLibraryTitle": {
+    "description": "Heading of the sidebar's playlist card."
+  },
+  "shellLibraryRegion": "Your playlists",
+  "@shellLibraryRegion": {
+    "description": "Accessible name of the playlist list."
+  },
+  "shellLibraryEmptyTitle": "Build your library",
+  "@shellLibraryEmptyTitle": {
+    "description": "Signed-out card title in the sidebar."
+  },
+  "shellLibraryEmptyBody": "Sign in and your playlists, albums and liked music appear here.",
+  "@shellLibraryEmptyBody": {
+    "description": "Signed-out card body."
+  },
+  "shellSignIn": "Sign in",
+  "@shellSignIn": {
+    "description": "Button: sign in to Google."
+  },
+  "shellBack": "Back",
+  "@shellBack": {
+    "description": "Icon button: history back."
+  },
+  "shellForward": "Forward",
+  "@shellForward": {
+    "description": "Icon button: history forward."
+  },
+  "shellSettings": "Settings",
+  "@shellSettings": {
+    "description": "Icon button and popover name."
+  },
+  "shellSearchPlaceholder": "What do you want to play?",
+  "@shellSearchPlaceholder": {
+    "description": "Placeholder of the search field."
+  },
+  "shellContent": "Content",
+  "@shellContent": {
+    "description": "Accessible name of the main content region."
+  },
+  "shellPlayerControls": "Player controls",
+  "@shellPlayerControls": {
+    "description": "Accessible name of the player bar."
+  },
+  "shellOpenNowPlaying": "Open Now Playing",
+  "@shellOpenNowPlaying": {
+    "description": "Accessible name of the artwork / title buttons."
+  },
+  "shellIdleTitle": "Not playing",
+  "@shellIdleTitle": {
+    "description": "Player bar title when nothing is loaded."
+  },
+  "shellIdleSubtitle": "Pick a song to start listening",
+  "@shellIdleSubtitle": {
+    "description": "Player bar subtitle when nothing is loaded."
+  },
+  "shellLoading": "Loading…",
+  "@shellLoading": {
+    "description": "Player bar title while a track loads."
+  },
+  "shellAdBadge": "Ad",
+  "@shellAdBadge": {
+    "description": "Badge next to an advertisement's title. Keep very short."
+  },
+  "shellLike": "Like",
+  "@shellLike": {
+    "description": "Toggle button, not pressed."
+  },
+  "shellUnlike": "Remove like",
+  "@shellUnlike": {
+    "description": "Toggle button, pressed."
+  },
+  "shellShuffle": "Shuffle queue",
+  "@shellShuffle": {
+    "description": "Icon button: reorders the queue once."
+  },
+  "shellShuffled": "Queue shuffled",
+  "@shellShuffled": {
+    "description": "Toast after shuffling."
+  },
+  "shellPrevious": "Previous",
+  "@shellPrevious": {
+    "description": "Icon button."
+  },
+  "shellPlay": "Play",
+  "@shellPlay": {
+    "description": "Icon button."
+  },
+  "shellPause": "Pause",
+  "@shellPause": {
+    "description": "Icon button."
+  },
+  "shellNext": "Next",
+  "@shellNext": {
+    "description": "Icon button."
+  },
+  "shellRepeatOff": "Repeat: off",
+  "@shellRepeatOff": {
+    "description": "Repeat button label and toast."
+  },
+  "shellRepeatAll": "Repeat: all",
+  "@shellRepeatAll": {
+    "description": "Repeat button label and toast."
+  },
+  "shellRepeatOne": "Repeat: one",
+  "@shellRepeatOne": {
+    "description": "Repeat button label and toast."
+  },
+  "shellProgress": "Playback position",
+  "@shellProgress": {
+    "description": "Accessible name of the seek slider."
+  },
+  "shellLyrics": "Lyrics",
+  "@shellLyrics": {
+    "description": "Toggle button."
+  },
+  "shellQueue": "Queue",
+  "@shellQueue": {
+    "description": "Toggle button."
+  },
+  "shellMute": "Mute",
+  "@shellMute": {
+    "description": "Icon button."
+  },
+  "shellUnmute": "Unmute",
+  "@shellUnmute": {
+    "description": "Icon button."
+  },
+  "shellVolume": "Volume",
+  "@shellVolume": {
+    "description": "Accessible name of the volume slider."
+  },
+  "shellMore": "More actions",
+  "@shellMore": {
+    "description": "Icon button: the track menu."
+  },
+  "shellImmersive": "Immersive mode",
+  "@shellImmersive": {
+    "description": "Toggle button."
+  },
+  "shellExitImmersive": "Exit immersive mode",
+  "@shellExitImmersive": {
+    "description": "Toggle button, pressed."
+  },
+  "shellClosePanel": "Close panel",
+  "@shellClosePanel": {
+    "description": "Icon button."
+  },
+  "shellNowPlaying": "Now Playing",
+  "@shellNowPlaying": {
+    "description": "Panel heading and landmark name."
+  },
+  "shellEmptyTitle": "Nothing playing yet",
+  "@shellEmptyTitle": {
+    "description": "Now Playing panel, empty."
+  },
+  "shellEmptyBody": "Pick a song from Home, or press {shortcut} to search.",
+  "@shellEmptyBody": {
+    "description": "Now Playing panel, empty.",
+    "placeholders": {
+      "shortcut": {
+        "type": "String",
+        "example": "⌘ K"
+      }
+    }
+  },
+  "shellAnnounceTrack": "Now playing: {title}",
+  "@shellAnnounceTrack": {
+    "description": "Screen-reader announcement.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Beat It"
+      }
+    }
+  },
+  "shellAnnounceTrackBy": "Now playing: {title} by {artists}",
+  "@shellAnnounceTrackBy": {
+    "description": "Screen-reader announcement.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Beat It"
+      },
+      "artists": {
+        "type": "String",
+        "example": "Michael Jackson"
+      }
+    }
+  },
+  "shellAppearance": "Appearance",
+  "@shellAppearance": {
+    "description": "Settings section heading."
+  },
+  "shellThemeDark": "Dark",
+  "@shellThemeDark": {
+    "description": "Appearance option."
+  },
+  "shellThemeLight": "Light",
+  "@shellThemeLight": {
+    "description": "Appearance option."
+  },
+  "shellThemeSystem": "System",
+  "@shellThemeSystem": {
+    "description": "Appearance option: follow the system. Keep short."
+  },
+  "shellLanguage": "Language",
+  "@shellLanguage": {
+    "description": "Settings section heading."
+  },
+  "shellLanguageSystem": "Match system",
+  "@shellLanguageSystem": {
+    "description": "Language option: follow the system's languages."
+  },
+  "shellLanguageNote": "Changing the language reloads the music view.",
+  "@shellLanguageNote": {
+    "description": "Hint under the language list."
+  },
+  "shellAccountSignIn": "Sign in to Google",
+  "@shellAccountSignIn": {
+    "description": "Settings menu item."
+  },
+  "shellAccountManage": "Manage Google account",
+  "@shellAccountManage": {
+    "description": "Settings menu item."
+  },
+  "shellServiceSettings": "YouTube Music settings",
+  "@shellServiceSettings": {
+    "description": "Settings menu item."
+  },
+  "shellShortcuts": "Keyboard shortcuts",
+  "@shellShortcuts": {
+    "description": "Settings menu item and dialog title."
+  },
+  "shellSignOut": "Sign out and clear local data…",
+  "@shellSignOut": {
+    "description": "Settings menu item; opens a confirmation."
+  },
+  "shellFooter": "Music and accounts are provided by YouTube Music",
+  "@shellFooter": {
+    "description": "Settings popover footer."
+  },
+  "shellClose": "Close",
+  "@shellClose": {
+    "description": "Icon button."
+  },
+  "shellShortcutGroupPlayback": "Playback",
+  "@shellShortcutGroupPlayback": {
+    "description": "Shortcut sheet group."
+  },
+  "shellShortcutGroupInterface": "Interface",
+  "@shellShortcutGroupInterface": {
+    "description": "Shortcut sheet group."
+  },
+  "shellShortcutGroupNavigation": "Navigation",
+  "@shellShortcutGroupNavigation": {
+    "description": "Shortcut sheet group."
+  },
+  "shellShortcutPlayPause": "Play / pause",
+  "@shellShortcutPlayPause": {
+    "description": "Shortcut sheet row."
+  },
+  "shellShortcutNextPrevious": "Next / previous",
+  "@shellShortcutNextPrevious": {
+    "description": "Shortcut sheet row."
+  },
+  "shellShortcutVolume": "Volume",
+  "@shellShortcutVolume": {
+    "description": "Shortcut sheet row."
+  },
+  "shellShortcutMute": "Mute",
+  "@shellShortcutMute": {
+    "description": "Shortcut sheet row."
+  },
+  "shellShortcutGlobal": "Play / pause from anywhere",
+  "@shellShortcutGlobal": {
+    "description": "Shortcut sheet row."
+  },
+  "shellShortcutSearch": "Search",
+  "@shellShortcutSearch": {
+    "description": "Shortcut sheet row."
+  },
+  "shellShortcutPanel": "Now Playing panel",
+  "@shellShortcutPanel": {
+    "description": "Shortcut sheet row."
+  },
+  "shellShortcutImmersive": "Immersive mode",
+  "@shellShortcutImmersive": {
+    "description": "Shortcut sheet row."
+  },
+  "shellShortcutSidebar": "Sidebar",
+  "@shellShortcutSidebar": {
+    "description": "Shortcut sheet row."
+  },
+  "shellShortcutDismiss": "Close panel / popover",
+  "@shellShortcutDismiss": {
+    "description": "Shortcut sheet row."
+  },
+  "shellShortcutHome": "Home",
+  "@shellShortcutHome": {
+    "description": "Shortcut sheet row."
+  },
+  "shellShortcutLibrary": "Library",
+  "@shellShortcutLibrary": {
+    "description": "Shortcut sheet row."
+  },
+  "shellShortcutHistory": "Back / forward",
+  "@shellShortcutHistory": {
+    "description": "Shortcut sheet row."
+  },
+  "shellKeyCtrl": "Ctrl",
+  "@shellKeyCtrl": {
+    "description": "Key cap name (non-Mac)."
+  },
+  "shellKeyShift": "Shift",
+  "@shellKeyShift": {
+    "description": "Key cap name (non-Mac)."
+  },
+  "shellKeySpace": "Space",
+  "@shellKeySpace": {
+    "description": "Key cap name."
+  },
+  "shellKeyEsc": "Esc",
+  "@shellKeyEsc": {
+    "description": "Key cap name."
+  },
+  "shellGreetingNight": "Late night listening",
+  "@shellGreetingNight": {
+    "description": "Home greeting, 00:00–05:00."
+  },
+  "shellGreetingMorning": "Good morning",
+  "@shellGreetingMorning": {
+    "description": "Home greeting, 05:00–11:00."
+  },
+  "shellGreetingNoon": "Good afternoon",
+  "@shellGreetingNoon": {
+    "description": "Home greeting, 11:00–13:00."
+  },
+  "shellGreetingAfternoon": "Good afternoon",
+  "@shellGreetingAfternoon": {
+    "description": "Home greeting, 13:00–18:00."
+  },
+  "shellGreetingEvening": "Good evening",
+  "@shellGreetingEvening": {
+    "description": "Home greeting, 18:00–24:00."
+  }
+}

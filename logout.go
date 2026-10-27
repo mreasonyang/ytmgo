@@ -4,7 +4,9 @@ import (
 	"html"
 
 	"github.com/egoist/mygo"
+	"ytmgo/internal/language"
 	"ytmgo/internal/session"
+	"ytmgo/locales"
 )
 
 func (a *desktop) setSignedIn(signedIn bool) {
@@ -16,9 +18,9 @@ func (a *desktop) setSignedIn(signedIn bool) {
 		a.accountSeparator.SetVisible(signedIn)
 	}
 	if a.accountItem != nil {
-		label := "登录 Google 账号"
+		label := locales.MenuSignIn()
 		if signedIn {
-			label = "管理账号"
+			label = locales.MenuManageAccount()
 		}
 		a.accountItem.SetLabel(label)
 	}
@@ -42,10 +44,10 @@ func (a *desktop) requestSignOut() {
 	parent := a.window
 	go func() {
 		result, err := mygo.Dialog.Message(mygo.MessageOptions{
-			Parent: parent, Type: mygo.MessageQuestion, Title: "退出登录",
-			Message: "退出登录并清除本机账号数据？",
-			Detail:  "将停止播放，关闭登录窗口，并清除 ytmgo 内所有账号的登录状态、Cookie、网页存储与缓存。\n外观设置、本地收藏和云端音乐库会保留，其他浏览器的登录不受影响。",
-			Buttons: []string{"取消", "退出并清除"}, DefaultButton: 0, CancelButton: 0,
+			Parent: parent, Type: mygo.MessageQuestion, Title: locales.SignOutTitle(),
+			Message: locales.SignOutMessage(),
+			Detail:  locales.SignOutDetail(),
+			Buttons: []string{locales.ButtonCancel(), locales.SignOutConfirm()}, DefaultButton: 0, CancelButton: 0,
 		})
 		mygo.RunOnMain(func() {
 			a.logoutBusy = false
@@ -64,8 +66,8 @@ func (a *desktop) clearAccountData() {
 	a.setSignedIn(false)
 	if a.logoutWindow == nil || a.logoutWindow.IsDestroyed() {
 		w := mygo.NewWindow(mygo.WindowOptions{
-			Title: "账号 · ytmgo", Width: 660, Height: 460, MinWidth: 580, MinHeight: 420,
-			BackgroundColor: "light-dark(#ecebe7, #101614)",
+			Title: locales.AccountWindowTitle(), Width: 660, Height: 460, MinWidth: 580, MinHeight: 420,
+			BackgroundColor: "light-dark(#e7e7ea, #050506)",
 		})
 		a.logoutWindow = w
 		a.logoutLoading, a.logoutNextHTML = false, ""
@@ -109,7 +111,7 @@ func (a *desktop) clearAccountData() {
 			}
 		})
 	}
-	a.logoutPage("正在退出登录", "正在清除本机账号数据，请稍候…", "", "")
+	a.logoutPage(locales.LogoutBusyTitle(), locales.LogoutBusyDetail(), "", "")
 	a.show()
 	go func() {
 		err := session.Clear(a.sessionMarker, func() {
@@ -122,11 +124,11 @@ func (a *desktop) clearAccountData() {
 			}
 			if err != nil {
 				a.closeSessionPages()
-				a.logoutPage("清理尚未完成", "请重试。清理完成前不会重新打开音乐页面；外观设置和本地收藏仍然保留。", "重试清理", "retry")
+				a.logoutPage(locales.LogoutFailedTitle(), locales.LogoutFailedDetail(), locales.LogoutRetry(), "retry")
 				return
 			}
 			a.logoutComplete = true
-			a.logoutPage("已退出登录", "此应用内所有账号的登录状态、Cookie、网页存储和缓存已清除。外观设置、本地收藏及云端音乐库已保留。", "返回首页", "continue")
+			a.logoutPage(locales.LogoutDoneTitle(), locales.LogoutDoneDetail(), locales.LogoutContinue(), "continue")
 		})
 	}()
 }
@@ -134,25 +136,39 @@ func (a *desktop) clearAccountData() {
 func (a *desktop) closeSessionPages() {
 	// Destroy every page sharing the store before clearing it. Merely
 	// reloading afterwards leaves live sessions able to write back.
-	for _, w := range []*mygo.Window{a.account, a.legacy, a.window} {
+	for _, w := range []*mygo.Window{a.account, a.window} {
 		if w != nil && !w.IsDestroyed() {
 			w.Destroy()
 		}
 	}
-	a.account, a.legacy, a.window = nil, nil, nil
+	a.account, a.window = nil, nil
 }
+
+// logoutStyle mirrors web/shell/tokens.css: base gutter, panel surface,
+// type scale, pill action and the shared focus ring.
+const logoutStyle = `:root{color-scheme:light dark;--base:light-dark(#e7e7ea,#050506);--surface:light-dark(#fff,#121214);--text:light-dark(#121214,#f5f5f7);--text2:light-dark(#55555c,#a8a8af);--accent:light-dark(#e8382d,#ff5a4f);--onaccent:light-dark(#fff,#0b0b0c)}
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;padding:8px;background:var(--base);color:var(--text);font:500 15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Noto Sans CJK SC",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+main{height:100%;display:grid;align-content:center;gap:16px;padding:40px;border-radius:12px;background:var(--surface)}
+.mark{width:40px;height:40px;border-radius:11px;background:var(--accent);display:grid;place-items:center}.mark i{width:0;height:0;margin-left:3px;border-left:13px solid var(--onaccent);border-top:8px solid transparent;border-bottom:8px solid transparent}
+small{font:700 11px/1.3 inherit;letter-spacing:.08em;text-transform:uppercase;color:var(--text2)}h1{margin:0;font:760 32px/1.12 -apple-system,BlinkMacSystemFont,"SF Pro Display",system-ui,sans-serif;letter-spacing:-.025em}p{margin:0 0 8px;color:var(--text2);max-width:46ch}
+a{justify-self:start;display:inline-flex;align-items:center;height:40px;padding:0 22px;border-radius:999px;background:var(--text);color:var(--surface);text-decoration:none;font-weight:700;transition:transform .24s cubic-bezier(.34,1.4,.64,1)}a:hover{transform:scale(1.04)}a:active{transform:scale(.97)}a:focus-visible{outline:2px solid var(--text);outline-offset:3px}
+.busy{width:22px;height:22px;border-radius:50%;border:2px solid color-mix(in srgb,var(--text) 20%,transparent);border-top-color:var(--text);animation:spin .9s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+html[data-script=hans] body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei UI",system-ui,sans-serif}
+html[data-script=hant] body{font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans CJK TC","Microsoft JhengHei UI",system-ui,sans-serif}
+html[data-script=jpan] body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans CJK JP","Yu Gothic UI",system-ui,sans-serif}
+html:not([data-script=latn]) body{line-height:1.7;line-break:strict;text-autospace:normal}html:not([data-script=latn]) h1{letter-spacing:0;line-height:1.3;font-feature-settings:"palt"}html:not([data-script=latn]) small{letter-spacing:.04em}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}`
 
 func (a *desktop) logoutPage(title, detail, label, action string) {
 	colorScheme := "light dark"
-	if mode := a.service.Appearance(); mode == "light" || mode == "dark" {
+	if mode := a.prefs.Appearance(); mode == "light" || mode == "dark" {
 		colorScheme = mode
 	}
-	button := ""
+	control := `<div class="busy" role="progressbar" aria-label="` + html.EscapeString(locales.LogoutBusyLabel()) + `"></div>`
 	if action != "" {
-		button = `<a href="ytmgo://session/` + html.EscapeString(action) + `">` + html.EscapeString(label) + `</a>`
+		control = `<a href="ytmgo://session/` + html.EscapeString(action) + `">` + html.EscapeString(label) + `</a>`
 	}
-	a.loadLogoutHTML(`<!doctype html><html lang="zh-CN" style="color-scheme:` + colorScheme + `"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><style>
-:root{color-scheme:light dark}*{box-sizing:border-box}body{margin:0;padding:54px 46px;background:light-dark(#ecebe7,#101614);color:light-dark(#192c24,#ecf1eb);font:15px/1.8 -apple-system,BlinkMacSystemFont,sans-serif}small{letter-spacing:2px;color:light-dark(#3b6952,#a0cdb5)}h1{font-size:28px;margin:18px 0 12px}p{opacity:.8;margin-bottom:28px}a{display:inline-block;padding:9px 20px;border-radius:9px;background:light-dark(#2c6247,#b2dbb9);color:light-dark(#fff,#101614);text-decoration:none;font-weight:600}a:focus-visible{outline:3px solid currentColor;outline-offset:4px}</style></head><body><small>ytmgo · 账号</small><h1>` + html.EscapeString(title) + `</h1><p>` + html.EscapeString(detail) + `</p>` + button + `</body></html>`)
+	a.loadLogoutHTML(`<!doctype html><html lang="` + html.EscapeString(mygo.App.Locale()) + `" data-script="` + language.Script(mygo.App.Locale()) + `" style="color-scheme:` + colorScheme + `"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><style>` + logoutStyle + `</style></head><body><main><div class="mark" aria-hidden="true"><i></i></div><small>` + html.EscapeString(locales.LogoutEyebrow()) + `</small><h1>` + html.EscapeString(title) + `</h1><p>` + html.EscapeString(detail) + `</p>` + control + `</main></body></html>`)
 }
 
 func (a *desktop) loadLogoutHTML(document string) {

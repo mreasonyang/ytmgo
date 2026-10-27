@@ -3,7 +3,8 @@ package navigation
 
 import (
 	"net/url"
-	"strings"
+
+	"ytmgo/internal/language"
 )
 
 const Home = "https://music.youtube.com/"
@@ -64,29 +65,18 @@ func AppearanceAction(raw, current string) (string, bool) {
 	return "", false
 }
 
-// EmbeddedPlayer permits the automatic official frame load on WebKitGTK,
-// which cannot reliably distinguish it from a top-level navigation. Remote
-// pages remain outside the native IPC trusted origins. User-followed links
-// continue through the external-link handler.
-func EmbeddedPlayer(raw, appOrigin string, userInitiated bool) bool {
-	if userInitiated {
-		return false
+// LanguageAction accepts only "system" or a supported interface language,
+// requested by the music page itself (the shell's settings popover).
+func LanguageAction(raw, current string) (string, bool) {
+	if !MusicContent(current) {
+		return "", false
 	}
-	u, err := url.Parse(raw)
-	if err != nil || u.User != nil || u.Scheme != "https" || u.Host != "www.youtube.com" || u.Fragment != "" {
-		return false
-	}
-	id, ok := strings.CutPrefix(u.Path, "/embed/")
-	if !ok || len(id) != 11 || u.EscapedPath() != u.Path {
-		return false
-	}
-	for _, c := range id {
-		if !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_' || c == '-') {
-			return false
+	for _, choice := range append([]string{language.System}, language.Supported...) {
+		if raw == "ytmgo://language/"+choice {
+			return choice, true
 		}
 	}
-	q, err := url.ParseQuery(u.RawQuery)
-	return err == nil && len(q["origin"]) == 1 && q.Get("origin") == appOrigin && len(q["enablejsapi"]) == 1 && q.Get("enablejsapi") == "1"
+	return "", false
 }
 
 // External permits only ordinary web links; never send arbitrary URL schemes

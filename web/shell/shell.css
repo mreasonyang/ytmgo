@@ -1,0 +1,204 @@
+/* shell — layout geometry and the persistent frame: sidebar, top bar,
+   canvas panel, compact tab bar. The service's own chrome is hidden or
+   re-hosted; its content column becomes the canvas scroll container. */
+
+:root[data-ytmgo-theme] {
+  --y-left: calc(var(--y-gap) * 2 + var(--y-sidebar-w));
+  --y-right: var(--y-gap);
+  --y-bottom: calc(var(--y-playerbar-h) + var(--y-tabbar-h));
+}
+@media (min-width: 1181px) {
+  :root[data-ytmgo-theme][data-ytmgo-sidebar="collapsed"] { --y-sidebar-w: 72px; }
+  :root[data-ytmgo-theme][data-ytmgo-panel="open"] { --y-right: calc(var(--y-gap) * 2 + var(--y-panel-w)); }
+}
+
+/* ── Service chrome ─────────────────────────────────────────────── */
+[data-ytmgo-theme] :is(ytmusic-app-layout > #guide, ytmusic-app-layout > #mini-guide, #mini-guide-background, #nav-bar-background, #nav-bar-divider, #player-bar-background, ytmusic-app-layout > .fullscreen-overlay) {
+  display: none !important;
+}
+[data-ytmgo-theme] ytmusic-app, [data-ytmgo-theme] ytmusic-app-layout { background: transparent !important; }
+/* Kept alive (its buttons and slider drive the player) but never shown. */
+[data-ytmgo-theme] ytmusic-player-bar { visibility: hidden !important; pointer-events: none !important; }
+
+/* ── Canvas: the main panel ─────────────────────────────────────── */
+#ytmgo-canvas, [data-ytmgo-theme] ytmusic-app-layout > #content {
+  position: fixed !important;
+  top: var(--y-gap) !important; left: var(--y-left) !important;
+  right: var(--y-right) !important; bottom: var(--y-bottom) !important;
+  border-radius: var(--y-r-lg);
+}
+#ytmgo-canvas { z-index: 0; overflow: hidden; background: var(--y-surface-1); pointer-events: none; }
+/* Artwork-tinted wash: the current page header (or what's playing) bleeds
+   into the top of the canvas and recedes as you scroll. */
+.y-canvas-wash {
+  position: absolute; inset: -40% -10% auto; width: 120%; height: 120%;
+  object-fit: cover; filter: blur(90px) saturate(1.5); opacity: 0;
+  transform: translateY(calc(var(--y-scroll, 0) * -0.25px));
+  -webkit-mask-image: linear-gradient(#000 30%, transparent 75%); mask-image: linear-gradient(#000 30%, transparent 75%);
+  transition: opacity var(--y-d-xslow) var(--y-ease-out);
+}
+.y-canvas-wash.is-loaded { opacity: calc(.42 - var(--y-scroll, 0) / 2400); }
+[data-ytmgo-theme="light"] .y-canvas-wash.is-loaded { opacity: calc(.26 - var(--y-scroll, 0) / 3600); }
+
+[data-ytmgo-theme] ytmusic-app-layout > #content {
+  z-index: var(--y-z-canvas);
+  margin: 0 !important; width: auto !important; height: auto !important; min-height: 0 !important;
+  padding: var(--y-topbar-h) 0 var(--y-s-12) !important;
+  overflow-x: hidden !important; overflow-y: auto !important; overscroll-behavior: contain;
+  background: transparent !important; outline: none;
+  scrollbar-width: thin; scrollbar-color: var(--y-surface-4) transparent;
+}
+[data-ytmgo-theme] ytmusic-app-layout > #content::-webkit-scrollbar { width: 12px; }
+[data-ytmgo-theme] ytmusic-app-layout > #content::-webkit-scrollbar-thumb { background: var(--y-surface-4); border: 3px solid transparent; border-radius: 99px; background-clip: padding-box; }
+[data-ytmgo-theme] ytmusic-app-layout > #content::-webkit-scrollbar-track { background: transparent; }
+
+#ytmgo-greeting { display: none; padding: var(--y-s-4) var(--y-s-8) var(--y-s-2); }
+[data-ytmgo-route="home"] #ytmgo-greeting { display: block; animation: y-enter var(--y-d-slow) var(--y-ease-out); }
+#ytmgo-greeting h1 { margin: 0; font: var(--y-type-title-1); letter-spacing: var(--y-track-tight); color: var(--y-text-1); }
+
+/* ── Sidebar ────────────────────────────────────────────────────── */
+#ytmgo-sidebar {
+  position: fixed; z-index: var(--y-z-chrome);
+  top: var(--y-gap); left: var(--y-gap); bottom: var(--y-bottom); width: var(--y-sidebar-w);
+  display: flex; flex-direction: column; gap: var(--y-gap);
+  transition: width var(--y-d-slow) var(--y-ease-emphasized);
+}
+.y-side-card { background: var(--y-surface-1); border-radius: var(--y-r-lg); padding: var(--y-s-2); }
+.y-side-nav { display: grid; gap: 2px; }
+.y-brand { display: flex; align-items: center; justify-content: space-between; padding: var(--y-s-2) var(--y-s-2) var(--y-s-3) var(--y-s-3); }
+.y-brand-link { display: flex; align-items: center; gap: var(--y-s-3); min-width: 0; }
+.y-brand-mark { width: 32px; height: 32px; flex: 0 0 32px; transition: transform var(--y-d-base) var(--y-ease-spring); }
+.y-brand-link:hover .y-brand-mark { transform: rotate(-8deg) scale(1.06); }
+.y-brand-word { font: 800 22px/1 var(--y-font-display); letter-spacing: -.04em; color: var(--y-text-1); }
+
+.y-nav-item, .y-library-title, .y-lib-item {
+  position: relative; display: flex; align-items: center; gap: var(--y-s-4); width: 100%;
+  min-height: 44px; padding: 0 var(--y-s-3) !important; border-radius: var(--y-r-md) !important;
+  color: var(--y-text-2) !important; font: var(--y-type-label) !important; text-align: left;
+  transition: color var(--y-d-fast) var(--y-ease-out), background-color var(--y-d-fast) var(--y-ease-out);
+}
+.y-nav-item .y-icon, .y-library-title .y-icon { width: 24px; height: 24px; }
+.y-nav-item:hover, .y-library-title:hover, .y-lib-item:hover { color: var(--y-text-1) !important; background: var(--y-hover) !important; }
+.y-nav-item:active, .y-lib-item:active { background: var(--y-press) !important; }
+.y-nav-item[aria-current="page"] { color: var(--y-text-1) !important; }
+.y-icon-on, [aria-current="page"] > .y-icon-off { display: none; }
+[aria-current="page"] > .y-icon-on { display: block; }
+
+.y-library { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.y-library-head { padding-bottom: var(--y-s-1); }
+.y-library-title { font-weight: 700 !important; }
+.y-library-list { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; display: grid; align-content: start; gap: 2px; }
+.y-lib-item { min-height: 56px; padding: 0 var(--y-s-2) !important; gap: var(--y-s-3); }
+.y-tile {
+  display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 44px;
+  border-radius: var(--y-r-sm); color: #fff; font: 800 18px/1 var(--y-font-display);
+  background: linear-gradient(135deg, hsl(var(--h) 68% 52%), hsl(calc(var(--h) + 48) 62% 30%));
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .08);
+}
+.y-tile .y-icon { width: 20px; height: 20px; }
+.y-lib-text { display: grid; min-width: 0; }
+.y-lib-title { color: var(--y-text-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.y-lib-sub { font: var(--y-type-caption); color: var(--y-text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.y-library-empty { margin: var(--y-s-2); padding: var(--y-s-5) var(--y-s-4); border-radius: var(--y-r-md); background: var(--y-surface-2); display: grid; gap: var(--y-s-2); justify-items: start; }
+.y-library-empty-title { font: var(--y-type-label); font-weight: 700; color: var(--y-text-1); }
+.y-library-empty-body { font: var(--y-type-caption); color: var(--y-text-2); margin-bottom: var(--y-s-2) !important; }
+.y-nav-item .y-label, .y-library-title .y-label { flex: 1 1 auto; }
+
+/* Rail: labels collapse away, tooltips step in. */
+:root[data-ytmgo-sidebar="collapsed"] #ytmgo-sidebar .y-label,
+:root[data-ytmgo-sidebar="collapsed"] .y-library-empty { display: none; }
+:root[data-ytmgo-sidebar="collapsed"] .y-brand { flex-direction: column; gap: var(--y-s-3); padding: var(--y-s-2) 0 var(--y-s-3); }
+:root[data-ytmgo-sidebar="collapsed"] :is(.y-nav-item, .y-library-title, .y-lib-item) { justify-content: center; padding: 0 !important; }
+#ytmgo-sidebar [data-tip] { --tip-top: 50%; --tip-left: calc(100% + 10px); --tip-x: 0; --tip-y: -50%; }
+:root:not([data-ytmgo-sidebar="collapsed"]) #ytmgo-sidebar :is(.y-nav-item, .y-library-title, .y-lib-item)::after { display: none; }
+@media (max-width: 1180px) {
+  #ytmgo-sidebar .y-label, .y-library-empty, .y-side-toggle { display: none !important; }
+  .y-brand { flex-direction: column; padding: var(--y-s-2) 0 var(--y-s-3) !important; }
+  :is(.y-nav-item, .y-library-title, .y-lib-item) { justify-content: center; padding: 0 !important; }
+  #ytmgo-sidebar :is(.y-nav-item, .y-library-title, .y-lib-item)::after { display: block !important; }
+}
+
+/* ── Top bar (over the canvas) ──────────────────────────────────── */
+#ytmgo-topbar {
+  position: fixed; z-index: var(--y-z-chrome);
+  top: var(--y-gap); left: var(--y-left); right: var(--y-right); height: var(--y-topbar-h);
+  display: flex; align-items: center; justify-content: space-between; padding: 0 var(--y-s-4);
+  pointer-events: none; border-radius: var(--y-r-lg) var(--y-r-lg) 0 0;
+}
+#ytmgo-topbar > * { pointer-events: auto; }
+.y-topbar-glass {
+  position: absolute; inset: 0; pointer-events: none !important; border-radius: inherit;
+  background: var(--y-glass); -webkit-backdrop-filter: var(--y-blur); backdrop-filter: var(--y-blur);
+  box-shadow: 0 1px 0 var(--y-line); opacity: 0; transition: opacity var(--y-d-base) var(--y-ease-out);
+}
+#ytmgo-topbar.is-scrolled .y-topbar-glass { opacity: 1; }
+.y-topbar-history, .y-topbar-actions { position: relative; display: flex; gap: var(--y-s-2); }
+#ytmgo-topbar [data-tip] { --tip-top: calc(100% + 8px); --tip-y: 0; }
+
+/* The service's nav bar is re-hosted inside the top bar: search after the
+   history buttons, account controls just before Settings. */
+[data-ytmgo-theme] ytmusic-nav-bar {
+  position: fixed !important; z-index: calc(var(--y-z-chrome) + 1) !important;
+  top: var(--y-gap) !important; left: calc(var(--y-left) + 96px) !important; right: calc(var(--y-right) + 60px) !important;
+  width: auto !important; height: var(--y-topbar-h) !important; padding: 0 !important;
+  background: transparent !important; border: 0 !important; box-shadow: none !important;
+  justify-content: flex-start !important;
+}
+[data-ytmgo-theme] ytmusic-nav-bar > #left-content { display: none !important; }
+[data-ytmgo-theme] ytmusic-nav-bar .center-content { justify-content: flex-start !important; flex: 1 1 auto !important; max-width: none !important; margin: 0 !important; padding: 0 !important;
+  position: relative !important; left: auto !important; transform: none !important; }
+/* History, cast and the overflow menu are reached through ytmgo's own Settings. */
+[data-ytmgo-theme] ytmusic-nav-bar :is(.history-icon-button, ytmusic-cast-button, ytmusic-settings-button, #right-content > yt-icon-button) { display: none !important; }
+[data-ytmgo-theme] ytmusic-nav-bar #right-content { gap: var(--y-s-2); margin-left: var(--y-s-4) !important; }
+[data-ytmgo-theme] ytmusic-nav-bar a[href*="accounts.google.com"] {
+  display: inline-flex !important; align-items: center; height: 36px !important; padding: 0 var(--y-s-5) !important;
+  border-radius: var(--y-r-pill) !important; background: var(--y-text-1) !important; color: var(--y-surface-1) !important;
+  font: var(--y-type-label) !important; font-weight: 700 !important; border: 0 !important;
+  transition: transform var(--y-d-base) var(--y-ease-spring);
+}
+[data-ytmgo-theme] ytmusic-nav-bar a[href*="accounts.google.com"]:hover { transform: scale(1.04); }
+[data-ytmgo-theme] ytmusic-nav-bar #avatar-btn { border-radius: 50%; box-shadow: 0 0 0 4px var(--y-glass); }
+
+[data-ytmgo-theme] ytmusic-search-box { width: min(100%, 440px) !important; max-width: 440px !important; min-width: 0 !important; margin: 0 !important; border: 0 !important; background: transparent !important; }
+[data-ytmgo-theme] ytmusic-search-box .search-box { border-radius: var(--y-r-pill) !important; background: transparent !important; border: 0 !important; }
+[data-ytmgo-theme] ytmusic-search-box .search-container {
+  height: 44px !important; border-radius: var(--y-r-pill) !important; border: 1px solid transparent !important;
+  background: var(--y-surface-3) !important; box-shadow: none !important;
+  transition: background-color var(--y-d-fast) var(--y-ease-out), border-color var(--y-d-fast) var(--y-ease-out), box-shadow var(--y-d-fast) var(--y-ease-out);
+}
+[data-ytmgo-theme] ytmusic-search-box .search-container:hover { background: var(--y-surface-4) !important; border-color: var(--y-line-strong) !important; }
+[data-ytmgo-theme] ytmusic-search-box:focus-within .search-container { border-color: var(--y-text-1) !important; box-shadow: 0 0 0 1px var(--y-text-1) !important; }
+[data-ytmgo-theme] ytmusic-search-box[opened] .search-container { border-radius: 22px 22px 0 0 !important; }
+[data-ytmgo-theme] ytmusic-search-box input { color: var(--y-text-1) !important; font: var(--y-type-body) !important; }
+[data-ytmgo-theme] ytmusic-search-box input::placeholder { color: var(--y-text-3) !important; }
+[data-ytmgo-theme] ytmusic-search-box :is(.search-icon, .clear-button, yt-icon) { color: var(--y-text-2) !important; }
+[data-ytmgo-theme] ytmusic-search-box #suggestion-list {
+  background: var(--y-glass-strong) !important; -webkit-backdrop-filter: var(--y-blur); backdrop-filter: var(--y-blur);
+  border-radius: 0 0 var(--y-r-xl) var(--y-r-xl) !important; box-shadow: var(--y-e-3) !important; border: 0 !important; overflow: hidden;
+}
+[data-ytmgo-theme] ytmusic-search-suggestion:hover, [data-ytmgo-theme] ytmusic-search-suggestion[selected] { background: var(--y-hover) !important; }
+
+/* ── Compact tab bar ────────────────────────────────────────────── */
+#ytmgo-tabbar { display: none; }
+@media (max-width: 760px) {
+  #ytmgo-sidebar { display: none; }
+  #ytmgo-canvas, [data-ytmgo-theme] ytmusic-app-layout > #content { border-radius: 0; }
+  [data-ytmgo-theme] ytmusic-nav-bar { left: 56px !important; right: 56px !important; }
+  #ytmgo-topbar { padding: 0 var(--y-s-2); }
+  .y-topbar-history .y-forward { display: none; }
+  #ytmgo-greeting { padding: var(--y-s-2) var(--y-s-4) 0; }
+  #ytmgo-tabbar {
+    position: fixed; z-index: var(--y-z-playerbar); left: 0; right: 0; bottom: 0; height: var(--y-tabbar-h);
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    padding-bottom: env(safe-area-inset-bottom);
+    background: linear-gradient(transparent, var(--y-base) 30%);
+  }
+  .y-tab {
+    display: grid; justify-items: center; align-content: center; gap: 4px; min-width: 0; padding: 0 var(--y-s-1) !important;
+    color: var(--y-text-2); font: var(--y-type-micro) !important;
+    transition: color var(--y-d-fast) var(--y-ease-out), transform var(--y-d-base) var(--y-ease-spring);
+  }
+  .y-tab .y-icon { width: 24px; height: 24px; }
+  .y-tab:active { transform: scale(.92); }
+  .y-tab[aria-current="page"] { color: var(--y-text-1); }
+}

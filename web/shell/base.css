@@ -1,0 +1,156 @@
+/* base — primitives shared by every shell surface: reset, type, icons,
+   buttons, tooltips, focus and keyframes. */
+
+html[data-ytmgo-theme], html[data-ytmgo-theme] body {
+  background: var(--y-base) !important;
+  color: var(--y-text-1) !important;
+  font: var(--y-type-body) !important;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden !important;
+}
+
+:where(#ytmgo-sidebar, #ytmgo-topbar, #ytmgo-playerbar, #ytmgo-np, #ytmgo-tabbar, #ytmgo-greeting, .y-popover, .y-dialog-wrap, #ytmgo-toast),
+:where(#ytmgo-sidebar, #ytmgo-topbar, #ytmgo-playerbar, #ytmgo-np, #ytmgo-tabbar, .y-popover, .y-dialog-wrap) * {
+  box-sizing: border-box;
+  font-family: var(--y-font);
+  letter-spacing: normal;
+}
+:where(#ytmgo-sidebar, #ytmgo-topbar, #ytmgo-playerbar, #ytmgo-np, #ytmgo-tabbar, .y-popover, .y-dialog-wrap) :is(p, h1, h2, dl, dd) { margin: 0; }
+:where(#ytmgo-sidebar, #ytmgo-topbar, #ytmgo-playerbar, #ytmgo-np, #ytmgo-tabbar, .y-popover, .y-dialog-wrap) :is(button, a) {
+  font: inherit; color: inherit; text-decoration: none; background: none; border: 0; padding: 0; margin: 0;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+[hidden] { display: none !important; }
+
+.y-sr { position: fixed !important; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.y-icon { width: 20px; height: 20px; flex: 0 0 auto; display: block; }
+
+/* Icon button: 32px target (44px in compact), circular hover wash, tactile press. */
+.y-icon-btn {
+  position: relative;
+  display: inline-grid; place-items: center;
+  width: var(--y-hit); height: var(--y-hit);
+  border-radius: var(--y-r-pill);
+  color: var(--y-text-2);
+  transition: color var(--y-d-fast) var(--y-ease-out), background-color var(--y-d-fast) var(--y-ease-out), transform var(--y-d-base) var(--y-ease-spring);
+}
+.y-icon-btn:hover { color: var(--y-text-1); }
+.y-icon-btn:active { transform: scale(.9); transition-duration: var(--y-d-instant); }
+.y-icon-btn.y-round { background: var(--y-glass); }
+.y-icon-btn.y-round:hover { background: var(--y-surface-4); }
+.y-icon-btn[aria-pressed="true"] { color: var(--y-accent); }
+/* Active toggles carry a dot as well as color, so state never relies on hue alone. */
+.y-icon-btn.y-toggle[aria-pressed="true"]::before {
+  content: ''; position: absolute; bottom: 1px; left: 50%; width: 4px; height: 4px; margin-left: -2px;
+  border-radius: 50%; background: currentColor;
+}
+:is(.y-icon-btn, .y-btn, .y-play)[aria-disabled="true"] { opacity: .35; pointer-events: none; }
+
+.y-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--y-s-2);
+  height: 36px; padding: 0 var(--y-s-5); border-radius: var(--y-r-pill);
+  font: var(--y-type-label) !important;
+  transition: transform var(--y-d-base) var(--y-ease-spring), background-color var(--y-d-fast) var(--y-ease-out);
+}
+.y-btn:hover { transform: scale(1.04); }
+.y-btn:active { transform: scale(.97); transition-duration: var(--y-d-instant); }
+.y-btn-inverse { background: var(--y-text-1) !important; color: var(--y-surface-1) !important; }
+
+.y-link { color: inherit; }
+.y-link:hover { color: var(--y-text-1); text-decoration: underline !important; text-underline-offset: 2px; }
+
+.y-eyebrow { font: var(--y-type-micro); letter-spacing: var(--y-track-micro); text-transform: var(--y-case-micro); color: var(--y-text-3); }
+.y-badge {
+  flex: 0 0 auto; padding: 1px 6px; border-radius: var(--y-r-xs);
+  background: var(--y-accent-soft); color: var(--y-accent); font: var(--y-type-micro);
+}
+kbd {
+  font: 600 12px/1 var(--y-font); color: var(--y-text-2);
+  padding: 4px 6px; border-radius: var(--y-r-xs); background: var(--y-surface-3); white-space: nowrap;
+}
+
+/* Focus: a crisp two-tone ring, keyboard only. */
+:where(#ytmgo-sidebar, #ytmgo-topbar, #ytmgo-playerbar, #ytmgo-np, #ytmgo-tabbar, .y-popover, .y-dialog-wrap) :focus-visible {
+  outline: 2px solid var(--y-focus) !important; outline-offset: 2px; box-shadow: 0 0 0 5px var(--y-base);
+}
+:where(#ytmgo-sidebar, #ytmgo-topbar, #ytmgo-playerbar, #ytmgo-np, #ytmgo-tabbar) :focus:not(:focus-visible) { outline: none; }
+
+/* Tooltips: delayed, label-sourced, never on touch. */
+@media (hover: hover) {
+  [data-tip] { --tip-x: -50%; --tip-y: -100%; --tip-top: -8px; --tip-left: 50%; }
+  [data-tip]::after {
+    content: attr(data-tip);
+    position: absolute; top: var(--tip-top); left: var(--tip-left); z-index: 5;
+    transform: translate(var(--tip-x), var(--tip-y)) scale(.94);
+    padding: 6px 9px; border-radius: var(--y-r-sm);
+    background: var(--y-surface-4); color: var(--y-text-1); box-shadow: var(--y-e-2);
+    font: var(--y-type-caption); font-weight: 600; white-space: nowrap;
+    opacity: 0; pointer-events: none;
+    transition: opacity var(--y-d-fast) var(--y-ease-out), transform var(--y-d-fast) var(--y-ease-out);
+  }
+  [data-tip]:hover::after { opacity: 1; transform: translate(var(--tip-x), var(--tip-y)) scale(1); transition-delay: 450ms; }
+  [data-tip]:active::after { opacity: 0; transition-delay: 0ms; }
+}
+
+/* One-shot feedback animations (see pulse() in core.js). */
+@keyframes y-pop { 0% { transform: scale(1); } 35% { transform: scale(1.28); } 100% { transform: scale(1); } }
+@keyframes y-spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+@keyframes y-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes y-fade { from { opacity: 0; } to { opacity: 1; } }
+.is-pop svg { animation: y-pop var(--y-d-slow) var(--y-ease-spring); }
+.is-spin svg { animation: y-spin var(--y-d-xslow) var(--y-ease-emphasized); }
+.is-entering { animation: y-enter var(--y-d-slow) var(--y-ease-out); }
+
+@media (prefers-reduced-motion: reduce) {
+  .is-pop svg, .is-spin svg, .is-entering { animation: none !important; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+
+/* ── Text across scripts ──────────────────────────────────────────
+   Strict CJK line breaking (no line may start with closing punctuation or
+   small kana), automatic
+   spacing between CJK and Latin runs, trimmed full-width punctuation at
+   line starts, and proportional (palt) glyphs in headings, where fixed
+   full-width punctuation leaves visible holes. Long Latin tokens wrap
+   instead of overflowing. Headings balance their lines. */
+:root[data-ytmgo-theme] :where(#ytmgo-sidebar, #ytmgo-topbar, #ytmgo-playerbar, #ytmgo-np, #ytmgo-np-surface, #ytmgo-tabbar, #ytmgo-greeting, .y-popover, .y-dialog-wrap, #ytmgo-toast) {
+  overflow-wrap: break-word;
+}
+:root:is([data-ytmgo-script="hans"], [data-ytmgo-script="hant"], [data-ytmgo-script="jpan"]) {
+  line-break: strict;
+  word-break: normal;
+}
+/* Spacing adjustments apply to ytmgo's own text only; the service's
+   catalogue text is left exactly as it was authored. */
+:root:is([data-ytmgo-script="hans"], [data-ytmgo-script="hant"], [data-ytmgo-script="jpan"])
+  :where(#ytmgo-sidebar, #ytmgo-topbar, #ytmgo-playerbar, #ytmgo-np, #ytmgo-np-surface, #ytmgo-tabbar, #ytmgo-greeting, .y-popover, .y-dialog-wrap, #ytmgo-toast) {
+  text-autospace: normal;
+  text-spacing-trim: space-first;
+}
+/* Japanese has no spaces; break at phrase boundaries (BudouX-style) where
+   the engine supports it, instead of inside katakana loanwords. */
+:root[data-ytmgo-script="jpan"] :where(#ytmgo-sidebar, #ytmgo-np, #ytmgo-np-surface, #ytmgo-greeting, .y-popover, .y-dialog-wrap, #ytmgo-toast) {
+  word-break: auto-phrase;
+}
+:root:is([data-ytmgo-script="hans"], [data-ytmgo-script="hant"], [data-ytmgo-script="jpan"])
+  :is(h1, h2, .y-np-title, .y-dialog-head h2, ytmusic-responsive-header-renderer h1, ytmusic-carousel-shelf-basic-header-renderer .title) {
+  font-feature-settings: "palt" 1;
+}
+:where(h1, h2, .y-np-empty-title, .y-library-empty-title, .y-np-empty-body, .y-library-empty-body, .y-popover-note) { text-wrap: balance; }
+
+/* Labels never force their container wider: they ellipsize in one-line
+   slots (navigation, rows) and wrap in free-flowing ones (menus, cards). */
+.y-label, .y-tab-label, .y-option-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.y-btn { height: auto; min-height: 36px; padding-block: var(--y-s-1); text-align: center; }
+@media (hover: hover) {
+  [data-tip]::after { white-space: normal; width: max-content; max-width: 260px; text-align: center; }
+}
+
+/* Edge-aware tooltips: right-edge controls open their tips leftward, and a
+   control's tip never shows over the popover it opened. */
+@media (hover: hover) {
+  :is(.y-topbar-actions, .y-np-head-actions, .y-pb-side) > [data-tip]:last-child,
+  .y-pb-side > .y-pb-more { --tip-left: 100%; --tip-x: -100%; }
+  [aria-expanded="true"][data-tip]::after { display: none; }
+}

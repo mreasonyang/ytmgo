@@ -1,0 +1,1168 @@
+{
+  "available": true,
+  "path": "/",
+  "theme": "dark",
+  "viewport": {
+    "height": 828,
+    "width": 420
+  },
+  "horizontalOverflow": false,
+  "controls": [
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "style-scope yt-icon-button",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Initiate search",
+      "rect": {
+        "h": 32,
+        "w": 32,
+        "x": 67,
+        "y": 10
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Podcasts",
+      "rect": {
+        "h": 32,
+        "w": 110,
+        "x": 16,
+        "y": 113
+      },
+      "selected": false,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Relax",
+      "rect": {
+        "h": 32,
+        "w": 85,
+        "x": 134,
+        "y": 113
+      },
+      "selected": false,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Energize",
+      "rect": {
+        "h": 32,
+        "w": 106,
+        "x": 227,
+        "y": 113
+      },
+      "selected": false,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Sleep",
+      "rect": {
+        "h": 32,
+        "w": 86,
+        "x": 342,
+        "y": 113
+      },
+      "selected": false,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextOutline ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeXs ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Play all",
+      "rect": {
+        "h": 32,
+        "w": 62,
+        "x": 278,
+        "y": 185
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "style-scope yt-icon-button",
+      "contrast": 14.2,
+      "disabled": true,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Previous",
+      "rect": {
+        "h": 20,
+        "w": 20,
+        "x": 350,
+        "y": 207
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "style-scope yt-icon-button",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Next",
+      "rect": {
+        "h": 20,
+        "w": 20,
+        "x": 382,
+        "y": 207
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Like",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 408,
+        "y": 249
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Action menu",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 408,
+        "y": 249
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Like",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 408,
+        "y": 313
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Action menu",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 408,
+        "y": 313
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Like",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 408,
+        "y": 377
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Action menu",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 408,
+        "y": 377
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Like",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 408,
+        "y": 441
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Action menu",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 408,
+        "y": 441
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "style-scope yt-icon-button",
+      "contrast": 14.2,
+      "disabled": true,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Previous",
+      "rect": {
+        "h": 20,
+        "w": 20,
+        "x": 350,
+        "y": 602
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "style-scope yt-icon-button",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Next",
+      "rect": {
+        "h": 20,
+        "w": 20,
+        "x": 382,
+        "y": 602
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Action menu",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 144,
+        "y": 660
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Action menu",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 344,
+        "y": 660
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        23,
+        23,
+        26
+      ],
+      "classes": "y-icon-btn y-round",
+      "contrast": 7.57,
+      "disabled": true,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Back",
+      "rect": {
+        "h": 44,
+        "w": 44,
+        "x": 8,
+        "y": 6
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        47,
+        47,
+        52
+      ],
+      "classes": "y-icon-btn y-round",
+      "contrast": 12.23,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Settings",
+      "rect": {
+        "h": 44,
+        "w": 44,
+        "x": 368,
+        "y": 6
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-tab",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Home",
+      "rect": {
+        "h": 64,
+        "w": 105,
+        "x": 0,
+        "y": 764
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-tab",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Search",
+      "rect": {
+        "h": 64,
+        "w": 105,
+        "x": 105,
+        "y": 764
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-tab",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Explore",
+      "rect": {
+        "h": 64,
+        "w": 105,
+        "x": 210,
+        "y": 764
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-tab",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Library",
+      "rect": {
+        "h": 64,
+        "w": 105,
+        "x": 315,
+        "y": 764
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        47,
+        47,
+        52
+      ],
+      "classes": "y-segment",
+      "contrast": 12.23,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Dark",
+      "rect": {
+        "h": 58,
+        "w": 99,
+        "x": 91,
+        "y": 97
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        27,
+        27,
+        30
+      ],
+      "classes": "y-segment",
+      "contrast": 7.27,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Light",
+      "rect": {
+        "h": 58,
+        "w": 99,
+        "x": 191,
+        "y": 97
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        27,
+        27,
+        30
+      ],
+      "classes": "y-segment",
+      "contrast": 7.27,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "System",
+      "rect": {
+        "h": 58,
+        "w": 99,
+        "x": 292,
+        "y": 97
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        22,
+        22,
+        24
+      ],
+      "classes": "y-language",
+      "contrast": 16.63,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Match systemen",
+      "rect": {
+        "h": 36,
+        "w": 306,
+        "x": 88,
+        "y": 198
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        22,
+        22,
+        24
+      ],
+      "classes": "y-language",
+      "contrast": 16.63,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "en",
+      "rect": {
+        "h": 36,
+        "w": 306,
+        "x": 88,
+        "y": 236
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        22,
+        22,
+        24
+      ],
+      "classes": "y-menu-item",
+      "contrast": 16.63,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Sign in to Google",
+      "rect": {
+        "h": 40,
+        "w": 314,
+        "x": 84,
+        "y": 309
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        22,
+        22,
+        24
+      ],
+      "classes": "y-menu-item",
+      "contrast": 16.63,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "YouTube Music settings",
+      "rect": {
+        "h": 40,
+        "w": 314,
+        "x": 84,
+        "y": 351
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        22,
+        22,
+        24
+      ],
+      "classes": "y-menu-item",
+      "contrast": 16.63,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Keyboard shortcuts⌘ /",
+      "rect": {
+        "h": 40,
+        "w": 314,
+        "x": 84,
+        "y": 393
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    }
+  ],
+  "lowContrast": [],
+  "layout": {
+    "#movie_player": {
+      "display": "block",
+      "h": 0,
+      "objectFit": "fill",
+      "top": "0px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "hidden",
+      "w": 0,
+      "x": 0,
+      "y": 0
+    },
+    "#ytmgo-np": {
+      "display": "block",
+      "h": 700,
+      "objectFit": "fill",
+      "top": "0px",
+      "transform": "none",
+      "translate": "24px",
+      "visibility": "hidden",
+      "w": 419.984375,
+      "x": 24.015625,
+      "y": 0
+    },
+    "#ytmgo-playerbar": {
+      "display": "none",
+      "h": 0,
+      "objectFit": "fill",
+      "top": "auto",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 0,
+      "x": 0,
+      "y": 0
+    },
+    "#ytmgo-tabbar": {
+      "display": "grid",
+      "h": 64,
+      "objectFit": "fill",
+      "top": "764px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 420,
+      "x": 0,
+      "y": 764
+    },
+    "#ytmgo-topbar": {
+      "display": "flex",
+      "h": 56,
+      "objectFit": "fill",
+      "top": "0px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 420,
+      "x": 0,
+      "y": 0
+    },
+    ".html5-video-container": {
+      "display": "block",
+      "h": 0,
+      "objectFit": "fill",
+      "top": "0px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "hidden",
+      "w": 0,
+      "x": 0,
+      "y": 0
+    },
+    ".y-dialog": null,
+    ".y-np-art": {
+      "display": "none",
+      "h": 0,
+      "objectFit": "fill",
+      "top": "auto",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "hidden",
+      "w": 0,
+      "x": 0,
+      "y": 0
+    },
+    ".y-np-meta": {
+      "display": "none",
+      "h": 0,
+      "objectFit": "fill",
+      "top": "56px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "hidden",
+      "w": 0,
+      "x": 0,
+      "y": 0
+    },
+    ".y-pb-progress": {
+      "display": "block",
+      "h": 0,
+      "objectFit": "fill",
+      "top": "auto",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 0,
+      "x": 0,
+      "y": 0
+    },
+    ".y-pb-transport": {
+      "display": "flex",
+      "h": 0,
+      "objectFit": "fill",
+      "top": "auto",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 0,
+      "x": 0,
+      "y": 0
+    },
+    ".y-popover": {
+      "display": "block",
+      "h": 419.375,
+      "objectFit": "fill",
+      "top": "55.825474px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 338.109375,
+      "x": 71.71875,
+      "y": 55.8125
+    },
+    "video": {
+      "display": "block",
+      "h": 0,
+      "objectFit": "cover",
+      "top": "0px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "hidden",
+      "w": 0,
+      "x": 0,
+      "y": 0
+    },
+    "ytmusic-player#player": {
+      "display": "block",
+      "h": 0,
+      "objectFit": "fill",
+      "top": "auto",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "hidden",
+      "w": 0,
+      "x": 0,
+      "y": 0
+    },
+    "ytmusic-player-page": {
+      "display": "block",
+      "h": 644,
+      "objectFit": "fill",
+      "top": "56px",
+      "transform": "none",
+      "translate": "24px",
+      "visibility": "hidden",
+      "w": 419.984375,
+      "x": 24.015625,
+      "y": 56
+    },
+    "ytmusic-search-box": {
+      "display": "block",
+      "h": 46,
+      "objectFit": "fill",
+      "top": "0px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 177.34375,
+      "x": 56,
+      "y": 5
+    }
+  },
+  "state": {
+    "active": "false",
+    "media": "audio",
+    "panel": "closed",
+    "script": "latn",
+    "theme": "dark",
+    "view": "browse"
+  },
+  "playback": {
+    "currentTime": 0,
+    "duration": null,
+    "ended": false,
+    "muted": false,
+    "paused": true,
+    "videoHeight": 0,
+    "videoWidth": 0,
+    "volume": 1
+  },
+  "labels": [
+    {
+      "clientWidth": 99,
+      "label": "Dark",
+      "rect": {
+        "display": "grid",
+        "h": 58.1875,
+        "objectFit": "fill",
+        "top": "auto",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 98.703125,
+        "x": 90.71875,
+        "y": 97.109375
+      },
+      "scrollWidth": 99
+    },
+    {
+      "clientWidth": 99,
+      "label": "Light",
+      "rect": {
+        "display": "grid",
+        "h": 58.1875,
+        "objectFit": "fill",
+        "top": "auto",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 98.703125,
+        "x": 191.421875,
+        "y": 97.109375
+      },
+      "scrollWidth": 99
+    },
+    {
+      "clientWidth": 99,
+      "label": "System",
+      "rect": {
+        "display": "grid",
+        "h": 58.1875,
+        "objectFit": "fill",
+        "top": "auto",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 98.703125,
+        "x": 292.125,
+        "y": 97.109375
+      },
+      "scrollWidth": 99
+    },
+    {
+      "clientWidth": 306,
+      "label": "Match systemen",
+      "rect": {
+        "display": "flex",
+        "h": 36,
+        "objectFit": "fill",
+        "top": "auto",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 306.109375,
+        "x": 87.71875,
+        "y": 197.59375
+      },
+      "scrollWidth": 306
+    },
+    {
+      "clientWidth": 306,
+      "label": "en",
+      "rect": {
+        "display": "flex",
+        "h": 36,
+        "objectFit": "fill",
+        "top": "auto",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 306.109375,
+        "x": 87.71875,
+        "y": 235.59375
+      },
+      "scrollWidth": 306
+    },
+    {
+      "clientWidth": 314,
+      "label": "Sign in to Google",
+      "rect": {
+        "display": "flex",
+        "h": 40,
+        "objectFit": "fill",
+        "top": "auto",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 314.109375,
+        "x": 83.71875,
+        "y": 309.390625
+      },
+      "scrollWidth": 314
+    },
+    {
+      "clientWidth": 314,
+      "label": "YouTube Music settings",
+      "rect": {
+        "display": "flex",
+        "h": 40,
+        "objectFit": "fill",
+        "top": "auto",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 314.109375,
+        "x": 83.71875,
+        "y": 351.390625
+      },
+      "scrollWidth": 314
+    },
+    {
+      "clientWidth": 314,
+      "label": "Keyboard shortcuts⌘ /",
+      "rect": {
+        "display": "flex",
+        "h": 40,
+        "objectFit": "fill",
+        "top": "auto",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 314.109375,
+        "x": 83.71875,
+        "y": 393.390625
+      },
+      "scrollWidth": 314
+    }
+  ]
+}

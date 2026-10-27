@@ -1,0 +1,54 @@
+{
+  "baseline": "55880f11d28a833e1ed138c575ea79b750919531",
+  "version": "0.3.0",
+  "platform": "macOS 27.0.1 arm64",
+  "native_language_exits": [
+    {
+      "from": "system/en",
+      "to": "zh-Hans",
+      "entry": "shell settings",
+      "result": "process exited; saved language visible after relaunch"
+    },
+    {
+      "from": "zh-Hans",
+      "to": "ja",
+      "entry": "native View language menu",
+      "result": "process exited; saved language visible after relaunch"
+    },
+    {
+      "from": "ja",
+      "to": "zh-Hant",
+      "entry": "shell settings",
+      "result": "process exited; saved language visible after relaunch"
+    },
+    {
+      "from": "zh-Hant",
+      "to": "system/en",
+      "entry": "native View language menu",
+      "result": "process exited; saved language visible after relaunch"
+    }
+  ],
+  "same_locale_choice": {
+    "initial": "system/en",
+    "selection": "en",
+    "saved_named_preference": "en",
+    "reopened_picker": "system selected, en unselected",
+    "after_clicking_system_in_reopened_picker": "saved named preference remained en",
+    "recovery": "native View > Language > Match System saved system"
+  },
+  "login_entry": {
+    "separate_window": true,
+    "email_entry_present": true,
+    "next_button_present": true,
+    "credentials_entered": false,
+    "closing_returned_to_main": true
+  },
+  "window_close": {
+    "process_retained_after_cmd_w": true,
+    "reactivation_restored_main": true
+  },
+  "final_preferences": {
+    "language": "system",
+    "appearance": "dark"
+  }
+}

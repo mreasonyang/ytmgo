@@ -1,0 +1,2058 @@
+{
+  "available": true,
+  "path": "/watch",
+  "theme": "dark",
+  "viewport": {
+    "height": 873,
+    "width": 1440
+  },
+  "horizontalOverflow": false,
+  "controls": [
+    {
+      "bg": [
+        47,
+        47,
+        52
+      ],
+      "classes": "style-scope yt-icon-button",
+      "contrast": 12.23,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Initiate search",
+      "rect": {
+        "h": 32,
+        "w": 32,
+        "x": 403,
+        "y": 22
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        47,
+        47,
+        52
+      ],
+      "classes": "style-scope yt-icon-button",
+      "contrast": 12.23,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Clear",
+      "rect": {
+        "h": 32,
+        "w": 32,
+        "x": 790,
+        "y": 22
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Videos",
+      "rect": {
+        "h": 32,
+        "w": 94,
+        "x": 328,
+        "y": 84
+      },
+      "selected": false,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Songs",
+      "rect": {
+        "h": 32,
+        "w": 90,
+        "x": 430,
+        "y": 84
+      },
+      "selected": false,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Artists",
+      "rect": {
+        "h": 32,
+        "w": 93,
+        "x": 529,
+        "y": 84
+      },
+      "selected": false,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Albums",
+      "rect": {
+        "h": 32,
+        "w": 99,
+        "x": 630,
+        "y": 84
+      },
+      "selected": false,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Community playlists",
+      "rect": {
+        "h": 32,
+        "w": 185,
+        "x": 737,
+        "y": 84
+      },
+      "selected": false,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Episodes",
+      "rect": {
+        "h": 32,
+        "w": 109,
+        "x": 930,
+        "y": 84
+      },
+      "selected": false,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Profiles",
+      "rect": {
+        "h": 32,
+        "w": 100,
+        "x": 1047,
+        "y": 84
+      },
+      "selected": false,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Featured playlists",
+      "rect": {
+        "h": 32,
+        "w": 168,
+        "x": 1155,
+        "y": 84
+      },
+      "selected": false,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Podcasts",
+      "rect": {
+        "h": 32,
+        "w": 110,
+        "x": 1331,
+        "y": 84
+      },
+      "selected": false,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        255,
+        90,
+        79
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextFilled ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconLeading ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 6.4,
+      "disabled": false,
+      "fg": [
+        11,
+        11,
+        12
+      ],
+      "label": "Play",
+      "rect": {
+        "h": 40,
+        "w": 117,
+        "x": 480,
+        "y": 318
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        27,
+        27,
+        30
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextOutline ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconLeading ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 15.78,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Save to playlist",
+      "rect": {
+        "h": 40,
+        "w": 117,
+        "x": 613,
+        "y": 318
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        27,
+        27,
+        30
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 15.78,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Action menu",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 730,
+        "y": 164
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        27,
+        27,
+        30
+      ],
+      "classes": "style-scope ytmusic-card-shelf-renderer",
+      "contrast": 8.92,
+      "disabled": false,
+      "fg": [
+        187,
+        187,
+        188
+      ],
+      "label": "More from YouTube",
+      "rect": {
+        "h": 17,
+        "w": 398,
+        "x": 794,
+        "y": 200
+      },
+      "selected": false,
+      "tag": "YTMUSIC-MESSAGE-RENDERER"
+    },
+    {
+      "bg": [
+        27,
+        27,
+        30
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 15.78,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Action menu",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 1172,
+        "y": 241
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        27,
+        27,
+        30
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 15.78,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Action menu",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 1172,
+        "y": 313
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        27,
+        27,
+        30
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 15.78,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Action menu",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 1172,
+        "y": 385
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Action menu",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 1176,
+        "y": 521
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Action menu",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 1176,
+        "y": 601
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Action menu",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 1176,
+        "y": 681
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Action menu",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 1176,
+        "y": 761
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Action menu",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 1176,
+        "y": 841
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        47,
+        47,
+        52
+      ],
+      "classes": "tab-header style-scope ytmusic-player-page iron-selected",
+      "contrast": 12.23,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Up next",
+      "rect": {
+        "h": 30,
+        "w": 100,
+        "x": 959,
+        "y": 115
+      },
+      "selected": true,
+      "tag": "TP-YT-PAPER-TAB"
+    },
+    {
+      "bg": [
+        27,
+        27,
+        30
+      ],
+      "classes": "tab-header style-scope ytmusic-player-page",
+      "contrast": 7.27,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Lyrics",
+      "rect": {
+        "h": 30,
+        "w": 88,
+        "x": 1059,
+        "y": 115
+      },
+      "selected": false,
+      "tag": "TP-YT-PAPER-TAB"
+    },
+    {
+      "bg": [
+        27,
+        27,
+        30
+      ],
+      "classes": "tab-header style-scope ytmusic-player-page",
+      "contrast": 7.27,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Comments",
+      "rect": {
+        "h": 30,
+        "w": 122,
+        "x": 1148,
+        "y": 115
+      },
+      "selected": false,
+      "tag": "TP-YT-PAPER-TAB"
+    },
+    {
+      "bg": [
+        27,
+        27,
+        30
+      ],
+      "classes": "tab-header style-scope ytmusic-player-page",
+      "contrast": 7.27,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Related",
+      "rect": {
+        "h": 30,
+        "w": 100,
+        "x": 1269,
+        "y": 115
+      },
+      "selected": false,
+      "tag": "TP-YT-PAPER-TAB"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Save",
+      "rect": {
+        "h": 32,
+        "w": 95,
+        "x": 1269,
+        "y": 185
+      },
+      "selected": false,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        60,
+        34,
+        35
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextIconButton ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 13.37,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Action menu",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 1305,
+        "y": 311
+      },
+      "selected": true,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        245,
+        245,
+        247
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 17.18,
+      "disabled": false,
+      "fg": [
+        18,
+        18,
+        20
+      ],
+      "label": "All",
+      "rect": {
+        "h": 32,
+        "w": 65,
+        "x": 956,
+        "y": 414
+      },
+      "selected": true,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Popular",
+      "rect": {
+        "h": 32,
+        "w": 100,
+        "x": 1029,
+        "y": 414
+      },
+      "selected": false,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Discover",
+      "rect": {
+        "h": 32,
+        "w": 107,
+        "x": 1137,
+        "y": 414
+      },
+      "selected": false,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Deep cuts",
+      "rect": {
+        "h": 32,
+        "w": 116,
+        "x": 1252,
+        "y": 414
+      },
+      "selected": false,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "yt-simple-endpoint style-scope ytmusic-chip-cloud-chip-renderer",
+      "contrast": 14.2,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Party",
+      "rect": {
+        "h": 32,
+        "w": 84,
+        "x": 1376,
+        "y": 414
+      },
+      "selected": false,
+      "tag": "A"
+    },
+    {
+      "bg": [
+        18,
+        18,
+        20
+      ],
+      "classes": "y-brand-link",
+      "contrast": 17.18,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "ytmgo Home",
+      "rect": {
+        "h": 32,
+        "w": 107,
+        "x": 28,
+        "y": 24
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        18,
+        18,
+        20
+      ],
+      "classes": "y-icon-btn y-side-toggle",
+      "contrast": 7.92,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Collapse sidebar",
+      "rect": {
+        "h": 32,
+        "w": 32,
+        "x": 240,
+        "y": 24
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        18,
+        18,
+        20
+      ],
+      "classes": "y-nav-item",
+      "contrast": 7.92,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Home",
+      "rect": {
+        "h": 44,
+        "w": 264,
+        "x": 16,
+        "y": 70
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        18,
+        18,
+        20
+      ],
+      "classes": "y-nav-item",
+      "contrast": 7.92,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Explore",
+      "rect": {
+        "h": 44,
+        "w": 264,
+        "x": 16,
+        "y": 116
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        18,
+        18,
+        20
+      ],
+      "classes": "y-nav-item",
+      "contrast": 7.92,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Library",
+      "rect": {
+        "h": 44,
+        "w": 264,
+        "x": 16,
+        "y": 162
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        18,
+        18,
+        20
+      ],
+      "classes": "y-library-title",
+      "contrast": 7.92,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Your Library",
+      "rect": {
+        "h": 44,
+        "w": 264,
+        "x": 16,
+        "y": 230
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        245,
+        245,
+        247
+      ],
+      "classes": "y-btn y-btn-inverse",
+      "contrast": 17.18,
+      "disabled": false,
+      "fg": [
+        18,
+        18,
+        20
+      ],
+      "label": "Sign in",
+      "rect": {
+        "h": 36,
+        "w": 86,
+        "x": 40,
+        "y": 385
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        23,
+        23,
+        26
+      ],
+      "classes": "y-icon-btn y-round",
+      "contrast": 7.57,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Back",
+      "rect": {
+        "h": 32,
+        "w": 32,
+        "x": 312,
+        "y": 24
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        23,
+        23,
+        26
+      ],
+      "classes": "y-icon-btn y-round y-forward",
+      "contrast": 7.57,
+      "disabled": true,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Forward",
+      "rect": {
+        "h": 32,
+        "w": 32,
+        "x": 352,
+        "y": 24
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        23,
+        23,
+        26
+      ],
+      "classes": "y-icon-btn y-round",
+      "contrast": 7.57,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Settings",
+      "rect": {
+        "h": 32,
+        "w": 32,
+        "x": 1016,
+        "y": 24
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn y-round y-np-collapse",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Exit immersive mode",
+      "rect": {
+        "h": 32,
+        "w": 32,
+        "x": 56,
+        "y": 20
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-link",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Daft Punk",
+      "rect": {
+        "h": 23,
+        "w": 83,
+        "x": 431,
+        "y": 630
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn y-like",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Like",
+      "rect": {
+        "h": 36,
+        "w": 36,
+        "x": 434,
+        "y": 666
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "More actions",
+      "rect": {
+        "h": 36,
+        "w": 36,
+        "x": 474,
+        "y": 666
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "y-pb-art has-art",
+      "contrast": 4.17,
+      "disabled": false,
+      "fg": [
+        132,
+        132,
+        140
+      ],
+      "label": "Open Now Playing",
+      "rect": {
+        "h": 56,
+        "w": 56,
+        "x": 16,
+        "y": 803
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-pb-title",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Around the World",
+      "rect": {
+        "h": 18,
+        "w": 118,
+        "x": 84,
+        "y": 812
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-link",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Daft Punk",
+      "rect": {
+        "h": 18,
+        "w": 61,
+        "x": 84,
+        "y": 832
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn y-like",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Like",
+      "rect": {
+        "h": 32,
+        "w": 32,
+        "x": 214,
+        "y": 815
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Shuffle queue",
+      "rect": {
+        "h": 32,
+        "w": 32,
+        "x": 612,
+        "y": 805
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Previous",
+      "rect": {
+        "h": 32,
+        "w": 32,
+        "x": 656,
+        "y": 805
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        245,
+        245,
+        247
+      ],
+      "classes": "y-play",
+      "contrast": 17.18,
+      "disabled": false,
+      "fg": [
+        18,
+        18,
+        20
+      ],
+      "label": "Pause",
+      "rect": {
+        "h": 40,
+        "w": 40,
+        "x": 700,
+        "y": 801
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Next",
+      "rect": {
+        "h": 32,
+        "w": 32,
+        "x": 752,
+        "y": 805
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn y-toggle",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Repeat: off",
+      "rect": {
+        "h": 32,
+        "w": 32,
+        "x": 796,
+        "y": 805
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn y-toggle",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Lyrics",
+      "rect": {
+        "h": 32,
+        "w": 32,
+        "x": 1148,
+        "y": 815
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn y-toggle",
+      "contrast": 6.62,
+      "disabled": false,
+      "fg": [
+        255,
+        90,
+        79
+      ],
+      "label": "Queue",
+      "rect": {
+        "h": 32,
+        "w": 32,
+        "x": 1184,
+        "y": 815
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Mute",
+      "rect": {
+        "h": 32,
+        "w": 32,
+        "x": 1220,
+        "y": 815
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn y-pb-more",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "More actions",
+      "rect": {
+        "h": 32,
+        "w": 32,
+        "x": 1356,
+        "y": 815
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn y-toggle",
+      "contrast": 6.62,
+      "disabled": false,
+      "fg": [
+        255,
+        90,
+        79
+      ],
+      "label": "Exit immersive mode",
+      "rect": {
+        "h": 32,
+        "w": 32,
+        "x": 1392,
+        "y": 815
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    }
+  ],
+  "lowContrast": [
+    {
+      "bg": [
+        36,
+        36,
+        40
+      ],
+      "classes": "y-pb-art has-art",
+      "contrast": 4.17,
+      "disabled": false,
+      "fg": [
+        132,
+        132,
+        140
+      ],
+      "label": "Open Now Playing",
+      "rect": {
+        "h": 56,
+        "w": 56,
+        "x": 16,
+        "y": 803
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    }
+  ],
+  "layout": {
+    "#movie_player": {
+      "display": "block",
+      "h": 935.96875,
+      "objectFit": "fill",
+      "top": "0px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 831.984375,
+      "x": 56,
+      "y": 96
+    },
+    "#ytmgo-np": {
+      "display": "block",
+      "h": 789,
+      "objectFit": "fill",
+      "top": "0px",
+      "transform": "none",
+      "translate": "0px",
+      "visibility": "visible",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "#ytmgo-playerbar": {
+      "display": "grid",
+      "h": 84,
+      "objectFit": "fill",
+      "top": "789px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 1440,
+      "x": 0,
+      "y": 789
+    },
+    "#ytmgo-tabbar": {
+      "display": "none",
+      "h": 0,
+      "objectFit": "fill",
+      "top": "auto",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 0,
+      "x": 0,
+      "y": 0
+    },
+    "#ytmgo-topbar": {
+      "display": "flex",
+      "h": 64,
+      "objectFit": "fill",
+      "top": "8px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 768,
+      "x": 296,
+      "y": 8
+    },
+    ".html5-video-container": {
+      "display": "block",
+      "h": 935.96875,
+      "objectFit": "fill",
+      "top": "0px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 831.984375,
+      "x": 56,
+      "y": 96
+    },
+    ".y-dialog": null,
+    ".y-np-art": {
+      "display": "none",
+      "h": 0,
+      "objectFit": "fill",
+      "top": "auto",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 0,
+      "x": 0,
+      "y": 0
+    },
+    ".y-np-meta": {
+      "display": "flex",
+      "h": 96,
+      "objectFit": "fill",
+      "top": "588px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 831.984375,
+      "x": 56,
+      "y": 588
+    },
+    ".y-pb-progress": {
+      "display": "grid",
+      "h": 16.796875,
+      "objectFit": "fill",
+      "top": "auto",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 566.578125,
+      "x": 436.703125,
+      "y": 844.59375
+    },
+    ".y-pb-transport": {
+      "display": "flex",
+      "h": 40,
+      "objectFit": "fill",
+      "top": "auto",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 216,
+      "x": 611.984375,
+      "y": 800.59375
+    },
+    ".y-popover": null,
+    "video": {
+      "display": "block",
+      "h": 935.96875,
+      "objectFit": "contain",
+      "top": "0px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 831.984375,
+      "x": 56,
+      "y": 96
+    },
+    "ytmusic-player#player": {
+      "display": "block",
+      "h": 467.984375,
+      "objectFit": "fill",
+      "top": "0px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 831.984375,
+      "x": 56,
+      "y": 96
+    },
+    "ytmusic-player-page": {
+      "display": "block",
+      "h": 717,
+      "objectFit": "fill",
+      "top": "72px",
+      "transform": "none",
+      "translate": "0px",
+      "visibility": "visible",
+      "w": 1440,
+      "x": 0,
+      "y": 72
+    },
+    "ytmusic-search-box": {
+      "display": "block",
+      "h": 46,
+      "objectFit": "fill",
+      "top": "-23px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 440,
+      "x": 392,
+      "y": 17
+    }
+  },
+  "state": {
+    "active": "true",
+    "media": "video",
+    "panel": "open",
+    "script": "latn",
+    "theme": "dark",
+    "view": "immersive"
+  },
+  "playback": {
+    "currentTime": 25.382761189,
+    "duration": 241.621,
+    "ended": false,
+    "muted": false,
+    "paused": false,
+    "videoHeight": 480,
+    "videoWidth": 640,
+    "volume": 0.44
+  },
+  "labels": [
+    {
+      "clientWidth": 32,
+      "label": "Exit immersive mode",
+      "rect": {
+        "display": "grid",
+        "h": 32,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 32,
+        "x": 56,
+        "y": 20
+      },
+      "scrollWidth": 86
+    },
+    {
+      "clientWidth": 83,
+      "label": "Daft Punk",
+      "rect": {
+        "display": "inline-block",
+        "h": 23.390625,
+        "objectFit": "fill",
+        "top": "auto",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 82.765625,
+        "x": 430.609375,
+        "y": 630.421875
+      },
+      "scrollWidth": 83
+    },
+    {
+      "clientWidth": 36,
+      "label": "Like",
+      "rect": {
+        "display": "grid",
+        "h": 36,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 36,
+        "x": 433.984375,
+        "y": 665.8125
+      },
+      "scrollWidth": 38
+    },
+    {
+      "clientWidth": 36,
+      "label": "More actions",
+      "rect": {
+        "display": "grid",
+        "h": 36,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 36,
+        "x": 473.984375,
+        "y": 665.8125
+      },
+      "scrollWidth": 65
+    },
+    {
+      "clientWidth": 56,
+      "label": "Open Now Playing",
+      "rect": {
+        "display": "grid",
+        "h": 56,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 56,
+        "x": 16,
+        "y": 803
+      },
+      "scrollWidth": 56
+    },
+    {
+      "clientWidth": 118,
+      "label": "Around the World",
+      "rect": {
+        "display": "block",
+        "h": 18.1875,
+        "objectFit": "fill",
+        "top": "auto",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 118.203125,
+        "x": 84,
+        "y": 811.8125
+      },
+      "scrollWidth": 118
+    },
+    {
+      "clientWidth": 61,
+      "label": "Daft Punk",
+      "rect": {
+        "display": "inline-block",
+        "h": 18.1875,
+        "objectFit": "fill",
+        "top": "auto",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 60.875,
+        "x": 84,
+        "y": 832
+      },
+      "scrollWidth": 61
+    },
+    {
+      "clientWidth": 32,
+      "label": "Like",
+      "rect": {
+        "display": "grid",
+        "h": 32,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 32,
+        "x": 214.203125,
+        "y": 815
+      },
+      "scrollWidth": 36
+    },
+    {
+      "clientWidth": 32,
+      "label": "Shuffle queue",
+      "rect": {
+        "display": "grid",
+        "h": 32,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 32,
+        "x": 611.984375,
+        "y": 804.59375
+      },
+      "scrollWidth": 66
+    },
+    {
+      "clientWidth": 32,
+      "label": "Previous",
+      "rect": {
+        "display": "grid",
+        "h": 32,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 32,
+        "x": 655.984375,
+        "y": 804.59375
+      },
+      "scrollWidth": 50
+    },
+    {
+      "clientWidth": 40,
+      "label": "Pause",
+      "rect": {
+        "display": "grid",
+        "h": 40,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 40,
+        "x": 699.984375,
+        "y": 800.59375
+      },
+      "scrollWidth": 46
+    },
+    {
+      "clientWidth": 32,
+      "label": "Next",
+      "rect": {
+        "display": "grid",
+        "h": 32,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 32,
+        "x": 751.984375,
+        "y": 804.59375
+      },
+      "scrollWidth": 38
+    },
+    {
+      "clientWidth": 32,
+      "label": "Repeat: off",
+      "rect": {
+        "display": "grid",
+        "h": 32,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 32,
+        "x": 795.984375,
+        "y": 804.59375
+      },
+      "scrollWidth": 57
+    },
+    {
+      "clientWidth": 463,
+      "label": "Playback position",
+      "rect": {
+        "display": "flex",
+        "h": 16,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 462.578125,
+        "x": 488.703125,
+        "y": 844.984375
+      },
+      "scrollWidth": 463
+    },
+    {
+      "clientWidth": 32,
+      "label": "Lyrics",
+      "rect": {
+        "display": "grid",
+        "h": 32,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 32,
+        "x": 1147.984375,
+        "y": 815
+      },
+      "scrollWidth": 42
+    },
+    {
+      "clientWidth": 32,
+      "label": "Queue",
+      "rect": {
+        "display": "grid",
+        "h": 32,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 32,
+        "x": 1183.984375,
+        "y": 815
+      },
+      "scrollWidth": 44
+    },
+    {
+      "clientWidth": 32,
+      "label": "Mute",
+      "rect": {
+        "display": "grid",
+        "h": 32,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 32,
+        "x": 1219.984375,
+        "y": 815
+      },
+      "scrollWidth": 41
+    },
+    {
+      "clientWidth": 96,
+      "label": "Volume",
+      "rect": {
+        "display": "flex",
+        "h": 16,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 96,
+        "x": 1255.984375,
+        "y": 823
+      },
+      "scrollWidth": 96
+    },
+    {
+      "clientWidth": 32,
+      "label": "More actions",
+      "rect": {
+        "display": "grid",
+        "h": 32,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 32,
+        "x": 1355.984375,
+        "y": 815
+      },
+      "scrollWidth": 32
+    },
+    {
+      "clientWidth": 32,
+      "label": "Exit immersive mode",
+      "rect": {
+        "display": "grid",
+        "h": 32,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 32,
+        "x": 1391.984375,
+        "y": 815
+      },
+      "scrollWidth": 32
+    }
+  ]
+}

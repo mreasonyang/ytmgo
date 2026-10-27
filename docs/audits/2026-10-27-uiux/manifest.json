@@ -1,0 +1,117 @@
+{
+  "audited_commit": "55880f11d28a833e1ed138c575ea79b750919531",
+  "version": "0.3.0",
+  "platform": "macOS 27.0.1 arm64",
+  "files": [
+    {
+      "path": "screenshots/02-native-zh-hans-dark.jpg",
+      "bytes": 479191,
+      "sha256": "2d7763857971fdcf92e43f66e6be9e8bbbb3d29014b1c36ac630f97708eb2b6d"
+    },
+    {
+      "path": "screenshots/07-ja-light-immersive.jpg",
+      "bytes": 377133,
+      "sha256": "8d6f901b75ee4772610ef402178fe08a5992d4b0297ffede951d5c7d3977d83c"
+    },
+    {
+      "path": "screenshots/12-ja-compact-immersive-minheight.jpg",
+      "bytes": 150644,
+      "sha256": "f7ae62ce2697a0ddd6847c2f13c3a67d8fd847f2458fa3be84e7d36d8a8dff98"
+    },
+    {
+      "path": "screenshots/13-ja-immersive-nav-no-visible-change.jpg",
+      "bytes": 171100,
+      "sha256": "fd332e0fb4780a68b12fb5c5e0823848f20e965b0ea8effed3f79add920dda25"
+    },
+    {
+      "path": "screenshots/14-ja-after-immersive-nav.jpg",
+      "bytes": 193688,
+      "sha256": "0a867134a4a76d12d67286bfc97e1a5e2c1150f4b76af028d5761e56427abe6d"
+    },
+    {
+      "path": "screenshots/15-ja-settings-system-hint.jpg",
+      "bytes": 217374,
+      "sha256": "3743587a3914914bd3c01c2f2859a327c42ba8bffa63287efa6cee831ea9f8da"
+    },
+    {
+      "path": "screenshots/16-hant-shortcuts.jpg",
+      "bytes": 134665,
+      "sha256": "9a465afe58bba9ab483d063b4fdfd66763ec9fe43c027b8fb77eb43c6b810b2d"
+    },
+    {
+      "path": "screenshots/18-probe-420-home-dark.jpg",
+      "bytes": 161071,
+      "sha256": "69db85d7bc193440210cf25f4271769cee7293642f615aea36f5f46fd53b6a92"
+    },
+    {
+      "path": "screenshots/22-probe-420-playing.jpg",
+      "bytes": 60010,
+      "sha256": "5356b202eaba007dc9abab3789c24e21d15aaa82e3e93a845ab55690018d5d7e"
+    },
+    {
+      "path": "screenshots/23-probe-420-immersive.jpg",
+      "bytes": 225907,
+      "sha256": "2986f1c59a4df8f26e2ab71dcf538d36c5b67e2bf2dd985059ba1d598d69552f"
+    },
+    {
+      "path": "screenshots/24-probe-wide-video-cropped-dark.jpg",
+      "bytes": 472110,
+      "sha256": "86eec0dab804b589c80a0bf19ffdb7b366305cc03550b4c0abdfec0cd4961982"
+    },
+    {
+      "path": "screenshots/25-probe-wide-immersive-video-cropped.jpg",
+      "bytes": 402471,
+      "sha256": "aa7d0e24ae3da75f62e83dee6e0c3184ce6731b2988e1bbb24c43b9640bdd0dd"
+    },
+    {
+      "path": "screenshots/26-probe-track-menu-light.jpg",
+      "bytes": 473722,
+      "sha256": "addb1fbaef82dc6a9719270e6342a84680ccf36ce4adfd4abab0d3c16123755a"
+    },
+    {
+      "path": "screenshots/27-probe-1100-overlay-light.jpg",
+      "bytes": 299381,
+      "sha256": "a94b202216b7c8b49140dd7763f16b5b9bd36f2a90867e3c34f2e7a000974113"
+    },
+    {
+      "path": "screenshots/28-native-same-locale-stale-choice.jpg",
+      "bytes": 233452,
+      "sha256": "0f9d54e453be13e2dab226dd4f12aeda302e2f590daee48b97b160cfc947b0c3"
+    },
+    {
+      "path": "layout/wide-video-dark.json",
+      "bytes": 39959,
+      "sha256": "118efe2917ea3ba528a7e20e47fa875eb4db384220fa2cf38446292f54f79839"
+    },
+    {
+      "path": "layout/wide-immersive-video-dark.json",
+      "bytes": 39726,
+      "sha256": "dfc81f42c40982af9eb4f143106e6e34fbe977f03029d67044bafec809185f55"
+    },
+    {
+      "path": "layout/420-immersive-ad.json",
+      "bytes": 13923,
+      "sha256": "6f20f89c37a36d9e3b447d0dd96b83232730b4a1b7232a845a201cda7879660c"
+    },
+    {
+      "path": "layout/wide-track-menu-light.json",
+      "bytes": 47779,
+      "sha256": "d4d1ff07e173c3d75a305bbec083a81b63382947a012c5bb21709113cc0f1175"
+    },
+    {
+      "path": "layout/1100-panel-light.json",
+      "bytes": 38367,
+      "sha256": "f2270444966edf63d2480aadfd7e7a7fcba4ddc4f26b9b3da9c1a65f5fb0763a"
+    },
+    {
+      "path": "layout/420-settings.json",
+      "bytes": 23295,
+      "sha256": "884db221841cca946ee7f7094bcf63fadec424964163546c1cb05a8731e26131"
+    },
+    {
+      "path": "native-observations.json",
+      "bytes": 1539,
+      "sha256": "aaefbcd431ca18a2188940af2bc917ed84d505c24042b70e05d48a5a235274b7"
+    }
+  ]
+}

@@ -1,0 +1,742 @@
+{
+  "available": true,
+  "path": "/watch",
+  "theme": "dark",
+  "viewport": {
+    "height": 828,
+    "width": 420
+  },
+  "horizontalOverflow": false,
+  "controls": [
+    {
+      "bg": [
+        22,
+        22,
+        24
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 16.63,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "No thanks",
+      "rect": {
+        "h": 40,
+        "w": 96,
+        "x": 152,
+        "y": 612
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        255,
+        90,
+        79
+      ],
+      "classes": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextFilled ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+      "contrast": 6.4,
+      "disabled": false,
+      "fg": [
+        11,
+        11,
+        12
+      ],
+      "label": "1 month free",
+      "rect": {
+        "h": 40,
+        "w": 112,
+        "x": 256,
+        "y": 612
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        23,
+        23,
+        26
+      ],
+      "classes": "y-icon-btn y-round",
+      "contrast": 7.57,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Back",
+      "rect": {
+        "h": 44,
+        "w": 44,
+        "x": 8,
+        "y": 6
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        23,
+        23,
+        26
+      ],
+      "classes": "y-icon-btn y-round",
+      "contrast": 7.57,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Settings",
+      "rect": {
+        "h": 44,
+        "w": 44,
+        "x": 368,
+        "y": 6
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn y-round y-np-collapse",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Exit immersive mode",
+      "rect": {
+        "h": 44,
+        "w": 44,
+        "x": 16,
+        "y": 6
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn y-like",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Like",
+      "rect": {
+        "h": 36,
+        "w": 36,
+        "x": 320,
+        "y": 462
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "More actions",
+      "rect": {
+        "h": 36,
+        "w": 36,
+        "x": 360,
+        "y": 462
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Shuffle queue",
+      "rect": {
+        "h": 44,
+        "w": 44,
+        "x": 24,
+        "y": 701
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Previous",
+      "rect": {
+        "h": 44,
+        "w": 44,
+        "x": 101,
+        "y": 701
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        245,
+        245,
+        247
+      ],
+      "classes": "y-play",
+      "contrast": 17.18,
+      "disabled": false,
+      "fg": [
+        18,
+        18,
+        20
+      ],
+      "label": "Pause",
+      "rect": {
+        "h": 64,
+        "w": 64,
+        "x": 178,
+        "y": 691
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Next",
+      "rect": {
+        "h": 44,
+        "w": 44,
+        "x": 275,
+        "y": 701
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-icon-btn y-toggle",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Repeat: off",
+      "rect": {
+        "h": 44,
+        "w": 44,
+        "x": 352,
+        "y": 701
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-tab",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Home",
+      "rect": {
+        "h": 64,
+        "w": 105,
+        "x": 0,
+        "y": 764
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-tab",
+      "contrast": 18.71,
+      "disabled": false,
+      "fg": [
+        245,
+        245,
+        247
+      ],
+      "label": "Search",
+      "rect": {
+        "h": 64,
+        "w": 105,
+        "x": 105,
+        "y": 764
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-tab",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Explore",
+      "rect": {
+        "h": 64,
+        "w": 105,
+        "x": 210,
+        "y": 764
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    },
+    {
+      "bg": [
+        5,
+        5,
+        6
+      ],
+      "classes": "y-tab",
+      "contrast": 8.62,
+      "disabled": false,
+      "fg": [
+        168,
+        168,
+        175
+      ],
+      "label": "Library",
+      "rect": {
+        "h": 64,
+        "w": 105,
+        "x": 315,
+        "y": 764
+      },
+      "selected": false,
+      "tag": "BUTTON"
+    }
+  ],
+  "lowContrast": [],
+  "layout": {
+    "#movie_player": {
+      "display": "block",
+      "h": 0,
+      "objectFit": "fill",
+      "top": "0px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 0,
+      "x": 0,
+      "y": 0
+    },
+    "#ytmgo-np": {
+      "display": "block",
+      "h": 764,
+      "objectFit": "fill",
+      "top": "0px",
+      "transform": "none",
+      "translate": "0px",
+      "visibility": "visible",
+      "w": 420,
+      "x": 0,
+      "y": 0
+    },
+    "#ytmgo-playerbar": {
+      "display": "grid",
+      "h": 132,
+      "objectFit": "fill",
+      "top": "632px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 420,
+      "x": 0,
+      "y": 632
+    },
+    "#ytmgo-tabbar": {
+      "display": "grid",
+      "h": 64,
+      "objectFit": "fill",
+      "top": "764px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 420,
+      "x": 0,
+      "y": 764
+    },
+    "#ytmgo-topbar": {
+      "display": "flex",
+      "h": 56,
+      "objectFit": "fill",
+      "top": "0px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 420,
+      "x": 0,
+      "y": 0
+    },
+    ".html5-video-container": {
+      "display": "block",
+      "h": 0,
+      "objectFit": "fill",
+      "top": "0px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 0,
+      "x": 0,
+      "y": 0
+    },
+    ".y-dialog": null,
+    ".y-np-art": {
+      "display": "block",
+      "h": 347.75,
+      "objectFit": "cover",
+      "top": "64px",
+      "transform": "matrix(1, 0, 0, 1, -173.875, 0)",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 347.75,
+      "x": 36,
+      "y": 64
+    },
+    ".y-np-meta": {
+      "display": "flex",
+      "h": 88,
+      "objectFit": "fill",
+      "top": "435.759979px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 372,
+      "x": 24,
+      "y": 435.75
+    },
+    ".y-pb-progress": {
+      "display": "grid",
+      "h": 38.796875,
+      "objectFit": "fill",
+      "top": "auto",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 372,
+      "x": 24,
+      "y": 640.59375
+    },
+    ".y-pb-transport": {
+      "display": "flex",
+      "h": 64,
+      "objectFit": "fill",
+      "top": "auto",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 372,
+      "x": 24,
+      "y": 691.390625
+    },
+    ".y-popover": null,
+    "video": {
+      "display": "block",
+      "h": 0,
+      "objectFit": "cover",
+      "top": "0px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 0,
+      "x": 0,
+      "y": 0
+    },
+    "ytmusic-player#player": {
+      "display": "block",
+      "h": 0,
+      "objectFit": "fill",
+      "top": "auto",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "visible",
+      "w": 0,
+      "x": 0,
+      "y": 0
+    },
+    "ytmusic-player-page": {
+      "display": "block",
+      "h": 708,
+      "objectFit": "fill",
+      "top": "56px",
+      "transform": "none",
+      "translate": "0px",
+      "visibility": "visible",
+      "w": 420,
+      "x": 0,
+      "y": 56
+    },
+    "ytmusic-search-box": {
+      "display": "block",
+      "h": 46,
+      "objectFit": "fill",
+      "top": "-23px",
+      "transform": "none",
+      "translate": "none",
+      "visibility": "hidden",
+      "w": 177.34375,
+      "x": 72,
+      "y": 5
+    }
+  },
+  "state": {
+    "active": "true",
+    "media": "audio",
+    "panel": "closed",
+    "script": "latn",
+    "theme": "dark",
+    "view": "immersive"
+  },
+  "playback": {
+    "currentTime": 11.564676333,
+    "duration": 135,
+    "ended": false,
+    "muted": false,
+    "paused": false,
+    "videoHeight": 0,
+    "videoWidth": 0,
+    "volume": 1
+  },
+  "labels": [
+    {
+      "clientWidth": 44,
+      "label": "Exit immersive mode",
+      "rect": {
+        "display": "grid",
+        "h": 44,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 44,
+        "x": 16,
+        "y": 6
+      },
+      "scrollWidth": 92
+    },
+    {
+      "clientWidth": 36,
+      "label": "Like",
+      "rect": {
+        "display": "grid",
+        "h": 36,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 36,
+        "x": 320,
+        "y": 461.75
+      },
+      "scrollWidth": 38
+    },
+    {
+      "clientWidth": 36,
+      "label": "More actions",
+      "rect": {
+        "display": "grid",
+        "h": 36,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 36,
+        "x": 360,
+        "y": 461.75
+      },
+      "scrollWidth": 65
+    },
+    {
+      "clientWidth": 44,
+      "label": "Shuffle queue",
+      "rect": {
+        "display": "grid",
+        "h": 44,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 44,
+        "x": 24,
+        "y": 701.390625
+      },
+      "scrollWidth": 72
+    },
+    {
+      "clientWidth": 44,
+      "label": "Previous",
+      "rect": {
+        "display": "grid",
+        "h": 44,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 44,
+        "x": 101,
+        "y": 701.390625
+      },
+      "scrollWidth": 58
+    },
+    {
+      "clientWidth": 64,
+      "label": "Pause",
+      "rect": {
+        "display": "grid",
+        "h": 64,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 64,
+        "x": 178,
+        "y": 691.390625
+      },
+      "scrollWidth": 64
+    },
+    {
+      "clientWidth": 44,
+      "label": "Next",
+      "rect": {
+        "display": "grid",
+        "h": 44,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 44,
+        "x": 275,
+        "y": 701.390625
+      },
+      "scrollWidth": 44
+    },
+    {
+      "clientWidth": 44,
+      "label": "Repeat: off",
+      "rect": {
+        "display": "grid",
+        "h": 44,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 44,
+        "x": 352,
+        "y": 701.390625
+      },
+      "scrollWidth": 63
+    },
+    {
+      "clientWidth": 372,
+      "label": "Playback position",
+      "rect": {
+        "display": "flex",
+        "h": 20,
+        "objectFit": "fill",
+        "top": "0px",
+        "transform": "none",
+        "translate": "none",
+        "visibility": "visible",
+        "w": 372,
+        "x": 24,
+        "y": 640.59375
+      },
+      "scrollWidth": 372
+    }
+  ]
+}

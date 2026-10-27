@@ -15,7 +15,7 @@
 - 另使用独立匿名 bundle ID 的原生 WebKit 探针，加载同一 `web/shell/bundle.json` 的 CSS/JS。实际网页 viewport 为 **1440×873、1100×768、420×828**，补充布局及颜色测量；相应快照的 `horizontalOverflow` 均为 false。这不是 DOM 替身测试。
 - 探针的原生菜单和语言载荷是诊断实现；正式应用的语言重建、偏好、账号入口及生命周期结论只来自正式构建。
 - 所有交互使用 CUA。布局探针只返回元素几何、颜色、显示状态和媒体时间/音量，不读取 Cookie、认证存储、账号身份、argv 或环境内容。没有输入账号密码，没有登录、退出或清理真实账号。
-- 本机截图、布局 JSON、原生观察记录位于 [evidence/20261027/uiux-audit](evidence/20261027/uiux-audit/)。此目录按仓库惯例不提交；截图清单和哈希见 `screenshots.json`。
+- 跨设备可用的关键证据已随仓库提交至 [docs/audits/2026-10-27-uiux](docs/audits/2026-10-27-uiux/README.md)：15 张原始截图、6 份布局快照、原生观察记录，以及文件大小与 SHA-256 清单。其他设备不需要访问原验收机器。完整的 32 张截图与诊断应用仍保留在本机忽略目录 `evidence/20261027/uiux-audit/`，不影响按本报告复现和修复。
 
 ## 已确认问题
 
@@ -29,7 +29,7 @@
 
 **验收要求：** 原生菜单和页面入口均可往返切换四语言及跟随系统，进程持续存活，设置与服务语言同步；如果仍需重载，应明确处理播放中断和页面恢复。
 
-证据：`native-observations.json`；重启后的 `02-native-zh-hans-dark.jpg`、`16-hant-shortcuts.jpg`。截图证明重启后的语言，退出本身由进程消失和交互结果确认。
+证据：[native-observations.json](docs/audits/2026-10-27-uiux/native-observations.json)；重启后的 [02-native-zh-hans-dark.jpg](docs/audits/2026-10-27-uiux/screenshots/02-native-zh-hans-dark.jpg)、[16-hant-shortcuts.jpg](docs/audits/2026-10-27-uiux/screenshots/16-hant-shortcuts.jpg)。截图证明重启后的语言，退出本身由进程消失和交互结果确认。
 
 ### F02 · P1 · 原生音乐视频高度翻倍，画面被裁切
 
@@ -41,7 +41,7 @@
 
 **验收要求：** 真实音乐视频和广告在停靠、浮动、沉浸视图中完整显示，内部视频不越出画框；区分正常等比留黑与实际裁切。
 
-证据：`24-probe-wide-video-cropped-dark.jpg`、`25-probe-wide-immersive-video-cropped.jpg`、`07-ja-light-immersive.jpg`；`_probe/wide-video-dark.json`、`_probe/wide-immersive-video-dark.json`。
+证据：[24-probe-wide-video-cropped-dark.jpg](docs/audits/2026-10-27-uiux/screenshots/24-probe-wide-video-cropped-dark.jpg)、[25-probe-wide-immersive-video-cropped.jpg](docs/audits/2026-10-27-uiux/screenshots/25-probe-wide-immersive-video-cropped.jpg)、[07-ja-light-immersive.jpg](docs/audits/2026-10-27-uiux/screenshots/07-ja-light-immersive.jpg)；[wide-video-dark.json](docs/audits/2026-10-27-uiux/layout/wide-video-dark.json)、[wide-immersive-video-dark.json](docs/audits/2026-10-27-uiux/layout/wide-immersive-video-dark.json)。
 
 ### F03 · P2 · 同一显示语言下，语言偏好与设置选中态脱节
 
@@ -51,7 +51,7 @@
 
 **验收要求：** “系统/显式语言”是独立于当前显示语言的状态；同语言切换也应更新设置、原生菜单和持久化选择，关闭重开后保持一致。
 
-证据：`28-native-same-locale-stale-choice.jpg`、`native-observations.json`。诊断仅检查 `language` 这个非敏感偏好文件。
+证据：[28-native-same-locale-stale-choice.jpg](docs/audits/2026-10-27-uiux/screenshots/28-native-same-locale-stale-choice.jpg)、[native-observations.json](docs/audits/2026-10-27-uiux/native-observations.json)。诊断仅检查 `language` 这个非敏感偏好文件。
 
 ### F04 · P2 · “跟随系统”提示显示的是当前选定语言
 
@@ -61,7 +61,7 @@
 
 **验收要求：** 提示实际系统解析语言；或者移除这个容易误导的提示。
 
-证据：`15-ja-settings-system-hint.jpg`、恢复系统后原生 English 界面和 `native-observations.json`。
+证据：[15-ja-settings-system-hint.jpg](docs/audits/2026-10-27-uiux/screenshots/15-ja-settings-system-hint.jpg)、恢复系统后原生 English 界面和 [native-observations.json](docs/audits/2026-10-27-uiux/native-observations.json)。
 
 ### F05 · P2 · 紧凑沉浸模式的底部导航看起来无效
 
@@ -71,7 +71,7 @@
 
 **验收要求：** 点击底部浏览目的地时展示对应页面并保留播放；搜索入口也应有可见结果。实际复现的是“探索”，其他按钮应一并回归。
 
-证据：`13-ja-immersive-nav-no-visible-change.jpg`、`14-ja-after-immersive-nav.jpg`。
+证据：[13-ja-immersive-nav-no-visible-change.jpg](docs/audits/2026-10-27-uiux/screenshots/13-ja-immersive-nav-no-visible-change.jpg)、[14-ja-after-immersive-nav.jpg](docs/audits/2026-10-27-uiux/screenshots/14-ja-after-immersive-nav.jpg)。
 
 ### F06 · P2 · 紧凑窗口没有可见的队列和歌词入口
 
@@ -81,7 +81,7 @@
 
 **验收要求：** 为队列、歌词提供可发现的紧凑入口，并可从面板返回原浏览位置。这里是入口缺失，不是断言底层队列/歌词功能不存在。
 
-证据：`22-probe-420-playing.jpg`、`12-ja-compact-immersive-minheight.jpg`、`23-probe-420-immersive.jpg`；探针标签清单见 `_probe/420-immersive-ad.json`。
+证据：[22-probe-420-playing.jpg](docs/audits/2026-10-27-uiux/screenshots/22-probe-420-playing.jpg)、[12-ja-compact-immersive-minheight.jpg](docs/audits/2026-10-27-uiux/screenshots/12-ja-compact-immersive-minheight.jpg)、[23-probe-420-immersive.jpg](docs/audits/2026-10-27-uiux/screenshots/23-probe-420-immersive.jpg)；探针标签清单见 [420-immersive-ad.json](docs/audits/2026-10-27-uiux/layout/420-immersive-ad.json)。
 
 ### F07 · P2 · 浅色搜索卡片存在近白字配浅底
 
@@ -93,7 +93,7 @@
 
 **验收要求：** 验证最终可见的文本节点，覆盖卡片、空状态、推广、菜单和两套服务按钮组件；浅深色都满足项目可读性约定。
 
-证据：`26-probe-track-menu-light.jpg`、`27-probe-1100-overlay-light.jpg`；`_probe/wide-track-menu-light.json`、`_probe/1100-panel-light.json`。
+证据：[26-probe-track-menu-light.jpg](docs/audits/2026-10-27-uiux/screenshots/26-probe-track-menu-light.jpg)、[27-probe-1100-overlay-light.jpg](docs/audits/2026-10-27-uiux/screenshots/27-probe-1100-overlay-light.jpg)；[wide-track-menu-light.json](docs/audits/2026-10-27-uiux/layout/wide-track-menu-light.json)、[1100-panel-light.json](docs/audits/2026-10-27-uiux/layout/1100-panel-light.json)。
 
 ### F08 · P3 · 队列自动播放开关残留服务默认蓝色
 
@@ -101,7 +101,7 @@
 
 **建议：** 为服务开关补上统一的语义令牌映射，或者在设计规范中明确其独立颜色语义。它目前看起来像遗漏适配的原生组件。
 
-证据：`24-probe-wide-video-cropped-dark.jpg`、`26-probe-track-menu-light.jpg`。
+证据：[24-probe-wide-video-cropped-dark.jpg](docs/audits/2026-10-27-uiux/screenshots/24-probe-wide-video-cropped-dark.jpg)、[26-probe-track-menu-light.jpg](docs/audits/2026-10-27-uiux/screenshots/26-probe-track-menu-light.jpg)。
 
 ### F09 · P3 · 紧凑未播放状态仍预留迷你播放器空间
 
@@ -111,7 +111,7 @@
 
 **建议：** 未播放时将这部分空间还给内容，开始播放后再为迷你播放器预留。
 
-证据：`18-probe-420-home-dark.jpg`、`_probe/420-settings.json`。
+证据：[18-probe-420-home-dark.jpg](docs/audits/2026-10-27-uiux/screenshots/18-probe-420-home-dark.jpg)、[420-settings.json](docs/audits/2026-10-27-uiux/layout/420-settings.json)。
 
 ## 通过项与限制
 

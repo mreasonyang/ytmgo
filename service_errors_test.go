@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"ytmgo/internal/accountbridge"
+	"ytmgo/internal/accountsession"
 	"ytmgo/internal/catalog"
 	"ytmgo/internal/player"
 )
@@ -61,7 +61,7 @@ func TestAccountVerificationMessagesDoNotClaimSessionExpiry(t *testing.T) {
 			t.Fatal("account verification response used the wrong explanation")
 		}
 	}
-	if accountErrorMessageKey(accountbridge.ErrExpired) != "nativeAccountSessionError" {
+	if accountErrorMessageKey(accountsession.ErrExpired) != "nativeAccountSessionError" {
 		t.Fatal("confirmed expired credentials lost reconnect guidance")
 	}
 }

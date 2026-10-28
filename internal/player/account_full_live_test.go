@@ -10,11 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"ytmgo/internal/accountbridge"
+	"ytmgo/internal/accountlogin"
+	"ytmgo/internal/accountsession"
 	"ytmgo/internal/catalog"
 )
 
-// This opt-in test accepts one explicit extension handoff into memory. It never
+// This opt-in test opens one explicit system WebView login into memory. It never
 // opens a keychain or browser store and never saves a session. Evidence is a
 // closed schema: fixed categories/stages, server flags, PID and numeric PCM
 // metrics only. This is packaged-runtime acceptance, not native app acceptance.
@@ -100,15 +101,15 @@ func TestAccountFullDecodeLive(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), deadline)
 	defer cancel()
 	waitCtx, waitCancel := context.WithTimeout(ctx, 3*time.Minute)
-	bridge, err := accountbridge.Listen(waitCtx)
+	login, err := accountlogin.Start(waitCtx, accountlogin.Options{Path: filepath.Join(root, "build", "darwin-arm64", "ytmgo.app", "Contents", "Resources", "login", "ytmgo-account-login"), Title: "ytmgo playback acceptance sign-in", Timeout: 3 * time.Minute})
 	if err != nil {
 		waitCancel()
-		t.Fatal("account_live_bridge_unavailable")
+		t.Fatal("account_live_login_unavailable")
 	}
-	defer bridge.Close()
+	defer login.Cancel()
 	emit(event{Event: "handoff_ready", Category: "waiting", PID: os.Getpid()})
-	session, err := bridge.Wait(waitCtx)
-	bridge.Close()
+	session, err := login.Wait()
+	login.Cancel()
 	waitCancel()
 	if err != nil {
 		t.Fatal("account_live_handoff_failed")
@@ -123,7 +124,7 @@ func TestAccountFullDecodeLive(t *testing.T) {
 		t.Fatal("account_live_session_rejected")
 	}
 	clear(cookies)
-	session = accountbridge.Session{}
+	session = accountsession.Session{}
 	checkCtx, checkCancel := context.WithTimeout(ctx, 30*time.Second)
 	status, err := client.AccountStatus(checkCtx)
 	checkCancel()

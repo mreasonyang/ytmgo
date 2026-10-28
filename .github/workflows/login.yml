@@ -1,0 +1,73 @@
+name: Native account login
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: login-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native:
+    name: Login helper on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-24.04]
+    env:
+      CGO_ENABLED: "0"
+      CARGO_BUILD_JOBS: "2"
+      CARGO_TARGET_DIR: ${{ github.workspace }}/build/login-target
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Linux native dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev libsoup-3.0-dev libsecret-1-dev xvfb xauth dbus-x11
+      - name: Test helper and build staging logic
+        run: |
+          cargo test --locked --manifest-path native/account-login/Cargo.toml
+          python -m unittest discover -s scripts/login -p "test_*.py"
+      - name: Build and verify native helper
+        run: |
+          python scripts/login/prepare.py
+          python scripts/login/prepare.py --verify
+      - name: Go tests
+        if: runner.os != 'Linux'
+        run: go test ./...
+      - name: Go tests with Linux display and session bus
+        if: runner.os == 'Linux'
+        run: xvfb-run -a dbus-run-session -- go test ./...
+      - name: Compile native app
+        run: go build -o build/native-app-check .
+      - name: Build isolated native lifecycle fixture
+        run: cargo build --locked --manifest-path native/account-login/Cargo.toml --features fixture
+      - name: Native helper lifecycle
+        if: runner.os != 'Linux'
+        run: python scripts/login/test_lifecycle.py --helper build/login-target/debug/ytmgo-account-login${{ runner.os == 'Windows' && '.exe' || '' }}
+      - name: Native helper lifecycle with Linux display and session bus
+        if: runner.os == 'Linux'
+        run: xvfb-run -a dbus-run-session -- python scripts/login/test_lifecycle.py --helper build/login-target/debug/ytmgo-account-login
+      # This is login-helper and source validation. The media-runtime packager
+      # still targets macOS; no full Windows/Linux app or real-account login
+      # is claimed by this workflow. Never add account credentials to CI.

@@ -2,29 +2,18 @@ package main
 
 import (
 	"context"
-	"embed"
 	"errors"
 	"github.com/egoist/mygo"
-	"github.com/egoist/mygo/transfer"
-	"github.com/egoist/mygo/ui"
 	"net/http"
-	"os"
-	"path/filepath"
 	"sync"
 	"time"
-	"ytmgo/internal/accountbridge"
+	"ytmgo/internal/accountlogin"
+	"ytmgo/internal/accountsession"
 	"ytmgo/internal/catalog"
 	"ytmgo/internal/language"
 	"ytmgo/internal/player"
 	"ytmgo/locales"
 )
-
-// Only public extension source is embedded or expanded to disk.
-//
-//go:embed scripts/account-extension/manifest.json scripts/account-extension/popup.html scripts/account-extension/popup.css scripts/account-extension/popup.mjs scripts/account-extension/session-policy.mjs
-var accountExtension embed.FS
-
-const musicHomeURL = "https://music.youtube.com/"
 
 type accountFlow struct {
 	ctx        context.Context
@@ -64,16 +53,16 @@ func (f *accountFlow) finish(ctx context.Context, generation, current uint64, va
 
 type accountState struct {
 	work                     sync.Mutex
+	loginWait                sync.WaitGroup
 	flow                     accountFlow
-	store                    accountbridge.Store
-	session                  *accountbridge.Session
+	store                    accountsession.Store
+	session                  *accountsession.Session
 	configured               player.AccountSession
 	revision                 uint64
 	restored, ready, started bool
 	pollCancel               context.CancelFunc
-	bridge                   *accountbridge.Bridge
-	bridgeCancel             context.CancelFunc
-	message                  string
+	login                    *accountlogin.Login
+	loginCancel              context.CancelFunc
 }
 type nativeAccountSecrets struct{}
 
@@ -81,14 +70,14 @@ func (nativeAccountSecrets) Set(key string, value []byte) error { return mygo.Se
 func (nativeAccountSecrets) Get(key string) ([]byte, error) {
 	value, err := mygo.Secrets.Get(key)
 	if errors.Is(err, mygo.ErrSecretNotFound) {
-		return nil, accountbridge.ErrNotFound
+		return nil, accountsession.ErrNotFound
 	}
 	return value, err
 }
 func (nativeAccountSecrets) Delete(key string) error {
 	err := mygo.Secrets.Delete(key)
 	if errors.Is(err, mygo.ErrSecretNotFound) {
-		return accountbridge.ErrNotFound
+		return accountsession.ErrNotFound
 	}
 	return err
 }
@@ -110,7 +99,7 @@ func accountErrorMessageKey(err error) string {
 		}
 		return "nativeAccountError"
 	}
-	if errors.Is(err, accountbridge.ErrSession) || errors.Is(err, accountbridge.ErrExpired) ||
+	if errors.Is(err, accountsession.ErrSession) || errors.Is(err, accountsession.ErrExpired) ||
 		errors.Is(err, catalog.ErrInvalidSession) || errors.Is(err, catalog.ErrSessionExpired) ||
 		errors.Is(err, catalog.ErrAuthenticationRequired) {
 		return "nativeAccountSessionError"
@@ -118,13 +107,13 @@ func accountErrorMessageKey(err error) string {
 	return "nativeAccountError"
 }
 
-func verifyAccountSession(ctx context.Context, candidate accountSessionClient, session accountbridge.Session) (catalog.AccountStatus, catalog.SessionCredentials, error) {
+func verifyAccountSession(ctx context.Context, candidate accountSessionClient, session accountsession.Session) (catalog.AccountStatus, catalog.SessionCredentials, error) {
 	defer candidate.ClearSession()
 	if err := ctx.Err(); err != nil {
 		return catalog.AccountStatus{}, catalog.SessionCredentials{}, err
 	}
 	cookies, err := session.HTTPCookies(time.Now())
-	if errors.Is(err, accountbridge.ErrExpired) {
+	if errors.Is(err, accountsession.ErrExpired) {
 		// A known local expiration is explicit loss of authentication. Network
 		// errors below remain errors and cannot downgrade membership.
 		return catalog.AccountStatus{}, catalog.SessionCredentials{}, nil
@@ -144,27 +133,27 @@ func verifyAccountSession(ctx context.Context, candidate accountSessionClient, s
 	}
 	credentials, ok := candidate.Credentials()
 	if status.LoggedIn && !ok {
-		return catalog.AccountStatus{}, catalog.SessionCredentials{}, accountbridge.ErrSession
+		return catalog.AccountStatus{}, catalog.SessionCredentials{}, accountsession.ErrSession
 	}
 	return status, credentials, nil
 }
 
 type accountSessionStore interface {
-	Load() (accountbridge.Session, error)
+	Load() (accountsession.Session, error)
 	Delete() error
 }
 
-func restoreAccountSession(store accountSessionStore) (accountbridge.Session, error) {
+func restoreAccountSession(store accountSessionStore) (accountsession.Session, error) {
 	session, err := store.Load()
-	if !errors.Is(err, accountbridge.ErrExpired) {
+	if !errors.Is(err, accountsession.ErrExpired) {
 		return session, err
 	}
 	// Delete this app's encrypted session and its key. A failed deletion remains
 	// a storage failure, never an apparently successful anonymous restore.
 	if store.Delete() != nil {
-		return accountbridge.Session{}, accountbridge.ErrStorage
+		return accountsession.Session{}, accountsession.ErrStorage
 	}
-	return accountbridge.Session{}, accountbridge.ErrNotFound
+	return accountsession.Session{}, accountsession.ErrNotFound
 }
 
 // Saved membership is verified before configuring any playback engine.
@@ -193,7 +182,7 @@ func (a *desktop) startAccountPolling() {
 }
 func (a *desktop) refreshAccount() {
 	s := &a.accountState
-	if !s.started || a.accountBusy || s.bridge != nil {
+	if !s.started || a.accountBusy || s.login != nil {
 		return
 	}
 	if !s.restored {
@@ -224,7 +213,7 @@ func (a *desktop) restoreAccount() {
 				return
 			}
 			a.accountBusy = false
-			if flowErr != nil || (err != nil && !errors.Is(err, accountbridge.ErrNotFound)) {
+			if flowErr != nil || (err != nil && !errors.Is(err, accountsession.ErrNotFound)) {
 				a.accountMessage("nativeAccountStorageError")
 				return
 			}
@@ -239,7 +228,7 @@ func (a *desktop) restoreAccount() {
 
 // Serial worker plus UI generation gate prevents old account replies from
 // replacing a newer session. Network failures preserve the verified account.
-func (a *desktop) updateAccount(session *accountbridge.Session, newIdentity bool) {
+func (a *desktop) updateAccount(session *accountsession.Session, newIdentity bool) {
 	s := &a.accountState
 	if a.accountBusy {
 		return
@@ -258,8 +247,7 @@ func (a *desktop) updateAccount(session *accountbridge.Session, newIdentity bool
 	ctx := s.flow.begin(a.ctx, generation)
 	locale := language.ServiceLanguage(mygo.App.Locale())
 	previousCredentials, hadCredentials := a.catalog.Credentials()
-	s.message = "nativeAccountChecking"
-	a.invalidateAccount()
+	a.invalidate()
 	go func() {
 		s.work.Lock()
 		defer s.work.Unlock()
@@ -272,7 +260,7 @@ func (a *desktop) updateAccount(session *accountbridge.Session, newIdentity bool
 			cancel()
 		}
 		if err == nil && newIdentity && !status.LoggedIn {
-			err = accountbridge.ErrSession
+			err = accountsession.ErrSession
 		}
 		errorKey := accountErrorMessageKey(err)
 		if err == nil && newIdentity {
@@ -354,7 +342,6 @@ func (a *desktop) updateAccount(session *accountbridge.Session, newIdentity bool
 				category = "premium"
 			}
 			recordAccountDiagnostic(a.diagnosticPath, category)
-			s.message = ""
 			a.clearAccountRequestFailure(newIdentity)
 			a.preparedID = ""
 			if replay.pending && replay.generation == a.playGeneration {
@@ -363,16 +350,12 @@ func (a *desktop) updateAccount(session *accountbridge.Session, newIdentity bool
 				a.prepareNext()
 			}
 			if newIdentity {
-				if a.account != nil && !a.account.IsDestroyed() {
-					a.account.Destroy()
-					a.account = nil
-				}
 				a.navigate("library")
 				a.show()
 			} else if identityChanged {
 				a.navigate("home")
 			} else {
-				a.invalidateAccount()
+				a.invalidate()
 			}
 		})
 	}()
@@ -438,66 +421,68 @@ func (a *desktop) signIn() {
 	if a.accountBusy {
 		return
 	}
-	if a.account != nil && !a.account.IsDestroyed() {
-		a.account.Show()
-		a.account.Focus()
+	s := &a.accountState
+	if s.login != nil {
+		_ = s.login.Focus()
 		return
 	}
-	a.accountState.message = "nativeAccountWaiting"
-	w := mygo.NewWindow(mygo.WindowOptions{Title: locales.LoginWindowTitle(), Width: 640, Height: 600, MinWidth: 480, MinHeight: 480, Content: ui.View(a.accountView)})
-	a.account = w
-	w.OnClose(func(*mygo.CloseEvent) {
-		if a.account == w {
-			a.account = nil
-			a.stopAccountBridge()
-		}
-	})
-	a.beginAccountBridge()
-}
-func (a *desktop) beginAccountBridge() {
-	if a.accountBusy {
-		return
-	}
-	// A deliberate new transfer replaces the failed transfer's prompt, while
-	// catalog failures and the previously connected account remain untouched.
 	a.clearAccountRequestFailure(true)
-	a.stopAccountBridge()
-	ctx, cancel := context.WithCancel(a.ctx)
-	bridge, err := accountbridge.Listen(ctx)
+	ctx, cancel := context.WithTimeout(a.ctx, 10*time.Minute)
+	login, err := accountlogin.Start(ctx, accountlogin.Options{Title: locales.LoginWindowTitle(), Timeout: 10 * time.Minute})
 	if err != nil {
 		cancel()
-		a.accountMessage("nativeAccountBridgeError")
+		a.accountMessage(loginErrorMessageKey(err))
 		return
 	}
-	s := &a.accountState
-	s.bridge, s.bridgeCancel, s.message = bridge, cancel, "nativeAccountWaiting"
-	a.invalidateAccount()
+	s.login, s.loginCancel = login, cancel
+	s.loginWait.Add(1)
 	go func() {
-		session, err := bridge.Wait(ctx)
+		session, err := login.Wait()
+		// Quit waits for the child, never for a callback on the stopped UI loop.
+		s.loginWait.Done()
 		a.post(func() {
-			if s.bridge != bridge {
+			if s.login != login {
 				return
 			}
-			a.stopAccountBridge()
+			s.login, s.loginCancel = nil, nil
+			cancel()
+			if errors.Is(err, accountlogin.ErrCancelled) {
+				return
+			}
 			if err != nil {
-				a.accountMessage("nativeAccountExpired")
+				a.accountMessage(loginErrorMessageKey(err))
 				return
 			}
 			a.updateAccount(&session, true)
 		})
 	}()
 }
-func (a *desktop) stopAccountBridge() {
-	s := &a.accountState
-	if s.bridge != nil {
-		s.bridge.Close()
-		s.bridge = nil
-	}
-	if s.bridgeCancel != nil {
-		s.bridgeCancel()
-		s.bridgeCancel = nil
+
+func loginErrorMessageKey(err error) string {
+	switch {
+	case errors.Is(err, accountlogin.ErrRuntimeMissing):
+		return "nativeAccountLoginMissing"
+	case errors.Is(err, accountlogin.ErrRuntimeOutdated):
+		return "nativeAccountLoginOutdated"
+	case errors.Is(err, accountlogin.ErrTimeout):
+		return "nativeAccountLoginTimeout"
+	default:
+		return "nativeAccountLoginFailed"
 	}
 }
+
+func (a *desktop) stopAccountLogin() {
+	s := &a.accountState
+	login, cancel := s.login, s.loginCancel
+	s.login, s.loginCancel = nil, nil
+	if cancel != nil {
+		cancel()
+	}
+	if login != nil {
+		login.Cancel()
+	}
+}
+
 func (a *desktop) closeAccount() {
 	a.accountGeneration++
 	s := &a.accountState
@@ -505,7 +490,7 @@ func (a *desktop) closeAccount() {
 	if s.pollCancel != nil {
 		s.pollCancel()
 	}
-	a.stopAccountBridge()
+	a.stopAccountLogin()
 	s.session = nil
 	s.configured = player.AccountSession{}
 }
@@ -514,94 +499,14 @@ func (a *desktop) accountMessage(key string) {
 }
 func (a *desktop) accountFailure(key, category string) {
 	recordAccountDiagnostic(a.diagnosticPath, category)
-	a.accountState.message = key
 	a.model.Error = a.tr(key)
 	a.model.ErrorScope = errorAccount
-	a.invalidateAccount()
+	a.invalidate()
 }
 
 func (a *desktop) accountRequestFailure(key, category string, newIdentity bool) {
 	a.accountFailure(key, category)
 	a.model.ErrorScope = accountErrorScope(newIdentity)
-}
-func (a *desktop) invalidateAccount() {
-	a.invalidate()
-	if a.account != nil && !a.account.IsDestroyed() {
-		a.account.Update(func() {})
-	}
-}
-func (a *desktop) accountView(c *ui.Context) {
-	dark := c.Theme().Dark
-	if a.model.Appearance == "dark" {
-		dark = true
-	}
-	if a.model.Appearance == "light" {
-		dark = false
-	}
-	c.SetTheme(nativeTheme(dark))
-	p := palette(dark)
-	ui.Scroll(c).Fill().Background(p.base).TextColor(p.text).Padding(24).Gap(16).Children(func() {
-		ui.Text(c, locales.LoginWindowTitle()).FontSize(24)
-		ui.Text(c, a.tr("nativeAccountGuide")).FontSize(14).LineHeight(1.5)
-		if nativePill(c, a.tr("nativeAccountExtensionFolder"), p, false).AlignSelf(ui.Start).Clicked() {
-			a.openAccountExtension()
-		}
-		if nativePill(c, a.tr("nativeAccountCopyMusicURL"), p, false).AlignSelf(ui.Start).Clicked() {
-			if mygo.Clipboard.Write(transfer.TextData(musicHomeURL)) != nil {
-				a.accountMessage("nativeAccountMusicURLCopyError")
-			} else {
-				a.accountState.message = "nativeAccountMusicURLCopied"
-				a.invalidateAccount()
-			}
-		}
-		if nativePill(c, a.tr("nativeAccountOpenMusic"), p, true).AlignSelf(ui.Start).Clicked() {
-			a.openAccountBrowser()
-		}
-		ui.Text(c, a.tr("nativeAccountPrivacy")).FontSize(13).TextColor(p.muted).LineHeight(1.4)
-		accountError := a.model.ErrorScope == errorAccount || a.model.ErrorScope == errorAccountConnect
-		if accountError && a.model.Error != "" && a.accountState.message == "" && !a.accountBusy {
-			ui.Text(c, a.model.Error).FontSize(13).LineHeight(1.4)
-		} else if a.accountState.message != "" {
-			ui.Text(c, a.tr(a.accountState.message)).FontSize(13).LineHeight(1.4)
-		}
-		if a.accountState.bridge == nil && !a.accountBusy {
-			if nativePill(c, a.tr("buttonRetry"), p, false).Clicked() {
-				a.beginAccountBridge()
-			}
-		}
-	})
-}
-func (a *desktop) openAccountBrowser() {
-	go func() {
-		if mygo.Shell.OpenExternal(musicHomeURL) != nil {
-			a.post(func() { a.accountMessage("nativeAccountBrowserError") })
-		}
-	}()
-}
-func (a *desktop) openAccountExtension() {
-	go func() {
-		root, err := mygo.App.Path(mygo.PathUserData)
-		if err == nil {
-			root = filepath.Join(root, "account-extension")
-			err = os.MkdirAll(root, 0700)
-		}
-		for _, name := range []string{"manifest.json", "popup.html", "popup.css", "popup.mjs", "session-policy.mjs"} {
-			if err != nil {
-				break
-			}
-			var data []byte
-			data, err = accountExtension.ReadFile("scripts/account-extension/" + name)
-			if err == nil {
-				err = os.WriteFile(filepath.Join(root, name), data, 0600)
-			}
-		}
-		if err == nil {
-			err = mygo.Shell.OpenPath(root)
-		}
-		if err != nil {
-			a.post(func() { a.accountMessage("nativeAccountBridgeError") })
-		}
-	}()
 }
 func (a *desktop) clearAccountContent() {
 	if a.likeCancel != nil {
@@ -639,6 +544,7 @@ func (a *desktop) signOut() {
 	if a.accountBusy || !a.model.SignedIn {
 		return
 	}
+	a.stopAccountLogin()
 	a.accountBusy = true
 	go func() {
 		answer, err := mygo.Dialog.Message(mygo.MessageOptions{Parent: a.window, Title: locales.MenuSignOut(), Message: a.tr("nativeSignOutConfirm"), Buttons: []string{a.tr("shellClose"), a.tr("shellSignOut")}, CancelButton: 0})
@@ -647,7 +553,7 @@ func (a *desktop) signOut() {
 			if err != nil || answer.Button != 1 {
 				return
 			}
-			a.stopAccountBridge()
+			a.stopAccountLogin()
 			a.accountState.flow.cancelPending()
 			a.accountGeneration++
 			generation := a.accountGeneration
@@ -658,10 +564,6 @@ func (a *desktop) signOut() {
 			s.restored = true
 			s.ready = false
 			a.accountBusy = true
-			if a.account != nil && !a.account.IsDestroyed() {
-				a.account.Destroy()
-				a.account = nil
-			}
 			if a.playCancel != nil {
 				a.playCancel()
 			}

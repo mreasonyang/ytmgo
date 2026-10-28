@@ -16,3 +16,5 @@
 *.app/
 node_modules/
 __pycache__/
+
+/native/account-login/target/

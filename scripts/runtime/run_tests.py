@@ -17,7 +17,6 @@ ROOT = Path(__file__).resolve().parents[2]
 RUNTIME = ROOT / "build/runtime"
 SOURCE = ROOT / "scripts/runtime/tests"
 STAGED = RUNTIME / "tests"
-EXTENSION = ROOT / "scripts/account-extension"
 COUNTERS = ("tests", "pass", "fail", "cancelled", "skipped", "todo")
 
 
@@ -45,13 +44,12 @@ def run():
     try:
         shutil.copytree(SOURCE, STAGED, dirs_exist_ok=True)
         tests = sorted(STAGED.glob("*.test.mjs"))
-        extension_tests = sorted(EXTENSION.glob("*.test.mjs"))
-        if not tests or not extension_tests:
+        if not tests:
             category = "test_files_missing"
         else:
             process = subprocess.Popen(
                 [str(RUNTIME / "node"), "--no-warnings", "--test", "--test-reporter=tap",
-                 *map(str, tests), *map(str, extension_tests)],
+                 *map(str, tests)],
                 cwd=RUNTIME, env={"PATH": str(RUNTIME) + ":/usr/bin:/bin"},
                 stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL, start_new_session=True)

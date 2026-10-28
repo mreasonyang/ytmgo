@@ -149,7 +149,7 @@ timing, impose an artificial startup delay, or implement advertisement playback
 and progress reporting. Anonymous content transport success is not evidence of
 normal advertising behavior or authenticated account benefits.
 
-Run `make test-runtime` for the runtime and account-extension offline tests;
+Run `make test-runtime` for the runtime offline tests;
 `make check` includes this target. Preparation installs the locked dependencies
 only in `build/runtime`, using empty npm configuration and disabled install
 scripts. It may download public build dependencies; the tests themselves use

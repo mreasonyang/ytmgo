@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -43,10 +44,14 @@ func findRuntime() (runtimePaths, error) {
 	if err != nil {
 		return r, errors.New("runtime_missing")
 	}
-	r = runtimePaths{filepath.Join(abs, "worker.mjs"), filepath.Join(abs, "node"), filepath.Join(abs, "ffmpeg")}
+	suffix := ""
+	if runtime.GOOS == "windows" {
+		suffix = ".exe"
+	}
+	r = runtimePaths{filepath.Join(abs, "worker.mjs"), filepath.Join(abs, "node"+suffix), filepath.Join(abs, "ffmpeg"+suffix)}
 	for _, name := range []string{r.node, r.ffmpeg} {
 		st, err := os.Stat(name)
-		if err != nil || !st.Mode().IsRegular() || st.Mode().Perm()&0111 == 0 {
+		if err != nil || !st.Mode().IsRegular() || runtime.GOOS != "windows" && st.Mode().Perm()&0111 == 0 {
 			return runtimePaths{}, errors.New("runtime_missing")
 		}
 	}
@@ -100,7 +105,25 @@ func validMediaURL(raw string) bool {
 // No inherited Node hooks or authentication configuration reach helpers.
 func childCommand(ctx context.Context, path string, args ...string) *exec.Cmd {
 	cmd := exec.CommandContext(ctx, path, args...)
-	cmd.Env = []string{"PATH=/usr/bin:/bin", "LANG=en_US.UTF-8", "LC_ALL=en_US.UTF-8"}
+	cmd.Env = childEnvironment()
 	configureChild(cmd)
 	return cmd
+}
+
+func childEnvironment() []string {
+	if runtime.GOOS != "windows" {
+		return []string{"PATH=/usr/bin:/bin", "LANG=en_US.UTF-8", "LC_ALL=en_US.UTF-8"}
+	}
+	// Windows loads system DLLs and resolves its temporary directory through
+	// these variables. Do not inherit PATH, Node hooks or authentication data.
+	env := []string{"LANG=en_US.UTF-8", "LC_ALL=en_US.UTF-8"}
+	for _, name := range []string{"SystemRoot", "WINDIR", "TEMP", "TMP"} {
+		if value := os.Getenv(name); value != "" {
+			env = append(env, name+"="+value)
+		}
+	}
+	if root := os.Getenv("SystemRoot"); root != "" {
+		env = append(env, "PATH="+filepath.Join(root, "System32"))
+	}
+	return env
 }

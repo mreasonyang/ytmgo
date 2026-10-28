@@ -1,5 +1,74 @@
 # Native playback verification
 
+## Temporary cross-platform WebView login — 2026-10-29 (Asia/Shanghai)
+
+The extension login UI, extension files and loopback account bridge have been
+removed. MyGo remains the native main UI. Sign In launches one Wry helper using
+WKWebView on macOS, WebView2 on Windows and WebKitGTK on Linux. The helper uses
+a private browser context, reads HttpOnly cookies through the native API and
+passes a bounded session over private pipes. The app verifies that session with
+YouTube before saving it through the existing encrypted session store. It does
+not import a browser profile, require an extension or configure OAuth.
+
+Windows uses a unique temporary writable user-data directory, including when
+the executable is installed under Program Files; WebView2 must be at least
+101.0.1210.39. Linux requires WebKitGTK 4.1 >=2.42 and a Secret Service for account
+storage. The helper's platform-specific build and the full media distribution
+are separate: the existing media packager still targets macOS only.
+
+Local validation completed before packaging:
+
+- Production and fixture Rust unit tests: 8/8 each on macOS.
+- Real macOS private WebView with fixed offline content: session handoff,
+  cancellation, parent pipe closure and timeout all passed. The fixture reads
+  a synthetic HttpOnly cookie, and every new helper verifies an empty store
+  despite the preceding synthetic cookie having a future expiration date.
+- Go unit/race suites and vet passed before the final process-tree refinement;
+  final checks and platform CI results are recorded below when complete.
+- Media runtime offline tests: 66/66; runtime manifest and protocol tests: 5/5
+  each; login packaging tests: 3/3; i18n: 182 keys in each of four languages.
+- Windows/Linux amd64 and arm64, plus Darwin amd64 Go application compilation
+  passed. This is source compilation, not native WebView or playback acceptance.
+- The staged macOS helper is 1,268,528 bytes; staging verification passes and
+  rejects an incorrect Windows target.
+
+The following extension-based acceptance notes are historical. They are not
+instructions for the new login flow. Real Google authentication, complete
+browser-process cleanup, packaged UI and Windows/Linux native execution remain
+separate checks; offline fixture success must not be described as real-account
+acceptance.
+
+## Formal-package acceptance continuation — 2026-10-29 (Asia/Shanghai)
+
+Continued from source commit `d1bd663` with a clean worktree. The existing
+formal app executable still has SHA256
+`e42d4ac3d77e7a5aebf1148dc04aa3a2dca7fe5952045d9eeda447d2e8b07dd1`;
+strict/deep signature verification passed, and all 19 bundled runtime `.mjs`
+entry files matched current runtime sources. The app was launched directly
+from `build/darwin-arm64/ytmgo.app`; no rebuild or installation replacement
+was needed.
+
+`make check` passed (Go tests, 89 runtime/extension tests, manifest/protocol
+checks, vet, and 190 messages in each of four languages). `go test -race
+./internal/accountbridge ./...` and all 17 diagnostic collector tests passed.
+
+Fresh account diagnostics reported `signed_out` at `2026-10-28T16:25:37Z`
+(00:25:37 on October 29 locally). Only allowlisted diagnostic fields and
+encrypted-file existence were inspected; `account/session.enc` was absent.
+The native account window displayed the encrypted-session guidance and
+opened its normal five-minute handoff window. Brave already had a signed-in
+Music tab and the ytmgo Account extension. Automated clicks on the extension
+menu repeatedly dismissed it (AX IDs became invalid; a screenshot-guided
+click also returned to the main browser window). The operator was asked to
+complete the ordinary extension handoff manually.
+
+This continuation has **not** accepted a fresh real-account connection,
+Premium entitlement, playback, or restart restoration. No current-package
+three-state memory measurements were collected. Resume with the operator's
+handoff, verify Premium/library/playback, quit normally, then relaunch the
+same executable and verify automatic restoration before state-switch and
+memory acceptance. If the handoff window expires, reopen Sign In first.
+
 ## Single-key encrypted session storage — 2026-10-28
 
 The chunk/index Keychain implementation has been removed. One fixed native

@@ -1,4 +1,4 @@
-package accountbridge
+package accountsession
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -106,7 +107,7 @@ func TestSecretStoreLargeEncryptedRoundTripAndOwnKeyDelete(t *testing.T) {
 	}
 	for path, mode := range map[string]os.FileMode{store.Path: 0600, filepath.Dir(store.Path): 0700} {
 		info, err := os.Stat(path)
-		if err != nil || info.Mode().Perm() != mode {
+		if err != nil || !privateStorageMode(info.Mode(), mode) {
 			t.Fatal("session storage permissions are not private")
 		}
 	}
@@ -221,13 +222,9 @@ func TestSecretStoreFailedAndCanceledSavePreservesPrevious(t *testing.T) {
 		t.Fatal("save committed after cancellation during native key access")
 	}
 	m.afterGet = nil
-	if os.Chmod(filepath.Dir(store.Path), 0500) != nil {
-		t.Fatal("cannot set up directory failure")
-	}
+	restoreDirectory := blockSessionLocation(t, store.Path)
 	err := store.Save(context.Background(), changed)
-	if os.Chmod(filepath.Dir(store.Path), 0700) != nil {
-		t.Fatal("cannot restore synthetic directory")
-	}
+	restoreDirectory()
 	if err != ErrStorage || !bytes.Equal(original, savedBytes(t, store.Path)) || m.setCalls != 1 {
 		t.Fatal("failed or canceled save changed previous ciphertext or key")
 	}
@@ -310,12 +307,24 @@ func TestSecretStoreRejectsUnsafePaths(t *testing.T) {
 				store.Path = "session.enc"
 			case "file-symlink":
 				target := filepath.Join(t.TempDir(), "other")
-				if os.WriteFile(target, []byte("synthetic-unrelated-file"), 0600) != nil || os.Symlink(target, store.Path) != nil {
+				if os.WriteFile(target, []byte("synthetic-unrelated-file"), 0600) != nil {
+					t.Fatal("target setup failed")
+				}
+				if err := os.Symlink(target, store.Path); err != nil {
+					if runtime.GOOS == "windows" {
+						t.Skip("Windows symlink creation requires Developer Mode or privileges")
+					}
 					t.Fatal("symlink setup failed")
 				}
 			case "directory-symlink":
 				dir := filepath.Dir(store.Path)
-				if os.Remove(dir) != nil || os.Symlink(t.TempDir(), dir) != nil {
+				if os.Remove(dir) != nil {
+					t.Fatal("directory setup failed")
+				}
+				if err := os.Symlink(t.TempDir(), dir); err != nil {
+					if runtime.GOOS == "windows" {
+						t.Skip("Windows symlink creation requires Developer Mode or privileges")
+					}
 					t.Fatal("directory symlink setup failed")
 				}
 			case "directory-target":
@@ -323,6 +332,9 @@ func TestSecretStoreRejectsUnsafePaths(t *testing.T) {
 					t.Fatal("directory target setup failed")
 				}
 			case "public-directory":
+				if runtime.GOOS == "windows" {
+					t.Skip("POSIX mode bits do not describe Windows ACLs")
+				}
 				if os.Chmod(filepath.Dir(store.Path), 0755) != nil {
 					t.Fatal("permission setup failed")
 				}
@@ -339,13 +351,9 @@ func TestSecretStoreDeleteFailuresAreReported(t *testing.T) {
 	if store.Save(context.Background(), fixture()) != nil {
 		t.Fatal("initial save failed")
 	}
-	if os.Chmod(filepath.Dir(store.Path), 0500) != nil {
-		t.Fatal("permission setup failed")
-	}
+	restoreDirectory := blockSessionLocation(t, store.Path)
 	err := store.Delete()
-	if os.Chmod(filepath.Dir(store.Path), 0700) != nil {
-		t.Fatal("permission restore failed")
-	}
+	restoreDirectory()
 	if err != ErrStorage || m.deleteCalls != 0 {
 		t.Fatal("failed file removal was hidden or deleted key first")
 	}
@@ -360,6 +368,44 @@ func TestSecretStoreDeleteFailuresAreReported(t *testing.T) {
 	m.failDelete = false
 	if store.Delete() != nil || len(m.values) != 0 {
 		t.Fatal("could not retry native key deletion")
+	}
+}
+
+// Replacing the session file by a directory models an unavailable storage
+// location on every OS, without treating chmod as a Windows ACL.
+func blockSessionLocation(t *testing.T, path string) func() {
+	t.Helper()
+	backup := path + ".synthetic-held"
+	if os.Rename(path, backup) != nil || os.Mkdir(path, 0700) != nil {
+		t.Fatal("cannot block synthetic session location")
+	}
+	return func() {
+		t.Helper()
+		if os.Remove(path) != nil || os.Rename(backup, path) != nil {
+			t.Fatal("cannot restore synthetic session location")
+		}
+	}
+}
+
+// Public POSIX permissions must be rejected before the encryption key is read.
+// Windows relies on the per-user AppData ACL and native credential store instead.
+func TestSecretStoreRejectsPublicCiphertextPermissions(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("POSIX mode bits do not describe Windows ACLs")
+	}
+	store, secrets := testStore(t)
+	if store.Save(context.Background(), fixture()) != nil {
+		t.Fatal("save failed")
+	}
+	reads := secrets.getCalls
+	if os.Chmod(store.Path, 0644) != nil {
+		t.Fatal("mode setup failed")
+	}
+	if _, err := store.Load(); err != ErrStorage || secrets.getCalls != reads {
+		t.Fatal("public ciphertext reached native secret access")
+	}
+	if os.Chmod(store.Path, 0600) != nil {
+		t.Fatal("mode restore failed")
 	}
 }
 

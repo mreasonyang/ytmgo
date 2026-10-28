@@ -1,6 +1,6 @@
-// Package accountbridge accepts an explicitly selected browser session over a
-// short-lived, origin-bound loopback channel. It never discovers browser stores.
-package accountbridge
+// Package accountsession validates and encrypts the selected YouTube account
+// session. It never discovers browser stores or accepts network handoffs.
+package accountsession
 
 import (
 	"bytes"

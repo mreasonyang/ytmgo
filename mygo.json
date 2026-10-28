@@ -19,13 +19,18 @@
       "Audio",
       "Player"
     ],
-    "webview": false
+    "webview": true,
+    "depends": [
+      "libwebkit2gtk-4.1-0 (>= 2.42)",
+      "libsecret-1-0 (>= 0.19)"
+    ]
   },
   "i18n": {
     "dir": "locales",
     "source": "en"
   },
   "resources": [
-    "build/runtime"
+    "build/runtime",
+    "build/login"
   ]
 }

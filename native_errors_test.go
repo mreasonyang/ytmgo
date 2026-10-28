@@ -26,9 +26,6 @@ func TestNativeServiceErrorsUseExistingRetries(t *testing.T) {
 				if !tt.HasText(message) {
 					t.Fatal("service failure has no explanation")
 				}
-				if _, exists := tt.Find(a.Tr("nativeAccountOpenMusic")); exists {
-					t.Fatal("service error must not offer browser verification")
-				}
 				nativeAssertVisible(t, tt, a.Tr("buttonRetry"), 420, 740)
 				if err := tt.Click(a.Tr("buttonRetry")); err != nil {
 					t.Fatal(err)

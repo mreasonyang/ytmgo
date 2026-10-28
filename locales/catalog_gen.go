@@ -2397,86 +2397,6 @@ func (msgs Messages) NativeVideoUnavailable() string {
 	return Catalog.Format(msgs.locale, "nativeVideoUnavailable", nil)
 }
 
-// NativeAccountGuide says "This extension requires a Chromium-compatible browser; Safari and Firefox are not supported. If your default browser …"
-// in the language the app shows.
-func NativeAccountGuide() string { return In(i18n.Locale()).NativeAccountGuide() }
-
-// NativeAccountGuide says "This extension requires a Chromium-compatible browser; Safari and Firefox are not supported. If your default browser …"
-// in the language of msgs.
-func (msgs Messages) NativeAccountGuide() string {
-	return Catalog.Format(msgs.locale, "nativeAccountGuide", nil)
-}
-
-// NativeAccountExtensionFolder says "Open extension folder"
-// in the language the app shows.
-func NativeAccountExtensionFolder() string { return In(i18n.Locale()).NativeAccountExtensionFolder() }
-
-// NativeAccountExtensionFolder says "Open extension folder"
-// in the language of msgs.
-func (msgs Messages) NativeAccountExtensionFolder() string {
-	return Catalog.Format(msgs.locale, "nativeAccountExtensionFolder", nil)
-}
-
-// NativeAccountOpenMusic says "Open YouTube Music in default browser"
-// in the language the app shows.
-func NativeAccountOpenMusic() string { return In(i18n.Locale()).NativeAccountOpenMusic() }
-
-// NativeAccountOpenMusic says "Open YouTube Music in default browser"
-// in the language of msgs.
-func (msgs Messages) NativeAccountOpenMusic() string {
-	return Catalog.Format(msgs.locale, "nativeAccountOpenMusic", nil)
-}
-
-// NativeAccountPrivacy says "ytmgo verifies membership with YouTube and saves this session encrypted on your device. Signing out here leaves your …"
-// in the language the app shows.
-func NativeAccountPrivacy() string { return In(i18n.Locale()).NativeAccountPrivacy() }
-
-// NativeAccountPrivacy says "ytmgo verifies membership with YouTube and saves this session encrypted on your device. Signing out here leaves your …"
-// in the language of msgs.
-func (msgs Messages) NativeAccountPrivacy() string {
-	return Catalog.Format(msgs.locale, "nativeAccountPrivacy", nil)
-}
-
-// NativeAccountWaiting says "Waiting for your explicit account transfer from the browser. This window accepts one transfer for five minutes."
-// in the language the app shows.
-func NativeAccountWaiting() string { return In(i18n.Locale()).NativeAccountWaiting() }
-
-// NativeAccountWaiting says "Waiting for your explicit account transfer from the browser. This window accepts one transfer for five minutes."
-// in the language of msgs.
-func (msgs Messages) NativeAccountWaiting() string {
-	return Catalog.Format(msgs.locale, "nativeAccountWaiting", nil)
-}
-
-// NativeAccountChecking says "Verifying the account and configuring playback…"
-// in the language the app shows.
-func NativeAccountChecking() string { return In(i18n.Locale()).NativeAccountChecking() }
-
-// NativeAccountChecking says "Verifying the account and configuring playback…"
-// in the language of msgs.
-func (msgs Messages) NativeAccountChecking() string {
-	return Catalog.Format(msgs.locale, "nativeAccountChecking", nil)
-}
-
-// NativeAccountExpired says "The connection window expired. Choose Retry to open a new five-minute window."
-// in the language the app shows.
-func NativeAccountExpired() string { return In(i18n.Locale()).NativeAccountExpired() }
-
-// NativeAccountExpired says "The connection window expired. Choose Retry to open a new five-minute window."
-// in the language of msgs.
-func (msgs Messages) NativeAccountExpired() string {
-	return Catalog.Format(msgs.locale, "nativeAccountExpired", nil)
-}
-
-// NativeAccountBridgeError says "Could not open the local account connection. Close any other ytmgo login window and retry."
-// in the language the app shows.
-func NativeAccountBridgeError() string { return In(i18n.Locale()).NativeAccountBridgeError() }
-
-// NativeAccountBridgeError says "Could not open the local account connection. Close any other ytmgo login window and retry."
-// in the language of msgs.
-func (msgs Messages) NativeAccountBridgeError() string {
-	return Catalog.Format(msgs.locale, "nativeAccountBridgeError", nil)
-}
-
 // NativeAccountStorageError says "Could not access encrypted session storage. Retry and allow ytmgo access if the system asks."
 // in the language the app shows.
 func NativeAccountStorageError() string { return In(i18n.Locale()).NativeAccountStorageError() }
@@ -2485,48 +2405,6 @@ func NativeAccountStorageError() string { return In(i18n.Locale()).NativeAccount
 // in the language of msgs.
 func (msgs Messages) NativeAccountStorageError() string {
 	return Catalog.Format(msgs.locale, "nativeAccountStorageError", nil)
-}
-
-// NativeAccountBrowserError says "Could not open the default browser. Open https://music.youtube.com/ in your browser manually."
-// in the language the app shows.
-func NativeAccountBrowserError() string { return In(i18n.Locale()).NativeAccountBrowserError() }
-
-// NativeAccountBrowserError says "Could not open the default browser. Open https://music.youtube.com/ in your browser manually."
-// in the language of msgs.
-func (msgs Messages) NativeAccountBrowserError() string {
-	return Catalog.Format(msgs.locale, "nativeAccountBrowserError", nil)
-}
-
-// NativeAccountCopyMusicURL says "Copy YouTube Music address"
-// in the language the app shows.
-func NativeAccountCopyMusicURL() string { return In(i18n.Locale()).NativeAccountCopyMusicURL() }
-
-// NativeAccountCopyMusicURL says "Copy YouTube Music address"
-// in the language of msgs.
-func (msgs Messages) NativeAccountCopyMusicURL() string {
-	return Catalog.Format(msgs.locale, "nativeAccountCopyMusicURL", nil)
-}
-
-// NativeAccountMusicURLCopied says "Copied https://music.youtube.com/. Paste it into the browser where you installed the account extension."
-// in the language the app shows.
-func NativeAccountMusicURLCopied() string { return In(i18n.Locale()).NativeAccountMusicURLCopied() }
-
-// NativeAccountMusicURLCopied says "Copied https://music.youtube.com/. Paste it into the browser where you installed the account extension."
-// in the language of msgs.
-func (msgs Messages) NativeAccountMusicURLCopied() string {
-	return Catalog.Format(msgs.locale, "nativeAccountMusicURLCopied", nil)
-}
-
-// NativeAccountMusicURLCopyError says "Could not copy the address. Enter https://music.youtube.com/ in the browser where you installed the account extension."
-// in the language the app shows.
-func NativeAccountMusicURLCopyError() string {
-	return In(i18n.Locale()).NativeAccountMusicURLCopyError()
-}
-
-// NativeAccountMusicURLCopyError says "Could not copy the address. Enter https://music.youtube.com/ in the browser where you installed the account extension."
-// in the language of msgs.
-func (msgs Messages) NativeAccountMusicURLCopyError() string {
-	return Catalog.Format(msgs.locale, "nativeAccountMusicURLCopyError", nil)
 }
 
 // NativeVerificationRequired says "Google requires additional verification. ytmgo cannot complete this request."
@@ -2567,4 +2445,44 @@ func NativeServiceRedirect() string { return In(i18n.Locale()).NativeServiceRedi
 // in the language of msgs.
 func (msgs Messages) NativeServiceRedirect() string {
 	return Catalog.Format(msgs.locale, "nativeServiceRedirect", nil)
+}
+
+// NativeAccountLoginMissing says "The sign-in window could not start. Reinstall ytmgo and check that your system WebView runtime is available."
+// in the language the app shows.
+func NativeAccountLoginMissing() string { return In(i18n.Locale()).NativeAccountLoginMissing() }
+
+// NativeAccountLoginMissing says "The sign-in window could not start. Reinstall ytmgo and check that your system WebView runtime is available."
+// in the language of msgs.
+func (msgs Messages) NativeAccountLoginMissing() string {
+	return Catalog.Format(msgs.locale, "nativeAccountLoginMissing", nil)
+}
+
+// NativeAccountLoginOutdated says "Update Microsoft Edge WebView2 Runtime, then try signing in again."
+// in the language the app shows.
+func NativeAccountLoginOutdated() string { return In(i18n.Locale()).NativeAccountLoginOutdated() }
+
+// NativeAccountLoginOutdated says "Update Microsoft Edge WebView2 Runtime, then try signing in again."
+// in the language of msgs.
+func (msgs Messages) NativeAccountLoginOutdated() string {
+	return Catalog.Format(msgs.locale, "nativeAccountLoginOutdated", nil)
+}
+
+// NativeAccountLoginTimeout says "Sign-in timed out. Please try again."
+// in the language the app shows.
+func NativeAccountLoginTimeout() string { return In(i18n.Locale()).NativeAccountLoginTimeout() }
+
+// NativeAccountLoginTimeout says "Sign-in timed out. Please try again."
+// in the language of msgs.
+func (msgs Messages) NativeAccountLoginTimeout() string {
+	return Catalog.Format(msgs.locale, "nativeAccountLoginTimeout", nil)
+}
+
+// NativeAccountLoginFailed says "Sign-in could not be completed. Please try again."
+// in the language the app shows.
+func NativeAccountLoginFailed() string { return In(i18n.Locale()).NativeAccountLoginFailed() }
+
+// NativeAccountLoginFailed says "Sign-in could not be completed. Please try again."
+// in the language of msgs.
+func (msgs Messages) NativeAccountLoginFailed() string {
+	return Catalog.Format(msgs.locale, "nativeAccountLoginFailed", nil)
 }

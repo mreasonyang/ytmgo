@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"ytmgo/internal/accountbridge"
+	"ytmgo/internal/accountsession"
 	"ytmgo/internal/catalog"
 	"ytmgo/internal/player"
 )
@@ -34,7 +34,7 @@ func TestAccountErrorsOnlyRequestReconnectionForInvalidSessions(t *testing.T) {
 			t.Fatal("unverified account failure incorrectly requested reconnection")
 		}
 	}
-	for _, err := range []error{accountbridge.ErrSession, accountbridge.ErrExpired, catalog.ErrInvalidSession, catalog.ErrSessionExpired, catalog.ErrAuthenticationRequired} {
+	for _, err := range []error{accountsession.ErrSession, accountsession.ErrExpired, catalog.ErrInvalidSession, catalog.ErrSessionExpired, catalog.ErrAuthenticationRequired} {
 		if accountErrorMessageKey(fmt.Errorf("account session: %w", err)) != "nativeAccountSessionError" {
 			t.Fatal("invalid or expired session did not request reconnection")
 		}
@@ -158,10 +158,10 @@ func TestIncompleteStagedCookiesNeverQueryLibrary(t *testing.T) {
 func (f *stagedSessionFixture) Credentials() (catalog.SessionCredentials, bool) {
 	return catalog.SessionCredentials{Cookie: "SAPISID=synthetic-only", AccountIndex: 2}, true
 }
-func syntheticAccountSession() accountbridge.Session {
+func syntheticAccountSession() accountsession.Session {
 	i := 2
 	secure := true
-	return accountbridge.Session{AccountIndex: &i, Cookies: []accountbridge.Cookie{{Name: "SAPISID", Value: "synthetic-only", Domain: ".youtube.com", Path: "/", Secure: &secure}}}
+	return accountsession.Session{AccountIndex: &i, Cookies: []accountsession.Cookie{{Name: "SAPISID", Value: "synthetic-only", Domain: ".youtube.com", Path: "/", Secure: &secure}}}
 }
 
 func TestAccountConfigurationChangesIncludeCredentialRefresh(t *testing.T) {
@@ -217,8 +217,8 @@ type restoreSessionFixture struct {
 	deletes            int
 }
 
-func (f *restoreSessionFixture) Load() (accountbridge.Session, error) {
-	return accountbridge.Session{}, f.loadErr
+func (f *restoreSessionFixture) Load() (accountsession.Session, error) {
+	return accountsession.Session{}, f.loadErr
 }
 func (f *restoreSessionFixture) Delete() error { f.deletes++; return f.deleteErr }
 func TestAccountRestoreDistinguishesExpiryStorageAndMalformedSession(t *testing.T) {
@@ -226,11 +226,11 @@ func TestAccountRestoreDistinguishesExpiryStorageAndMalformedSession(t *testing.
 		loadErr, deleteErr, want error
 		deletes                  int
 	}{
-		{accountbridge.ErrExpired, nil, accountbridge.ErrNotFound, 1},
-		{accountbridge.ErrExpired, errors.New("synthetic-denied"), accountbridge.ErrStorage, 1},
-		{accountbridge.ErrStorage, nil, accountbridge.ErrStorage, 0},
-		{accountbridge.ErrSession, nil, accountbridge.ErrSession, 0},
-		{accountbridge.ErrNotFound, nil, accountbridge.ErrNotFound, 0},
+		{accountsession.ErrExpired, nil, accountsession.ErrNotFound, 1},
+		{accountsession.ErrExpired, errors.New("synthetic-denied"), accountsession.ErrStorage, 1},
+		{accountsession.ErrStorage, nil, accountsession.ErrStorage, 0},
+		{accountsession.ErrSession, nil, accountsession.ErrSession, 0},
+		{accountsession.ErrNotFound, nil, accountsession.ErrNotFound, 0},
 	} {
 		store := &restoreSessionFixture{loadErr: test.loadErr, deleteErr: test.deleteErr}
 		_, err := restoreAccountSession(store)

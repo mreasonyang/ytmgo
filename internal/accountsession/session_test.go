@@ -1,12 +1,8 @@
-package accountbridge
+package accountsession
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
-	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -16,76 +12,6 @@ func fixture() Session {
 	i := 2
 	secure := true
 	return Session{AccountIndex: &i, Cookies: []Cookie{{Name: "SAPISID", Value: "synthetic-only", Domain: ".youtube.com", Path: "/", Secure: &secure}}}
-}
-func request(b *Bridge, method, path, origin, token string, body []byte) *httptest.ResponseRecorder {
-	r := httptest.NewRequest(method, "http://"+Address+path, bytes.NewReader(body))
-	r.Header.Set("Origin", origin)
-	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set("X-Ytmgo-Handoff", token)
-	w := httptest.NewRecorder()
-	b.ServeHTTP(w, r)
-	return w
-}
-func TestBridgeOriginTokenOneUseAndExpiry(t *testing.T) {
-	b, err := newBridge()
-	if err != nil {
-		t.Fatal("bridge construction failed")
-	}
-	defer b.Close()
-	data, _ := json.Marshal(fixture())
-	for _, origin := range []string{"", "null", "https://music.youtube.com", "chrome-extension://untrusted"} {
-		if request(b, http.MethodPost, "/challenge", origin, "", nil).Code != 403 {
-			t.Fatal("foreign origin accepted")
-		}
-	}
-	challenge := request(b, http.MethodPost, "/challenge", Origin, "", nil)
-	var value struct {
-		Token string `json:"token"`
-	}
-	if json.Unmarshal(challenge.Body.Bytes(), &value) != nil || len(value.Token) != 43 {
-		t.Fatal("challenge unavailable")
-	}
-	if request(b, http.MethodPost, "/session", Origin, "synthetic-wrong", data).Code != 403 {
-		t.Fatal("wrong handshake accepted")
-	}
-	if request(b, http.MethodPost, "/session?secret=forbidden", Origin, value.Token, data).Code != 400 {
-		t.Fatal("query accepted")
-	}
-	if request(b, http.MethodPost, "/session", Origin, value.Token, data).Code != 200 {
-		t.Fatal("valid transfer rejected")
-	}
-	if request(b, http.MethodPost, "/session", Origin, value.Token, data).Code != 410 {
-		t.Fatal("transfer reused")
-	}
-	if request(b, http.MethodPost, "/challenge", Origin, "", nil).Code != 410 {
-		t.Fatal("spent handshake exposed")
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	s, err := b.Wait(ctx)
-	if err != nil || *s.AccountIndex != 2 {
-		t.Fatal("session was not delivered")
-	}
-	expired, _ := newBridge()
-	defer expired.Close()
-	expired.deadline = time.Now().Add(-time.Second)
-	if request(expired, http.MethodPost, "/challenge", Origin, "", nil).Code != 410 {
-		t.Fatal("expired challenge accepted")
-	}
-}
-func TestBridgeRejectsHostAndOversizedBody(t *testing.T) {
-	b, _ := newBridge()
-	defer b.Close()
-	r := httptest.NewRequest("GET", "http://evil.test/challenge", nil)
-	r.Header.Set("Origin", Origin)
-	w := httptest.NewRecorder()
-	b.ServeHTTP(w, r)
-	if w.Code != 403 {
-		t.Fatal("foreign Host accepted")
-	}
-	if request(b, "POST", "/session", Origin, b.token, []byte(strings.Repeat("x", MaxPayload+1))).Code != 413 {
-		t.Fatal("oversized body accepted")
-	}
 }
 func TestSessionValidation(t *testing.T) {
 	now := time.Now()

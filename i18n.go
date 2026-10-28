@@ -46,9 +46,6 @@ func (a *desktop) relocalize() {
 		a.window.SetTitle(locales.AppName())
 		a.invalidate()
 	}
-	if a.account != nil {
-		a.account.SetTitle(locales.LoginWindowTitle())
-	}
 }
 func (a *desktop) setAppearance(value string) {
 	if _, err := a.prefs.SetAppearance(value); err != nil {

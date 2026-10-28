@@ -11,7 +11,7 @@ import (
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
-	"ytmgo/internal/accountbridge"
+	"ytmgo/internal/accountsession"
 	"ytmgo/internal/catalog"
 	"ytmgo/internal/language"
 	"ytmgo/internal/player"
@@ -32,7 +32,7 @@ type historyEntry struct {
 // UI state belongs to the main thread. Workers deliver results through post;
 // request generations prevent an old search or track from replacing a new one.
 type desktop struct {
-	window, account                 *mygo.Window
+	window                          *mygo.Window
 	tray                            *mygo.Tray
 	prefs                           *Preferences
 	languagePath                    string
@@ -85,7 +85,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	a := &desktop{ctx: ctx, cancel: cancel, prefs: &Preferences{path: filepath.Join(dataDir, "appearance")}, languagePath: filepath.Join(dataDir, "language"), queueIndex: -1, historyIndex: -1, unmutedVolume: 0.7}
 	a.diagnosticPath = filepath.Join(dataDir, "native-diagnostics")
-	a.accountState.store = accountbridge.Store{Secrets: nativeAccountSecrets{}, Path: filepath.Join(dataDir, "account", "session.enc")}
+	a.accountState.store = accountsession.Store{Secrets: nativeAccountSecrets{}, Path: filepath.Join(dataDir, "account", "session.enc")}
 	recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 	recordPlaybackDiagnostic(a.diagnosticPath, "video", "ready")
 	a.model = UIModel{Route: "home", Appearance: a.prefs.Appearance(), Language: language.Load(a.languagePath), Volume: 0.7, PanelTab: "queue"}
@@ -104,6 +104,9 @@ func main() {
 	})
 	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { a.quitting = true; a.cancelResume(); a.closeAccount(); a.cancel() })
 	mygo.App.OnWillQuit(func(*mygo.QuitEvent) {
+		// Keep the parent alive until cancellation has reaped every login child.
+		// Its bounded kill timer cannot run after this process has exited.
+		a.accountState.loginWait.Wait()
 		mygo.GlobalShortcut.UnregisterAll()
 		mygo.NowPlaying.Clear()
 		if a.video != nil {
@@ -168,6 +171,9 @@ func main() {
 		go a.pollVideo()
 	})
 	if err = mygo.App.Run(); err != nil {
+		a.cancel()
+		a.stopAccountLogin()
+		a.accountState.loginWait.Wait()
 		log.Fatal("ytmgo: desktop runtime could not start")
 	}
 }

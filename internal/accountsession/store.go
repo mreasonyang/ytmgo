@@ -1,4 +1,4 @@
-package accountbridge
+package accountsession
 
 import (
 	"bytes"
@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"time"
 )
 
@@ -42,6 +43,14 @@ type Store struct {
 	Path    string
 }
 
+// POSIX mode bits protect the dedicated directory and ciphertext file. Windows
+// does not represent ACLs through FileMode.Perm: the caller uses its per-user
+// AppData directory and its native Credential Manager for the AES key. Chmod is
+// not an ACL implementation, and the session remains encrypted on every OS.
+func privateStorageMode(mode, expected os.FileMode) bool {
+	return runtime.GOOS == "windows" || mode.Perm() == expected
+}
+
 func (s Store) validPath() bool {
 	return filepath.IsAbs(s.Path) && filepath.Clean(s.Path) == s.Path && filepath.Dir(s.Path) != s.Path && filepath.Dir(s.Path) != filepath.VolumeName(s.Path)+string(filepath.Separator)
 }
@@ -54,7 +63,7 @@ func privateSessionDirectory(path string, create bool) error {
 		}
 	}
 	info, err := os.Lstat(dir)
-	if err != nil || !info.IsDir() || info.Mode().Perm() != 0700 {
+	if err != nil || !info.IsDir() || !privateStorageMode(info.Mode(), 0700) {
 		return ErrStorage
 	}
 	return nil
@@ -67,7 +76,7 @@ func readSessionFile(path string) ([]byte, error) {
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, ErrNotFound
 	}
-	if err != nil || !info.Mode().IsRegular() || info.Size() <= int64(sessionFileOverhead) || info.Size() > int64(maxSessionFileSize) {
+	if err != nil || !info.Mode().IsRegular() || !privateStorageMode(info.Mode(), 0600) || info.Size() <= int64(sessionFileOverhead) || info.Size() > int64(maxSessionFileSize) {
 		return nil, ErrStorage
 	}
 	if err := privateSessionDirectory(path, false); err != nil {
@@ -79,7 +88,7 @@ func readSessionFile(path string) ([]byte, error) {
 	}
 	defer file.Close()
 	opened, err := file.Stat()
-	if err != nil || !opened.Mode().IsRegular() || !os.SameFile(info, opened) {
+	if err != nil || !opened.Mode().IsRegular() || !privateStorageMode(opened.Mode(), 0600) || !os.SameFile(info, opened) {
 		return nil, ErrStorage
 	}
 	data, err := io.ReadAll(io.LimitReader(file, int64(maxSessionFileSize+1)))
@@ -196,7 +205,7 @@ func writeSessionFile(ctx context.Context, path string, data []byte) error {
 	// Never replace a link or special file, including one introduced while a
 	// native secret-store prompt was open.
 	info, err := os.Lstat(path)
-	if err != nil && !errors.Is(err, os.ErrNotExist) || err == nil && !info.Mode().IsRegular() {
+	if err != nil && !errors.Is(err, os.ErrNotExist) || err == nil && (!info.Mode().IsRegular() || !privateStorageMode(info.Mode(), 0600)) {
 		return ErrStorage
 	}
 	if ctx.Err() != nil || os.Rename(file.Name(), path) != nil {
@@ -249,7 +258,7 @@ func (s Store) Delete() error {
 		return ErrStorage
 	}
 	if err == nil {
-		if !info.Mode().IsRegular() || privateSessionDirectory(s.Path, false) != nil || os.Remove(s.Path) != nil {
+		if !info.Mode().IsRegular() || !privateStorageMode(info.Mode(), 0600) || privateSessionDirectory(s.Path, false) != nil || os.Remove(s.Path) != nil {
 			return ErrStorage
 		}
 	}

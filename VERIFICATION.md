@@ -1,5 +1,64 @@
 # Native playback verification
 
+## Single-key encrypted session storage — 2026-10-28
+
+The chunk/index Keychain implementation has been removed. One fixed native
+secret contains a 32-byte AES key; the entire session is stored as authenticated
+AES-256-GCM ciphertext in `account/session.enc` under the app data directory.
+Saves use a random nonce and an atomic file replacement. The directory is 0700
+and the file is 0600. Missing ciphertext returns signed out before accessing
+Keychain. Signing out removes the ciphertext first, then its single key.
+Old Keychain chunks are neither read nor migrated; users of that development
+version reconnect their account once. Unrelated and old secret items are not
+accessed by the new implementation.
+
+`make check` passed: all Go tests, 89 runtime tests, vet, manifest/protocol
+checks and 190 messages per language. The accountbridge race suite and focused
+app account/restore race tests passed. Tests cover large sessions using one key,
+fresh nonces, restart reads, absent files without secret-store calls, corrupt
+ciphertext, missing/wrong keys, cancellation, failed writes preserving the
+previous file, cleanup, expiry and private filesystem permissions. An independent
+review found no blocking issue.
+
+A separate native macOS AUDIT app exercised the real MyGo Keychain adapter
+using only synthetic data and a distinct app identifier. The same signed binary
+was launched three times with normal exits between stages:
+
+- Save: 11,629 bytes of session JSON, one 32-byte key written; missing-file
+  Load made zero secret-store calls. File and directory permissions matched.
+- Restore: the session matched exactly after process restart, with one key read
+  and no key write.
+- Delete: both ciphertext and key were absent afterward; subsequent Load made
+  zero key reads.
+
+Evidence is under `build/diagnostics/session-storage-20261028/`, including
+`native-probe-result.json` and the three stage receipts. No real Google session
+or encryption key was recorded. The first AUDIT launch from Documents stopped
+before reading its test request; the identical binary completed all stages
+from a dedicated Caches directory. No authorization window was operated.
+
+The default `make build` attempt stopped in the DMG Finder-attribute helper.
+Packaging with the same MyGo command and a Caches output directory succeeded
+in 18.1 seconds; the app and DMG were copied back to `build/darwin-arm64` and
+their hashes matched. Strict/deep app signature verification and DMG checksum
+verification passed. The packaged app was launched from Caches: its fresh
+account diagnostic reported `signed_out` at 2026-10-28T15:21:22Z, the native
+account window displayed the updated encrypted-session text, and the app was
+then closed. No encrypted account file existed, so old Keychain chunks were
+not requested. The `/Applications` installation was not replaced.
+
+Final app executable SHA256:
+`e42d4ac3d77e7a5aebf1148dc04aa3a2dca7fe5952045d9eeda447d2e8b07dd1`.
+DMG SHA256:
+`b2d42e1544a20925778bb9c06a7a3a3dc1bff4b28c4b76f1d4d2df5352ce0199`.
+
+This proves native synthetic persistence and formal-app anonymous startup,
+not a fresh real Google account reconnection/restore. The app remains ad-hoc
+signed: a changed signing identity can still cause a system authorization
+prompt for the one key. The account-flow timeout does not interrupt a blocking
+macOS authorization request. No new playback or memory comparison was run for
+this storage-only change.
+
 ## Current service-error behavior — 2026-10-28
 
 Service verification, consent, sign-in and unknown redirects are now explained

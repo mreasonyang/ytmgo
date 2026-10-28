@@ -11,6 +11,7 @@ import (
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
+	"ytmgo/internal/accountbridge"
 	"ytmgo/internal/catalog"
 	"ytmgo/internal/language"
 	"ytmgo/internal/player"
@@ -84,6 +85,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	a := &desktop{ctx: ctx, cancel: cancel, prefs: &Preferences{path: filepath.Join(dataDir, "appearance")}, languagePath: filepath.Join(dataDir, "language"), queueIndex: -1, historyIndex: -1, unmutedVolume: 0.7}
 	a.diagnosticPath = filepath.Join(dataDir, "native-diagnostics")
+	a.accountState.store = accountbridge.Store{Secrets: nativeAccountSecrets{}, Path: filepath.Join(dataDir, "account", "session.enc")}
 	recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 	recordPlaybackDiagnostic(a.diagnosticPath, "video", "ready")
 	a.model = UIModel{Route: "home", Appearance: a.prefs.Appearance(), Language: language.Load(a.languagePath), Volume: 0.7, PanelTab: "queue"}

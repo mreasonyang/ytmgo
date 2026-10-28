@@ -6,7 +6,7 @@ YouTube Music 桌面客户端，当前开发版本 **0.4.0**。主界面用 **My
 
 账号状态由服务端明确返回的 `logged_in` 和 `has_unlimited_entitlement` 决定，每五分钟及应用回到前台时刷新。Premium 模式不加载 jsdom 或播放证明模块；普通账号和未登录模式在需要播放时启动证明引擎。切换时退出并回收旧引擎，同账号的会员变化保留正在播放的音频，换账号或退出则撤销旧账号的媒体流。请求失败或字段缺失不会被当成会员过期。
 
-账号、整曲播放、内存与安装包测试记录在 [VERIFICATION.md](VERIFICATION.md)。Premium 原生播放实测整应用中位数约 359 MiB，不能把约 74 MiB 的 Node 辅助进程当成整应用占用。匿名、普通账号和 Premium 的代码与实际验证范围分别记录；新版钥匙串恢复仍需用户完成 macOS 授权。设计约定见 [DESIGN.md](DESIGN.md)。
+账号、整曲播放、内存与安装包测试记录在 [VERIFICATION.md](VERIFICATION.md)。Premium 原生播放实测整应用中位数约 359 MiB，不能把约 74 MiB 的 Node 辅助进程当成整应用占用。匿名、普通账号和 Premium 的代码与实际验证范围分别记录；新会话存储的恢复与清理验证也单独记录。设计约定见 [DESIGN.md](DESIGN.md)。
 
 ## 运行和构建
 
@@ -20,7 +20,7 @@ open build/darwin-arm64/ytmgo.app
 
 `make build` 会打包锁定的 YouTube.js 18.3.0、Node 26.12.1、完整标准证明客户端及精简 FFmpeg 9.0.2。播放源代码及新包中不包含 yt-dlp；没有客户端切换或旧播放器 fallback。版本、校验值、许可证、上游源码和构建信息随包保存。证明客户端采用 GPL-3.0，依赖许可材料的剩余缺口已单独记录，尚未做公开分发验收。详细说明见 [scripts/runtime/README.md](scripts/runtime/README.md)。
 
-产物为 `build/darwin-arm64/ytmgo.app` 和 `build/darwin-arm64/ytmgo-0.4.0-arm64.dmg`。App 采用 ad-hoc 签名，DMG 本体未签名；未做 Apple Developer ID 签名或公证。重新构建导致 ad-hoc 身份变化时，macOS 可能要求重新授权访问本应用保存的钥匙串会话。其他操作系统未作为本轮交付目标。
+产物为 `build/darwin-arm64/ytmgo.app` 和 `build/darwin-arm64/ytmgo-0.4.0-arm64.dmg`。App 采用 ad-hoc 签名，DMG 本体未签名；未做 Apple Developer ID 签名或公证。重新构建导致 ad-hoc 身份变化时，macOS 可能要求重新授权访问本应用保存在钥匙串中的加密密钥。其他操作系统未作为本轮交付目标。
 
 开发运行：
 
@@ -42,7 +42,7 @@ YTMGO_RUNTIME_DIR="$PWD/build/runtime" go tool mygo dev
 
 点击登录后，在原生引导窗口打开扩展目录，首次使用时在兼容 Chromium 的浏览器扩展管理页面启用开发者模式，并加载应用随包提供的扩展。“打开 YouTube Music”使用系统默认浏览器；若默认浏览器不支持该扩展，可以复制 YouTube Music 网址到兼容浏览器。请在安装扩展的同一个浏览器中选中要使用的账号，明确点击扩展的连接按钮。传输仅发生在扩展与 `127.0.0.1` 之间，采用限时、单次握手；账号索引随会话传递，不默认选择浏览器的第一个账号。
 
-会话由本应用的系统安全存储保管，macOS 使用 Keychain。重启后先重新核验服务端状态，再启用对应播放模式。没有明文凭据文件、旧 WebKit 数据迁移或存储 fallback。确认退出会停止播放、清空本应用的个人数据与已保存会话；外部浏览器的 Google 登录状态不受影响。
+完整会话使用 AES-256-GCM 加密保存在应用数据目录的 `account/session.enc`；系统安全存储只保管一个 32 字节密钥，macOS 使用 Keychain。文件按原子替换保存，目录权限为 0700、文件为 0600。重启后先重新核验服务端状态，再启用对应播放模式。没有明文凭据文件、旧分片读取、旧 WebKit 数据迁移或存储 fallback；使用过分片版本的用户需要重新连接一次账号。确认退出会停止播放、清空本应用的个人数据，并删除加密会话文件与密钥；外部浏览器的 Google 登录状态不受影响。
 
 遇到 Google 验证、登录或同意页面跳转时，应用直接说明服务端要求及当前请求无法完成；未知跳转也会如实说明。曲库和播放保留普通重试，不提供未经证实的网页验证步骤。已连接账号会保留，不会把请求限制认定为会员过期。普通 403、429 或网络错误不会被称为验证码，服务端返回的跳转地址不会被保存或打开。
 
@@ -63,7 +63,7 @@ main.go / controller.go      原生窗口、菜单、导航、队列与请求生
 native_views.go              原生屏幕、响应式布局和交互
 native_style.go              原有色板与矢量图标
 account.go                  浏览器交接、权益轮询和退出
-internal/accountbridge/     单次会话交接与系统安全存储
+internal/accountbridge/     单次会话交接与加密会话存储
 scripts/account-extension/  用户主动连接的浏览器扩展
 artwork.go                  有界图片下载与解码缓存
 video_controller.go         视频视图可见性及帧更新

@@ -2427,11 +2427,11 @@ func (msgs Messages) NativeAccountOpenMusic() string {
 	return Catalog.Format(msgs.locale, "nativeAccountOpenMusic", nil)
 }
 
-// NativeAccountPrivacy says "ytmgo verifies membership with YouTube and remembers this session in the system secret store. Signing out here leaves…"
+// NativeAccountPrivacy says "ytmgo verifies membership with YouTube and saves this session encrypted on your device. Signing out here leaves your …"
 // in the language the app shows.
 func NativeAccountPrivacy() string { return In(i18n.Locale()).NativeAccountPrivacy() }
 
-// NativeAccountPrivacy says "ytmgo verifies membership with YouTube and remembers this session in the system secret store. Signing out here leaves…"
+// NativeAccountPrivacy says "ytmgo verifies membership with YouTube and saves this session encrypted on your device. Signing out here leaves your …"
 // in the language of msgs.
 func (msgs Messages) NativeAccountPrivacy() string {
 	return Catalog.Format(msgs.locale, "nativeAccountPrivacy", nil)
@@ -2477,11 +2477,11 @@ func (msgs Messages) NativeAccountBridgeError() string {
 	return Catalog.Format(msgs.locale, "nativeAccountBridgeError", nil)
 }
 
-// NativeAccountStorageError says "Could not access the system secret store. Allow ytmgo access, then retry. No unencrypted session will be saved."
+// NativeAccountStorageError says "Could not access encrypted session storage. Retry and allow ytmgo access if the system asks."
 // in the language the app shows.
 func NativeAccountStorageError() string { return In(i18n.Locale()).NativeAccountStorageError() }
 
-// NativeAccountStorageError says "Could not access the system secret store. Allow ytmgo access, then retry. No unencrypted session will be saved."
+// NativeAccountStorageError says "Could not access encrypted session storage. Retry and allow ytmgo access if the system asks."
 // in the language of msgs.
 func (msgs Messages) NativeAccountStorageError() string {
 	return Catalog.Format(msgs.locale, "nativeAccountStorageError", nil)

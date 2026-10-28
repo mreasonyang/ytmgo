@@ -179,8 +179,13 @@ External links use the system default browser through MyGo Shell. Account
 authorization uses a user-clicked, short-lived loopback extension handoff in a
 Chromium-compatible browser. The current extension does not support Safari or
 Firefox; the guide lets users copy the Music URL to the browser containing the
-extension. It does not select or require a browser vendor. Sessions belong to this app in the
-system secret store; no WebKit store or legacy migration exists. Session data
+extension. It does not select or require a browser vendor. A single 32-byte key belongs to
+this app in the system secret store. The entire session is authenticated-encrypted
+with AES-256-GCM in `account/session.enc` under the app data directory, using
+atomic replacement, a private directory and an owner-only file. Missing ciphertext
+returns signed out without touching the secret store. Signing out removes the
+ciphertext before deleting the key. Old chunked sessions are not read or migrated;
+those users reconnect their account. No WebKit store or legacy fallback exists. Session data
 must never enter logs, argv, environment variables or evidence files.
 The service supplies logged-in and Music Premium booleans. A five-minute poll
 and foreground refresh update them only after a valid response. Premium engines

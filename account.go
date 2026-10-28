@@ -159,7 +159,7 @@ func restoreAccountSession(store accountSessionStore) (accountbridge.Session, er
 	if !errors.Is(err, accountbridge.ErrExpired) {
 		return session, err
 	}
-	// Delete only this app's indexed secret chunks. A failed deletion remains
+	// Delete this app's encrypted session and its key. A failed deletion remains
 	// a storage failure, never an apparently successful anonymous restore.
 	if store.Delete() != nil {
 		return accountbridge.Session{}, accountbridge.ErrStorage
@@ -175,7 +175,6 @@ func (a *desktop) startAccountPolling() {
 	}
 	s.started = true
 	s.revision = 1
-	s.store = accountbridge.Store{Secrets: nativeAccountSecrets{}}
 	ctx, cancel := context.WithCancel(a.ctx)
 	s.pollCancel = cancel
 	go func() {

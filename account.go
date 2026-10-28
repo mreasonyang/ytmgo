@@ -100,6 +100,21 @@ type accountSessionClient interface {
 	ClearSession()
 }
 
+func accountErrorMessageKey(err error) string {
+	// An HTTP rejection can reflect a service or network restriction. It does
+	// not establish that the transferred account session needs replacing.
+	var httpError *catalog.HTTPError
+	if errors.As(err, &httpError) {
+		return "nativeAccountError"
+	}
+	if errors.Is(err, accountbridge.ErrSession) || errors.Is(err, accountbridge.ErrExpired) ||
+		errors.Is(err, catalog.ErrInvalidSession) || errors.Is(err, catalog.ErrSessionExpired) ||
+		errors.Is(err, catalog.ErrAuthenticationRequired) {
+		return "nativeAccountSessionError"
+	}
+	return "nativeAccountError"
+}
+
 func verifyAccountSession(ctx context.Context, candidate accountSessionClient, session accountbridge.Session) (catalog.AccountStatus, catalog.SessionCredentials, error) {
 	defer candidate.ClearSession()
 	if err := ctx.Err(); err != nil {
@@ -257,7 +272,7 @@ func (a *desktop) updateAccount(session *accountbridge.Session, newIdentity bool
 		if err == nil && newIdentity && !status.LoggedIn {
 			err = accountbridge.ErrSession
 		}
-		errorKey := "nativeAccountError"
+		errorKey := accountErrorMessageKey(err)
 		if err == nil && newIdentity {
 			err = s.store.Save(ctx, *session)
 			if err != nil {
@@ -305,8 +320,11 @@ func (a *desktop) updateAccount(session *accountbridge.Session, newIdentity bool
 				}
 				if session != nil && status.LoggedIn && (newIdentity || !hadCredentials || credentials != previousCredentials) {
 					cookies, cookieErr := session.HTTPCookies(time.Now())
-					if cookieErr != nil || a.catalog.SetSession(cookies, *session.AccountIndex, session.OnBehalfOfUser) != nil {
-						a.accountMessage("nativeAccountError")
+					if cookieErr == nil {
+						cookieErr = a.catalog.SetSession(cookies, *session.AccountIndex, session.OnBehalfOfUser)
+					}
+					if cookieErr != nil {
+						a.accountMessage(accountErrorMessageKey(cookieErr))
 						return
 					}
 				} else if !status.LoggedIn {

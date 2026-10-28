@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -17,6 +18,27 @@ type stagedSessionFixture struct {
 	library             func(context.Context) (catalog.AccountStatus, error)
 	set, reads, cleared int
 	cookieCount         int
+}
+
+func TestAccountErrorsOnlyRequestReconnectionForInvalidSessions(t *testing.T) {
+	for _, status := range []int{302, 401, 403, 429, 500, 503} {
+		t.Run(fmt.Sprintf("http-%d", status), func(t *testing.T) {
+			err := fmt.Errorf("account request: %w", &catalog.HTTPError{Stage: "browse", StatusCode: status})
+			if accountErrorMessageKey(err) != "nativeAccountError" {
+				t.Fatal("HTTP failure incorrectly asked the user to replace their session")
+			}
+		})
+	}
+	for _, err := range []error{context.DeadlineExceeded, context.Canceled, catalog.ErrUnavailable, catalog.ErrAccountStatusUnavailable, catalog.ErrSessionChanged} {
+		if accountErrorMessageKey(err) != "nativeAccountError" {
+			t.Fatal("unverified account failure incorrectly requested reconnection")
+		}
+	}
+	for _, err := range []error{accountbridge.ErrSession, accountbridge.ErrExpired, catalog.ErrInvalidSession, catalog.ErrSessionExpired, catalog.ErrAuthenticationRequired} {
+		if accountErrorMessageKey(fmt.Errorf("account session: %w", err)) != "nativeAccountSessionError" {
+			t.Fatal("invalid or expired session did not request reconnection")
+		}
+	}
 }
 
 func (f *stagedSessionFixture) SetSession(cookies []*http.Cookie, _ int, _ string) error {

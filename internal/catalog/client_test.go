@@ -64,8 +64,9 @@ func queueResponse(withLyrics bool) object {
 func fixtureClient(t *testing.T, handler func(http.ResponseWriter, *http.Request)) *Client {
 	t.Helper()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" {
-			_, _ = io.WriteString(w, `{"INNERTUBE_CLIENT_VERSION":"1.20261027.01.00"}`)
+		if r.Method != http.MethodPost || !strings.HasPrefix(r.URL.Path, "/youtubei/v1/") {
+			t.Error("catalog made a request outside the direct API contract")
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		handler(w, r)

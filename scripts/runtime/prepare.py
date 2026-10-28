@@ -20,6 +20,7 @@ import tarfile
 import urllib.request
 
 from runtime_manifest import NODE_MODULES_HASH_POLICY, node_modules_digest
+from protocol_version import check_protocol_version
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "build/runtime"
@@ -119,6 +120,10 @@ def prepare_resolver():
          "--globalconfig=" + str(global_config), "--registry=https://registry.npmjs.org",
          "--cache=" + str(CACHE / "npm-cache")], OUT,
         {"PATH": str(OUT) + ":/usr/bin:/bin:/usr/sbin:/sbin"})
+    # Check the actual installed dependency, not only its npm lock version.
+    # A changed upstream client contract must stop packaging for review.
+    check_protocol_version(OUT / "node_modules/youtubei.js/dist/src/utils/Constants.js",
+                           ROOT / "internal/catalog/client.go")
     for package, metadata in lock["packages"].items():
         if not package:
             continue

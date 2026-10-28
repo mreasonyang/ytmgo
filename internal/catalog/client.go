@@ -22,12 +22,13 @@ import (
 )
 
 const (
-	serviceOrigin           = "https://music.youtube.com"
-	requestTimeout          = 20 * time.Second
-	maxBootstrapBytes int64 = 4 << 20
-	maxResponseBytes  int64 = 8 << 20
-	maxItems                = 500
-	maxCacheEntries         = 128
+	serviceOrigin = "https://music.youtube.com"
+	// Matches the bundled youtubei.js YTMUSIC WEB_REMIX client contract.
+	musicClientVersion       = "1.20250219.01.00"
+	requestTimeout           = 20 * time.Second
+	maxResponseBytes   int64 = 8 << 20
+	maxItems                 = 500
+	maxCacheEntries          = 128
 )
 
 var (
@@ -44,8 +45,6 @@ var (
 	ErrSessionChanged           = errors.New("catalog_session_changed")
 	ErrSessionExpired           = errors.New("catalog_session_expired")
 	ErrAccountStatusUnavailable = errors.New("catalog_account_status_unavailable")
-	versionPattern              = regexp.MustCompile(`"INNERTUBE_CLIENT_VERSION"\s*:\s*"([0-9]+\.[0-9]{8}\.[0-9]+\.[0-9]+)"`)
-	visitorPattern              = regexp.MustCompile(`"VISITOR_DATA"\s*:\s*"([^"\r\n]+)"`)
 	videoIDPattern              = regexp.MustCompile(`^[a-zA-Z0-9_-]{11}$`)
 	browseIDPattern             = regexp.MustCompile(`^[a-zA-Z0-9_.=-]{1,512}$`)
 	browseParamsPattern         = regexp.MustCompile(`^[a-zA-Z0-9_+=%/.-]*$`)
@@ -126,10 +125,6 @@ type Client struct {
 	http                     *http.Client
 	origin, language, region string
 	mu                       sync.RWMutex
-	bootstrapMu              sync.Mutex
-	version                  string
-	visitor                  string
-	versionExpires           time.Time
 	continuations            map[string]continuation
 	lyrics                   map[string]lyricsReference
 	session                  *accountSession
@@ -401,10 +396,6 @@ func (c *Client) apiRequestWithPolicy(ctx context.Context, endpoint string, payl
 	}
 	ctx, cancel := context.WithTimeout(ctx, requestTimeout)
 	defer cancel()
-	version, err := c.clientVersion(ctx)
-	if err != nil {
-		return nil, err
-	}
 	if err := c.scopeError(scope); err != nil {
 		return nil, err
 	}
@@ -413,10 +404,10 @@ func (c *Client) apiRequestWithPolicy(ctx context.Context, endpoint string, payl
 		requestPayload[key] = value
 	}
 	c.mu.RLock()
-	language, region, visitor := c.language, c.region, c.visitor
+	language, region := c.language, c.region
 	c.mu.RUnlock()
 	requestContext := map[string]any{"client": map[string]string{
-		"clientName": "WEB_REMIX", "clientVersion": version, "hl": language, "gl": region,
+		"clientName": "WEB_REMIX", "clientVersion": musicClientVersion, "hl": language, "gl": region,
 	}}
 	if scope.session != nil && scope.session.onBehalfOfUser != "" {
 		requestContext["user"] = map[string]string{"onBehalfOfUser": scope.session.onBehalfOfUser}
@@ -440,11 +431,8 @@ func (c *Client) apiRequestWithPolicy(ctx context.Context, endpoint string, payl
 	req.Header.Set("Origin", serviceOrigin)
 	req.Header.Set("Referer", serviceOrigin+"/")
 	req.Header.Set("X-Youtube-Client-Name", "67")
-	req.Header.Set("X-Youtube-Client-Version", version)
+	req.Header.Set("X-Youtube-Client-Version", musicClientVersion)
 	req.Header.Set("Accept-Language", language)
-	if visitor != "" {
-		req.Header.Set("X-Goog-Visitor-Id", visitor)
-	}
 	authorize(req, scope.session)
 	data, err := c.request(req, endpoint, maxResponseBytes)
 	if scopeErr := c.scopeError(scope); scopeErr != nil {
@@ -469,39 +457,6 @@ func (c *Client) apiRequestWithPolicy(ctx context.Context, endpoint string, payl
 		return nil, err
 	}
 	return response, nil
-}
-
-func (c *Client) clientVersion(ctx context.Context) (string, error) {
-	c.bootstrapMu.Lock()
-	defer c.bootstrapMu.Unlock()
-	c.mu.RLock()
-	version, expires := c.version, c.versionExpires
-	c.mu.RUnlock()
-	if version != "" && time.Now().Before(expires) {
-		return version, nil
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.origin+"/", nil)
-	if err != nil {
-		return "", ErrUnavailable
-	}
-	data, err := c.request(req, "bootstrap", maxBootstrapBytes)
-	if err != nil {
-		return "", err
-	}
-	match := versionPattern.FindSubmatch(data)
-	if len(match) != 2 {
-		return "", ErrInvalidResponse
-	}
-	version = string(match[1])
-	visitor := ""
-	if visitorMatch := visitorPattern.FindSubmatch(data); len(visitorMatch) == 2 && len(visitorMatch[1]) <= 4096 {
-		visitor = string(visitorMatch[1])
-	}
-	c.mu.Lock()
-	c.version, c.versionExpires = version, time.Now().Add(time.Hour)
-	c.visitor = visitor
-	c.mu.Unlock()
-	return version, nil
 }
 
 func (c *Client) request(req *http.Request, stage string, limit int64) ([]byte, error) {

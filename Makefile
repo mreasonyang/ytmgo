@@ -14,6 +14,7 @@ test:
 
 test-runtime: runtime
 	python3 scripts/runtime/test_runtime_manifest.py
+	python3 scripts/runtime/test_protocol_version.py
 	python3 scripts/runtime/run_tests.py
 
 check: test test-runtime

@@ -210,12 +210,96 @@ validation, but account bootstrap returned HTTP 302 before membership flags
 were read. A separate public Go probe classified its redirect as a Google
 challenge; no redirect was followed. A diagnostic-only experiment binding the
 bootstrap to the selected account also returned 302 and was not promoted.
-The original production sources and delivery artifacts remain unchanged.
+That failed experiment did not change production sources or delivery artifacts.
 All diagnostic apps were closed. Failure evidence is retained in
 `build/diagnostics/premium-idle-authenticated-20261028/blocked.json` and its
 fixed-field stage records; `premium-idle-01` is explicitly excluded. These
 failed-state samples do not establish Premium idle memory, and the successful
 playback figures above remain playback-only results.
+
+### Account bootstrap investigation and direct API correction (2026-10-28)
+
+The blocked request was `GET https://music.youtube.com/`, used by the Go catalog
+to scrape client version and visitor configuration. The membership query,
+`POST /youtubei/v1/browse?prettyPrint=false`, had not yet run. Account verification
+created a fresh catalog client each time, making the one-hour bootstrap cache
+ineffective for the five-minute/focus checks. A failed HTML request was also
+misreported as a reason to sign in again.
+
+A bounded public comparison reproduced the Go HTTP/2 homepage request returning
+302 with a Google challenge destination. A Python request with the same URL and
+User-Agent returned 200. An explicit HTTP/1.1 Go attempt failed at the network
+level; this does not establish a specific TLS, protocol, IP, or cookie cause.
+The direct Go HTTP/2 WEB_REMIX browse request, using the installed youtubei.js
+Music client version and no visitor header, returned 200 in 974 ms with explicit
+`logged_in=false` and `music_premium=false` and no API error. Redirects were never
+followed, and no challenge was solved.
+
+The isolated direct-API candidate then accepted the authorized Premium session,
+returned the server-verified `premium` category, loaded the native Library, and
+passed another account refresh. Its executable SHA256 is
+`28f4539709f3323edde4cf828a7f185296f66d6c93fd16a50bd95f165ba3b3e2`.
+It retains the memory-only diagnostic account store; this is not Keychain
+restore acceptance. Its runtime/resources are identical to the previous
+delivery. Evidence is in `build/diagnostics/premium-direct-api-20261028/`.
+
+The correction removes the catalog's homepage bootstrap and anonymous visitor
+cache, and uses one WEB_REMIX version matching the pinned player SDK. It adds
+no DOM library, browser runtime, alternate client, retry, or fallback. This
+changes catalog/account requests only; anonymous/standard playback proof has
+its own initialization and must not be described as fixed by this change.
+
+Upstream research supports this approach:
+
+- [NewPipeExtractor #872](https://github.com/TeamNewPipe/NewPipeExtractor/issues/872)
+  specifically discusses avoiding HTML configuration extraction to reduce
+  reCAPTCHA. Its [closing change](https://github.com/TeamNewPipe/NewPipeExtractor/commit/efd3d8540114b379819e6e78b387b655907314d3)
+  moves WEB initialization to service-worker data; it is not a demonstrated
+  fix for this exact Music/Go 302.
+- [NewPipeExtractor #547](https://github.com/TeamNewPipe/NewPipeExtractor/issues/547#issuecomment-1140507701)
+  records a maintainer's historical resolution after moving requests to
+  InnerTube. This is not a guarantee against future service challenges.
+- [YouTube.js Session](https://github.com/LuanRT/YouTube.js/blob/main/src/core/Session.ts)
+  uses service-worker configuration and an SDK Music version, rather than
+  requiring Music homepage HTML for that version.
+- [ytmusicapi context initialization](https://github.com/sigma67/ytmusicapi/blob/main/ytmusicapi/helpers.py#L31)
+  constructs its WEB_REMIX version independently; it can still fetch the
+  homepage for visitor data, so it is not immune to homepage failures.
+
+Research date: 2026-10-28. NewPipeExtractor had 2,030 stars and a YouTube code
+fix on October 22; YouTube.js had 5,399 stars and released 18.3.0 on October 23;
+ytmusicapi had 3,091 stars, a code fix on October 1 and test updates on October
+12. No exact resolved upstream issue was found proving why this particular Go
+request received a challenge while Python succeeded.
+
+The production correction additionally distinguishes service/network errors
+from explicitly invalid or expired sessions. Only the latter request account
+reconnection. Packaging checks the Go Music protocol version against the actual
+installed SDK and stops on disagreement; there is no automatic version change.
+`go test -race ./...` and `make check` passed, including 80 runtime tests, five
+manifest tests, five protocol-version tests, vet, and 186 localized messages.
+`make build` produced the updated ad-hoc signed arm64 app and DMG. No installed
+Keychain restore or public release is claimed by these checks.
+
+The valid Premium idle follow-up used a fresh sign-in, the native Library page,
+and no playback before the measurement. After at least 30 seconds of settling,
+the half-open 120-second window contained 120 complete samples: **143.69 MiB
+median, 144.21 MiB peak** across the app, descendants and responsible helpers.
+Component medians were UI 75.86 MiB, Node 22.05 MiB, system helpers 45.78 MiB,
+and FFmpeg 0. No WebKit or Brave process was in scope. This is one diagnostic
+run with memory-only session storage, not a repeated-run or installed-app bound.
+The seven process identities observed across the full run were absent after
+normal quit. Portable results are in
+`docs/audits/2026-10-28-account-memory/premium-idle.json`.
+
+The subsequent attempt to measure pause-after-play did not start audio:
+the separate player SDK initialization returned `init_failed`. An account-free
+SDK probe also failed, and a public `/sw.js_data` status probe returned 302.
+The exact redirect destination and parser failure were not established for
+that SDK run. These are distinct from the corrected catalog request and are
+not evidence of a Premium entitlement failure. No valid paused window was
+recorded, and this catalog correction does not claim current end-to-end
+playback acceptance.
 
 The measurements and hashes below describe earlier builds only.
 

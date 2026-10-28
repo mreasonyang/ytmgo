@@ -2287,14 +2287,24 @@ func (msgs Messages) NativeLyricsUnavailable() string {
 	return Catalog.Format(msgs.locale, "nativeLyricsUnavailable", nil)
 }
 
-// NativeAccountError says "Could not complete the account request. Please sign in again."
+// NativeAccountError says "Could not complete the account request. Please try again later."
 // in the language the app shows.
 func NativeAccountError() string { return In(i18n.Locale()).NativeAccountError() }
 
-// NativeAccountError says "Could not complete the account request. Please sign in again."
+// NativeAccountError says "Could not complete the account request. Please try again later."
 // in the language of msgs.
 func (msgs Messages) NativeAccountError() string {
 	return Catalog.Format(msgs.locale, "nativeAccountError", nil)
+}
+
+// NativeAccountSessionError says "Your account session is no longer valid. Please reconnect your account."
+// in the language the app shows.
+func NativeAccountSessionError() string { return In(i18n.Locale()).NativeAccountSessionError() }
+
+// NativeAccountSessionError says "Your account session is no longer valid. Please reconnect your account."
+// in the language of msgs.
+func (msgs Messages) NativeAccountSessionError() string {
+	return Catalog.Format(msgs.locale, "nativeAccountSessionError", nil)
 }
 
 // NativeSignOutConfirm says "Sign out of ytmgo and remove its saved session? Brave will remain signed in."

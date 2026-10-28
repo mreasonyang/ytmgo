@@ -1,0 +1,72 @@
+{
+  "schema": "ytmgo-premium-idle-portable-v1",
+  "state": "premium",
+  "app_sha256": "28f4539709f3323edde4cf828a7f185296f66d6c93fd16a50bd95f165ba3b3e2",
+  "scope": "native_root_and_responsibility_owned_processes_and_all_descendants",
+  "metric": "proc_pid_rusage.ri_phys_footprint",
+  "build_kind": "isolated_diagnostic_candidate",
+  "catalog_candidate_only": true,
+  "ui_workload": "native_library_before_first_playback",
+  "idle_warmup_seconds_at_least": 30,
+  "idle_result": "pass",
+  "fixed_idle": {
+    "samples": 120,
+    "elapsed_window_seconds": [
+      65.387,
+      184.479
+    ],
+    "duration_seconds": 119.092,
+    "median_MiB": 143.69,
+    "peak_MiB": 144.21,
+    "min_MiB": 143.69,
+    "components_median_MiB": {
+      "native_ui": 75.86,
+      "node": 22.05,
+      "ffmpeg": 0.0,
+      "system_helper": 45.78,
+      "other_helper": 0.0
+    },
+    "components_peak_MiB": {
+      "native_ui": 76.38,
+      "node": 22.05,
+      "ffmpeg": 0.0,
+      "system_helper": 45.78,
+      "other_helper": 0.0
+    },
+    "process_counts": [
+      6
+    ],
+    "node_counts": [
+      1
+    ],
+    "requested_seconds": 120,
+    "requested_elapsed_window_seconds": [
+      65.387,
+      185.387
+    ],
+    "relative_window_seconds": [
+      0,
+      120
+    ],
+    "window_bounds": "inclusive_start_exclusive_end",
+    "window_anchor": "first_sample_marked_idle",
+    "raw_phase_samples": 133,
+    "raw_phase_span_seconds": 132.214,
+    "complete": true
+  },
+  "paused_measurement": {
+    "result": "not_measured",
+    "reason": "playback_did_not_start",
+    "valid_window": false
+  },
+  "sample_integrity": {
+    "brave_observed": false,
+    "webkit_observed": false,
+    "duplicate_pid_sample_count": 0,
+    "root_missing_sample_count": 0,
+    "component_sum_mismatches": 0,
+    "process_sum_mismatches": 0
+  },
+  "cleanup_all_observed_processes_absent": true,
+  "source_evidence": "build/diagnostics/premium-direct-api-20261028/premium-idle-01"
+}

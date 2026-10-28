@@ -21,6 +21,19 @@ test('failure metadata crosses JSONL only as fixed stage, phase and reason value
   assert.deepEqual(output, [{ id: 1, ok: false, category: 'unexpected_request_host', stage: 'proof_config_request' }]);
 });
 
+test('bootstrap response details cross JSONL only for the bootstrap stage', async () => {
+  const details = { safeBootstrapStep: 'session_data', safeHTTPStatus: 302, safeRedirect: 'google_challenge', safeMIME: 'html' };
+  assert.deepEqual(safeFailureDetails({ ...details, safeStage: 'player_request' }), { stage: 'player_request' });
+  assert.deepEqual(safeFailureDetails({ safeStage: 'bootstrap', safeBootstrapStep: 'synthetic-private', safeHTTPStatus: '302', safeRedirect: 'synthetic-private', safeMIME: 'synthetic-private' }), { stage: 'bootstrap' });
+  const output = [];
+  const control = new RuntimeController({
+    async warm() { throw Object.assign(new Error('synthetic-private-wrapper'), details, { safeCategory: 'bootstrap_redirect', safeStage: 'bootstrap' }); },
+    async close() {},
+  }, value => output.push(value));
+  control.accept({ id: 1, op: 'warm' }); await tick(); await control.close();
+  assert.deepEqual(output, [{ id: 1, ok: false, category: 'bootstrap_redirect', bootstrapStep: 'session_data', httpStatus: 302, redirect: 'google_challenge', mime: 'html', stage: 'bootstrap' }]);
+});
+
 test('strict IPC schemas reject unexpected operations, inherited names, fields and IDs', () => {
   for (const value of [null, [], {}, { id: 0, op: 'warm' }, { id: 1.5, op: 'warm' },
     { id: 1, op: 'toString' }, { id: 1, op: '__proto__' }, { id: 1, op: 'warm', cookie: 'fixture' },

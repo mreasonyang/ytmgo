@@ -313,6 +313,104 @@ not evidence of a Premium entitlement failure. No valid paused window was
 recorded, and this catalog correction does not claim current end-to-end
 playback acceptance.
 
+### Player SDK bootstrap investigation follow-up (2026-10-28)
+
+The original native diagnostic was re-read before relaunch. It contained both
+`Category=init_failed` and **`Stage=bootstrap`**. The prior investigation missed
+the stage field. `Resolver.configure()` saves the account without making a
+request; the first warm/resolve runs the public `BootstrapSession` before
+restoring the seed and passing the account to `EngineSession`. Consequently,
+this failure preceded account validation, proof initialization, and the player
+request. The public `/sw.js_data` request does not receive the saved account.
+
+The old fetch wrapper followed redirects and the SDK could wrap its errors,
+reducing the result to `init_failed`. The separate public 302 observation is
+consistent with a bootstrap failure but does **not** prove the exact HTTP
+response or redirect destination of that earlier native attempt. Neither an
+IP/TLS cause nor an entitlement failure has been established.
+
+The original runtime subsequently initialized successfully without a code
+change. An isolated observation using the same Node permission launcher saw
+three HTTP 200 responses with no redirects: session data, player identifier,
+and player script. The session-data prefix/JSON/shape and player cache were
+valid. The same native diagnostic executable (`28f4539709f3323edde4cf828a7f185296f66d6c93fd16a50bd95f165ba3b3e2`)
+accepted Premium, started playback on its first attempt in that process, and
+advanced through 39.181333333, 158.189333333, and 174.581333333 seconds before
+normal pause. This was muted playback/clock validation, not an acoustic
+recording. It demonstrates recovery of the previously failing build; it does
+not establish that the intermittent upstream failure is eliminated.
+
+The correction makes bootstrap fetch redirects explicit (`redirect=manual`)
+and preserves the first transport failure through SDK wrapping, binary IPC,
+the resolver, player state, and native diagnostics. Optional metadata is
+limited to four closed fields: bootstrap substep, HTTP status, redirect class,
+and MIME class. Network, timeout, TLS, and redirect categories are distinct.
+Unknown/malformed metadata is rejected; successful replies and non-bootstrap
+failures cannot carry these fields. Response bodies remain bounded streams.
+No response text, headers, URLs, query values, account data, or SDK cache is
+logged. There is no automatic retry, alternate client, or local session fallback.
+
+`go test -race ./...` and `make check` passed, including 89 runtime/extension
+tests, five manifest tests, five protocol-version tests, vet, and 186 localized
+messages. Synthetic tests cover redirects, SDK-wrapped transport failures,
+body-read failures, cancellation, and invalid metadata across both IPC
+boundaries. One public bootstrap with the new implementation also succeeded
+using the production permission launcher, with three requests. `make build`
+produced the updated native app and DMG.
+
+The updated bundle passed the dependency/protocol manifests, all 19 runtime
+module comparisons, strict deep app signature, DMG integrity, and embedded-app
+equality checks. The DMG remains unsigned. Evidence is
+`build/diagnostics/sdk-bootstrap-20261028/artifact-bootstrap.json`.
+Executable SHA256:
+`90d238c0ee2ab0cd212b0f01d2295e659fa769cee850019b0eef999175d7cd46`.
+DMG SHA256:
+`42794f2643abe8d751ec41b9db3f90287c019881fc23d41241b8e3d43a0855ae`.
+These replace the artifact files above; this does not establish installed
+Keychain restoration or a public release.
+
+A new isolated native diagnostic built from these tested sources also passed
+its first Premium playback attempt. Its runtime and complete resource tree
+match the formal bundle; only the account store (memory-only), application
+identity, and window title differ. Executable SHA256:
+`519a81eac28772768ef6e1859847bb5f9c99aecc863d82da14484eb0bdbb91dc`.
+The service verified Premium and the native clock advanced through 18.776,
+37.677333333, 42.925333333, and 52.024 seconds, before normal pause at
+64.074666666 seconds. Volume was zero; no acoustic recording or full-track
+completion is claimed. Signed-in Library, search, and Home loaded. The initial
+anonymous Home showed a load error before sign-in; its HTTP cause was not
+captured and anonymous Home reliability is not established by this test.
+All five observed app/descendant PIDs were absent after normal quit. The
+portable investigation record is
+`docs/audits/2026-10-28-account-memory/sdk-bootstrap-investigation.json`.
+
+The relevant upstream behavior is documented in
+[YouTube.js 18.3.0 Session](https://github.com/LuanRT/YouTube.js/blob/v18.3.0/src/core/Session.ts)
+and [PR 1066](https://github.com/LuanRT/YouTube.js/pull/1066), which introduced
+fail-fast initialization because locally generated session data after a
+server-data failure could break playback. Disabling fail-fast is not used as
+a workaround. [PR 1276](https://github.com/LuanRT/YouTube.js/pull/1276) fixes an
+optional configuration field and is already in the pinned SDK; it does not
+prove a fix for this 302 observation. Research date: 2026-10-28. No exact
+resolved upstream issue establishing this intermittent failure's cause was
+found.
+
+The successful original-runtime replay also completed a valid pause-after-play
+measurement on the native Library page. Its first half-open 120-second paused
+window had 120 complete samples: **176.95 MiB median, 179.06 MiB peak** across
+the app, descendants, and responsible helpers. Component medians were UI
+80.92 MiB, Node 73.96 MiB, FFmpeg 3.44 MiB, and system helpers 18.63 MiB.
+No WebKit or Brave process was in scope. Playback position remained
+174.581333333 seconds through the window, and all seven observed processes
+were absent after normal quit. This is one memory-only diagnostic account
+run of the prior runtime; it is separate from the fresh-before-play idle
+measurement above. Portable evidence:
+`docs/audits/2026-10-28-account-memory/premium-paused.json`.
+
+Local request and native observations are under
+`build/diagnostics/sdk-bootstrap-20261028/`. The previous exact HTTP cause
+remains unknown; current successful initialization cannot retroactively prove it.
+
 The measurements and hashes below describe earlier builds only.
 
 ## Historical anonymous implementation and measurements

@@ -74,6 +74,23 @@ test('successful binary IPC returns only after reaping and each explicit warm us
   } finally { await f.close(); }
 });
 
+test('binary bootstrap failures preserve only validated metadata and reject malformed fields', async () => {
+  const f = await fixture('diagnostic_valid');
+  try {
+    await assert.rejects(f.session.warm(), error => fixed('bootstrap_redirect')(error) &&
+      error.safeBootstrapStep === 'session_data' && error.safeHTTPStatus === 302 &&
+      error.safeRedirect === 'google_challenge' && error.safeMIME === 'html');
+    for (const mode of ['diagnostic_step', 'diagnostic_status_type', 'diagnostic_status_range', 'diagnostic_status_fraction',
+      'diagnostic_redirect', 'diagnostic_mime', 'diagnostic_null', 'diagnostic_extra']) {
+      await f.setMode(mode);
+      await assert.rejects(f.session.warm(), error => fixed('init_failed')(error) && error.safeBootstrapStep === undefined && error.safeHTTPStatus === undefined);
+    }
+    await f.setMode('normal');
+    const result = await f.session.warm();
+    assert.deepEqual(Object.keys(result).sort(), ['entries', 'fetchCount', 'playerID']); gone(pidOf(result));
+  } finally { await f.close(); }
+});
+
 test('concurrent warm is rejected without disturbing the active child', async () => {
   const f = await fixture('late_exit');
   try {

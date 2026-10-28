@@ -223,7 +223,7 @@ func (a *desktop) pollPlayback() {
 					a.model.Duration = state.Duration.Seconds()
 				}
 				if state.Error != "" {
-					recordPlaybackDiagnostic(a.diagnosticPath, "audio", state.Error, state.ErrorStage)
+					recordPlaybackDiagnostic(a.diagnosticPath, "audio", state.Error, state.ErrorDetails)
 					a.model.PlaybackError = a.tr("nativePlaybackError")
 				}
 				if state.Ended && !a.endedHandled {

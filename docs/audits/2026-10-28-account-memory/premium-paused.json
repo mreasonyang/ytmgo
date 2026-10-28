@@ -1,0 +1,74 @@
+{
+  "schema": "ytmgo-premium-paused-memory-v1",
+  "state": "premium",
+  "app_sha256": "28f4539709f3323edde4cf828a7f185296f66d6c93fd16a50bd95f165ba3b3e2",
+  "scope": "native_root_and_responsibility_owned_processes_and_all_descendants",
+  "metric": "proc_pid_rusage.ri_phys_footprint",
+  "build_kind": "original_runtime_diagnostic_candidate",
+  "runtime_changed_since_prior_failure": false,
+  "ui_workload": "native_library_after_playback_paused",
+  "paused_result": "pass",
+  "fixed_paused": {
+    "samples": 120,
+    "elapsed_window_seconds": [
+      131.461,
+      250.506
+    ],
+    "duration_seconds": 119.045,
+    "median_MiB": 176.95,
+    "peak_MiB": 179.06,
+    "min_MiB": 176.95,
+    "components_median_MiB": {
+      "native_ui": 80.92,
+      "node": 73.96,
+      "ffmpeg": 3.44,
+      "system_helper": 18.63,
+      "other_helper": 0.0
+    },
+    "components_peak_MiB": {
+      "native_ui": 83.03,
+      "node": 73.96,
+      "ffmpeg": 3.44,
+      "system_helper": 18.63,
+      "other_helper": 0.0
+    },
+    "process_counts": [
+      7
+    ],
+    "node_counts": [
+      2
+    ],
+    "requested_seconds": 120,
+    "requested_elapsed_window_seconds": [
+      131.461,
+      251.461
+    ],
+    "relative_window_seconds": [
+      0,
+      120
+    ],
+    "window_bounds": "inclusive_start_exclusive_end",
+    "window_anchor": "first_sample_marked_paused",
+    "raw_phase_samples": 355,
+    "raw_phase_span_seconds": 354.052,
+    "complete": true
+  },
+  "samples": 491,
+  "incomplete_samples": 0,
+  "sample_integrity": {
+    "brave_observed": false,
+    "webkit_observed": false,
+    "duplicate_pid_sample_count": 0,
+    "root_missing_sample_count": 0,
+    "component_sum_mismatches": 0,
+    "process_sum_mismatches": 0
+  },
+  "playback_evidence": {
+    "first_start_succeeded": true,
+    "audio_muted": true,
+    "speaker_recording": false,
+    "pause_position_seconds": 174.581333333
+  },
+  "cleanup_all_observed_processes_absent": true,
+  "source_evidence": "build/diagnostics/sdk-bootstrap-20261028/native-retest-01/memory"
+}

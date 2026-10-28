@@ -35,6 +35,18 @@ export async function run(mode) {
   if (mode === 'stderr') process.stderr.write('offline fixture diagnostic\n');
   if (mode === 'unknown_error') { value.ok = false; delete value.entries; delete value.playerID; delete value.fetchCount; value.category = 'untrusted fixture diagnostic'; }
   if (mode === 'reported_error') { value.ok = false; delete value.entries; delete value.playerID; delete value.fetchCount; value.category = 'cache_limit'; }
+  if (mode.startsWith('diagnostic_')) {
+    const reply = { ok: false, category: 'bootstrap_redirect', bootstrapStep: 'session_data', httpStatus: 302, redirect: 'google_challenge', mime: 'html' };
+    if (mode === 'diagnostic_step') reply.bootstrapStep = 'synthetic-private-step';
+    if (mode === 'diagnostic_status_type') reply.httpStatus = '302';
+    if (mode === 'diagnostic_status_range') reply.httpStatus = 600;
+    if (mode === 'diagnostic_status_fraction') reply.httpStatus = 302.5;
+    if (mode === 'diagnostic_redirect') reply.redirect = 'synthetic-private-location';
+    if (mode === 'diagnostic_mime') reply.mime = 'synthetic-private-content-type';
+    if (mode === 'diagnostic_null') reply.bootstrapStep = null;
+    if (mode === 'diagnostic_extra') reply.extra = 'synthetic-private-header';
+    process.stdout.write(frame(reply), () => process.exit(0)); return;
+  }
   if (mode === 'bad_schema') value.extra = 'untrusted fixture diagnostic';
   if (mode === 'bad_entries') value.entries = Array.from({ length: 5 }, (_, i) => [String(i), bytes]);
   if (mode === 'duplicate_entries') value.entries = [['fixture', bytes], ['fixture', bytes]];

@@ -2,6 +2,7 @@ package player
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -24,11 +25,60 @@ type workerRequest struct {
 }
 
 type workerReply struct {
-	ID       uint64          `json:"id"`
-	OK       bool            `json:"ok"`
-	Category string          `json:"category"`
-	Stage    string          `json:"stage"`
-	Media    json.RawMessage `json:"media"`
+	ID            uint64          `json:"id"`
+	OK            bool            `json:"ok"`
+	Category      string          `json:"category"`
+	Stage         string          `json:"stage"`
+	Media         json.RawMessage `json:"media"`
+	Safe          json.RawMessage `json:"safe"`
+	Phase         string          `json:"phase"`
+	Reason        string          `json:"reason"`
+	BootstrapStep string          `json:"bootstrapStep,omitempty"`
+	HTTPStatus    int             `json:"httpStatus,omitempty"`
+	Redirect      string          `json:"redirect,omitempty"`
+	MIME          string          `json:"mime,omitempty"`
+}
+
+func parseWorkerReply(data []byte) (workerReply, error) {
+	var reply workerReply
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	if decoder.Decode(&reply) != nil || reply.ID == 0 {
+		return workerReply{}, errors.New("invalid_resolver_reply")
+	}
+	var trailing any
+	if decoder.Decode(&trailing) != io.EOF {
+		return workerReply{}, errors.New("invalid_resolver_reply")
+	}
+	var fields map[string]json.RawMessage
+	if json.Unmarshal(data, &fields) != nil {
+		return workerReply{}, errors.New("invalid_resolver_reply")
+	}
+	hasDetails := false
+	for _, key := range []string{"bootstrapStep", "httpStatus", "redirect", "mime"} {
+		if value, present := fields[key]; present {
+			hasDetails = true
+			if bytes.Equal(bytes.TrimSpace(value), []byte("null")) {
+				return workerReply{}, errors.New("invalid_resolver_reply")
+			}
+		}
+	}
+	if hasDetails && (reply.OK || reply.Stage != "bootstrap" || !reply.details().validBootstrap()) {
+		return workerReply{}, errors.New("invalid_resolver_reply")
+	}
+	if _, present := fields["httpStatus"]; present && reply.HTTPStatus == 0 {
+		return workerReply{}, errors.New("invalid_resolver_reply")
+	}
+	for key, value := range map[string]string{"bootstrapStep": reply.BootstrapStep, "redirect": reply.Redirect, "mime": reply.MIME} {
+		if _, present := fields[key]; present && value == "" {
+			return workerReply{}, errors.New("invalid_resolver_reply")
+		}
+	}
+	return reply, nil
+}
+
+func (r workerReply) details() FailureDetails {
+	return FailureDetails{Stage: r.Stage, BootstrapStep: r.BootstrapStep, HTTPStatus: r.HTTPStatus, Redirect: r.Redirect, MIME: r.MIME}
 }
 
 // resolver owns the current account's playback session. Its stdout is a private data
@@ -89,8 +139,8 @@ func launchResolver(life context.Context, cancel context.CancelFunc, cmd *exec.C
 		scanner := bufio.NewScanner(out)
 		scanner.Buffer(make([]byte, 4096), resolverReplyLimit)
 		for scanner.Scan() {
-			var reply workerReply
-			if json.Unmarshal(scanner.Bytes(), &reply) != nil || reply.ID == 0 {
+			reply, err := parseWorkerReply(scanner.Bytes())
+			if err != nil {
 				break
 			}
 			r.mu.Lock()
@@ -168,7 +218,7 @@ func (r *resolver) call(parent context.Context, request workerRequest) (workerRe
 	select {
 	case reply := <-response:
 		if !reply.OK {
-			return workerReply{}, resolverStageError(reply.Category, reply.Stage)
+			return workerReply{}, resolverFailureError(reply.Category, reply.details())
 		}
 		return reply, nil
 	case <-ctx.Done():
@@ -258,6 +308,7 @@ func resolverError(category string) error {
 	case "login_required", "playability_unavailable", "drm_unsupported", "sabr_unsupported", "no_audio_format", "no_video_format", "media_expired",
 		"proof_failed", "proof_expired", "proof_request_rejected", "bootstrap_cache_miss",
 		"unexpected_request_host", "unexpected_authentication", "unexpected_client", "resolver_http_error",
+		"bootstrap_redirect", "bootstrap_network_failed", "bootstrap_network_timeout", "bootstrap_tls_failed",
 		"init_failed", "resolver_response_limit", "cache_limit":
 		return errors.New(category)
 	default:
@@ -266,27 +317,22 @@ func resolverError(category string) error {
 }
 
 type resolutionFailure struct {
-	err   error
-	stage string
+	err     error
+	details FailureDetails
 }
 
 func (e *resolutionFailure) Error() string { return e.err.Error() }
 func (e *resolutionFailure) Unwrap() error { return e.err }
 
-func resolverStageError(category, stage string) error {
+func resolverFailureError(category string, details FailureDetails) error {
 	err := resolverError(category)
-	switch stage {
-	case "bootstrap", "sdk_create", "account_validation", "proof_config_request", "proof_config_parse", "proof_init", "player_request", "decipher", "proof_mint":
-		return &resolutionFailure{err: err, stage: stage}
-	default:
-		return err
+	details = details.Sanitized()
+	if details.Stage != "" {
+		return &resolutionFailure{err: err, details: details}
 	}
+	return err
 }
 
 func safeErrorStage(err error) string {
-	var failure *resolutionFailure
-	if errors.As(err, &failure) {
-		return failure.stage
-	}
-	return ""
+	return DiagnosticDetails(err).Stage
 }

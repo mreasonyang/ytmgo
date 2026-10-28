@@ -5,11 +5,13 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"ytmgo/internal/player"
 )
 
 // Only fixed categories cross this boundary. Never store dependency messages,
 // URLs, headers, track metadata, account identifiers, secrets, argv, or environments.
-func recordPlaybackDiagnostic(directory, component, category string, stages ...string) {
+func recordPlaybackDiagnostic(directory, component, category string, details ...player.FailureDetails) {
 	if directory == "" || (component != "audio" && component != "video") {
 		return
 	}
@@ -23,21 +25,24 @@ func recordPlaybackDiagnostic(directory, component, category string, stages ...s
 		"video_network_timeout", "video_connection_failed", "proof_failed", "proof_expired",
 		"proof_request_rejected", "bootstrap_cache_miss",
 		"unexpected_request_host", "unexpected_authentication", "unexpected_client", "resolver_http_error",
-		"init_failed", "resolver_response_limit", "cache_limit":
+		"init_failed", "resolver_response_limit", "cache_limit",
+		"bootstrap_redirect", "bootstrap_network_failed", "bootstrap_network_timeout", "bootstrap_tls_failed":
 	default:
 		category = "playback_failed"
 	}
-	stage := ""
-	if len(stages) == 1 {
-		switch stages[0] {
-		case "bootstrap", "sdk_create", "account_validation", "proof_config_request", "proof_config_parse", "proof_init", "player_request", "decipher", "proof_mint":
-			stage = stages[0]
-		}
+	metadata := player.FailureDetails{}
+	if len(details) == 1 {
+		metadata = details[0].Sanitized()
 	}
 	data, _ := json.Marshal(struct {
 		Time, Version, Component, Category string
 		Stage                              string `json:"Stage,omitempty"`
-	}{time.Now().UTC().Format(time.RFC3339), version, component, category, stage})
+		BootstrapStep                      string `json:"BootstrapStep,omitempty"`
+		HTTPStatus                         int    `json:"HTTPStatus,omitempty"`
+		Redirect                           string `json:"Redirect,omitempty"`
+		MIME                               string `json:"MIME,omitempty"`
+	}{time.Now().UTC().Format(time.RFC3339), version, component, category,
+		metadata.Stage, metadata.BootstrapStep, metadata.HTTPStatus, metadata.Redirect, metadata.MIME})
 	if os.MkdirAll(directory, 0700) == nil {
 		_ = os.WriteFile(filepath.Join(directory, component+"-status.json"), data, 0600)
 	}

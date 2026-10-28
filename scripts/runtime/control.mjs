@@ -1,8 +1,10 @@
 import { validateAccountSession } from './account-session.mjs';
 import { PROOF_PHASES, PROOF_REASONS, RUNTIME_STAGES } from './engine-ipc.mjs';
+import { BOOTSTRAP_CATEGORIES, bootstrapFailureDetails } from './bootstrap-diagnostics.mjs';
 // JSONL control-plane state. No credentials, remote URLs, or SDK logs belong
 // in a response. Long operations are serial; release/cancel never queue behind them.
 export const CATEGORIES = new Set([
+  ...BOOTSTRAP_CATEGORIES,
   'invalid_request', 'duplicate_request', 'queue_full', 'request_cancelled',
   'request_timeout', 'runtime_closed', 'runtime_failed', 'init_failed',
   'resolve_failed', 'decipher_failed', 'decipher_script_invalid',
@@ -19,7 +21,7 @@ export const CATEGORIES = new Set([
 ]);
 export const safeCategory = error => CATEGORIES.has(error?.safeCategory) ? error.safeCategory : 'runtime_failed';
 export function safeFailureDetails(error) {
-  const result = {};
+  const result = error?.safeStage === 'bootstrap' ? bootstrapFailureDetails(error) : {};
   if (RUNTIME_STAGES.has(error?.safeStage)) result.stage = error.safeStage;
   if (PROOF_PHASES.has(error?.safePhase)) result.phase = error.safePhase;
   if (PROOF_REASONS.has(error?.safeReason)) result.reason = error.safeReason;

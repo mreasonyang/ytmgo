@@ -266,7 +266,7 @@ func (a *desktop) startTrack(it catalog.Item) {
 			a.model.PlaybackLoading = false
 			if err != nil && ctx.Err() == nil {
 				state := a.player.Snapshot()
-				recordPlaybackDiagnostic(a.diagnosticPath, "audio", state.Error, state.ErrorStage)
+				recordPlaybackDiagnostic(a.diagnosticPath, "audio", state.Error, state.ErrorDetails)
 				a.model.PlaybackError = a.tr("nativePlaybackError")
 			} else if err == nil {
 				a.endedHandled = false

@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"ytmgo/internal/player"
 )
 
 func TestPlaybackDiagnosticsExcludeUntrustedDetails(t *testing.T) {
@@ -64,7 +66,7 @@ func TestResolverDiagnosticCategoriesPersistWithoutDetails(t *testing.T) {
 func TestResolverDiagnosticStageNeverIncludesUntrustedData(t *testing.T) {
 	dir := t.TempDir()
 	for _, stage := range []string{"proof_config_request", "synthetic-private-stage"} {
-		recordPlaybackDiagnostic(dir, "audio", "init_failed", stage)
+		recordPlaybackDiagnostic(dir, "audio", "init_failed", player.FailureDetails{Stage: stage})
 		data, err := os.ReadFile(filepath.Join(dir, "audio-status.json"))
 		if err != nil || strings.Contains(string(data), "synthetic") {
 			t.Fatal("untrusted stage persisted")
@@ -72,6 +74,33 @@ func TestResolverDiagnosticStageNeverIncludesUntrustedData(t *testing.T) {
 		var status struct{ Stage string }
 		if json.Unmarshal(data, &status) != nil || (stage == "proof_config_request" && status.Stage != stage) {
 			t.Fatal("fixed stage lost")
+		}
+	}
+}
+
+func TestBootstrapDiagnosticsContainOnlyClosedMetadata(t *testing.T) {
+	dir := t.TempDir()
+	details := player.FailureDetails{Stage: "bootstrap", BootstrapStep: "session_data", HTTPStatus: 302, Redirect: "google_challenge", MIME: "html"}
+	for _, category := range []string{"bootstrap_redirect", "bootstrap_network_failed", "bootstrap_network_timeout", "bootstrap_tls_failed"} {
+		recordPlaybackDiagnostic(dir, "audio", category, details)
+		data, err := os.ReadFile(filepath.Join(dir, "audio-status.json"))
+		var record map[string]any
+		if err != nil || json.Unmarshal(data, &record) != nil || len(record) != 9 || record["Category"] != category || record["Stage"] != "bootstrap" || record["BootstrapStep"] != "session_data" || record["HTTPStatus"] != float64(302) || record["Redirect"] != "google_challenge" || record["MIME"] != "html" {
+			t.Fatal("fixed bootstrap metadata did not reach native diagnostics")
+		}
+	}
+	for _, invalid := range []player.FailureDetails{
+		{Stage: "bootstrap", BootstrapStep: "private-detail", HTTPStatus: 302},
+		{Stage: "bootstrap", HTTPStatus: 600},
+		{Stage: "bootstrap", Redirect: "https://example.invalid/private"},
+		{Stage: "bootstrap", MIME: "text/html; private-detail"},
+		{Stage: "player_request", BootstrapStep: "session_data", HTTPStatus: 403, Redirect: "other", MIME: "html"},
+	} {
+		recordPlaybackDiagnostic(dir, "audio", "init_failed", invalid)
+		data, err := os.ReadFile(filepath.Join(dir, "audio-status.json"))
+		var record map[string]any
+		if err != nil || json.Unmarshal(data, &record) != nil || len(record) != 5 || strings.Contains(string(data), "private") || strings.Contains(string(data), "https") {
+			t.Fatal("untrusted or non-bootstrap details persisted")
 		}
 	}
 }

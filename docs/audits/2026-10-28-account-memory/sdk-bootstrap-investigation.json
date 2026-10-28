@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "date": "2026-10-28",
+  "prior_failure": {
+    "category": "init_failed",
+    "stage": "bootstrap",
+    "exact_http_cause_captured": false
+  },
+  "same_build_replay": {
+    "runtime_changed": false,
+    "account_category": "premium",
+    "positions_seconds": [
+      39.181333333,
+      158.189333333,
+      174.581333333
+    ],
+    "paused_position_seconds": 174.581333333,
+    "volume": 0,
+    "acoustic_recording": false
+  },
+  "public_baseline": {
+    "succeeded": true,
+    "requests": 3,
+    "http_statuses": [
+      200,
+      200,
+      200
+    ],
+    "redirects": false
+  },
+  "candidate_public_bootstrap": {
+    "succeeded": true,
+    "requests": 3,
+    "manual_redirect": true,
+    "account_supplied": false
+  },
+  "validation": {
+    "go_race": "pass",
+    "make_check": "pass",
+    "runtime_tests": 89,
+    "manifest_tests": 5,
+    "protocol_tests": 5,
+    "i18n_messages": 186,
+    "build": "pass"
+  },
+  "limits": [
+    "prior_native_http_cause_unknown",
+    "intermittent_upstream_failure_not_proven_eliminated",
+    "installed_keychain_restore_not_tested"
+  ],
+  "artifacts": {
+    "executable_sha256": "90d238c0ee2ab0cd212b0f01d2295e659fa769cee850019b0eef999175d7cd46",
+    "dmg_sha256": "42794f2643abe8d751ec41b9db3f90287c019881fc23d41241b8e3d43a0855ae",
+    "app_signature": "pass",
+    "dmg_integrity": "pass",
+    "runtime_source_equality": "pass",
+    "dmg_signed": false
+  },
+  "candidate_native": {
+    "app_sha256": "519a81eac28772768ef6e1859847bb5f9c99aecc863d82da14484eb0bdbb91dc",
+    "production_runtime_resources_identical": true,
+    "diagnostic_differences": [
+      "memory_only_account_store",
+      "isolated_app_identity",
+      "window_title"
+    ],
+    "server_account_category": "premium",
+    "first_play_attempt_succeeded": true,
+    "positions_seconds": [
+      18.776,
+      37.677333333,
+      42.925333333,
+      52.024
+    ],
+    "paused_position_seconds": 64.074666666,
+    "volume": 0,
+    "acoustic_recording": false,
+    "signed_in_library": "pass",
+    "signed_in_search": "pass",
+    "signed_in_home": "pass",
+    "initial_anonymous_home": "load_error_http_cause_not_captured",
+    "normal_quit": true,
+    "observed_app_and_descendant_pids_absent_after_quit": true,
+    "observed_app_and_descendant_pid_count": 5
+  }
+}

@@ -14,11 +14,11 @@ import (
 )
 
 func TestResolverDiagnosticCategoriesRemainBounded(t *testing.T) {
-	if safeErrorStage(resolverStageError("init_failed", "proof_config_request")) != "proof_config_request" ||
-		safeErrorStage(resolverStageError("init_failed", "synthetic-private-stage")) != "" {
+	if safeErrorStage(resolverFailureError("init_failed", FailureDetails{Stage: "proof_config_request"})) != "proof_config_request" ||
+		safeErrorStage(resolverFailureError("init_failed", FailureDetails{Stage: "synthetic-private-stage"})) != "" {
 		t.Fatal("resolver stage boundary failed")
 	}
-	if !errors.Is(resolverStageError("request_timeout", "bootstrap"), context.DeadlineExceeded) {
+	if !errors.Is(resolverFailureError("request_timeout", FailureDetails{Stage: "bootstrap"}), context.DeadlineExceeded) {
 		t.Fatal("resolver stage hid timeout")
 	}
 	for _, category := range []string{"unexpected_request_host", "unexpected_authentication", "unexpected_client", "resolver_http_error", "init_failed", "resolver_response_limit", "cache_limit"} {

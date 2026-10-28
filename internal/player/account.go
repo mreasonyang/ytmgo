@@ -99,7 +99,7 @@ func (p *Player) SetAccount(ctx context.Context, next AccountSession) error {
 		p.session, p.media, p.wantPlay = nil, nil, false
 		p.state.Position, p.state.Duration = 0, 0
 		p.state.Playing, p.state.Ended = false, false
-		p.state.Error, p.state.ErrorStage = "", ""
+		p.state.Error, p.state.ErrorDetails = "", FailureDetails{}
 	}
 	p.mu.Unlock()
 	defer p.ops.Done()

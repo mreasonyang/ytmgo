@@ -24,7 +24,7 @@ type State struct {
 	Position, Duration time.Duration
 	Volume             float64
 	Error              string
-	ErrorStage         string
+	ErrorDetails       FailureDetails
 	Ended              bool
 }
 
@@ -315,7 +315,7 @@ func (p *Player) beginLocked(ctx context.Context, at time.Duration, play, clear 
 	}
 	p.wantPlay = play
 	p.state.Position, p.state.Loading, p.state.Playing = at, true, false
-	p.state.Error, p.state.ErrorStage, p.state.Ended = "", "", false
+	p.state.Error, p.state.ErrorDetails, p.state.Ended = "", FailureDetails{}, false
 	return ctx, p.gen, old, nil
 }
 
@@ -368,7 +368,7 @@ func (p *Player) fail(gen uint64, err error) error {
 	}
 	// Dependencies emit only fixed category errors. Never propagate raw
 	// exec/network errors, which can contain signed media URLs.
-	p.state.Error, p.state.ErrorStage = safeError(err), safeErrorStage(err)
+	p.state.Error, p.state.ErrorDetails = safeError(err), DiagnosticDetails(err)
 	return errors.New(p.state.Error)
 }
 
@@ -452,7 +452,7 @@ func (p *Player) Stop() error {
 	p.session, p.media, p.wantPlay = nil, nil, false
 	p.clearPreparedLocked()
 	p.state.Position, p.state.Playing, p.state.Loading, p.state.Ended = 0, false, false, false
-	p.state.Error, p.state.ErrorStage = "", ""
+	p.state.Error, p.state.ErrorDetails = "", FailureDetails{}
 	p.mu.Unlock()
 	old.close()
 	releaseMedia(oldMedia)
@@ -524,11 +524,11 @@ func (p *Player) Snapshot() State {
 		if !p.state.Playing && p.wantPlay && s.decoder.eof.Load() {
 			p.state.Ended = !s.decoder.failed.Load()
 			if s.decoder.failed.Load() {
-				p.state.Error, p.state.ErrorStage = "audio_stream_failed", ""
+				p.state.Error, p.state.ErrorDetails = "audio_stream_failed", FailureDetails{}
 			}
 		}
 		if p.state.Playing && audio.Err() != nil {
-			p.state.Error, p.state.ErrorStage = "audio_output_unavailable", ""
+			p.state.Error, p.state.ErrorDetails = "audio_output_unavailable", FailureDetails{}
 			p.state.Playing = false
 			s.output.Pause()
 			p.wantPlay = false
@@ -574,13 +574,18 @@ func safeError(err error) string {
 	if errors.Is(err, context.DeadlineExceeded) {
 		return "playback_timeout"
 	}
+	var failure *resolutionFailure
+	if errors.As(err, &failure) {
+		err = failure.err
+	}
 	switch err.Error() {
 	case "stream_resolution_failed", "invalid_media_response", "audio_stream_failed", "audio_decoder_unavailable", "runtime_missing",
 		"audio_access_denied", "audio_rate_limited", "audio_server_error", "audio_network_timeout", "audio_connection_failed",
 		"audio_range_mismatch", "audio_stream_truncated",
 		"proof_failed", "proof_expired", "proof_request_rejected", "bootstrap_cache_miss",
 		"unexpected_request_host", "unexpected_authentication", "unexpected_client", "resolver_http_error",
-		"init_failed", "resolver_response_limit", "cache_limit":
+		"init_failed", "resolver_response_limit", "cache_limit",
+		"bootstrap_redirect", "bootstrap_network_failed", "bootstrap_network_timeout", "bootstrap_tls_failed":
 		return err.Error()
 	default:
 		return "playback_failed"

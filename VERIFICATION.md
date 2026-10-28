@@ -64,9 +64,8 @@ changing production player behavior; targeted tests passed five local runs and
 three race runs. The next CI run must execute the remaining native fixtures.
 
 The following extension-based acceptance notes are historical. They are not
-instructions for the new login flow. Real Google authentication and account
-restoration remain pending user entry in the new private window. No real-account
-success is inferred from the offline fixtures or from displaying the login form.
+instructions for the new login flow. The real-account result below is separate
+from offline fixtures and from merely displaying the login form.
 
 The real Google attempt exposed a passkey limitation on macOS: the user could
 reach Google's passkey screen but no usable authentication dialog appeared.
@@ -96,8 +95,40 @@ The macOS helper now appends that suffix through
 `applicationNameForUserAgent`, preserving the system-generated base UA. It does
 not claim Chrome/Brave or invent a Safari version. The supplied WK configuration
 explicitly uses `nonPersistentDataStore`; fixture isolation checks are rerun.
-Windows and Linux keep their platform defaults. Anonymous results cannot prove
-authenticated account-index extraction, so real account handoff remains pending.
+Windows and Linux keep their platform defaults. The anonymous A/B alone did not
+prove authenticated account-index extraction; the subsequent v4 result below
+provides that separate real-account evidence.
+
+Current candidate: source `096c395`, package directory
+`/Users/easonyang/Library/Caches/ytmgo-webview-login-build-20261029-v4/darwin-arm64/`.
+The same validated app and DMG have been copied to `build/darwin-arm64/`.
+Main executable SHA256:
+`fbbdf778fe697f97e52c5dd6bcd3b1fe34cf048b527eeafb57e875b4088c0262`;
+DMG SHA256:
+`62f1bd6273c27958e5860464efbc090c6765272977c772541bc4a63f21ac99ef`.
+Both app bundle signatures and the disk image verify successfully. The package
+was launched for a fresh user-entered authentication attempt.
+
+The user completed Google alternative verification in v4. At 2026-10-29 02:51
+Asia/Shanghai, the app reported the allowlisted `premium` category, the encrypted
+session file existed, and the native music library displayed account playlists.
+The login helper and its three previously tracked WebKit processes had all
+exited. The same v4 binary was then quit and relaunched; Premium recognition and
+authenticated catalogue access returned without another login window. No
+credentials, session contents or key material were inspected or recorded.
+Evidence: `build/diagnostics/webview-login-20261029/v4-handoff-result.json`
+and `v4-restore-result.json`. This is macOS real-account acceptance, not Windows
+or Linux Google-login acceptance.
+
+CI run <https://github.com/mreasonyang/ytmgo/actions/runs/40746572499> passed the
+complete Linux job, including all four real WebKitGTK fixture cases. Windows
+passed Go tests, application compilation, production helper build and the
+cancel/parent-EOF/timeout fixture cases; its successful-session case timed out.
+The still-queued macOS job was cancelled after these completed to retrieve
+bounded failure diagnostics. A follow-up fixture-only diagnostic change adds
+fixed stage enums and fixed result reasons; no page/URL/cookie values or raw
+stderr are emitted, and production builds contain no diagnostic module. The
+Windows successful-session case remains open pending the next CI run.
 
 ## Formal-package acceptance continuation — 2026-10-29 (Asia/Shanghai)
 

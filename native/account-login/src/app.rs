@@ -14,6 +14,13 @@ use wry::{PageLoadEvent, WebView, WebViewBuilder};
 use crate::protocol::{self, Command, CommandKind, Failure, Outcome, Request};
 use crate::session::{self, Metadata, Session, SessionCookie};
 
+macro_rules! fixture_stage {
+    ($stage:ident) => {
+        #[cfg(feature = "fixture")]
+        crate::fixture_diagnostics::record(crate::fixture_diagnostics::Stage::$stage);
+    };
+}
+
 #[cfg(not(feature = "fixture"))]
 const START_URL: &str = "https://accounts.google.com/ServiceLogin?service=youtube&continue=https%3A%2F%2Fmusic.youtube.com%2F";
 
@@ -121,7 +128,9 @@ fn music_url(address: &str) -> bool {
 
 fn query(view: &WebView, proxy: &EventLoopProxy<Signal>, id: u64) -> bool {
     let proxy = proxy.clone();
+    fixture_stage!(MetadataRequested);
     view.evaluate_script_with_callback(METADATA, move |raw| {
+        fixture_stage!(MetadataReceived);
         // Only the fixed metadata object is accepted. Never transport page source.
         if raw.len() <= 1024 {
             let _ = proxy.send_event(Signal::Metadata { id, raw });
@@ -245,6 +254,7 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
         .with_download_started_handler(|_, _| false)
         .with_on_page_load_handler(move |event, address| {
             if matches!(event, PageLoadEvent::Started) {
+                fixture_stage!(LoadStarted);
                 load_generation.fetch_add(1, Ordering::SeqCst);
                 load_loading.store(true, Ordering::SeqCst);
                 let _ = loaded.send_event(Signal::Navigating);
@@ -252,6 +262,12 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
             if matches!(event, PageLoadEvent::Finished) {
                 #[cfg(feature = "fixture")]
                 let music = address == "about:blank" || address.is_empty();
+                #[cfg(feature = "fixture")]
+                if music {
+                    fixture_stage!(LoadExpected);
+                } else {
+                    fixture_stage!(LoadOther);
+                }
                 #[cfg(not(feature = "fixture"))]
                 let music = music_url(&address);
                 load_loading.store(false, Ordering::SeqCst);
@@ -278,6 +294,7 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
         Ok(view) => view,
         Err(_) => return Outcome::error(Failure::LoginFailed),
     };
+    fixture_stage!(ViewCreated);
     #[cfg(feature = "fixture")]
     {
         // A previous helper must not have left even a persistent synthetic cookie.
@@ -286,6 +303,7 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
             drop(view);
             return Outcome::error(Failure::LoginFailed);
         }
+        fixture_stage!(StoreEmpty);
         let cookie = wry::cookie::Cookie::build(("SAPISID", "synthetic-fixture-session"))
             .domain(".youtube.com")
             .path("/")
@@ -299,6 +317,7 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
             drop(view);
             return Outcome::error(Failure::LoginFailed);
         }
+        fixture_stage!(CookieSet);
     }
     if !start_input(input, proxy.clone()) {
         drop(view);
@@ -334,6 +353,7 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
             }
             #[cfg(feature = "fixture")]
             Event::UserEvent(Signal::FixtureComplete) => {
+                fixture_stage!(CompleteReceived);
                 complete_fixture = true;
                 next_probe = now;
             }
@@ -362,18 +382,21 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
                         && !loading.load(Ordering::SeqCst)
                         && probe.generation == generation.load(Ordering::SeqCst)
                 }) {
+                    fixture_stage!(MetadataValid);
                     match probe.stage {
                         Stage::Before => {
                             let now_seconds = SystemTime::now()
                                 .duration_since(UNIX_EPOCH)
                                 .unwrap_or_default()
                                 .as_secs() as i64;
+                            fixture_stage!(CookiesReadStarted);
                             match view
                                 .cookies()
                                 .map_err(|_| ())
                                 .and_then(|c| session::select(c, now_seconds))
                             {
                                 Ok(Some(cookies)) => {
+                                    fixture_stage!(CookiesSelected);
                                     next_id += 1;
                                     let id = next_id;
                                     pending = Some(Probe {
@@ -382,11 +405,14 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
                                         started: now,
                                         stage: Stage::After { metadata, cookies },
                                     });
+                                    fixture_stage!(MetadataAfterRequested);
                                     if !query(&view, &proxy, id) {
                                         outcome = Some(Outcome::error(Failure::LoginFailed));
                                     }
                                 }
-                                Ok(None) => {} // Keep waiting for an actual signed-in session.
+                                Ok(None) => {
+                                    fixture_stage!(CookiesMissing);
+                                } // Keep waiting for an actual signed-in session.
                                 Err(_) => outcome = Some(Outcome::error(Failure::LoginFailed)),
                             }
                         }
@@ -394,7 +420,9 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
                             metadata: before,
                             cookies,
                         } => {
+                            fixture_stage!(MetadataAfterValid);
                             if metadata == before {
+                                fixture_stage!(SessionReady);
                                 outcome = Some(Outcome::session(Session {
                                     cookies,
                                     account_index: metadata.account_index,
@@ -449,6 +477,7 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
         *flow = ControlFlow::WaitUntil(deadline.map_or(next_probe, |end| next_probe.min(end)));
     });
     // Only the caller emits the outcome, after this WebView and window are gone.
+    fixture_stage!(CleanupStarted);
     drop(pending);
     drop(view);
     drop(window);
@@ -459,6 +488,7 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
             return Outcome::error(Failure::LoginFailed);
         }
     }
+    fixture_stage!(CleanupFinished);
     outcome.unwrap_or_else(Outcome::cancelled)
 }
 

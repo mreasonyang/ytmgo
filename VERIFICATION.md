@@ -204,6 +204,19 @@ quit by PID/executable checks; `cleanup.json` records this in the evidence
 directory. `anonymous-01` was a track-selection precheck and is explicitly
 excluded from this comparison.
 
+The subsequent Premium non-playing follow-up could not establish a valid
+signed-in idle or paused window. Fresh extension handoffs passed local session
+validation, but account bootstrap returned HTTP 302 before membership flags
+were read. A separate public Go probe classified its redirect as a Google
+challenge; no redirect was followed. A diagnostic-only experiment binding the
+bootstrap to the selected account also returned 302 and was not promoted.
+The original production sources and delivery artifacts remain unchanged.
+All diagnostic apps were closed. Failure evidence is retained in
+`build/diagnostics/premium-idle-authenticated-20261028/blocked.json` and its
+fixed-field stage records; `premium-idle-01` is explicitly excluded. These
+failed-state samples do not establish Premium idle memory, and the successful
+playback figures above remain playback-only results.
+
 The measurements and hashes below describe earlier builds only.
 
 ## Historical anonymous implementation and measurements

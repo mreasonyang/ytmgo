@@ -1,0 +1,122 @@
+--- a/account.go
++++ b/account.go
+@@ -75,22 +75,57 @@
+ 	bridgeCancel             context.CancelFunc
+ 	message                  string
+ }
+-type nativeAccountSecrets struct{}
+-
+-func (nativeAccountSecrets) Set(key string, value []byte) error { return mygo.Secrets.Set(key, value) }
+-func (nativeAccountSecrets) Get(key string) ([]byte, error) {
+-	value, err := mygo.Secrets.Get(key)
+-	if errors.Is(err, mygo.ErrSecretNotFound) {
++
++// diagnosticMemorySecrets is confined to this isolated diagnostic build.
++// Every process starts empty. Values are copied into memory only, and cleared
++// on overwrite, deletion and close. No system secret API is called.
++type diagnosticMemorySecrets struct {
++	mu     sync.Mutex
++	values map[string][]byte
++	closed bool
++}
++
++func (s *diagnosticMemorySecrets) Set(key string, value []byte) error {
++	s.mu.Lock()
++	defer s.mu.Unlock()
++	if s.closed {
++		return accountbridge.ErrStorage
++	}
++	if s.values == nil {
++		s.values = make(map[string][]byte)
++	}
++	clear(s.values[key])
++	s.values[key] = append([]byte(nil), value...)
++	return nil
++}
++func (s *diagnosticMemorySecrets) Get(key string) ([]byte, error) {
++	s.mu.Lock()
++	defer s.mu.Unlock()
++	value, ok := s.values[key]
++	if s.closed || !ok {
+ 		return nil, accountbridge.ErrNotFound
+ 	}
+-	return value, err
+-}
+-func (nativeAccountSecrets) Delete(key string) error {
+-	err := mygo.Secrets.Delete(key)
+-	if errors.Is(err, mygo.ErrSecretNotFound) {
++	return append([]byte(nil), value...), nil
++}
++func (s *diagnosticMemorySecrets) Delete(key string) error {
++	s.mu.Lock()
++	defer s.mu.Unlock()
++	value, ok := s.values[key]
++	if s.closed || !ok {
+ 		return accountbridge.ErrNotFound
+ 	}
+-	return err
++	clear(value)
++	delete(s.values, key)
++	return nil
++}
++func (s *diagnosticMemorySecrets) Close() {
++	s.mu.Lock()
++	defer s.mu.Unlock()
++	s.closed = true
++	for key, value := range s.values {
++		clear(value)
++		delete(s.values, key)
++	}
+ }
+ 
+ type accountSessionClient interface {
+@@ -157,7 +192,7 @@
+ 	}
+ 	s.started = true
+ 	s.revision = 1
+-	s.store = accountbridge.Store{Secrets: nativeAccountSecrets{}}
++	s.store = accountbridge.Store{Secrets: &diagnosticMemorySecrets{}}
+ 	ctx, cancel := context.WithCancel(a.ctx)
+ 	s.pollCancel = cancel
+ 	go func() {
+@@ -476,6 +511,9 @@
+ 	}
+ }
+ func (a *desktop) closeAccount() {
++	if secrets, ok := a.accountState.store.Secrets.(*diagnosticMemorySecrets); ok {
++		secrets.Close()
++	}
+ 	a.accountGeneration++
+ 	s := &a.accountState
+ 	s.flow.cancelPending()
+--- a/main.go
++++ b/main.go
+@@ -141,7 +141,7 @@
+ 		a.art = newArtworkCache(a.ctx, func() {
+ 			a.invalidate()
+ 		})
+-		a.window = mygo.NewWindow(mygo.WindowOptions{Title: locales.AppName(), Width: 1440, Height: 940, MinWidth: 380, MinHeight: 640, StateKey: "native-main", BackgroundColor: "light-dark(#e7e7ea, #050506)", Content: ui.View(func(c *ui.Context) { nativeView(c, &a.model, a.actions()); a.syncVideo() })})
++		a.window = mygo.NewWindow(mygo.WindowOptions{Title: "ytmgo Memory Diagnostic", Width: 1440, Height: 940, MinWidth: 380, MinHeight: 640, StateKey: "native-main", BackgroundColor: "light-dark(#e7e7ea, #050506)", Content: ui.View(func(c *ui.Context) { nativeView(c, &a.model, a.actions()); a.syncVideo() })})
+ 		a.windowVisible = true
+ 		a.window.OnHide(func() { a.windowVisible = false; a.syncVideo() })
+ 		a.window.OnShow(func() { a.windowVisible = true; a.syncVideo() })
+--- a/mygo.json
++++ b/mygo.json
+@@ -1,6 +1,6 @@
+ {
+-  "name": "ytmgo",
+-  "identifier": "si.kyun.ytmgo",
++  "name": "ytmgo-memory-diagnostic",
++  "identifier": "si.kyun.ytmgo.memory-diagnostic",
+   "version": "0.4.0",
+   "out": "build",
+   "icon": "resources/icon.png",
+@@ -8,7 +8,7 @@
+     "minimumSystemVersion": "27.0",
+     "signingIdentity": "-",
+     "infoPlist": {
+-      "CFBundleDisplayName": "ytmgo",
++      "CFBundleDisplayName": "ytmgo Memory Diagnostic",
+       "NSHighResolutionCapable": true
+     }
+   },

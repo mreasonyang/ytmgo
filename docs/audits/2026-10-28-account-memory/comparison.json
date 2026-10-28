@@ -1,0 +1,219 @@
+{
+  "same_app_binary": true,
+  "all_steady_windows_complete": true,
+  "three_states_present": true,
+  "steady_window_seconds": 120,
+  "checked_at": "2026-10-28",
+  "host": {
+    "os_version": "27.0.1",
+    "hardware_model": "Mac16,8",
+    "physical_memory_bytes": 25769803776
+  },
+  "source_commit": "3d1036d35cab631d70e0bbf8bc5beab8bc4894aa",
+  "app_sha256": "d7ac0ec5df4d3a1734a64a1d12e1569d482a6af230d0b096783ebd2fd7a4a050",
+  "source_patch_sha256": "452b2e401fd8130d578211d595041d5b9bbb1ae6a3bd97b84a186cd0175195fa",
+  "method": {
+    "source_commit": "3d1036d35cab631d70e0bbf8bc5beab8bc4894aa",
+    "diagnostic_app_sha256": "d7ac0ec5df4d3a1734a64a1d12e1569d482a6af230d0b096783ebd2fd7a4a050",
+    "test_build_difference": "ephemeral_in_memory_account_store_and_distinct_app_identity",
+    "native_ui_and_player_unchanged": true,
+    "runtime_resources_identical_to_delivery": true,
+    "track_id": "4D7u5KF7SP8",
+    "track_title": "Get Lucky (feat. Pharrell Williams and Nile Rodgers)",
+    "metadata_duration_seconds": 369.641,
+    "view": "immersive_cover_queue",
+    "volume": 0,
+    "repeat": "one",
+    "prepared_next_disabled": true,
+    "fresh_process_each_state": true,
+    "fixed_warmup_seconds_after_playing_confirmation": 30,
+    "fixed_steady_window_seconds": 120,
+    "metric": "sum_ri_phys_footprint_of_responsible_processes_and_descendants",
+    "browser_excluded": true,
+    "window_capture_pixels": [
+      2880,
+      1810
+    ],
+    "limitations": [
+      "Single run per state unless otherwise noted",
+      "Live Home and search recommendations are not byte-identical between accounts; retained UI image cache may differ",
+      "This measures native UI and playback code in a diagnostic build, not Keychain persistence or the final distributed executable",
+      "Content playback is not advertisement protocol acceptance"
+    ]
+  },
+  "runs": [
+    {
+      "state": "anonymous",
+      "scope": "native_root_and_responsibility_owned_processes_and_all_descendants",
+      "metric": "proc_pid_rusage.ri_phys_footprint",
+      "samples": 268,
+      "incomplete_samples": 1,
+      "webkit_observed": false,
+      "steady_window_complete": true,
+      "fixed_playback_steady": {
+        "samples": 120,
+        "elapsed_window_seconds": [
+          137.504,
+          256.481
+        ],
+        "duration_seconds": 118.977,
+        "median_MiB": 403.44,
+        "peak_MiB": 407.38,
+        "min_MiB": 398.96,
+        "components_median_MiB": {
+          "native_ui": 245.85,
+          "node": 127.17,
+          "ffmpeg": 3.48,
+          "system_helper": 26.85,
+          "other_helper": 0.0
+        },
+        "components_peak_MiB": {
+          "native_ui": 246.1,
+          "node": 131.16,
+          "ffmpeg": 3.55,
+          "system_helper": 27.0,
+          "other_helper": 0.0
+        },
+        "process_counts": [
+          8
+        ],
+        "node_counts": [
+          2
+        ],
+        "requested_seconds": 120,
+        "requested_elapsed_window_seconds": [
+          137.504,
+          257.504
+        ],
+        "relative_window_seconds": [
+          0,
+          120
+        ],
+        "window_bounds": "inclusive_start_exclusive_end",
+        "window_anchor": "first_sample_marked_playback_steady",
+        "raw_phase_span_seconds": 129.017,
+        "complete": true
+      },
+      "all_complete_samples_peak_MiB": 432.88
+    },
+    {
+      "state": "standard",
+      "scope": "native_root_and_responsibility_owned_processes_and_all_descendants",
+      "metric": "proc_pid_rusage.ri_phys_footprint",
+      "samples": 341,
+      "incomplete_samples": 0,
+      "webkit_observed": false,
+      "steady_window_complete": true,
+      "fixed_playback_steady": {
+        "samples": 121,
+        "elapsed_window_seconds": [
+          210.452,
+          330.423
+        ],
+        "duration_seconds": 119.971,
+        "median_MiB": 399.19,
+        "peak_MiB": 403.16,
+        "min_MiB": 396.9,
+        "components_median_MiB": {
+          "native_ui": 248.05,
+          "node": 129.41,
+          "ffmpeg": 3.47,
+          "system_helper": 18.33,
+          "other_helper": 0.0
+        },
+        "components_peak_MiB": {
+          "native_ui": 250.94,
+          "node": 132.5,
+          "ffmpeg": 3.53,
+          "system_helper": 18.44,
+          "other_helper": 0.0
+        },
+        "process_counts": [
+          7
+        ],
+        "node_counts": [
+          2
+        ],
+        "requested_seconds": 120,
+        "requested_elapsed_window_seconds": [
+          210.452,
+          330.452
+        ],
+        "relative_window_seconds": [
+          0,
+          120
+        ],
+        "window_bounds": "inclusive_start_exclusive_end",
+        "window_anchor": "first_sample_marked_playback_steady",
+        "raw_phase_span_seconds": 128.95,
+        "complete": true
+      },
+      "all_complete_samples_peak_MiB": 446.34
+    },
+    {
+      "state": "premium",
+      "scope": "native_root_and_responsibility_owned_processes_and_all_descendants",
+      "metric": "proc_pid_rusage.ri_phys_footprint",
+      "samples": 299,
+      "incomplete_samples": 1,
+      "webkit_observed": false,
+      "steady_window_complete": true,
+      "fixed_playback_steady": {
+        "samples": 120,
+        "elapsed_window_seconds": [
+          169.413,
+          288.42
+        ],
+        "duration_seconds": 119.007,
+        "median_MiB": 347.48,
+        "peak_MiB": 351.79,
+        "min_MiB": 343.45,
+        "components_median_MiB": {
+          "native_ui": 250.64,
+          "node": 74.95,
+          "ffmpeg": 3.52,
+          "system_helper": 18.39,
+          "other_helper": 0.0
+        },
+        "components_peak_MiB": {
+          "native_ui": 251.72,
+          "node": 78.1,
+          "ffmpeg": 3.58,
+          "system_helper": 18.39,
+          "other_helper": 0.0
+        },
+        "process_counts": [
+          7
+        ],
+        "node_counts": [
+          2
+        ],
+        "requested_seconds": 120,
+        "requested_elapsed_window_seconds": [
+          169.413,
+          289.413
+        ],
+        "relative_window_seconds": [
+          0,
+          120
+        ],
+        "window_bounds": "inclusive_start_exclusive_end",
+        "window_anchor": "first_sample_marked_playback_steady",
+        "raw_phase_span_seconds": 128.049,
+        "complete": true
+      },
+      "all_complete_samples_peak_MiB": 359.79
+    }
+  ],
+  "cleanup": {
+    "observed_unique_processes": 25,
+    "remaining_matching_executable_counts": {
+      "native_ui": 0,
+      "node": 0,
+      "ffmpeg": 0,
+      "system_helper": 0,
+      "other_helper": 0
+    },
+    "all_native_app_node_ffmpeg_exited": true
+  }
+}

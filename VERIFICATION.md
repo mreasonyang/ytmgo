@@ -123,10 +123,10 @@ not a real billing upgrade/expiry; same-account membership changes are covered
 by automated lifecycle tests. Evidence:
 `build/diagnostics/account-native-20261028/premium-cycle-delivery/`.
 
-A native AX observation showed mute had reverted after natural next-track;
-the cause was not reproduced. Added tests cover the actual volume controller,
-natural EOF, prepared next, seek and account/membership changes and all pass.
-The observed incident remains unresolved; these tests are not a fix claim.
+The user confirmed that the observed volume change around natural next-track
+was their manual action. It is not a product mute defect or an outstanding
+acceptance item. Tests covering the volume controller, natural EOF, prepared
+next, seek and account/membership changes passed; no mute fix is claimed.
 
 Final packaging checks passed for 17 runtime modules, 137 manifest files,
 locked dependencies, Node version, App strict ad-hoc signature, DMG integrity,
@@ -141,6 +141,68 @@ Delivery executable SHA256:
 `897c9fb29e5c7c21728498117fe7069eb840a0059c8133265920c8e418e6c9ba`.
 Delivery DMG SHA256:
 `7017673c28dfbb739cc5f10659a1204f8f7b576f679e90fe182193dd87c0e649`.
+
+### Three-state whole-application memory comparison (2026-10-28)
+
+The three states were measured with fresh processes of the same diagnostic
+binary, using the native UI, native audio output, and unchanged delivery
+runtime/resources. Each run played the same 369.641-second recording
+(`4D7u5KF7SP8`) in the immersive cover/queue layout, with repeat-one, no
+next-track preparation, and volume zero. The native playback clock advanced
+while muted. The window capture was 2880×1810 pixels. Each state had a
+30-second warm-up after playback confirmation, followed by nominal 1 Hz memory
+sampling over a fixed 120-second half-open interval `[start, start + 120)`;
+`start` is the first sample marked `playback_steady`. Scheduling jitter yielded
+120, 121, and 120 samples respectively, not a different requested window.
+
+The test host was Mac16,8 with 24 GiB RAM and macOS 27.0.1. The metric is
+the sum of `ri_phys_footprint` across the app's responsible processes and
+descendants, including native system helpers. Brave is excluded.
+Every sample used in these fixed windows had complete process coverage; no
+owned WebKit process was observed. All numbers below are MiB. Peaks refer to
+these same fixed playback windows, not the whole launch/sign-in run.
+
+| Account state | Whole app median | Whole app peak | All Node median | All Node peak | Native UI median |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Signed out | 403.44 | 407.38 | 127.17 | 131.16 | 245.85 |
+| Signed in, non-Premium | 399.19 | 403.16 | 129.41 | 132.50 | 248.05 |
+| Premium | 347.48 | 351.79 | 74.95 | 78.10 | 250.64 |
+
+In these sessions, Premium's whole-app median was **55.96 MiB
+(13.87%)** below signed out and **51.71 MiB (12.95%)** below non-Premium.
+The corresponding combined Node differences were **52.22 MiB (41.06%)** and
+**54.46 MiB (42.08%)**. Component medians are separate statistics and need
+not add up to the whole-app median.
+
+This is a controlled playback setup with real account sessions, not a strict
+isolation of JSDOM's memory cost. Signed-out Home loading failed; signed-in
+handoffs opened Library, and search recommendation tails differed. Retained
+pages, artwork/GPU caches, and native system-helper sets therefore differed
+before the common playback view. The image cache's 32 MiB CPU-pixel budget
+excludes GPU textures and in-flight decoding. The combined Node figures help
+separate playback-resolution processes from UI differences, but also include
+SDK/account state; neither their difference nor the whole-app difference is
+claimed to be JSDOM alone. There was one successful run per state, so these are
+session observations rather than repeated-run estimates or universal limits.
+
+The diagnostic build replaces only account secret persistence with an initially
+empty, concurrency-safe memory store, plus a separate application identity and
+window title. It never calls the system secret API; fresh extension handoffs
+stay in memory and are discarded at process exit. Its native rendering/player
+implementation and runtime/resource bytes otherwise match the delivery build.
+It is **not the distributed executable** and does not validate Keychain restore
+or the normal advertisement protocol. Diagnostic executable SHA256:
+`d7ac0ec5df4d3a1734a64a1d12e1569d482a6af230d0b096783ebd2fd7a4a050`.
+
+Evidence: `build/diagnostics/account-memory-three-state-20261028/`, including
+`comparison.json`, `workload.json`, `diagnostic-build.json`,
+`diagnostic-source.patch`, and the `anonymous-02`, `standard-01`, and
+`premium-01` samples/summaries. A credential-free summary is in
+`docs/audits/2026-10-28-account-memory/comparison.json`. All 25 observed
+processes, including native system helpers, were confirmed absent after normal
+quit by PID/executable checks; `cleanup.json` records this in the evidence
+directory. `anonymous-01` was a track-selection precheck and is explicitly
+excluded from this comparison.
 
 The measurements and hashes below describe earlier builds only.
 

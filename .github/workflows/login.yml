@@ -5,6 +5,17 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      os:
+        description: Platform to validate (all preserves the automatic three-platform matrix)
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - macos-latest
+          - windows-latest
+          - ubuntu-24.04
 
 permissions:
   contents: read
@@ -25,7 +36,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-24.04]
+        os: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.os != '' && inputs.os != 'all' && format('["{0}"]', inputs.os) || '["macos-latest","windows-latest","ubuntu-24.04"]') }}
     env:
       CGO_ENABLED: "0"
       CARGO_BUILD_JOBS: "2"
@@ -68,7 +79,7 @@ jobs:
         run: cargo build --locked --manifest-path native/account-login/Cargo.toml --features fixture
       - name: Native helper lifecycle
         if: runner.os != 'Linux'
-        run: python scripts/login/test_lifecycle.py --helper build/login-target/debug/ytmgo-account-login${{ runner.os == 'Windows' && '.exe' || '' }}
+        run: python scripts/login/test_lifecycle.py --helper build/login-target/debug/ytmgo-account-login${{ runner.os == 'Windows' && '.exe' || '' }} --success-runs ${{ runner.os == 'Windows' && '5' || '1' }}
       - name: Native helper lifecycle with Linux display and session bus
         if: runner.os == 'Linux'
         run: xvfb-run -a dbus-run-session -- python scripts/login/test_lifecycle.py --helper build/login-target/debug/ytmgo-account-login

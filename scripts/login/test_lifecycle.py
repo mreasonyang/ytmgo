@@ -186,21 +186,26 @@ def run_case(helper, case, seen_stages=None):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--helper", required=True, type=Path)
+    parser.add_argument("--success-runs", type=int, choices=range(1, 11), default=1)
     args = parser.parse_args()
     helper = args.helper.resolve()
     if not helper.is_file():
         print(json.dumps({"login_lifecycle": "helper_missing"}))
         return 1
     passed = True
-    for case in ("success", "cancel", "parent_eof", "timeout"):
+    cases = [("success", attempt) for attempt in range(1, args.success_runs + 1)]
+    cases += [(case, 1) for case in ("cancel", "parent_eof", "timeout")]
+    for case, attempt in cases:
         stages = []
+        started = time.monotonic()
         try:
             reason = run_case(helper, case, stages)
         except OSError:
             reason = "process_start_failure"
         ok = reason is None
         passed = passed and ok
-        result = {"login_lifecycle": case, "status": "pass" if ok else "fail", "stages": stages}
+        result = {"login_lifecycle": case, "attempt": attempt, "status": "pass" if ok else "fail",
+                  "elapsed_ms": int((time.monotonic() - started) * 1000), "stages": stages}
         if reason is not None:
             result["reason"] = reason
         print(json.dumps(result), flush=True)

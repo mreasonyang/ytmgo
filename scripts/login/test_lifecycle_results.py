@@ -1,13 +1,35 @@
+import contextlib
+import io
 import json
+from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import unittest
 from unittest.mock import patch
 
-from test_lifecycle import FixtureStages, MAX_REPLY, MAX_STAGE_LINE, STAGES, reply_failure, run_case
+from test_lifecycle import FixtureStages, MAX_REPLY, MAX_STAGE_LINE, STAGES, main, reply_failure, run_case
 
 
 class LifecycleResultTests(unittest.TestCase):
+    def test_repeated_success_preserves_every_attempt_and_prior_failure(self):
+        with tempfile.TemporaryDirectory() as folder:
+            helper = Path(folder) / "synthetic-helper"
+            helper.touch()
+            output = io.StringIO()
+            outcomes = [None, "process_timeout", None, None, None, None, None, None]
+            with patch.object(sys, "argv", ["test_lifecycle", "--helper", str(helper), "--success-runs", "5"]), \
+                    patch("test_lifecycle.run_case", side_effect=outcomes) as run, \
+                    contextlib.redirect_stdout(output):
+                self.assertEqual(main(), 1)
+            self.assertEqual(run.call_count, 8)
+            results = [json.loads(line) for line in output.getvalue().splitlines()]
+            self.assertEqual([(row["login_lifecycle"], row["attempt"]) for row in results],
+                             [("success", n) for n in range(1, 6)] + [("cancel", 1), ("parent_eof", 1), ("timeout", 1)])
+            self.assertEqual(results[1]["reason"], "process_timeout")
+            self.assertEqual(results[-1]["status"], "pass")
+            self.assertTrue(all(isinstance(row["elapsed_ms"], int) and row["elapsed_ms"] >= 0 for row in results))
+
     def test_real_pipe_diagnostics_emit_only_known_stages(self):
         result = {"version": 1, "status": "session", "session": {
             "accountIndex": 3, "onBehalfOfUser": "fixture_channel",

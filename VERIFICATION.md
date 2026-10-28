@@ -118,7 +118,11 @@ authenticated catalogue access returned without another login window. No
 credentials, session contents or key material were inspected or recorded.
 Evidence: `build/diagnostics/webview-login-20261029/v4-handoff-result.json`
 and `v4-restore-result.json`. This is macOS real-account acceptance, not Windows
-or Linux Google-login acceptance.
+or Linux Google-login acceptance. A track from the restored library then reached
+11.15 seconds of playback progress and was paused; volume was left unchanged.
+The fresh responsibility/descendant process set still contained no login helper
+or WebKit executable (`v4-restored-playback-result.json`). This short check does
+not replace full-song or queue-transition acceptance.
 
 CI run <https://github.com/mreasonyang/ytmgo/actions/runs/40746572499> passed the
 complete Linux job, including all four real WebKitGTK fixture cases. Windows
@@ -128,7 +132,20 @@ The still-queued macOS job was cancelled after these completed to retrieve
 bounded failure diagnostics. A follow-up fixture-only diagnostic change adds
 fixed stage enums and fixed result reasons; no page/URL/cookie values or raw
 stderr are emitted, and production builds contain no diagnostic module. The
-Windows successful-session case remains open pending the next CI run.
+Follow-up run <https://github.com/mreasonyang/ytmgo/actions/runs/40749148251>
+passed the entire Windows and Linux jobs. Windows success reached every
+metadata/cookie/session/cleanup stage in about 9.1 seconds; all four lifecycle
+cases passed. Only fixture diagnostics changed, so this does not establish the
+cause or resolution of the preceding roughly 32.6-second failure. The queued
+macOS job was cancelled after Windows/Linux completed.
+
+A targeted Windows repeat uses the same built helper for five fresh successful
+sessions, followed by cancellation, parent EOF and explicit timeout. Each
+attempt retains fixed outcome/stages and elapsed time, and any failure makes
+the run fail. The existing 12-second command and 18-second exit budgets are
+unchanged. Automatic push/PR CI still covers all three platforms; the manual
+workflow can select one platform for focused follow-up without rerunning the
+already-passing platform jobs. Repeat results remain pending.
 
 ## Formal-package acceptance continuation — 2026-10-29 (Asia/Shanghai)
 

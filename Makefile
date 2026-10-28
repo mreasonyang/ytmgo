@@ -1,6 +1,11 @@
 .PHONY: dev runtime login build test test-runtime test-login check
 
-LOGIN_HELPER = $(CURDIR)/build/login/ytmgo-account-login$(if $(filter windows,$(shell go env GOOS)),.exe,)
+LOGIN_OS := $(shell go env GOOS)
+ifeq ($(LOGIN_OS),darwin)
+LOGIN_HELPER = $(CURDIR)/build/login/ytmgo Account Login.app/Contents/MacOS/ytmgo-account-login
+else
+LOGIN_HELPER = $(CURDIR)/build/login/ytmgo-account-login$(if $(filter windows,$(LOGIN_OS)),.exe,)
+endif
 
 dev: runtime login
 	YTMGO_RUNTIME_DIR="$(CURDIR)/build/runtime" YTMGO_LOGIN_HELPER="$(LOGIN_HELPER)" go tool mygo dev

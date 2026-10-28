@@ -11,6 +11,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import plistlib
 import shutil
 import struct
 import subprocess
@@ -22,6 +23,9 @@ CRATE = ROOT / "native/account-login"
 OUT = ROOT / "build/login"
 TARGET_DIR = ROOT / "build/login-target"
 BINARY = "ytmgo-account-login"
+MAC_BUNDLE = "ytmgo Account Login.app"
+MAC_IDENTIFIER = "si.kyun.ytmgo.account-login"
+MAC_PLIST = ROOT / "scripts/login/macos/Info.plist"
 TARGETS = {
     ("darwin", "arm64"): "aarch64-apple-darwin",
     ("darwin", "amd64"): "x86_64-apple-darwin",
@@ -49,6 +53,30 @@ def parse_platform(value):
 
 def executable_name(system):
     return BINARY + (".exe" if system == "windows" else "")
+
+
+def executable_path(system):
+    if system == "darwin":
+        return MAC_BUNDLE + "/Contents/MacOS/" + BINARY
+    return executable_name(system)
+
+
+def sign_macos_bundle(bundle):
+    result = subprocess.run(
+        ["/usr/bin/codesign", "--force", "--sign", "-", str(bundle)],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False,
+    )
+    if result.returncode:
+        raise RuntimeError("login-helper app bundle signing failed")
+
+
+def verify_macos_bundle(bundle):
+    result = subprocess.run(
+        ["/usr/bin/codesign", "--verify", "--strict", str(bundle)],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False,
+    )
+    if result.returncode:
+        raise RuntimeError("login-helper app bundle signature is invalid")
 
 
 def digest(path):
@@ -96,7 +124,7 @@ def verify(folder, target):
     if not isinstance(manifest, dict) or type(manifest.get("schema")) is not int:
         raise ValueError("invalid login-helper manifest")
     system, arch = target
-    name = executable_name(system)
+    name = executable_path(system)
     if (manifest.get("schema"), manifest.get("platform"), manifest.get("architecture"), manifest.get("executable")) != (1, system, arch, name):
         raise ValueError("login-helper manifest target mismatch")
     binary = folder / name
@@ -104,8 +132,23 @@ def verify(folder, target):
         raise ValueError("login-helper executable target mismatch")
     if digest(binary) != manifest.get("sha256"):
         raise ValueError("login-helper executable checksum mismatch")
-    if {path.name for path in folder.iterdir()} != {name, "manifest.json"}:
+    expected = {name, "manifest.json"}
+    if system == "darwin":
+        expected.update({MAC_BUNDLE + "/Contents/Info.plist", MAC_BUNDLE + "/Contents/_CodeSignature/CodeResources"})
+    files = set()
+    for path in folder.rglob("*"):
+        if path.is_symlink():
+            raise ValueError("unexpected symlink in login-helper staging directory")
+        if path.is_file():
+            files.add(path.relative_to(folder).as_posix())
+    if files != expected:
         raise ValueError("unexpected files in login-helper staging directory")
+    if system == "darwin":
+        bundle = folder / MAC_BUNDLE
+        plist = plistlib.loads((bundle / "Contents/Info.plist").read_bytes())
+        if not isinstance(plist, dict) or plist.get("CFBundleIdentifier") != MAC_IDENTIFIER or plist.get("CFBundleExecutable") != BINARY or plist.get("CFBundlePackageType") != "APPL" or plist.get("LSUIElement") is not False:
+            raise ValueError("login-helper app bundle identity mismatch")
+        verify_macos_bundle(bundle)
     return manifest
 
 
@@ -117,16 +160,22 @@ def stage(binary, target, lockfile, destination=OUT):
     temporary = Path(tempfile.mkdtemp(prefix=".login-stage-", dir=destination.parent))
     backup = destination.with_name(".login-previous")
     try:
-        name = executable_name(system)
-        shutil.copyfile(binary, temporary / name)
-        (temporary / name).chmod(0o755)
+        name = executable_path(system)
+        executable = temporary / name
+        executable.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(binary, executable)
+        executable.chmod(0o755)
+        if system == "darwin":
+            bundle = temporary / MAC_BUNDLE
+            shutil.copyfile(MAC_PLIST, bundle / "Contents/Info.plist")
+            sign_macos_bundle(bundle)
         manifest = {
             "schema": 1,
             "platform": system,
             "architecture": arch,
             "target": TARGETS[target],
             "executable": name,
-            "sha256": digest(temporary / name),
+            "sha256": digest(executable),
             "cargo_lock_sha256": digest(lockfile),
         }
         (temporary / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
@@ -181,7 +230,7 @@ def main():
         if not args.verify:
             build(target)
         verify(OUT, target)
-    except (OSError, ValueError, RuntimeError) as error:
+    except (OSError, ValueError, RuntimeError, plistlib.InvalidFileException) as error:
         # Do not forward compiler logs, command environments or arbitrary file
         # contents into build reports. These messages contain only categories.
         if isinstance(error, RuntimeError):

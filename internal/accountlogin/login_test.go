@@ -442,9 +442,9 @@ func TestRuntimePathAndManifest(t *testing.T) {
 		platform, arch, name string
 		want                 error
 	}{
-		{runtime.GOOS, runtime.GOARCH, executableName(), nil},
-		{"wrong-platform", runtime.GOARCH, executableName(), ErrRuntimeOutdated},
-		{runtime.GOOS, "wrong-architecture", executableName(), ErrRuntimeOutdated},
+		{runtime.GOOS, runtime.GOARCH, packagedExecutable(), nil},
+		{"wrong-platform", runtime.GOARCH, packagedExecutable(), ErrRuntimeOutdated},
+		{runtime.GOOS, "wrong-architecture", packagedExecutable(), ErrRuntimeOutdated},
 		{runtime.GOOS, runtime.GOARCH, "../different", ErrRuntimeOutdated},
 	} {
 		data := fmt.Sprintf(`{"schema":1,"platform":%q,"architecture":%q,"executable":%q,"sha256":"informational-before-signing"}`, row.platform, row.arch, row.name)
@@ -454,5 +454,28 @@ func TestRuntimePathAndManifest(t *testing.T) {
 		if err := validateManifest(path); !errors.Is(err, row.want) {
 			t.Fatal("platform metadata validation failed")
 		}
+	}
+}
+
+// The macOS helper has its own nested app identity; its manifest stays outside
+// that bundle. Other platforms continue to resolve beside the main executable.
+func TestPackagedHelperAndManifestLocation(t *testing.T) {
+	root := t.TempDir()
+	executable := filepath.Join(root, "ytmgo")
+	resources := root
+	if runtime.GOOS == "darwin" {
+		executable = filepath.Join(root, "ytmgo.app", "Contents", "MacOS", "ytmgo")
+		resources = filepath.Join(root, "ytmgo.app", "Contents", "Resources")
+	}
+	helper, manifest := packagedPaths(executable)
+	if manifest != filepath.Join(resources, "login", "manifest.json") {
+		t.Fatal("helper manifest resolved inside executable bundle")
+	}
+	expected := filepath.Join(resources, "login", executableName())
+	if runtime.GOOS == "darwin" {
+		expected = filepath.Join(resources, "login", "ytmgo Account Login.app", "Contents", "MacOS", "ytmgo-account-login")
+	}
+	if helper != expected {
+		t.Fatal("packaged helper location does not match platform layout")
 	}
 }

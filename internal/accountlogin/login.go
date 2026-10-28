@@ -343,16 +343,13 @@ func helperPath(override string) (string, error) {
 	}
 	packaged := override == ""
 	path := override
+	manifestPath := ""
 	if packaged {
 		executable, err := os.Executable()
 		if err != nil {
 			return "", ErrRuntimeMissing
 		}
-		root := filepath.Dir(executable)
-		if runtime.GOOS == "darwin" && filepath.Base(root) == "MacOS" {
-			root = filepath.Join(filepath.Dir(root), "Resources")
-		}
-		path = filepath.Join(root, "login", executableName())
+		path, manifestPath = packagedPaths(executable)
 	}
 	path, err := filepath.Abs(path)
 	if err != nil {
@@ -363,11 +360,27 @@ func helperPath(override string) (string, error) {
 		return "", ErrRuntimeMissing
 	}
 	if packaged {
-		if err := validateManifest(filepath.Join(filepath.Dir(path), "manifest.json")); err != nil {
+		if err := validateManifest(manifestPath); err != nil {
 			return "", err
 		}
 	}
 	return path, nil
+}
+
+func packagedPaths(executable string) (helper, manifest string) {
+	root := filepath.Dir(executable)
+	if runtime.GOOS == "darwin" && filepath.Base(root) == "MacOS" {
+		root = filepath.Join(filepath.Dir(root), "Resources")
+	}
+	root = filepath.Join(root, "login")
+	return filepath.Join(root, filepath.FromSlash(packagedExecutable())), filepath.Join(root, "manifest.json")
+}
+
+func packagedExecutable() string {
+	if runtime.GOOS == "darwin" {
+		return "ytmgo Account Login.app/Contents/MacOS/ytmgo-account-login"
+	}
+	return executableName()
 }
 
 func executableName() string {
@@ -398,7 +411,7 @@ func validateManifest(path string) error {
 	}
 	d := json.NewDecoder(bytes.NewReader(data))
 	d.DisallowUnknownFields()
-	if d.Decode(&manifest) != nil || manifest.Schema != 1 || manifest.Platform != runtime.GOOS || manifest.Architecture != runtime.GOARCH || manifest.Executable != executableName() {
+	if d.Decode(&manifest) != nil || manifest.Schema != 1 || manifest.Platform != runtime.GOOS || manifest.Architecture != runtime.GOARCH || manifest.Executable != packagedExecutable() {
 		return ErrRuntimeOutdated
 	}
 	var extra any

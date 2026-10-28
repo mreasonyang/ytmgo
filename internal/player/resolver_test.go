@@ -159,10 +159,19 @@ func TestResolverRejectsMalformedOrOversizedReplies(t *testing.T) {
 	for _, mode := range []string{"oversized", "malformed"} {
 		t.Run(mode, func(t *testing.T) {
 			r := fixtureResolver(t, mode)
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			// Rejecting output also joins the worker's process tree. Windows
+			// taskkill can take longer than one second on a hosted runner.
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
-			if err := r.Warm(ctx); err == nil || err.Error() != "stream_resolution_failed" {
+			err := r.Warm(ctx)
+			if err == nil {
 				t.Fatal("invalid worker output accepted")
+			}
+			if errors.Is(err, context.DeadlineExceeded) {
+				t.Fatal("worker protocol rejection and cleanup timed out")
+			}
+			if err.Error() != "stream_resolution_failed" {
+				t.Fatal("worker protocol rejection returned an unexpected error category")
 			}
 		})
 	}

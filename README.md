@@ -25,8 +25,7 @@ open build/darwin-arm64/ytmgo.app
 开发运行：
 
 ```sh
-make runtime login
-YTMGO_RUNTIME_DIR="$PWD/build/runtime" YTMGO_LOGIN_HELPER="$PWD/build/login/ytmgo-account-login" go tool mygo dev
+make dev
 ```
 
 ## 使用

@@ -23,20 +23,50 @@ Local validation completed before packaging:
   cancellation, parent pipe closure and timeout all passed. The fixture reads
   a synthetic HttpOnly cookie, and every new helper verifies an empty store
   despite the preceding synthetic cookie having a future expiration date.
-- Go unit/race suites and vet passed before the final process-tree refinement;
-  final checks and platform CI results are recorded below when complete.
+- Go unit tests and vet passed. The final process-tree launcher race suite
+  passed, including non-cooperating synthetic descendants on normal exit and
+  forced cancellation. Quit waits for child cleanup before the UI loop ends.
 - Media runtime offline tests: 66/66; runtime manifest and protocol tests: 5/5
-  each; login packaging tests: 3/3; i18n: 182 keys in each of four languages.
+  each; login packaging tests: 4/4; i18n: 182 keys in each of four languages.
 - Windows/Linux amd64 and arm64, plus Darwin amd64 Go application compilation
   passed. This is source compilation, not native WebView or playback acceptance.
-- The staged macOS helper is 1,268,528 bytes; staging verification passes and
-  rejects an incorrect Windows target.
+- Staging verification passes and rejects an incorrect Windows target. macOS
+  packages the helper as its own nested app, identifier
+  `si.kyun.ytmgo.account-login`; Windows and Linux use their native executable.
+
+The second macOS package is under
+`/Users/easonyang/Library/Caches/ytmgo-webview-login-build-20261029-v2/darwin-arm64/`.
+Its main executable SHA256 is
+`e082462b12d4a1c85325ac7b63c318c9586d1ab8533dadbba4799785b31bca67`;
+DMG SHA256 is
+`63118a520f90fc7bc21837227e278242e3f6de1b25a2c5e08e9721e154540ff8`.
+The signed helper is 1,261,264 bytes. Both app bundles pass strict signature
+verification, and the DMG passes `hdiutil verify`. This is an ad-hoc signed
+development package, not a notarized public release.
+
+Actual packaged macOS UI acceptance passed: Sign In displays Google's official
+email/phone form; a synthetic string can be pasted and cleared; a second Sign In
+focuses the same helper (one process); closing the window returns to the main
+app. PID-only ownership collection and the safe metadata collector tracked the
+helper plus its three WebKit processes; all four were gone after cancellation.
+The preceding package also passed application-quit cleanup of those four
+processes. No argv, environment, cookie values or credential stores were read
+for this check. Evidence is under
+`build/diagnostics/webview-login-20261029/`.
+
+First CI run: <https://github.com/mreasonyang/ytmgo/actions/runs/40741270589>.
+All three OS runners passed Rust tests, release helper builds and staging
+validation, plus the Go accountlogin/accountsession packages. macOS passed the
+entire job including the native fixture. Linux and Windows were blocked before
+their fixture by existing player tests: a headless audio-output assumption and
+a one-second process-exit budget. The test fixtures were corrected without
+changing production player behavior; targeted tests passed five local runs and
+three race runs. The next CI run must execute the remaining native fixtures.
 
 The following extension-based acceptance notes are historical. They are not
-instructions for the new login flow. Real Google authentication, complete
-browser-process cleanup, packaged UI and Windows/Linux native execution remain
-separate checks; offline fixture success must not be described as real-account
-acceptance.
+instructions for the new login flow. Real Google authentication and account
+restoration remain pending user entry in the new private window. No real-account
+success is inferred from the offline fixtures or from displaying the login form.
 
 ## Formal-package acceptance continuation — 2026-10-29 (Asia/Shanghai)
 

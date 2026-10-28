@@ -14,8 +14,10 @@ existing encrypted account store.
 
 Communication uses inherited stdin/stdout pipes, with a single bounded result.
 No login HTTP listener, browser extension, OAuth registration, cookie file, or
-system-browser import is involved. Closing the window, cancellation, timeout,
-or closing the parent's pipe ends the helper. The parent waits for helper exit
+system-browser import is involved. Interactive login sends `timeoutSeconds: 0`
+and imposes no application-defined expiration. Closing the window, cancellation,
+or closing the parent's pipe ends the helper; tests and bounded callers may
+request an explicit timeout of 1 to 1800 seconds. The parent waits for helper exit
 before accepting the result. Raw process output must never be logged.
 
 ## Platform requirements
@@ -27,8 +29,21 @@ before accepting the result. Raw process output must never be logged.
   runtime can ignore private mode, so the helper rejects it before opening a
   window. A separate temporary user-data directory supports installation in
   read-only Program Files; it is removed after the private WebView closes.
-- Linux: GTK 3 and WebKitGTK 4.1 >=2.42, including development packages when compiling.
+- Linux: GTK 3 and WebKitGTK 4.1 >=2.50.2, including development packages when compiling.
   The GTK container integration supports both X11 and Wayland.
+
+Passkey support is a separate platform capability. macOS WKWebView requires a
+relationship with the relying party through Associated Domains; this helper
+cannot authenticate Google passkeys. Users need another method offered by the
+Google page. Apple's browser-only entitlement is not applicable to this music
+client. Windows WebView2 supports FIDO2, but this app's real Google passkeys have
+not been tested. WebKitGTK 2.50.2 fixes Google's alternative-method flow when
+WebAuthn is unavailable; it does not add passkey support.
+
+Sources: [Apple passkeys](https://developer.apple.com/documentation/authenticationservices/supporting-passkeys),
+[browser entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.web-browser.public-key-credential),
+[Microsoft FIDO2](https://learn.microsoft.com/en-us/entra/identity-platform/support-fido2-authentication),
+[WebKitGTK release](https://webkitgtk.org/2025/11/19/webkitgtk2.50.2-released.html).
 
 The main application keeps the encryption key in its platform credential store:
 Keychain, Windows Credential Manager, or Linux Secret Service. A missing

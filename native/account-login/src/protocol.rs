@@ -21,7 +21,8 @@ impl Request {
             && !self.title.is_empty()
             && self.title.len() <= 128
             && !self.title.chars().any(char::is_control)
-            && (1..=1800).contains(&self.timeout_seconds)
+            // Zero leaves the interactive login open until an explicit outcome.
+            && self.timeout_seconds <= 1800
     }
 }
 
@@ -131,10 +132,20 @@ mod tests {
     }
 
     #[test]
-    fn protocol_refuses_unbounded_timeout_unknown_fields_and_control_titles() {
+    fn protocol_accepts_optional_timeout_and_refuses_invalid_request_fields() {
         let r: Request =
             serde_json::from_str(r#"{"version":1,"title":"Login","timeoutSeconds":600}"#).unwrap();
         assert!(r.valid());
+        for timeout_seconds in [0, 1, 1800] {
+            assert!(
+                Request {
+                    version: 1,
+                    title: "Login".into(),
+                    timeout_seconds,
+                }
+                .valid()
+            );
+        }
         assert!(
             !Request {
                 timeout_seconds: 1801,

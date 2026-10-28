@@ -427,11 +427,11 @@ func (a *desktop) signIn() {
 		return
 	}
 	a.clearAccountRequestFailure(true)
-	ctx, cancel := context.WithTimeout(a.ctx, 10*time.Minute)
-	login, err := accountlogin.Start(ctx, accountlogin.Options{Title: locales.LoginWindowTitle(), Timeout: 10 * time.Minute})
+	ctx, cancel := context.WithCancel(a.ctx)
+	login, err := accountlogin.Start(ctx, accountlogin.Options{Title: locales.LoginWindowTitle()})
 	if err != nil {
 		cancel()
-		a.accountMessage(loginErrorMessageKey(err))
+		a.accountRequestFailure(loginErrorMessageKey(err), "failed", true)
 		return
 	}
 	s.login, s.loginCancel = login, cancel
@@ -450,7 +450,7 @@ func (a *desktop) signIn() {
 				return
 			}
 			if err != nil {
-				a.accountMessage(loginErrorMessageKey(err))
+				a.accountRequestFailure(loginErrorMessageKey(err), "failed", true)
 				return
 			}
 			a.updateAccount(&session, true)

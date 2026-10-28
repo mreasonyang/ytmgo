@@ -10,11 +10,13 @@ import (
 
 func assertPlayerVolume(t *testing.T, p *Player, want float64, output bool) {
 	t.Helper()
-	if got := p.Snapshot().Volume; got != want {
-		t.Fatalf("player volume = %v, want %v", got, want)
-	}
 	p.mu.Lock()
 	defer p.mu.Unlock()
+	// Reading volume must not run Snapshot's audio-device error handling:
+	// an unavailable output deliberately pauses active playback there.
+	if got := p.state.Volume; got != want {
+		t.Fatalf("player volume = %v, want %v", got, want)
+	}
 	if output && p.session == nil {
 		t.Fatal("expected an installed audio output")
 	}

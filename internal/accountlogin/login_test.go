@@ -72,8 +72,11 @@ func runFixture(mode string) int {
 		Title          string `json:"title"`
 		TimeoutSeconds int64  `json:"timeoutSeconds"`
 	}
-	if json.Unmarshal(line, &config) != nil || config.Version != 1 || config.TimeoutSeconds < 1 {
+	if json.Unmarshal(line, &config) != nil || config.Version != 1 || config.TimeoutSeconds < 0 || config.TimeoutSeconds > 1800 {
 		return 21
+	}
+	if mode == "unlimited" && config.TimeoutSeconds != 0 {
+		return 26
 	}
 	data := sessionMessage()
 	switch mode {
@@ -127,9 +130,9 @@ func runFixture(mode string) int {
 		time.Sleep(150 * time.Millisecond)
 	case "stubborn":
 		time.Sleep(20 * time.Second)
-	case "cancel", "focus":
+	case "cancel", "focus", "unlimited":
 		line, err := r.ReadBytes('\n')
-		if mode == "focus" {
+		if mode != "cancel" {
 			if err != nil || string(line) != "{\"command\":\"focus\"}\n" {
 				return 23
 			}
@@ -382,6 +385,49 @@ func TestHelperCancellationAndDeadline(t *testing.T) {
 			}
 			if time.Since(started) > exitGrace+3*time.Second || l.cmd.ProcessState == nil {
 				t.Fatal("cancelled helper not reaped")
+			}
+		})
+	}
+}
+
+// A normal interactive login has no hard expiry, including in the helper's
+// wire configuration. The parent still owns cancellation and any deadline.
+func TestHelperZeroTimeoutHasNoImplicitDeadline(t *testing.T) {
+	l := startFixture(t, "unlimited", context.Background(), 0)
+	if _, exists := l.ctx.Deadline(); exists {
+		t.Fatal("interactive login received an implicit deadline")
+	}
+	if err := l.Focus(); err != nil {
+		t.Fatal("interactive login did not remain available")
+	}
+	if _, err := l.Wait(); err != nil {
+		t.Fatal("zero timeout was not sent to the helper")
+	}
+}
+
+func TestHelperZeroTimeoutRespectsParentLifetime(t *testing.T) {
+	for _, mode := range []string{"cancel", "deadline"} {
+		t.Run(mode, func(t *testing.T) {
+			var parent context.Context
+			var cancel context.CancelFunc
+			want := ErrCancelled
+			if mode == "deadline" {
+				parent, cancel = context.WithTimeout(context.Background(), 500*time.Millisecond)
+				want = ErrTimeout
+			} else {
+				parent, cancel = context.WithCancel(context.Background())
+			}
+			defer cancel()
+			l := startFixture(t, "cancel", parent, 0)
+			if mode == "cancel" {
+				cancel()
+			} else if deadline, exists := l.ctx.Deadline(); !exists {
+				t.Fatal("parent deadline was discarded")
+			} else if expected, _ := parent.Deadline(); !deadline.Equal(expected) {
+				t.Fatal("parent deadline was replaced")
+			}
+			if _, err := l.Wait(); !errors.Is(err, want) {
+				t.Fatal("parent cancellation or deadline was not preserved")
 			}
 		})
 	}

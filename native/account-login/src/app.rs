@@ -34,9 +34,17 @@ const METADATA: &str = r#"(() => {
   return {accountIndex:index, onBehalfOfUser:delegated || ''};
 })()"#;
 
-#[cfg(feature = "fixture")]
+#[cfg(all(feature = "fixture", not(target_os = "macos")))]
 const METADATA: &str =
     "window.fixtureConfirmed ? {accountIndex:3,onBehalfOfUser:'fixture_channel'} : null";
+
+#[cfg(all(feature = "fixture", target_os = "macos"))]
+const METADATA: &str = r#"(() => {
+  const ua = navigator.userAgent;
+  if (!ua.includes('AppleWebKit/') || !ua.includes('Safari/605.1.15 ytmgo/') ||
+      /Chrome\/|Chromium\/|Brave\//.test(ua)) return null;
+  return window.fixtureConfirmed ? {accountIndex:3,onBehalfOfUser:'fixture_channel'} : null;
+})()"#;
 
 #[cfg(feature = "fixture")]
 const FIXTURE_HTML: &str = r#"<!doctype html><html><head><meta charset="utf-8"><title>Synthetic account login</title></head><body style="font:18px system-ui;padding:24px"><h1>Synthetic account login</h1><p>Offline lifecycle test. No Google account or network is used.</p><button onclick="window.fixtureConfirmed=true">Complete synthetic login</button></body></html>"#;
@@ -149,7 +157,10 @@ fn supported_linux_version(version: &str) -> bool {
         let Ok(n) = s.parse() else { return false };
         found[i] = n;
     }
-    found >= [2, 42, 0]
+    // 2.50.2 fixes Google sign-in getting stuck before offering another method
+    // when an account has a WebAuthn second factor. This does not enable passkeys.
+    // https://webkitgtk.org/2025/11/19/webkitgtk2.50.2-released.html
+    found >= [2, 50, 2]
 }
 
 fn runtime_check() -> Result<(), Failure> {
@@ -208,6 +219,14 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
     let builder = WebViewBuilder::new_with_web_context(&mut context);
     #[cfg(not(windows))]
     let builder = WebViewBuilder::new();
+    #[cfg(target_os = "macos")]
+    let builder = {
+        use wry::WebViewBuilderExtMacos;
+        let Some(configuration) = crate::macos_webview::configuration() else {
+            return Outcome::error(Failure::LoginFailed);
+        };
+        builder.with_webview_configuration(configuration)
+    };
     let builder = builder
         .with_incognito(true)
         .with_navigation_handler(move |address| {
@@ -285,7 +304,8 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
         drop(view);
         return Outcome::error(Failure::LoginFailed);
     }
-    let deadline = Instant::now() + Duration::from_secs(request.timeout_seconds);
+    let deadline = (request.timeout_seconds > 0)
+        .then(|| Instant::now() + Duration::from_secs(request.timeout_seconds));
     let interval = Duration::from_millis(500);
     let mut next_probe = Instant::now();
     let mut pending: Option<Probe> = None;
@@ -296,7 +316,7 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
     let mut complete_fixture = false;
     event_loop.run_return(|event, _, flow| {
         let now = Instant::now();
-        if now >= deadline {
+        if deadline.is_some_and(|deadline| now >= deadline) {
             outcome = Some(Outcome::error(Failure::LoginTimeout));
             *flow = ControlFlow::Exit;
             return;
@@ -426,7 +446,7 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
                 }
             }
         }
-        *flow = ControlFlow::WaitUntil(next_probe.min(deadline));
+        *flow = ControlFlow::WaitUntil(deadline.map_or(next_probe, |end| next_probe.min(end)));
     });
     // Only the caller emits the outcome, after this WebView and window are gone.
     drop(pending);
@@ -456,11 +476,16 @@ mod tests {
     }
 
     #[test]
-    fn linux_cookie_enumeration_requires_a_known_supported_runtime() {
+    fn linux_login_requires_the_google_alternative_method_fix() {
         assert!(!supported_linux_version("2.40.7"));
-        assert!(supported_linux_version("2.42.0"));
-        assert!(supported_linux_version("2.50.1"));
+        assert!(!supported_linux_version("2.42.0"));
+        assert!(!supported_linux_version("2.50.1"));
+        assert!(supported_linux_version("2.50.2"));
+        assert!(supported_linux_version("2.50.3"));
+        assert!(supported_linux_version("2.52.0"));
         assert!(!supported_linux_version("unknown"));
+        assert!(!supported_linux_version("2.50"));
+        assert!(!supported_linux_version("2.50.2 beta"));
     }
 
     #[test]

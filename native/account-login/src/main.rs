@@ -3,6 +3,8 @@
 mod app;
 #[cfg(target_os = "macos")]
 mod macos_menu;
+#[cfg(target_os = "macos")]
+mod macos_webview;
 mod protocol;
 mod session;
 #[cfg(windows)]

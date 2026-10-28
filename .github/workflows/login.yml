@@ -53,9 +53,13 @@ jobs:
           python scripts/login/prepare.py
           python scripts/login/prepare.py --verify
       - name: Go tests
+        id: go_native
+        continue-on-error: true
         if: runner.os != 'Linux'
         run: go test ./...
       - name: Go tests with Linux display and session bus
+        id: go_linux
+        continue-on-error: true
         if: runner.os == 'Linux'
         run: xvfb-run -a dbus-run-session -- go test ./...
       - name: Compile native app
@@ -68,6 +72,9 @@ jobs:
       - name: Native helper lifecycle with Linux display and session bus
         if: runner.os == 'Linux'
         run: xvfb-run -a dbus-run-session -- python scripts/login/test_lifecycle.py --helper build/login-target/debug/ytmgo-account-login
+      - name: Require Go tests to pass
+        if: always() && (steps.go_native.outcome == 'failure' || steps.go_linux.outcome == 'failure')
+        run: exit 1
       # This is login-helper and source validation. The media-runtime packager
       # still targets macOS; no full Windows/Linux app or real-account login
       # is claimed by this workflow. Never add account credentials to CI.

@@ -31,13 +31,15 @@ var (
 
 const (
 	protocolVersion = 1
-	defaultTimeout  = 10 * time.Minute
 	exitGrace       = 5 * time.Second
 	maxWire         = accountsession.MaxPayload + 1024
 )
 
 type Options struct {
-	Title   string
+	Title string
+	// Timeout is optional. Zero keeps interactive login open until completion,
+	// cancellation or the parent context ends; positive values bound tests or
+	// callers that explicitly require a deadline.
 	Timeout time.Duration
 	// Path explicitly selects a development or acceptance-test helper. Normal
 	// packaged launches leave it empty and require matching platform metadata.
@@ -80,11 +82,11 @@ func Start(parent context.Context, options Options) (*Login, error) {
 		return nil, err
 	}
 	timeout := options.Timeout
-	if timeout <= 0 {
-		timeout = defaultTimeout
+	var seconds int64
+	if timeout > 0 {
+		seconds = int64((timeout-1)/time.Second) + 1
 	}
-	seconds := int64((timeout-1)/time.Second) + 1
-	if seconds < 1 || seconds > 1800 {
+	if seconds > 1800 {
 		return nil, ErrFailed
 	}
 	initial, err := json.Marshal(struct {
@@ -95,7 +97,13 @@ func Start(parent context.Context, options Options) (*Login, error) {
 	if err != nil {
 		return nil, ErrFailed
 	}
-	ctx, cancel := context.WithTimeout(parent, timeout)
+	var ctx context.Context
+	var cancel context.CancelFunc
+	if timeout > 0 {
+		ctx, cancel = context.WithTimeout(parent, timeout)
+	} else {
+		ctx, cancel = context.WithCancel(parent)
+	}
 	cmd := exec.Command(path)
 	cmd.Env = environmentForHelper()
 	// nil sends stderr directly to the null device. Descendants cannot keep a

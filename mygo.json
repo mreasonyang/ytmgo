@@ -21,7 +21,7 @@
     ],
     "webview": true,
     "depends": [
-      "libwebkit2gtk-4.1-0 (>= 2.42)",
+      "libwebkit2gtk-4.1-0 (>= 2.50.2)",
       "libsecret-1-0 (>= 0.19)"
     ]
   },

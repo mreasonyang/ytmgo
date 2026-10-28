@@ -39,7 +39,9 @@ make dev
 
 ## 账号与数据
 
-点击登录会打开 Google 官方登录页面；在窗口里选择账号并完成 Google 要求的验证。程序读取当前所选账号的会话，结束登录子进程，再向 YouTube 验证账号与会员状态后保存。关闭窗口取消本次登录，原有账号保留。会话只从系统 WebView 的私有存储读取，通过匿名管道交接，不经过浏览器扩展、本地 HTTP 服务或临时 Cookie 文件。
+点击登录会打开 Google 官方登录页面；在窗口里选择账号并完成 Google 要求的验证。正常登录不设应用自定义的强制到期时间；登录成功、关闭窗口或退出应用时结束登录子进程。程序读取当前所选账号的会话，再向 YouTube 验证账号与会员状态后保存。关闭窗口取消本次登录，原有账号保留。会话只从系统 WebView 的私有存储读取，通过匿名管道交接，不经过浏览器扩展、本地 HTTP 服务或临时 Cookie 文件。
+
+macOS 登录窗口目前不支持 Google passkey。Apple 要求 WKWebView 的 passkey 服务与应用建立关联域关系，ytmgo 无法自行取得 Google 的关联授权；请使用 Google 页面提供的其他验证方式。没有其他验证方式的账号目前无法完成登录。Windows 的 WebView2 支持 FIDO2，但本应用与具体 Google passkey 提供者的组合尚未实测；Linux 使用 WebKitGTK 4.1 ≥2.50.2，避免旧版本在带 WebAuthn 第二因子的 Google 账号上卡住，这不代表 Linux 已支持 passkey。[Apple 说明](https://developer.apple.com/documentation/authenticationservices/supporting-passkeys)、[WebKitGTK 修复说明](https://webkitgtk.org/2025/11/19/webkitgtk2.50.2-released.html)。
 
 完整会话使用 AES-256-GCM 加密保存在应用数据目录的 `account/session.enc`；系统安全存储只保管一个 32 字节密钥，macOS 使用 Keychain。文件按原子替换保存；macOS/Linux 目录权限为 0700、文件为 0600，Windows 使用当前用户的数据目录和 Credential Manager。重启后先重新核验服务端状态，再启用对应播放模式。没有明文凭据文件、旧分片读取、旧 WebKit 数据迁移或存储 fallback；使用过分片版本的用户需要重新连接一次账号。确认退出会停止播放、清空本应用的个人数据，并删除加密会话文件与密钥；外部浏览器的 Google 登录状态不受影响。
 

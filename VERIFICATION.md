@@ -12,7 +12,7 @@ not import a browser profile, require an extension or configure OAuth.
 
 Windows uses a unique temporary writable user-data directory, including when
 the executable is installed under Program Files; WebView2 must be at least
-101.0.1210.39. Linux requires WebKitGTK 4.1 >=2.42 and a Secret Service for account
+101.0.1210.39. Linux requires WebKitGTK 4.1 >=2.50.2 and a Secret Service for account
 storage. The helper's platform-specific build and the full media distribution
 are separate: the existing media packager still targets macOS only.
 
@@ -67,6 +67,37 @@ The following extension-based acceptance notes are historical. They are not
 instructions for the new login flow. Real Google authentication and account
 restoration remain pending user entry in the new private window. No real-account
 success is inferred from the offline fixtures or from displaying the login form.
+
+The real Google attempt exposed a passkey limitation on macOS: the user could
+reach Google's passkey screen but no usable authentication dialog appeared.
+Apple requires WKWebView relying parties to have an Associated Domains
+relationship with the app. The arbitrary-RP browser entitlement requires an
+approved browser application, not a fixed login helper. No entitlement or
+security bypass was added. The user chose Google's alternative verification
+method. See [Apple passkeys](https://developer.apple.com/documentation/authenticationservices/supporting-passkeys)
+and [browser entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.web-browser.public-key-credential).
+
+The first interactive window expired during that investigation because of the
+initial ten-minute limit. Normal login now has no application-defined deadline;
+explicit test/caller timeouts remain supported. Production and fixture Rust
+tests passed 8/8 each; the four native lifecycle cases passed again with zero
+timeout for success/cancel/parent-EOF and a positive explicit timeout case.
+The Go zero-timeout and parent cancellation/deadline tests passed, including race
+checks. Linux's minimum was raised from 2.42 to 2.50.2 because the latter fixes
+Google alternative verification hanging when WebAuthn is unavailable; this does
+not imply Linux passkey support. See the [upstream release](https://webkitgtk.org/2025/11/19/webkitgtk2.50.2-released.html).
+
+The user's alternative verification then reached Music's unsupported-browser
+page. At that point the app had not received or saved the session. An anonymous
+HTTP A/B reproduced this with the bare macOS WKWebView user agent: unsupported
+page present and `ytcfg` absent. Appending the WebKit/Safari compatibility token
+and the helper's own identity returned the normal Music document with `ytcfg`.
+The macOS helper now appends that suffix through
+`applicationNameForUserAgent`, preserving the system-generated base UA. It does
+not claim Chrome/Brave or invent a Safari version. The supplied WK configuration
+explicitly uses `nonPersistentDataStore`; fixture isolation checks are rerun.
+Windows and Linux keep their platform defaults. Anonymous results cannot prove
+authenticated account-index extraction, so real account handoff remains pending.
 
 ## Formal-package acceptance continuation — 2026-10-29 (Asia/Shanghai)
 

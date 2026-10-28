@@ -40,7 +40,7 @@ def run_case(helper, case):
         except (OSError, ValueError):
             return False
 
-    send({"version": 1, "title": "ytmgo synthetic login test", "timeoutSeconds": 2 if case == "timeout" else 15})
+    send({"version": 1, "title": "ytmgo synthetic login test", "timeoutSeconds": 2 if case == "timeout" else 0})
     try:
         if case == "success":
             # The control command is compiled out of production. Repeating it

@@ -1,5 +1,42 @@
 # Native playback verification
 
+## Current service-error behavior — 2026-10-28
+
+Service verification, consent, sign-in and unknown redirects are now explained
+inline. The separate recovery dialog, website-verification actions, modal
+state/callbacks, and ten recovery-only translation keys have been removed.
+Catalog and playback errors retain their ordinary retry actions; account
+errors do not retry unrelated catalog requests. Error ownership still prevents
+an old account refresh from clearing a failed transfer of a different account.
+Normal account connection remains separate and uses the system default browser.
+
+`make check` passed, including all Go tests, 89 runtime tests, vet,
+manifest/protocol checks, and 190 messages per language. Focused error
+classification/account-ownership race tests passed. Go tests were rerun after
+preserving account-window status feedback during the final simplification.
+
+The current production views were also exercised in a separate native AUDIT
+app with synthetic errors and no network/account/player. The Chinese catalog
+and Chinese/English playback screens at 420×740 showed the error explanation
+and ordinary retry, with no verification guide or browser action. Each retry
+incremented only its corresponding fixture counter (catalog 1, playback 1).
+The fixture retained the error and claimed no upstream recovery. The AUDIT app
+was then closed. Four-language rendered UI tests also passed.
+
+`make build` passed. The final app's strict/deep signature and DMG integrity
+were checked; the app remains ad-hoc signed and the DMG unsigned. The formal
+app was not launched. This change supersedes the earlier guided-verification
+and default-browser recovery UI records below; they remain historical evidence.
+
+Final app executable SHA256:
+`ffa1a768663b54e599cdfd553a7753ba547782a5e0dab20aa88bdbb1ebd6122e`.
+DMG SHA256:
+`8497f51580a66f5a2bf761fe544da8e4ced7b60951d0b844f7b7e81311a02af9`.
+All four current locale JSON files were verified byte-for-byte in the executable.
+Local fixture source, build metadata and final counter readback are under
+`build/diagnostics/error-explanation-20261028/`; its executable SHA256 is
+`dabfc855e4ac6da6365603ac808bb8029016a211b5ef59dfc2fe2c41b415ed54`.
+
 ## Account-aware native implementation — 2026-10-28
 
 The source now has native account instructions, an explicit browser extension
@@ -412,6 +449,8 @@ Local request and native observations are under
 remains unknown; current successful initialization cannot retroactively prove it.
 
 ### User-guided service verification recovery (2026-10-28)
+
+Superseded by the explanation-only behavior at the top of this document.
 
 Catalog/account HTTP errors now retain a closed redirect classification, just
 as the playback bootstrap does. Both implementations recognize challenge,

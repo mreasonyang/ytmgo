@@ -2529,142 +2529,42 @@ func (msgs Messages) NativeAccountMusicURLCopyError() string {
 	return Catalog.Format(msgs.locale, "nativeAccountMusicURLCopyError", nil)
 }
 
-// NativeVerificationRequired says "Google requires additional verification"
+// NativeVerificationRequired says "Google requires additional verification. ytmgo cannot complete this request."
 // in the language the app shows.
 func NativeVerificationRequired() string { return In(i18n.Locale()).NativeVerificationRequired() }
 
-// NativeVerificationRequired says "Google requires additional verification"
+// NativeVerificationRequired says "Google requires additional verification. ytmgo cannot complete this request."
 // in the language of msgs.
 func (msgs Messages) NativeVerificationRequired() string {
 	return Catalog.Format(msgs.locale, "nativeVerificationRequired", nil)
 }
 
-// NativeConsentRequired says "YouTube requires a consent step"
+// NativeConsentRequired says "YouTube returned a consent page. ytmgo cannot continue."
 // in the language the app shows.
 func NativeConsentRequired() string { return In(i18n.Locale()).NativeConsentRequired() }
 
-// NativeConsentRequired says "YouTube requires a consent step"
+// NativeConsentRequired says "YouTube returned a consent page. ytmgo cannot continue."
 // in the language of msgs.
 func (msgs Messages) NativeConsentRequired() string {
 	return Catalog.Format(msgs.locale, "nativeConsentRequired", nil)
 }
 
-// NativeServiceSignInRequired says "YouTube requested sign-in"
+// NativeServiceSignInRequired says "YouTube requires sign-in. This request could not be completed."
 // in the language the app shows.
 func NativeServiceSignInRequired() string { return In(i18n.Locale()).NativeServiceSignInRequired() }
 
-// NativeServiceSignInRequired says "YouTube requested sign-in"
+// NativeServiceSignInRequired says "YouTube requires sign-in. This request could not be completed."
 // in the language of msgs.
 func (msgs Messages) NativeServiceSignInRequired() string {
 	return Catalog.Format(msgs.locale, "nativeServiceSignInRequired", nil)
 }
 
-// NativeRecoveryHelp says "How to resolve"
-// in the language the app shows.
-func NativeRecoveryHelp() string { return In(i18n.Locale()).NativeRecoveryHelp() }
-
-// NativeRecoveryHelp says "How to resolve"
-// in the language of msgs.
-func (msgs Messages) NativeRecoveryHelp() string {
-	return Catalog.Format(msgs.locale, "nativeRecoveryHelp", nil)
-}
-
-// NativeVerificationHelp says "ytmgo cannot complete this verification in the app. Open YouTube Music in your browser. If the website asks for verif…"
-// in the language the app shows.
-func NativeVerificationHelp() string { return In(i18n.Locale()).NativeVerificationHelp() }
-
-// NativeVerificationHelp says "ytmgo cannot complete this verification in the app. Open YouTube Music in your browser. If the website asks for verif…"
-// in the language of msgs.
-func (msgs Messages) NativeVerificationHelp() string {
-	return Catalog.Format(msgs.locale, "nativeVerificationHelp", nil)
-}
-
-// NativeConsentHelp says "YouTube redirected this request to a consent page. Open YouTube Music in your browser, review any consent request on …"
-// in the language the app shows.
-func NativeConsentHelp() string { return In(i18n.Locale()).NativeConsentHelp() }
-
-// NativeConsentHelp says "YouTube redirected this request to a consent page. Open YouTube Music in your browser, review any consent request on …"
-// in the language of msgs.
-func (msgs Messages) NativeConsentHelp() string {
-	return Catalog.Format(msgs.locale, "nativeConsentHelp", nil)
-}
-
-// NativeServiceSignInHelp says "YouTube redirected this request to sign-in. Open YouTube Music in your browser and follow any sign-in request on the …"
-// in the language the app shows.
-func NativeServiceSignInHelp() string { return In(i18n.Locale()).NativeServiceSignInHelp() }
-
-// NativeServiceSignInHelp says "YouTube redirected this request to sign-in. Open YouTube Music in your browser and follow any sign-in request on the …"
-// in the language of msgs.
-func (msgs Messages) NativeServiceSignInHelp() string {
-	return Catalog.Format(msgs.locale, "nativeServiceSignInHelp", nil)
-}
-
-// NativeRecoveryLimits says "Browser steps may not unblock this app request. If retry still fails, try again later."
-// in the language the app shows.
-func NativeRecoveryLimits() string { return In(i18n.Locale()).NativeRecoveryLimits() }
-
-// NativeRecoveryLimits says "Browser steps may not unblock this app request. If retry still fails, try again later."
-// in the language of msgs.
-func (msgs Messages) NativeRecoveryLimits() string {
-	return Catalog.Format(msgs.locale, "nativeRecoveryLimits", nil)
-}
-
-// NativeRecoverySignInHint says "You can also try signing in to ytmgo, but signing in does not guarantee that this restriction will be removed."
-// in the language the app shows.
-func NativeRecoverySignInHint() string { return In(i18n.Locale()).NativeRecoverySignInHint() }
-
-// NativeRecoverySignInHint says "You can also try signing in to ytmgo, but signing in does not guarantee that this restriction will be removed."
-// in the language of msgs.
-func (msgs Messages) NativeRecoverySignInHint() string {
-	return Catalog.Format(msgs.locale, "nativeRecoverySignInHint", nil)
-}
-
-// NativeRecoveryConnectedHint says "Your account is still connected. This restriction does not establish that your session or membership has expired."
-// in the language the app shows.
-func NativeRecoveryConnectedHint() string { return In(i18n.Locale()).NativeRecoveryConnectedHint() }
-
-// NativeRecoveryConnectedHint says "Your account is still connected. This restriction does not establish that your session or membership has expired."
-// in the language of msgs.
-func (msgs Messages) NativeRecoveryConnectedHint() string {
-	return Catalog.Format(msgs.locale, "nativeRecoveryConnectedHint", nil)
-}
-
-// NativeServiceRedirect says "YouTube returned a page redirect that ytmgo cannot handle"
+// NativeServiceRedirect says "YouTube returned a page redirect that ytmgo cannot handle."
 // in the language the app shows.
 func NativeServiceRedirect() string { return In(i18n.Locale()).NativeServiceRedirect() }
 
-// NativeServiceRedirect says "YouTube returned a page redirect that ytmgo cannot handle"
+// NativeServiceRedirect says "YouTube returned a page redirect that ytmgo cannot handle."
 // in the language of msgs.
 func (msgs Messages) NativeServiceRedirect() string {
 	return Catalog.Format(msgs.locale, "nativeServiceRedirect", nil)
-}
-
-// NativeServiceRedirectHelp says "YouTube redirected this request to another page. ytmgo cannot confirm whether verification or another browser step is…"
-// in the language the app shows.
-func NativeServiceRedirectHelp() string { return In(i18n.Locale()).NativeServiceRedirectHelp() }
-
-// NativeServiceRedirectHelp says "YouTube redirected this request to another page. ytmgo cannot confirm whether verification or another browser step is…"
-// in the language of msgs.
-func (msgs Messages) NativeServiceRedirectHelp() string {
-	return Catalog.Format(msgs.locale, "nativeServiceRedirectHelp", nil)
-}
-
-// NativeRecoveryConnectionHint says "This account connection has not completed. Retrying will reopen the browser account transfer; your existing account, …"
-// in the language the app shows.
-func NativeRecoveryConnectionHint() string { return In(i18n.Locale()).NativeRecoveryConnectionHint() }
-
-// NativeRecoveryConnectionHint says "This account connection has not completed. Retrying will reopen the browser account transfer; your existing account, …"
-// in the language of msgs.
-func (msgs Messages) NativeRecoveryConnectionHint() string {
-	return Catalog.Format(msgs.locale, "nativeRecoveryConnectionHint", nil)
-}
-
-// NativeRecoveryReconnect says "Reconnect account"
-// in the language the app shows.
-func NativeRecoveryReconnect() string { return In(i18n.Locale()).NativeRecoveryReconnect() }
-
-// NativeRecoveryReconnect says "Reconnect account"
-// in the language of msgs.
-func (msgs Messages) NativeRecoveryReconnect() string {
-	return Catalog.Format(msgs.locale, "nativeRecoveryReconnect", nil)
 }

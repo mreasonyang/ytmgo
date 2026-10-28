@@ -105,8 +105,8 @@ func accountErrorMessageKey(err error) string {
 	// not establish that the transferred account session needs replacing.
 	var httpError *catalog.HTTPError
 	if errors.As(err, &httpError) {
-		if notice := catalogRecovery(err, recoveryAccount); notice.valid() {
-			return recoveryMessageKey(notice.Kind)
+		if key := catalogServiceErrorKey(err); key != "" {
+			return key
 		}
 		return "nativeAccountError"
 	}
@@ -344,7 +344,7 @@ func (a *desktop) updateAccount(session *accountbridge.Session, newIdentity bool
 				}
 			}
 			if err != nil {
-				a.accountRequestFailure(errorKey, failureCategory, err, newIdentity)
+				a.accountRequestFailure(errorKey, failureCategory, newIdentity)
 				return
 			}
 			category := "signed_out"
@@ -517,13 +517,13 @@ func (a *desktop) accountFailure(key, category string) {
 	recordAccountDiagnostic(a.diagnosticPath, category)
 	a.accountState.message = key
 	a.model.Error = a.tr(key)
-	a.model.ErrorRecovery = recoveryNotice{Scope: recoveryAccount}
+	a.model.ErrorScope = errorAccount
 	a.invalidateAccount()
 }
 
-func (a *desktop) accountRequestFailure(key, category string, err error, newIdentity bool) {
+func (a *desktop) accountRequestFailure(key, category string, newIdentity bool) {
 	a.accountFailure(key, category)
-	a.model.ErrorRecovery = accountRequestRecovery(err, newIdentity)
+	a.model.ErrorScope = accountErrorScope(newIdentity)
 }
 func (a *desktop) invalidateAccount() {
 	a.invalidate()
@@ -559,12 +559,9 @@ func (a *desktop) accountView(c *ui.Context) {
 			a.openAccountBrowser()
 		}
 		ui.Text(c, a.tr("nativeAccountPrivacy")).FontSize(13).TextColor(p.muted).LineHeight(1.4)
-		accountRecovery := (a.model.ErrorRecovery.Scope == recoveryAccount || a.model.ErrorRecovery.Scope == recoveryAccountConnect) && a.model.ErrorRecovery.valid()
-		if accountRecovery && !a.accountBusy {
+		accountError := a.model.ErrorScope == errorAccount || a.model.ErrorScope == errorAccountConnect
+		if accountError && a.model.Error != "" && a.accountState.message == "" && !a.accountBusy {
 			ui.Text(c, a.model.Error).FontSize(13).LineHeight(1.4)
-			if nativePill(c, a.tr("nativeRecoveryHelp"), p, true).AlignSelf(ui.Start).Clicked() {
-				a.showRecovery(a.model.ErrorRecovery)
-			}
 		} else if a.accountState.message != "" {
 			ui.Text(c, a.tr(a.accountState.message)).FontSize(13).LineHeight(1.4)
 		}
@@ -619,8 +616,7 @@ func (a *desktop) clearAccountContent() {
 	a.model.Page = catalog.Page{}
 	a.model.Loading = false
 	a.model.Error = ""
-	a.model.ErrorRecovery = recoveryNotice{}
-	a.model.RecoveryOpen = false
+	a.model.ErrorScope = ""
 	a.history = nil
 	a.historyIndex = -1
 }
@@ -631,7 +627,6 @@ func (a *desktop) clearAccountPlayback() {
 	a.queueIndex = -1
 	a.queueGeneration++
 	a.model.PlaybackError = ""
-	a.model.PlaybackRecovery = recoveryNotice{}
 	a.model.Lyrics = ""
 	a.model.Liked = false
 	a.model.Position = 0
@@ -690,7 +685,6 @@ func (a *desktop) signOut() {
 			a.model.Current = catalog.Item{}
 			a.queueIndex = -1
 			a.model.PlaybackError = ""
-			a.model.PlaybackRecovery = recoveryNotice{}
 			a.model.Lyrics = ""
 			a.model.Liked = false
 			a.model.Position = 0

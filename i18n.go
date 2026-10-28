@@ -53,7 +53,7 @@ func (a *desktop) relocalize() {
 func (a *desktop) setAppearance(value string) {
 	if _, err := a.prefs.SetAppearance(value); err != nil {
 		a.model.Error = a.tr("appearanceSaveError")
-		a.model.ErrorRecovery = recoveryNotice{}
+		a.model.ErrorScope = ""
 	} else {
 		a.model.Appearance = value
 	}

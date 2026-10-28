@@ -186,18 +186,8 @@
   "nativeAccountCopyMusicURL": "复制 YouTube Music 地址",
   "nativeAccountMusicURLCopied": "已复制 https://music.youtube.com/。请粘贴到已安装账号扩展的浏览器。",
   "nativeAccountMusicURLCopyError": "无法复制地址。请在已安装账号扩展的浏览器输入 https://music.youtube.com/。",
-  "nativeVerificationRequired": "Google 要求额外验证",
-  "nativeConsentRequired": "YouTube 要求确认同意事项",
-  "nativeServiceSignInRequired": "YouTube 请求登录",
-  "nativeRecoveryHelp": "查看解决方法",
-  "nativeVerificationHelp": "ytmgo 暂时无法在应用内完成此验证。请在浏览器打开 YouTube Music；如果网页出现验证，请按提示完成，然后返回这里重试。",
-  "nativeConsentHelp": "YouTube 将此请求转到了同意事项页面。请在浏览器打开 YouTube Music，查看网页上的同意请求，然后返回这里重试。",
-  "nativeServiceSignInHelp": "YouTube 将此请求转到了登录页面。请在浏览器打开 YouTube Music，按网页提示登录，然后返回这里重试。",
-  "nativeRecoveryLimits": "网页中的操作未必能解除应用的限制；重试仍失败时，请稍后再试。",
-  "nativeRecoverySignInHint": "也可以尝试登录 ytmgo，但登录不能保证解除此限制。",
-  "nativeRecoveryConnectedHint": "当前账号仍保持连接。此限制不代表登录态或会员权益已经失效。",
-  "nativeServiceRedirect": "YouTube 返回了 ytmgo 暂时无法处理的页面跳转",
-  "nativeServiceRedirectHelp": "YouTube 将此请求转到了其他页面。ytmgo 无法确认是否需要验证或其他浏览器操作。请在浏览器打开 YouTube Music，按网页提示处理，然后返回这里重试。",
-  "nativeRecoveryConnectionHint": "此次账号连接尚未完成。重试将重新开启浏览器账号交接；原有账号（如有）会保留。",
-  "nativeRecoveryReconnect": "重新连接账号"
+  "nativeVerificationRequired": "Google 要求额外验证，ytmgo 暂时无法完成此请求。",
+  "nativeConsentRequired": "YouTube 返回了同意事项页面，ytmgo 暂时无法继续。",
+  "nativeServiceSignInRequired": "YouTube 要求登录，当前请求未能完成。",
+  "nativeServiceRedirect": "YouTube 返回了 ytmgo 暂时无法处理的页面跳转。"
 }

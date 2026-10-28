@@ -52,7 +52,7 @@ func (a *desktop) loadPage(route, q string, record bool) {
 	a.model.Query = q
 	a.model.Loading = true
 	a.model.Error = ""
-	a.model.ErrorRecovery = recoveryNotice{}
+	a.model.ErrorScope = ""
 	a.model.Page = catalog.Page{}
 	if route == "library" && !a.model.SignedIn {
 		cancel()
@@ -153,7 +153,7 @@ func (a *desktop) travel(delta int) {
 	a.browseParams = e.params
 	a.model.Loading = false
 	a.model.Error = ""
-	a.model.ErrorRecovery = recoveryNotice{}
+	a.model.ErrorScope = ""
 	a.model.Immersive = false
 	a.model.CanBack = i > 0
 	a.model.CanForward = i+1 < len(a.history)
@@ -213,7 +213,7 @@ func (a *desktop) playItem(it catalog.Item) {
 func (a *desktop) startTrack(it catalog.Item) {
 	if a.player == nil {
 		a.model.Error = a.tr("nativeRuntimeMissing")
-		a.model.ErrorRecovery = recoveryNotice{}
+		a.model.ErrorScope = ""
 		return
 	}
 	a.cancelResume()
@@ -241,7 +241,6 @@ func (a *desktop) startTrack(it catalog.Item) {
 	a.model.Lyrics = a.tr("shellLoading")
 	a.model.Liked = it.Liked
 	a.model.PlaybackError = ""
-	a.model.PlaybackRecovery = recoveryNotice{}
 	a.endedHandled = true
 	mygo.NowPlaying.Set(mygo.NowPlayingInfo{Title: it.Title, Artist: it.Artist, Album: it.Album, Duration: it.Duration, State: mygo.PlaybackPaused, Commands: mygo.MediaPlay | mygo.MediaPause | mygo.MediaNext | mygo.MediaPrevious | mygo.MediaSeek})
 	a.invalidate()
@@ -458,7 +457,6 @@ func (a *desktop) resume() {
 				a.playbackFailure(a.player.Snapshot())
 			} else {
 				a.model.PlaybackError = ""
-				a.model.PlaybackRecovery = recoveryNotice{}
 				a.endedHandled = false
 			}
 		})
@@ -473,7 +471,7 @@ func (a *desktop) loadMore() {
 	generation := a.pageGeneration
 	a.model.Loading = true
 	a.model.Error = ""
-	a.model.ErrorRecovery = recoveryNotice{}
+	a.model.ErrorScope = ""
 	go func() {
 		ctx, cancel := context.WithTimeout(a.ctx, 25*time.Second)
 		defer cancel()
@@ -501,7 +499,6 @@ func (a *desktop) seek(seconds float64) {
 	a.cancelResume()
 	seconds = math.Max(0, math.Min(a.model.Duration, seconds))
 	a.model.PlaybackError = ""
-	a.model.PlaybackRecovery = recoveryNotice{}
 	generation := a.playGeneration
 	a.seekGeneration++
 	if a.seekCancel != nil {
@@ -588,7 +585,7 @@ func (a *desktop) like() {
 			}
 			if err != nil {
 				a.model.Error = a.tr("nativeAccountError")
-				a.model.ErrorRecovery = recoveryNotice{}
+				a.model.ErrorScope = ""
 			} else {
 				a.setLiked(id, liked)
 			}

@@ -186,18 +186,8 @@
   "nativeAccountCopyMusicURL": "YouTube Music のアドレスをコピー",
   "nativeAccountMusicURLCopied": "https://music.youtube.com/ をコピーしました。アカウント拡張機能を入れたブラウザに貼り付けてください。",
   "nativeAccountMusicURLCopyError": "コピーできませんでした。アカウント拡張機能を入れたブラウザに https://music.youtube.com/ と入力してください。",
-  "nativeVerificationRequired": "Google による追加確認が必要です",
-  "nativeConsentRequired": "YouTube の同意確認が必要です",
-  "nativeServiceSignInRequired": "YouTube がログインを求めています",
-  "nativeRecoveryHelp": "対処方法を見る",
-  "nativeVerificationHelp": "ytmgo 内ではこの確認を完了できません。ブラウザで YouTube Music を開いてください。ウェブサイトに確認画面が表示されたら、案内に従って完了し、ここに戻って再試行してください。",
-  "nativeConsentHelp": "YouTube がこのリクエストを同意確認ページに転送しました。ブラウザで YouTube Music を開き、ウェブサイトの同意事項を確認してから、ここに戻って再試行してください。",
-  "nativeServiceSignInHelp": "YouTube がこのリクエストをログインページに転送しました。ブラウザで YouTube Music を開き、ウェブサイトの案内に従ってログインしてから、ここに戻って再試行してください。",
-  "nativeRecoveryLimits": "ブラウザで操作しても、アプリの制限が解除されるとは限りません。再試行しても失敗する場合は、しばらくしてからお試しください。",
-  "nativeRecoverySignInHint": "ytmgo へのログインもお試しいただけますが、ログインしてもこの制限が解除されるとは限りません。",
-  "nativeRecoveryConnectedHint": "現在のアカウントは接続されたままです。この制限だけで、ログイン状態やメンバーシップが無効になったとは判断できません。",
-  "nativeServiceRedirect": "ytmgo が処理できないページ転送が返されました",
-  "nativeServiceRedirectHelp": "YouTube がこのリクエストを別のページに転送しました。確認やその他のブラウザ操作が必要かどうかは判断できません。ブラウザで YouTube Music を開き、ウェブサイトの案内に従ってから、ここに戻って再試行してください。",
-  "nativeRecoveryConnectionHint": "今回のアカウント接続はまだ完了していません。再試行すると、ブラウザからのアカウント連携をやり直します。既存のアカウントがある場合は保持されます。",
-  "nativeRecoveryReconnect": "アカウントを再接続"
+  "nativeVerificationRequired": "Google が追加の確認を求めているため、ytmgo はこのリクエストを完了できません。",
+  "nativeConsentRequired": "YouTube から同意確認ページが返され、ytmgo は処理を続行できません。",
+  "nativeServiceSignInRequired": "YouTube がログインを求めているため、このリクエストを完了できません。",
+  "nativeServiceRedirect": "YouTube から、ytmgo が処理できないページ転送が返されました。"
 }

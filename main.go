@@ -191,7 +191,7 @@ func (a *desktop) show() {
 }
 
 func (a *desktop) actions() ViewActions {
-	return ViewActions{Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, RetryPlayback: func() { a.startTrack(a.model.Current) }, ShowRecovery: a.showRecovery, OpenRecoveryBrowser: a.openRecoveryBrowser, RetryRecovery: a.retryRecovery, RecoveryAccount: a.recoverySignInAction, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, Account: a.signIn, SignOut: a.signOut, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: a.art.get}
+	return ViewActions{Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, RetryPlayback: func() { a.startTrack(a.model.Current) }, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, Account: a.signIn, SignOut: a.signOut, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: a.art.get}
 }
 
 func (a *desktop) pollPlayback() {

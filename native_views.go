@@ -29,8 +29,7 @@ type UIModel struct {
 	VideoFrame                                                  ui.ImageSource
 	PlaybackError                                               string
 	VideoError                                                  string
-	ErrorRecovery, PlaybackRecovery, Recovery                   recoveryNotice
-	RecoveryOpen, RecoveryBrowserFailed                         bool
+	ErrorScope                                                  errorScope
 }
 
 // ViewActions keeps native controls independent from the catalogue and player.
@@ -49,8 +48,6 @@ type ViewActions struct {
 	Video                                               func(bool)
 	RetryPlayback                                       func()
 	LoadMore                                            func()
-	ShowRecovery                                        func(recoveryNotice)
-	OpenRecoveryBrowser, RetryRecovery, RecoveryAccount func()
 	artViewport                                         ui.Rect
 	artClipped                                          bool
 }
@@ -116,7 +113,6 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 	}
 	nativeSettings(c, m, a, p, width, height)
 	nativeShortcuts(c, m, a, p, width, height)
-	nativeRecoveryDialog(c, m, a, p, width, height)
 }
 
 func nativeIconButton(c *ui.Context, name, label string, p nativePalette, active bool, hit float32) ui.Element {
@@ -312,9 +308,7 @@ func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, co
 		if m.Error != "" {
 			ui.Column(c).Padding(20).Gap(12).Background(p.raised).Radius(12).Children(func() {
 				ui.Text(c, m.Error).TextColor(p.secondary)
-				if m.ErrorRecovery.valid() {
-					nativeRecoveryHelp(c, m.ErrorRecovery, a, p).AlignSelf(ui.Start)
-				} else if nativePill(c, a.Tr("buttonRetry"), p, false).AlignSelf(ui.Start).Clicked() {
+				if m.ErrorScope != errorAccount && m.ErrorScope != errorAccountConnect && nativePill(c, a.Tr("buttonRetry"), p, false).AlignSelf(ui.Start).Clicked() {
 					a.Reload()
 				}
 			})
@@ -524,9 +518,6 @@ func nativeTransport(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 				infoWidth = width - 144
 				if m.PlaybackError != "" {
 					infoWidth = width - 168
-					if m.PlaybackRecovery.valid() {
-						infoWidth = width - 260
-					}
 				}
 			}
 			info := ui.ButtonBase(c).Width(infoWidth).MinWidth(0).Gap(12).Justify(ui.Start).Label(a.Tr("shellOpenNowPlaying")).Children(func() {
@@ -559,9 +550,7 @@ func nativeTransport(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 				}
 			}
 			if m.PlaybackError != "" {
-				if m.PlaybackRecovery.valid() {
-					nativeRecoveryHelp(c, m.PlaybackRecovery, a, p)
-				} else if nativePill(c, a.Tr("buttonRetry"), p, false).Width(64).PaddingX(6).Disabled(a.RetryPlayback == nil).Clicked() {
+				if nativePill(c, a.Tr("buttonRetry"), p, false).Width(64).PaddingX(6).Disabled(a.RetryPlayback == nil).Clicked() {
 					a.RetryPlayback()
 				}
 			}
@@ -1025,18 +1014,18 @@ func nativeSongShelf(items []catalog.Item) bool {
 // Request the next frame explicitly so it becomes visible without another input.
 type nativePresentationKey struct {
 	texts                              [13]string
-	flags                              [20]bool
+	flags                              [18]bool
 	values                             [4]float64
 	repeat, queueLength, libraryLength int
-	recovery                           [3]recoveryNotice
+	errorScope                         errorScope
 }
 
 func nativePresentation(m *UIModel) nativePresentationKey {
 	return nativePresentationKey{
 		texts:  [13]string{m.Route, m.Query, m.PanelTab, m.Appearance, m.Language, m.Current.ID, m.Current.Title, m.Page.Title, m.Error, m.Lyrics, m.Current.Artwork, m.VideoError, m.PlaybackError},
-		flags:  [20]bool{m.Loading, m.Playing, m.Muted, m.Liked, m.Shuffle, m.Panel, m.Immersive, m.Settings, m.Shortcuts, m.SidebarCollapsed, m.SignedIn, m.CanBack, m.CanForward, m.FocusSearch, m.Video, m.VideoLoading, m.PlaybackLoading, m.MusicPremium, m.RecoveryOpen, m.RecoveryBrowserFailed},
+		flags:  [18]bool{m.Loading, m.Playing, m.Muted, m.Liked, m.Shuffle, m.Panel, m.Immersive, m.Settings, m.Shortcuts, m.SidebarCollapsed, m.SignedIn, m.CanBack, m.CanForward, m.FocusSearch, m.Video, m.VideoLoading, m.PlaybackLoading, m.MusicPremium},
 		values: [4]float64{m.Volume, m.Position, m.Duration, 0}, repeat: m.Repeat, queueLength: len(m.Queue), libraryLength: len(m.LibraryItems),
-		recovery: [3]recoveryNotice{m.ErrorRecovery, m.PlaybackRecovery, m.Recovery},
+		errorScope: m.ErrorScope,
 	}
 }
 
@@ -1233,16 +1222,9 @@ func nativePlaybackNotice(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 		row.Height(24).Padding(0).Background(ui.Transparent)
 	}
 	row.Children(func() {
-		text := ui.Text(c, m.PlaybackError).Grow(1).MinWidth(0).FontSize(12).TextColor(p.accent).MaxLines(2).Ellipsis("…")
+		text := ui.Text(c, m.PlaybackError).Grow(1).MinWidth(0).FontSize(12).TextColor(p.accent)
 		if footer {
-			text.MaxLines(1).FontSize(11)
-		}
-		if m.PlaybackRecovery.valid() {
-			button := nativeRecoveryHelp(c, m.PlaybackRecovery, a, p)
-			if footer {
-				button.Height(24).MinHeight(24).PaddingY(0)
-			}
-			return
+			text.MaxLines(1).Ellipsis("…").FontSize(11)
 		}
 		button := nativePill(c, a.Tr("buttonRetry"), p, false).Width(64).PaddingX(6).Disabled(a.RetryPlayback == nil)
 		if footer {

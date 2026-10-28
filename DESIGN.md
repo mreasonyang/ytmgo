@@ -175,8 +175,11 @@ FFmpeg only reads a local relay; remote URLs and headers stay inside Node.
 concurrency. Settings remain small files in the application data directory.
 
 Acceptance requires no WebKit anywhere in the application, including sign-in.
-Account authorization uses the external Brave browser and a user-clicked,
-short-lived loopback extension handoff. Sessions belong to this app in the
+External links use the system default browser through MyGo Shell. Account
+authorization uses a user-clicked, short-lived loopback extension handoff in a
+Chromium-compatible browser. The current extension does not support Safari or
+Firefox; the guide lets users copy the Music URL to the browser containing the
+extension. It does not select or require a browser vendor. Sessions belong to this app in the
 system secret store; no WebKit store or legacy migration exists. Session data
 must never enter logs, argv, environment variables or evidence files.
 The service supplies logged-in and Music Premium booleans. A five-minute poll

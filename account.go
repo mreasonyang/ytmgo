@@ -7,10 +7,8 @@ import (
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/transfer"
 	"github.com/egoist/mygo/ui"
-	"io"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sync"
 	"time"
@@ -25,6 +23,8 @@ import (
 //
 //go:embed scripts/account-extension/manifest.json scripts/account-extension/popup.html scripts/account-extension/popup.css scripts/account-extension/popup.mjs scripts/account-extension/session-policy.mjs
 var accountExtension embed.FS
+
+const musicHomeURL = "https://music.youtube.com/"
 
 type accountFlow struct {
 	ctx        context.Context
@@ -547,11 +547,11 @@ func (a *desktop) accountView(c *ui.Context) {
 		if nativePill(c, a.tr("nativeAccountExtensionFolder"), p, false).AlignSelf(ui.Start).Clicked() {
 			a.openAccountExtension()
 		}
-		if nativePill(c, a.tr("nativeAccountCopyExtensions"), p, false).AlignSelf(ui.Start).Clicked() {
-			if mygo.Clipboard.Write(transfer.TextData("brave://extensions/")) != nil {
-				a.accountMessage("nativeAccountClipboardError")
+		if nativePill(c, a.tr("nativeAccountCopyMusicURL"), p, false).AlignSelf(ui.Start).Clicked() {
+			if mygo.Clipboard.Write(transfer.TextData(musicHomeURL)) != nil {
+				a.accountMessage("nativeAccountMusicURLCopyError")
 			} else {
-				a.accountState.message = "nativeAccountAddressCopied"
+				a.accountState.message = "nativeAccountMusicURLCopied"
 				a.invalidateAccount()
 			}
 		}
@@ -577,9 +577,7 @@ func (a *desktop) accountView(c *ui.Context) {
 }
 func (a *desktop) openAccountBrowser() {
 	go func() {
-		cmd := exec.Command("/usr/bin/open", "-a", "Brave Browser", "https://music.youtube.com/")
-		cmd.Stdout, cmd.Stderr = io.Discard, io.Discard
-		if cmd.Run() != nil {
+		if mygo.Shell.OpenExternal(musicHomeURL) != nil {
 			a.post(func() { a.accountMessage("nativeAccountBrowserError") })
 		}
 	}()

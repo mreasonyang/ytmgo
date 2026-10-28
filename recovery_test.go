@@ -68,7 +68,7 @@ func TestRecoveryKeepsConnectedAccountAndOnlyRetriesActiveFailure(t *testing.T) 
 	message := a.model.Error
 	a.recoveryBrowserResult(notice, false)
 	if !a.model.RecoveryOpen || a.model.Error != message || !a.activeRecovery(notice) {
-		t.Fatal("opening Brave incorrectly resolved the failed request")
+		t.Fatal("opening the browser incorrectly resolved the failed request")
 	}
 	a.recoveryBrowserResult(notice, true)
 	if !a.model.RecoveryBrowserFailed || a.model.Error != message {

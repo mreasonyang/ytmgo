@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "checks": {
+    "manifest_policy": "pass",
+    "manifest_node_modules": "pass",
+    "manifest_files": "pass",
+    "runtime_source_modules": "pass",
+    "runtime_package_and_lock": "pass",
+    "protocol_version": "pass",
+    "locale_200_keys_complete": "pass",
+    "locale_bytes_embedded": "pass",
+    "locale_no_brave": "pass",
+    "extension_public_sources_embedded": "pass",
+    "app_signature_deep_strict": "pass",
+    "dmg_signature": "expected_unsigned_dmg",
+    "dmg_integrity": "pass",
+    "dmg_readonly_mount": "pass",
+    "dmg_app_tree_matches": "pass",
+    "dmg_app_signature_deep_strict": "pass",
+    "dmg_unmounted": "pass"
+  },
+  "formal_app_launched": false,
+  "browser_launched": false,
+  "app_tree": {
+    "sha256": "a8032c1d682a2be33f9f632b92f8b4b24615183023080f65b79335af1bf2ec2c",
+    "files": 5437,
+    "bytes": 216787609
+  },
+  "runtime_source_module_count": 19,
+  "runtime_manifest_file_count": 139,
+  "locale_count": 4,
+  "locale_message_key_count": 200,
+  "embedded_extension_file_count": 5,
+  "app_executable": {
+    "sha256": "dcefbc91b6ad7b92cba9e64d692e2a7045e9fe7f13cd89b37e62a9245645e315",
+    "bytes": 12568800
+  },
+  "dmg": {
+    "sha256": "fb545d7f9e135945979e21bfa8a17561ddb123d2bd730e99d2963c5433f761c2",
+    "bytes": 43475145
+  },
+  "result": "partial"
+}

@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "date": "2026-10-28",
+  "source": "CUA native AX and screenshot observations",
+  "diagnostic_executable_sha256": "044cdb1d4f8e345fc413a701ecdafc091b2a7ceaa322bb7445f72409c49f8b85",
+  "account": {
+    "locale": "zh-Hans",
+    "width": 640,
+    "height": 600,
+    "vendor_requirement_removed": true,
+    "extension_compatibility_limit_visible": true,
+    "copy_music_url_clicked": true,
+    "copy_success_message_visible": true,
+    "default_browser_button_visible": true,
+    "visual_layout": "readable, actions visible without overlap"
+  },
+  "recovery": {
+    "locales_observed": [
+      "zh-Hans",
+      "en"
+    ],
+    "width": 420,
+    "height": 740,
+    "default_browser_button_visible": true,
+    "visual_layout": "readable, no button clipping or text overlap"
+  },
+  "default_https_handler_bundle_id": "com.google.Chrome",
+  "browser_launch_tested": false,
+  "browser_launch_omission_reason": "user prohibits automatic Chrome interaction",
+  "browser_settings_changed": false,
+  "real_account_used": false,
+  "real_captcha_tested": false,
+  "audit_app_closed": true,
+  "safe_processes_ytmgo_count": 0,
+  "automated_checks": {
+    "make_check": "pass",
+    "runtime_tests": 89,
+    "locale_keys": 200,
+    "focused_recovery_account_error_race": "pass",
+    "make_build": "pass"
+  },
+  "dispatch_evidence": "account.go and recovery.go use mygo.Shell.OpenExternal; pinned MyGo v0.7.1 macOS implementation uses NSWorkspace.openURL without a browser identity"
+}

@@ -2,7 +2,7 @@
 
 ## Account-aware native implementation — 2026-10-28
 
-The source now has native account instructions, an explicit Brave extension
+The source now has native account instructions, an explicit browser extension
 handoff and system-secret session storage. The app does not create a WebKit
 page or read the previous WebKit cookie store. The status query parses the
 server's `logged_in` and `has_unlimited_entitlement` values; it runs on restore,
@@ -421,8 +421,9 @@ responses are described as unsupported service redirects; ordinary 403/429
 and connection failures are not presented as proof of a CAPTCHA.
 
 The native catalog and playback error surfaces link to a recovery dialog in
-all four languages. It opens the fixed YouTube Music homepage in Brave, asks
-the user to follow any website prompt, and provides explicit retry. No
+all four languages. The initial build opened the fixed YouTube Music homepage
+in Brave; the correction below removes this browser binding. The dialog asks
+the user to follow any website prompt and provides explicit retry. No
 arbitrary upstream redirect URL is stored or opened. The interface explains
 that in-app verification is unavailable and browser steps may not unblock the
 native request. Anonymous users can connect an account; connected accounts
@@ -479,6 +480,47 @@ Validation of this change:
   `85b356d6f9ae6535c7ceae8c5b7a8c3fff90d7a83f7386b6862397b86c7a1c13`.
 
 Portable evidence is in `docs/audits/2026-10-28-service-recovery/`.
+
+### Default-browser routing correction (2026-10-28)
+
+Three vendor-specific behaviors were removed: the account and recovery page
+openers no longer select Brave, and the login guide no longer copies a
+`brave://extensions/` URL. Both page openers now call
+`mygo.Shell.OpenExternal(musicHomeURL)`, which uses the system default browser.
+On macOS the pinned MyGo implementation uses `NSWorkspace.openURL:` without a
+browser identifier. The copy action provides `https://music.youtube.com/`.
+All four locales, current product documentation, and the extension guide are
+browser-neutral. Older observations naming Brave remain historical evidence.
+
+The existing account extension still requires a Chromium-compatible browser;
+its pinned extension identity and origin validation remain intact. The guide
+explicitly excludes Safari/Firefox for this extension and explains how to open
+Music in the same browser where the extension was installed. This correction
+does not establish new account-transfer compatibility with other browsers.
+
+- `make check` passed: all Go tests, 89 runtime tests, manifest/protocol
+  checks, vet, and four languages with 200 messages each. Focused recovery
+  and account-error race tests passed.
+- An independent native AUDIT build used the current production account and
+  recovery views without a real account, bridge, player, or credential store.
+  Actual UI interaction checked the 640×600 Chinese account guide and its
+  successful copy-action message, plus Chinese and English recovery dialogs
+  at 420×740. The button text and instructions were readable without overlap.
+- The system's HTTPS default handler was `com.google.Chrome`. Browser launch
+  was not exercised because the user prohibits automatic Chrome interaction.
+  Default routing is established by the production calls and the pinned MyGo
+  implementation; no end-to-end browser launch is claimed in this correction.
+  Browser settings were unchanged. The AUDIT app was closed after testing.
+- `make build` and package content/integrity checks passed. Nineteen runtime
+  modules, 139 manifest entries, all locale bytes, and five embedded extension
+  source files matched the source/runtime. The formal app was not launched.
+  App signing is ad-hoc and the DMG remains unsigned.
+- App executable SHA256:
+  `dcefbc91b6ad7b92cba9e64d692e2a7045e9fe7f13cd89b37e62a9245645e315`.
+  DMG SHA256:
+  `fb545d7f9e135945979e21bfa8a17561ddb123d2bd730e99d2963c5433f761c2`.
+
+Evidence: `docs/audits/2026-10-28-default-browser/`.
 
 The measurements and hashes below describe earlier builds only.
 

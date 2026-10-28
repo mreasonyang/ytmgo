@@ -611,27 +611,27 @@ func (msgs Messages) LinkErrorTitle() string {
 	return Catalog.Format(msgs.locale, "linkErrorTitle", nil)
 }
 
-// LinkErrorMessage says "Brave Browser couldn't be opened"
+// LinkErrorMessage says "The default browser couldn't be opened"
 // in the language the app shows.
 //
-// Dialog message: the preferred browser is missing.
+// Dialog message: the system could not open the default browser.
 func LinkErrorMessage() string { return In(i18n.Locale()).LinkErrorMessage() }
 
-// LinkErrorMessage says "Brave Browser couldn't be opened"
+// LinkErrorMessage says "The default browser couldn't be opened"
 // in the language of msgs.
 //
-// Dialog message: the preferred browser is missing.
+// Dialog message: the system could not open the default browser.
 func (msgs Messages) LinkErrorMessage() string {
 	return Catalog.Format(msgs.locale, "linkErrorMessage", nil)
 }
 
-// LinkErrorDetail says "Install or open Brave, then try again."
+// LinkErrorDetail says "Check your default browser settings and try again."
 // in the language the app shows.
 //
 // Dialog detail.
 func LinkErrorDetail() string { return In(i18n.Locale()).LinkErrorDetail() }
 
-// LinkErrorDetail says "Install or open Brave, then try again."
+// LinkErrorDetail says "Check your default browser settings and try again."
 // in the language of msgs.
 //
 // Dialog detail.
@@ -2307,11 +2307,11 @@ func (msgs Messages) NativeAccountSessionError() string {
 	return Catalog.Format(msgs.locale, "nativeAccountSessionError", nil)
 }
 
-// NativeSignOutConfirm says "Sign out of ytmgo and remove its saved session? Brave will remain signed in."
+// NativeSignOutConfirm says "Sign out of ytmgo and remove its saved session? Your browser will remain signed in."
 // in the language the app shows.
 func NativeSignOutConfirm() string { return In(i18n.Locale()).NativeSignOutConfirm() }
 
-// NativeSignOutConfirm says "Sign out of ytmgo and remove its saved session? Brave will remain signed in."
+// NativeSignOutConfirm says "Sign out of ytmgo and remove its saved session? Your browser will remain signed in."
 // in the language of msgs.
 func (msgs Messages) NativeSignOutConfirm() string {
 	return Catalog.Format(msgs.locale, "nativeSignOutConfirm", nil)
@@ -2397,11 +2397,11 @@ func (msgs Messages) NativeVideoUnavailable() string {
 	return Catalog.Format(msgs.locale, "nativeVideoUnavailable", nil)
 }
 
-// NativeAccountGuide says "1. Open the extension folder.\n2. Copy the Brave extensions address and paste it into Brave’s address bar. Enable De…"
+// NativeAccountGuide says "This extension requires a Chromium-compatible browser; Safari and Firefox are not supported. If your default browser …"
 // in the language the app shows.
 func NativeAccountGuide() string { return In(i18n.Locale()).NativeAccountGuide() }
 
-// NativeAccountGuide says "1. Open the extension folder.\n2. Copy the Brave extensions address and paste it into Brave’s address bar. Enable De…"
+// NativeAccountGuide says "This extension requires a Chromium-compatible browser; Safari and Firefox are not supported. If your default browser …"
 // in the language of msgs.
 func (msgs Messages) NativeAccountGuide() string {
 	return Catalog.Format(msgs.locale, "nativeAccountGuide", nil)
@@ -2417,11 +2417,11 @@ func (msgs Messages) NativeAccountExtensionFolder() string {
 	return Catalog.Format(msgs.locale, "nativeAccountExtensionFolder", nil)
 }
 
-// NativeAccountOpenMusic says "Open YouTube Music in Brave"
+// NativeAccountOpenMusic says "Open YouTube Music in default browser"
 // in the language the app shows.
 func NativeAccountOpenMusic() string { return In(i18n.Locale()).NativeAccountOpenMusic() }
 
-// NativeAccountOpenMusic says "Open YouTube Music in Brave"
+// NativeAccountOpenMusic says "Open YouTube Music in default browser"
 // in the language of msgs.
 func (msgs Messages) NativeAccountOpenMusic() string {
 	return Catalog.Format(msgs.locale, "nativeAccountOpenMusic", nil)
@@ -2437,11 +2437,11 @@ func (msgs Messages) NativeAccountPrivacy() string {
 	return Catalog.Format(msgs.locale, "nativeAccountPrivacy", nil)
 }
 
-// NativeAccountWaiting says "Waiting for your explicit account transfer from Brave. This window accepts one transfer for five minutes."
+// NativeAccountWaiting says "Waiting for your explicit account transfer from the browser. This window accepts one transfer for five minutes."
 // in the language the app shows.
 func NativeAccountWaiting() string { return In(i18n.Locale()).NativeAccountWaiting() }
 
-// NativeAccountWaiting says "Waiting for your explicit account transfer from Brave. This window accepts one transfer for five minutes."
+// NativeAccountWaiting says "Waiting for your explicit account transfer from the browser. This window accepts one transfer for five minutes."
 // in the language of msgs.
 func (msgs Messages) NativeAccountWaiting() string {
 	return Catalog.Format(msgs.locale, "nativeAccountWaiting", nil)
@@ -2487,44 +2487,46 @@ func (msgs Messages) NativeAccountStorageError() string {
 	return Catalog.Format(msgs.locale, "nativeAccountStorageError", nil)
 }
 
-// NativeAccountBrowserError says "Could not open Brave. Install or open Brave Browser, then retry."
+// NativeAccountBrowserError says "Could not open the default browser. Open https://music.youtube.com/ in your browser manually."
 // in the language the app shows.
 func NativeAccountBrowserError() string { return In(i18n.Locale()).NativeAccountBrowserError() }
 
-// NativeAccountBrowserError says "Could not open Brave. Install or open Brave Browser, then retry."
+// NativeAccountBrowserError says "Could not open the default browser. Open https://music.youtube.com/ in your browser manually."
 // in the language of msgs.
 func (msgs Messages) NativeAccountBrowserError() string {
 	return Catalog.Format(msgs.locale, "nativeAccountBrowserError", nil)
 }
 
-// NativeAccountCopyExtensions says "Copy Brave extensions address"
+// NativeAccountCopyMusicURL says "Copy YouTube Music address"
 // in the language the app shows.
-func NativeAccountCopyExtensions() string { return In(i18n.Locale()).NativeAccountCopyExtensions() }
+func NativeAccountCopyMusicURL() string { return In(i18n.Locale()).NativeAccountCopyMusicURL() }
 
-// NativeAccountCopyExtensions says "Copy Brave extensions address"
+// NativeAccountCopyMusicURL says "Copy YouTube Music address"
 // in the language of msgs.
-func (msgs Messages) NativeAccountCopyExtensions() string {
-	return Catalog.Format(msgs.locale, "nativeAccountCopyExtensions", nil)
+func (msgs Messages) NativeAccountCopyMusicURL() string {
+	return Catalog.Format(msgs.locale, "nativeAccountCopyMusicURL", nil)
 }
 
-// NativeAccountAddressCopied says "Copied brave://extensions/. Paste it into Brave’s address bar and press Return."
+// NativeAccountMusicURLCopied says "Copied https://music.youtube.com/. Paste it into the browser where you installed the account extension."
 // in the language the app shows.
-func NativeAccountAddressCopied() string { return In(i18n.Locale()).NativeAccountAddressCopied() }
+func NativeAccountMusicURLCopied() string { return In(i18n.Locale()).NativeAccountMusicURLCopied() }
 
-// NativeAccountAddressCopied says "Copied brave://extensions/. Paste it into Brave’s address bar and press Return."
+// NativeAccountMusicURLCopied says "Copied https://music.youtube.com/. Paste it into the browser where you installed the account extension."
 // in the language of msgs.
-func (msgs Messages) NativeAccountAddressCopied() string {
-	return Catalog.Format(msgs.locale, "nativeAccountAddressCopied", nil)
+func (msgs Messages) NativeAccountMusicURLCopied() string {
+	return Catalog.Format(msgs.locale, "nativeAccountMusicURLCopied", nil)
 }
 
-// NativeAccountClipboardError says "Could not copy the address. Enter brave://extensions/ in Brave’s address bar."
+// NativeAccountMusicURLCopyError says "Could not copy the address. Enter https://music.youtube.com/ in the browser where you installed the account extension."
 // in the language the app shows.
-func NativeAccountClipboardError() string { return In(i18n.Locale()).NativeAccountClipboardError() }
+func NativeAccountMusicURLCopyError() string {
+	return In(i18n.Locale()).NativeAccountMusicURLCopyError()
+}
 
-// NativeAccountClipboardError says "Could not copy the address. Enter brave://extensions/ in Brave’s address bar."
+// NativeAccountMusicURLCopyError says "Could not copy the address. Enter https://music.youtube.com/ in the browser where you installed the account extension."
 // in the language of msgs.
-func (msgs Messages) NativeAccountClipboardError() string {
-	return Catalog.Format(msgs.locale, "nativeAccountClipboardError", nil)
+func (msgs Messages) NativeAccountMusicURLCopyError() string {
+	return Catalog.Format(msgs.locale, "nativeAccountMusicURLCopyError", nil)
 }
 
 // NativeVerificationRequired says "Google requires additional verification"
@@ -2567,31 +2569,31 @@ func (msgs Messages) NativeRecoveryHelp() string {
 	return Catalog.Format(msgs.locale, "nativeRecoveryHelp", nil)
 }
 
-// NativeVerificationHelp says "ytmgo cannot complete this verification in the app. Open YouTube Music in Brave. If the website asks for verification…"
+// NativeVerificationHelp says "ytmgo cannot complete this verification in the app. Open YouTube Music in your browser. If the website asks for verif…"
 // in the language the app shows.
 func NativeVerificationHelp() string { return In(i18n.Locale()).NativeVerificationHelp() }
 
-// NativeVerificationHelp says "ytmgo cannot complete this verification in the app. Open YouTube Music in Brave. If the website asks for verification…"
+// NativeVerificationHelp says "ytmgo cannot complete this verification in the app. Open YouTube Music in your browser. If the website asks for verif…"
 // in the language of msgs.
 func (msgs Messages) NativeVerificationHelp() string {
 	return Catalog.Format(msgs.locale, "nativeVerificationHelp", nil)
 }
 
-// NativeConsentHelp says "YouTube redirected this request to a consent page. Open YouTube Music in Brave, review any consent request on the web…"
+// NativeConsentHelp says "YouTube redirected this request to a consent page. Open YouTube Music in your browser, review any consent request on …"
 // in the language the app shows.
 func NativeConsentHelp() string { return In(i18n.Locale()).NativeConsentHelp() }
 
-// NativeConsentHelp says "YouTube redirected this request to a consent page. Open YouTube Music in Brave, review any consent request on the web…"
+// NativeConsentHelp says "YouTube redirected this request to a consent page. Open YouTube Music in your browser, review any consent request on …"
 // in the language of msgs.
 func (msgs Messages) NativeConsentHelp() string {
 	return Catalog.Format(msgs.locale, "nativeConsentHelp", nil)
 }
 
-// NativeServiceSignInHelp says "YouTube redirected this request to sign-in. Open YouTube Music in Brave and follow any sign-in request on the website…"
+// NativeServiceSignInHelp says "YouTube redirected this request to sign-in. Open YouTube Music in your browser and follow any sign-in request on the …"
 // in the language the app shows.
 func NativeServiceSignInHelp() string { return In(i18n.Locale()).NativeServiceSignInHelp() }
 
-// NativeServiceSignInHelp says "YouTube redirected this request to sign-in. Open YouTube Music in Brave and follow any sign-in request on the website…"
+// NativeServiceSignInHelp says "YouTube redirected this request to sign-in. Open YouTube Music in your browser and follow any sign-in request on the …"
 // in the language of msgs.
 func (msgs Messages) NativeServiceSignInHelp() string {
 	return Catalog.Format(msgs.locale, "nativeServiceSignInHelp", nil)

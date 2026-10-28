@@ -2,8 +2,8 @@ package main
 
 import (
 	"errors"
-	"io"
-	"os/exec"
+
+	"github.com/egoist/mygo"
 
 	"ytmgo/internal/catalog"
 	"ytmgo/internal/player"
@@ -133,17 +133,15 @@ func (a *desktop) showRecovery(notice recoveryNotice) {
 	a.invalidate()
 }
 
-// Browser success means only that Brave opened. The original request must
-// succeed on an explicit retry before its verification error is resolved.
+// Opening the default browser does not resolve the failed native request.
+// Its result is determined by an explicit retry.
 func (a *desktop) openRecoveryBrowser() {
 	if !a.model.RecoveryOpen || !a.activeRecovery(a.model.Recovery) {
 		return
 	}
 	notice := a.model.Recovery
 	go func() {
-		cmd := exec.Command("/usr/bin/open", "-a", "Brave Browser", "https://music.youtube.com/")
-		cmd.Stdout, cmd.Stderr = io.Discard, io.Discard
-		err := cmd.Run()
+		err := mygo.Shell.OpenExternal(musicHomeURL)
 		a.post(func() {
 			a.recoveryBrowserResult(notice, err != nil)
 		})

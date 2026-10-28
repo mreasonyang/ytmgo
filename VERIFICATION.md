@@ -145,7 +145,24 @@ attempt retains fixed outcome/stages and elapsed time, and any failure makes
 the run fail. The existing 12-second command and 18-second exit budgets are
 unchanged. Automatic push/PR CI still covers all three platforms; the manual
 workflow can select one platform for focused follow-up without rerunning the
-already-passing platform jobs. Repeat results remain pending.
+already-passing platform jobs.
+
+The Windows-only repeat run
+<https://github.com/mreasonyang/ytmgo/actions/runs/40750786895> failed: successful
+session attempts 1–4 passed (10.631/2.534/1.975/3.271 seconds); attempt 5 obtained
+the session but returned `login_failed` after `cleanup_started`, without
+`cleanup_finished` (4.579 seconds). Cancel, parent EOF and timeout passed. This
+locates that repeat failure in temporary-profile cleanup; it does not explain
+the earlier roughly 32-second failure. No speculative production fix was made.
+The user explicitly stopped Windows testing and restricted current delivery
+to macOS. Windows validation remains incomplete, and no new CI run is queued
+for this documentation-only closeout.
+
+macOS delivery remains the real-account-tested v4 app/DMG above: the unsupported
+Music page was fixed, Premium/session save and same-binary restart restoration
+passed, restored playback advanced, and the temporary login helper plus its
+WebKit processes exited. Subsequent commits changed fixture diagnostics and CI
+only; they did not change the macOS production implementation in this package.
 
 ## Formal-package acceptance continuation — 2026-10-29 (Asia/Shanghai)
 

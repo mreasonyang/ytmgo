@@ -1,67 +1,16 @@
 package main
 
 import (
-	"encoding/json"
-	"strings"
-
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/i18n"
 	"ytmgo/internal/language"
 	"ytmgo/locales"
 )
 
-// shellI18N is the third argument of the injected shell: its messages in the
-// language the app shows, formatted with each simple argument left as a
-// literal {name} slot for the shell to fill (locales/*.json "shell*" keys
-// use no plural/select arguments; TestShellMessagesAreSimple enforces it).
-type shellI18N struct {
-	Locale    string            `json:"locale"`
-	Script    string            `json:"script"`
-	Choice    string            `json:"choice"`
-	Languages []shellLanguage   `json:"languages"`
-	Messages  map[string]string `json:"messages"`
+func (a *desktop) tr(key string) string { return a.trArgs(key, nil) }
+func (a *desktop) trArgs(key string, args map[string]any) string {
+	return locales.Catalog.Format(mygo.App.Locale(), key, args)
 }
-
-type shellLanguage struct {
-	Tag  string `json:"tag"`
-	Name string `json:"name"`
-}
-
-func shellMessageKeys() []string {
-	raw, _ := assets.ReadFile("locales/en.json")
-	var catalog map[string]json.RawMessage
-	_ = json.Unmarshal(raw, &catalog)
-	var keys []string
-	for key := range catalog {
-		if strings.HasPrefix(key, "shell") {
-			keys = append(keys, key)
-		}
-	}
-	return keys
-}
-
-func newShellI18N(locale, choice string) shellI18N {
-	payload := shellI18N{Locale: locale, Script: language.Script(locale), Choice: choice, Messages: map[string]string{}}
-	for _, tag := range language.Supported {
-		payload.Languages = append(payload.Languages, shellLanguage{Tag: tag, Name: i18n.Autonym(tag)})
-	}
-	for _, key := range shellMessageKeys() {
-		var args map[string]any
-		if m, _, ok := locales.Catalog.Message(locale, key); ok {
-			for _, arg := range m.Args() {
-				if args == nil {
-					args = map[string]any{}
-				}
-				args[arg.Name] = "{" + arg.Name + "}"
-			}
-		}
-		payload.Messages[key] = locales.Catalog.Format(locale, key, args)
-	}
-	return payload
-}
-
-// applyLanguage makes the saved choice the app's language. MyGo matches
-// the system languages against the catalogs for "system" (zh-TW → zh-Hant).
 func (a *desktop) applyLanguage() {
 	choice := language.Load(a.languagePath)
 	if choice == language.System {
@@ -70,36 +19,53 @@ func (a *desktop) applyLanguage() {
 		mygo.App.SetLocale(choice)
 	}
 }
-
 func (a *desktop) setLanguage(choice string) {
-	if err := language.Save(a.languagePath, choice); err != nil {
+	if language.Save(a.languagePath, choice) != nil {
 		return
 	}
+	a.model.Language = choice
 	a.applyLanguage()
+	// A preference change can resolve to the same locale; always refresh it.
+	a.localeChanged()
 }
-
-// relocalize runs when the shown language changes: native menus and window
-// titles are rebuilt, and the music view reloads so both the shell and the
-// service canvas (its hl) speak the new language.
+func (a *desktop) localeChanged() {
+	if a.catalog != nil {
+		a.catalog.SetLanguage(language.ServiceLanguage(mygo.App.Locale()))
+		if a.window != nil {
+			a.reload()
+		}
+	}
+	a.relocalize()
+}
 func (a *desktop) relocalize() {
 	mygo.App.SetMenu(a.menu())
-	a.setSignedIn(a.signedIn)
 	if a.tray != nil {
 		a.tray.SetMenu(a.trayMenu())
 	}
-	if a.account != nil && !a.account.IsDestroyed() {
+	if a.window != nil {
+		a.window.SetTitle(locales.AppName())
+		a.invalidate()
+	}
+	if a.account != nil {
 		a.account.SetTitle(locales.LoginWindowTitle())
 	}
-	if a.logoutBlocked {
-		if a.logoutWindow != nil && !a.logoutWindow.IsDestroyed() {
-			a.logoutWindow.SetTitle(locales.AccountWindowTitle())
-		}
-		return
+}
+func (a *desktop) setAppearance(value string) {
+	if _, err := a.prefs.SetAppearance(value); err != nil {
+		a.model.Error = a.tr("appearanceSaveError")
+	} else {
+		a.model.Appearance = value
 	}
-	if a.window != nil && !a.window.IsDestroyed() {
-		a.window.Destroy()
-		a.window = nil
-		a.openMusic()
-		a.show()
+	a.invalidate()
+}
+func (a *desktop) languageMenu() []*mygo.MenuItem {
+	choice := language.Load(a.languagePath)
+	radio := func(label, value string) *mygo.MenuItem {
+		return &mygo.MenuItem{Label: label, Type: mygo.MenuItemRadio, Checked: choice == value, Click: func(*mygo.MenuItem, *mygo.Window) { a.setLanguage(value) }}
 	}
+	items := []*mygo.MenuItem{radio(locales.MenuLanguageSystem(), language.System), mygo.Separator()}
+	for _, tag := range language.Supported {
+		items = append(items, radio(i18n.Autonym(tag), tag))
+	}
+	return items
 }

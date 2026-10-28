@@ -1,93 +1,473 @@
-# 验收记录
+# Native playback verification
 
-本文件记录已完成的历史检查。下文 `evidence/` 记录保留在本机，不随 Git 仓库上传。
+## Account-aware native implementation — 2026-10-28
 
-当前候选：**0.3.0**。日期：2026-10-27（Asia/Shanghai）。
+The source now has native account instructions, an explicit Brave extension
+handoff and system-secret session storage. The app does not create a WebKit
+page or read the previous WebKit cookie store. The status query parses the
+server's `logged_in` and `has_unlimited_entitlement` values; it runs on restore,
+login, focus and every five minutes. An unavailable response remains an error,
+not a downgrade to a free account.
 
-界面外壳从零重写（设计规范见 DESIGN.md），并新增 English / 简体中文 / 繁體中文 / 日本語 界面。
+Startup waits for account restoration and does not warm the proof engine.
+Premium selects an engine that rejects imports of jsdom and the proof provider.
+Anonymous/free playback starts a proof engine on demand. Membership changes
+cancel preparation and reap the previous engine while retaining the currently
+playing stream. Identity changes revoke the previous account's streams.
 
-**macOS 补充验收（2026-10-27，`55880f1`）：NO-GO。** 本轮正式 0.3.0 构建、检查与签名完整性通过，并完成原生四语言、播放、主题、窗口生命周期及独立匿名 WebKit 的 1440 / 1100 / 420 宽布局检查。确认 2 个 P1、5 个 P2、2 个 P3，包括语言切换退出、视频高度翻倍裁切、语言偏好选中态脱节、浅色内容对比度和紧凑导航/入口问题。复现步骤、证据边界及未验收范围见 [UI / UX / i18n E2E 报告](UIUX_AUDIT.md)。真实账号流程仍未验收；本轮未修改产品实现。
+Go tests, vet, four-language checks (185 messages) and 80/80 offline
+JavaScript tests using the packaged locked dependencies passed. Go race tests passed
+for the app, account bridge, catalogue and player. New gated decoder tests
+cover seeks/replay during membership changes, cancelled identity changes,
+private configuration IPC and truncated PCM despite successful decoder exit.
+Seventeen process-scope tests and five packaging-projection tests also passed.
 
-以下三项为原重构阶段的记录，原生补验结果以上述报告为准：
+The new anonymous runtime completed two full-track PCM decodes:
 
-- `make check`：Go 测试与 vet、28 项外壳测试、`mygo i18n check`（157 条消息 × 4 种语言）。新增回归覆盖：目录键与占位符一致、所有外壳消息均有译文且只用简单参数、代码中无 CJK 字面量与用户可见字符串字面量、各语言挂载后的 `lang` / 字形脚本、语言与外观指令边界、服务播放栏缺失时的播放状态。
-- 无头 Chrome 156（Linux，匿名会话，含广告）注入真实服务页面截图检查：首页、搜索、专辑、探索、音乐库、正在播放面板、沉浸模式、设置、快捷键、浅色主题；1440 / 1100 / 420 宽度；四种语言及伪本地化（约 +40% 文本）。
-- 未验证：macOS / Linux 原生窗口中的 0.3.0（原生菜单、语言切换后重建窗口、托盘、全局快捷键、WKWebView 的 View Transitions 与 `linear()` 缓动）；真实账号登录后的歌单列表与「喜欢的音乐」识别；Windows。
+| Track | Metadata seconds | Actual PCM seconds | Resolve / first PCM seconds |
+| --- | ---: | ---: | ---: |
+| 1 | 212.561 | 212.546667 | 11.951941 / 1.622410 |
+| 2 | 369.641 | 369.626667 | 1.243670 / 0.901455 |
 
----
+Both streams reached EOF with nonzero finite PCM and no decoder/bridge error.
+This was faster-than-real-time decoding, not a speaker recording or normal-ad
+acceptance. Evidence: `build/diagnostics/account-native-20261028/anonymous-full/results.jsonl`.
+The first native-matrix attempt failed because an anonymous configuration GET
+included `authuser=0`, causing an official redirect which policy rejected. The
+anonymous request now uses the canonical URL; these full decodes followed that
+fix and are not evidence that the initial failed attempt passed.
 
-以下为 **0.2.1** 历史记录。
+The final anonymous native matrix also passed (race-enabled, 113.72 seconds):
+prepared next-track output was observed in 96.33–98.71 ms with zero new resolver
+or decoder calls; unprepared selection took 2.688 seconds. Pause held its clock,
+seek to 45 seconds advanced to 47.968 seconds, and simultaneous audio, prepared
+track and 480×480 video succeeded. Cold output took 21.621 seconds in this run;
+this is not a cold-start improvement claim. Network samples are not guarantees.
+Evidence: `build/diagnostics/account-native-20261028/anonymous-matrix-final/results.jsonl`.
 
-日期：2026-10-27（Asia/Shanghai）。
+A 31-sample signed-out idle run, with the native account window open, measured
+116.65 MiB median/peak across the full captured responsible process set (five
+processes); no WebKit executable was observed. This preliminary app had the
+same playback architecture but preceded final interaction fixes. It is an idle
+measurement, not a playback or final-package memory claim. Evidence:
+`build/diagnostics/account-native-20261028/signed-out-idle/samples.jsonl`.
 
-新增侧栏及原生账号菜单的退出入口。原生确认后关闭所有共享会话的音乐/账号/旧版页面，再通过 MyGo 清除网页数据；失败时保持在重试界面，中断后凭本地标记恢复清理。
+### Real-account and final-package acceptance
 
-- `make check`：Go 测试、Go vet、50 项前端测试；新增 Go 回归覆盖退出指令来源/手势、清理顺序、存储失败、重试、保留本地数据和中断标记。
-- macOS arm64 独立测试应用：普通/HttpOnly Cookie、localStorage、sessionStorage、IndexedDB、Cache Storage 和 Service Worker 模拟数据写入成功；重启确认持久化数据存在；通过实际客户端退出入口清理；再次重启检查全部不存在。
-- 未登录时侧栏无退出/清理入口，原生账号菜单只显示登录入口；加载未知状态也隐藏退出。模拟已登录状态显示退出及状态切换已由前端回归覆盖，真实账号登录后的显示待账号验收。
-- 原生菜单、侧栏入口、取消、成功结果、返回首页、失败提示及重试通过。模拟外观和本地歌单清理后保持原值。
-- 测试使用独立 bundle ID / 数据目录。未读取、导出或清除用户真实账号的凭据和网页存储。
-- 详细结果见 [0.2.1 退出验收](evidence/20261027/logout/REPORT.md)。
+The native app accepted an explicit Premium handoff, verified the server flags,
+loaded the account's library and played a 369.641-second recording through its
+natural end into the next track. Restarting that same build restored Premium.
+The Premium child enforces a module guard that rejects DOM/proof imports.
+The 241 steady playback samples (elapsed 60.467–300.493 seconds) measured a
+whole responsible-process median of **358.98 MiB**, peak **364.22 MiB**. No
+WebKit process was observed. One sample attributed 259.81 MiB to the native UI
+and about 74.27 MiB to the two Node processes. This is not a claim that the
+entire app uses only the helpers' memory. Quit reaped the app and both Node
+processes. Evidence: `build/diagnostics/account-native-20261028/premium-app/`.
+This run preceded the final canonical-URL/diagnostic/package-projection edits;
+it is a whole-app measurement of that build, not of every later package.
 
-实际 Google 账号端到端登录/登出、云端音乐库及登录恢复仍未验证。这里只确认本机 WebView 数据清理，不代表撤销 Google 服务端或其他设备的会话，也不清除系统日志、备份及历史磁盘副本。其他平台仍未做本轮原生验证。
+The ordinary-account handoff and server classification passed in the native
+app, but its first playback attempt failed before audio with
+`stream_resolution_failed`. The runtime now requests the canonical Music
+configuration URL and checks the returned account/brand identity strictly.
+It also reports bounded stage categories through private IPC and diagnostics;
+no dependency messages, URLs or credentials are persisted.
 
----
+The canonical request then resolved an ordinary-account recording successfully,
+but the first full-decode attempt stopped at 28.3935 seconds with the former
+generic `audio_connection_failed` category. A fresh explicit handoff retest
+completed both tracks: 212.546667 and 369.626667 seconds of PCM, correct EOF,
+and zero decoder/bridge errors. Resolution/first PCM took 27.702489/1.659875
+seconds and 3.505652/2.065523 seconds. This verifies ordinary-account content
+playback in the packaged runtime, not native UI/Keychain or advertisement
+acceptance. Both attempts remain in `standard-final-package-ephemeral/` and
+`standard-final-package-ephemeral-retry/` under the same evidence root.
+The first failure cannot retrospectively be classified as a transient network
+error: the then-current bridge collapsed late CDN rejection and timeout alike.
+The final bridge now retains a fixed error category on its private capability;
+a bounded local HEAD reads it after a stream failure, without retrying the CDN
+or changing Content-Length/Range behavior. Synthetic late-403, timeout,
+truncation and untrusted-header tests passed.
 
-以下为 **0.2.0** 历史记录。日期：2026-10-27（Asia/Shanghai）。
+The final package completed two anonymous full decodes: 212.546667 seconds of
+PCM for 212.561 seconds of metadata, then 369.626667 for 369.641. Both reached
+EOF with nonzero finite PCM and no decoder/bridge error. Resolution/first PCM
+took 11.360899/1.040926 seconds and 2.224731/0.754330 seconds respectively.
+Evidence: `build/diagnostics/account-native-20261028/anonymous-final-package/`.
 
-0.2.0 将默认主界面切换为服务实时页面上的自定义布局，并加入独立 Google 登录窗口。账号尚待用户完成登录，因此整体账号验收未完成。
+The rebuilt app's Keychain restore triggered a macOS authorization prompt after
+the ad-hoc signing identity changed. The user was away from the device, so this
+restore was not completed or bypassed. Separate ephemeral browser-handoff tests
+do not count as native Keychain restoration acceptance.
 
-- `make check`：Go 测试、Go vet、49 项前端测试通过。49 项中 42 项属于旧版；新增 7 项验证新脚本的来源隔离、文档早期挂载、外观状态、SPA 导航、控制缺失处理、音量边界和方向键编辑保护。
-- macOS arm64 原生测试：真实首页、Daft Punk 搜索结果、歌曲播放/暂停、Cmd+Right 下一首、进度跳转到 2:32 和回到首页继续到 3:15 已验证。
-- 独立 Google 登录窗口成功加载官方账号输入页；关闭后主窗口继续使用。最终已重新打开并交给用户登录。
-- 浅/深色可读性、浏览时隐藏悬浮视频、冷启动外观恢复通过；签名和最终 DMG 完整性验证通过。
-- 新主界面不授予远程网页 Go IPC 权限。当时的测试没有导出凭据；应用的系统 WebView 本身仍会持久化 Cookie、网页存储与缓存。
-- 本轮原生截图和验收范围见 [0.2.0 记录](evidence/20261027/account-redesign/REPORT.md)。
+The first Premium lifecycle attempt completed its 212.561-second track, then
+hit the test's three-minute per-track deadline while still decoding a
+369.641-second recording (275.7535 seconds of PCM, no bridge error). This is a
+test-enforced cancellation, not evidence of a CDN rejection. The per-track
+deadline is now seven minutes, and the lifecycle scenario uses one complete
+recording before and after switching; the default account test still uses two
+tracks. The timed-out attempt remains in `premium-cycle-final/`.
 
-待完成：真实账号登录后的音乐库/歌单读写、自动返回主界面、账号切换/退出与重启会话恢复。其他平台、硬件媒体键、长时间后台播放、Apple 公证均未由本轮验证。
+The corrected lifecycle test passed against the delivery runtime: verified
+Premium → complete 212.546667-second PCM decode → anonymous proof warm-up →
+verified Premium restoration → another complete 212.546667-second decode.
+Both decodes reached EOF with zero decoder/bridge errors. During the two
+ten-second observation windows, the test host plus responsible helpers measured
+146.18 MiB median with the anonymous proof engine, then 43.16 MiB after Premium
+reconfiguration. The old proof PID disappeared and was absent throughout the
+restored Premium decode; a new engine was created on demand. Restored decoding
+measured 91.11 MiB median. All owned processes were gone at test completion.
+These figures exclude native UI and Brave. This tests actual identity changes,
+not a real billing upgrade/expiry; same-account membership changes are covered
+by automated lifecycle tests. Evidence:
+`build/diagnostics/account-native-20261028/premium-cycle-delivery/`.
 
----
+A native AX observation showed mute had reverted after natural next-track;
+the cause was not reproduced. Added tests cover the actual volume controller,
+natural EOF, prepared next, seek and account/membership changes and all pass.
+The observed incident remains unresolved; these tests are not a fix claim.
 
-以下为 2026-10-26 的 **0.1.5 及更早版本历史记录**。
+Final packaging checks passed for 17 runtime modules, 137 manifest files,
+locked dependencies, Node version, App strict ad-hoc signature, DMG integrity,
+and identical App contents inside/outside the mounted DMG. The dependency hash
+now uses `mygo-visible-v1`, matching MyGo's omission of dot-prefixed resources.
+The DMG itself is unsigned: MyGo intentionally skips DMG signing in ad-hoc mode.
+Neither Developer ID signing nor notarization has been performed. Evidence:
+`build/diagnostics/account-native-20261028/artifact-release-candidate.json`. The earlier
+manifest mismatch and its failed record remain preserved separately.
 
-## 0.1.5 默认封面视图
+Delivery executable SHA256:
+`897c9fb29e5c7c21728498117fe7069eb840a0059c8133265920c8e418e6c9ba`.
+Delivery DMG SHA256:
+`7017673c28dfbb739cc5f10659a1204f8f7b576f679e90fe182193dd87c0e649`.
 
-已将右侧常驻视频改为默认歌曲封面；点击「显示视频」才展示播放器，点击「显示封面」返回。两种视图复用同一 iframe，切换不重新加载歌曲。加载、受限和自动播放被阻止时显示相应操作；正常播放和暂停时不再显示播放器实现说明。
+The measurements and hashes below describe earlier builds only.
 
-- `make check`：Go 测试、42 项前端测试及 `go vet` 通过。新增封面默认状态、封面/视频切换不重启、下一首封面与缺图回退测试；更新播放被阻止时的手动恢复测试。
-- macOS arm64 0.1.5 打包应用：冷启动默认封面且不自动播放；点击 `Back of My Mind` 后在封面模式实际进入播放，时间到 0:07。
-- 主动展开视频时为 0:28；切回封面后继续到 0:42，再暂停成功。进度滑条跳转到 1:34 后继续播放至 1:59。
-- 点击下一首切换到 `Carousel`，封面与歌曲标题更新，保持封面模式并继续播放。浅色模式下继续到 1:17，恢复原深色后到 1:43；最终在 2:32 暂停。
-- [浅色封面截图](evidence/20261026/cover-playback/light-cover.png)、[深色封面截图](evidence/20261026/cover-playback/dark-cover.png)、[最终原生状态回读](evidence/20261026/cover-playback/native-readback.txt)。
+## Historical anonymous implementation and measurements
 
-0.1.5 当时运行位置为 `build/darwin-arm64/ytmgo.app`；该路径现已被 0.2.0 构建替换。此轮验证范围是 macOS arm64；下方其他平台结果属于 0.1.4，不能当作 0.1.5 的复验。播放仍依赖 YouTube 嵌入播放器，此次改动为画面展示切换，不是独立音频流，不保证减少视频下载或解码。播放进度和状态经过 UI 回读，未采集物理音频输出。
+The following records predate the account-aware implementation above. They
+remain useful as baseline evidence; they do not establish current package
+behavior, account support or memory use.
 
-## 0.1.4 历史结果
+### Earlier implementation
 
-按当时用户确认的可用平台范围，结论 **PASS**。
+- Native MyGo browsing and controls retain the original UI/UX. One prepared
+  next-track lease and PCM decoder transfer ownership without resolving or
+  starting a decoder on selection. Queue changes, seek, stop and close cancel
+  obsolete preparation. Audio and on-demand video share the resolver.
+- The outer Node process owns control messages and the bounded media bridge.
+  It does not import YouTube.js, JSDOM or the proof provider. One restricted
+  persistent engine owns the YouTube.js 18.3.0 anonymous WEB_REMIX session,
+  signature processing, JSDOM and proof generator. SDK and proof no longer have
+  separate persistent processes or duplicated module graphs.
+- Initial anonymous Session/Player analysis runs in a short-lived bootstrap
+  process. At most four opaque SDK cache entries, up to 8 MiB in total, cross a
+  private binary pipe bounded to 16 MiB. The child exits and is reaped before
+  the shared engine restores the cache with the same SDK and player ID.
+  Restoration rejects initialization network requests as `bootstrap_cache_miss`;
+  it cannot silently repeat player analysis. Normal player requests resume
+  after restoration.
+- Both `bootstrap-session.mjs` and `engine-session.mjs` launch Node with
+  `--optimize-for-size`. This uses V8's memory-oriented policy without a heap
+  cap, forced GC, slower UI updates or a change of DOM implementation. JSDOM
+  29.1.1 remains the sole DOM. The Happy DOM diagnostic failed real audio
+  verification and was not promoted; an isolated warm success was insufficient.
+- The shared engine uses the complete, unmodified standard provider 2.0.2 at
+  commit `26475e9d3665b972c4aeb83b4dbaafcf64b88438`. Warm-up initializes its
+  generator; subsequent audio/video requests bind proofs to individual IDs.
+  Provider cache refresh is local policy, not a server guarantee of proof
+  validity. Refresh does not revoke existing media leases; signed media expiry
+  still bounds them.
+- Bootstrap and engine requests have 30-second deadlines and one active request
+  per session. Engine binary IPC is bounded to 16 MiB requests and 128 KiB replies.
+  Children use a minimal environment with runtime-only read and network
+  permissions. Cancellation, malformed output, timeout and close terminate and
+  reap the owned child. The native parent terminates its process group on exit.
+  No disk proof cache, credentials, raw dependency logs, argv or environment
+  contents enter diagnostics.
+- The bridge supports four independent media capabilities/consumers, 64 KiB
+  upstream ranges and 32 KiB writes with backpressure. No full-song cache is
+  retained. Go and FFmpeg receive only local bounded stream endpoints.
+- yt-dlp, client switching, old-player fallback and artificial advertisement
+  delays are absent from the playback source and package.
 
-### 检查记录
+### Earlier automated and playback checks
 
-| 检查 | 结果 |
+`make check` passed, including Go tests, vet and 172 messages in four languages.
+All **43 Node offline tests** passed. The current app and DMG were rebuilt with
+`make build`. Build success is separate from the partial whole-app checks below.
+
+The race-enabled native playback matrix passed after both bootstrap and engine
+received `--optimize-for-size`. Evidence:
+`build/diagnostics/jsdom-replacement-20261027/compact-candidate/summary.json`
+and `results.jsonl` in the same directory.
+
+| Scenario | Current single network run |
+| --- | ---: |
+| Completely cold first Load | 11.285 s |
+| Cold first observed output | 11.586 s |
+| Background next-track preparation, three samples | 1.567–1.702 s |
+| Prepared Load ownership transfer, three samples | 0.952–123.394 ms |
+| Prepared native output observation, three samples | 97.608–234.620 ms |
+| Unprepared random selection in existing session | 1.602 s Load / 1.697 s output |
+| Fresh startup warm-up | 6.266 s |
+| First Load after that warm-up | 1.694 s |
+
+Output observation requires nonzero decoded PCM, playing state and at least
+50 ms of native audio-clock advance. It is not a speaker recording or acoustic
+latency. Every prepared handoff made zero new resolver and decoder calls. The
+matrix exercised a 35-second prepared hold alongside active audio and 480×480
+video, three prepared selections, random selection, pause, seek, close and a
+fresh-player warm/load. Pause held position; a seek to 45 s advanced to 47.957 s
+after approximately 3 s.
+
+These are individual network samples, not guarantees of constant switching
+latency. Cold output still took 11.586 s; this run does not establish a cold-start
+improvement. The UI's natural-end polling remains 350 ms; sample-accurate gapless
+playback has not been established.
+
+The shared engine with `--optimize-for-size` also completed two whole-track
+decodes, faster than real time. Track 1 produced 212.547 s of nonzero PCM against
+212.561 s metadata; track 2 produced 369.627 s against 369.641 s. Both decoder
+EOF/exit checks passed. Resolution took 0.931/0.856 s and first decoded PCM took
+0.702/0.657 s. This test used the same persistent-engine code; the bootstrap
+flag was added afterward and then covered by the complete matrix above. It is
+not evidence of full-duration real-time listening. Evidence:
+`build/diagnostics/jsdom-replacement-20261027/engine-size-full/results.jsonl`.
+
+### Earlier playback memory comparison
+
+The metric is the sum of captured-process `ri_phys_footprint`, covering the
+Go race-test process and its Node/FFmpeg descendants. The original collector
+filtered executable names before attribution and did not capture all responsible
+system services. It also excludes application UI and artwork. These are matching
+filtered scopes, not complete responsible-process totals. PID/start identity and
+safe libproc sampling are used; argv, environments and credential stores are not read.
+
+Both runs use the shared SDK/proof engine and JSDOM. The baseline has the default
+V8 policy; the current candidate adds `--optimize-for-size` to engine and
+bootstrap. Compare matching rows only:
+
+| Matching scope / metric | Shared-engine baseline | Current compact runtime |
+| --- | ---: | ---: |
+| Active playback median | 261.62 MiB | 200.38 MiB |
+| Active playback peak | 277.42 MiB | 206.97 MiB |
+| Held prepared-track median | 273.51 MiB | 200.41 MiB |
+| Held prepared-track peak | 277.42 MiB | 206.97 MiB |
+| Entire sampled run median | 230.62 MiB | 199.80 MiB |
+| Entire sampled run peak | 292.96 MiB | 225.19 MiB |
+
+Active playback has 64 baseline / 63 current samples; the prepared-hold subset
+has 32 / 33; the entire run has 85 / 86. Playback phases and the entire run have
+different scopes and must not be interchanged. Sequential network runs also
+have different timings; this is not a randomized performance benchmark or a
+long-term leak test. No current whole-app total can be inferred from this table.
+
+Evidence directories under `build/diagnostics/jsdom-replacement-20261027/`:
+`merged-jsdom-baseline/summary.json` and `compact-candidate/summary.json`.
+
+## JSDOM replacement and lazy-loading experiments — not promoted
+
+Happy DOM's lower import footprint did not translate into reliable proof/audio
+acceptance. Its clean candidate failed before PCM with `proof_failed`; a single
+successful warm-up did not establish a working replacement. JSDOM remains the
+only production DOM implementation, without a replacement or fallback path.
+
+A separate JSDOM lazy-require prototype preserved the real CSS and selector
+implementations, postponing their module imports until first use. It changed
+12 dependency files; the other 5,454 runtime files were byte-identical. All
+37 offline DOM/CSS cases passed with equal results. In three alternating offline
+pairs, ordinary DOM construction footprint fell from 77.62 to 60.82 MiB. CSS use
+loaded the module graph back to 937 modules; first selector/CSS use added roughly
+66/47 ms. Two private CommonJS exports became getters, so this was a dependency
+patch, not an entirely unchanged JSDOM package.
+
+One complete live playback matrix also passed, including nonzero PCM, three
+prepared transitions, concurrent video, random selection, controls and shutdown.
+However, active-playback median was **192.90 MiB**, only **7.48 MiB (3.7%)** below
+the unpatched compact runtime's 200.38 MiB; active peak was 202.40 MiB. The full
+sampled-run median/peak were 190.91/207.14 MiB. Cold output was 23.047 s, prepared
+output 97–100 ms, random output 9.727 s and fresh warm-up 11.093 s. These are
+single network runs, not proof that lazy loading caused the latency differences.
+
+The small observed playback benefit did not justify maintaining the 12-file
+private patch or establish the desired whole-app improvement. **It was not
+promoted or packaged.** No additional variants were added. Evidence:
+`build/diagnostics/jsdom-lazy-20261028/REPORT.md`, `behavior-final/summary.json`,
+`tree-verification.json`, and
+`build/diagnostics/jsdom-replacement-20261027/lazy-jsdom-candidate/summary.json`.
+
+### Earlier whole-app acceptance — partial, 2026-10-28
+
+The exact locally built bundle identified below was launched with its real
+native window. Signed-out search and muted playback were observed at the same
+1440×940-DIP window size. The baseline was a separate diagnostic copy containing
+the frozen shared-engine runtime without the size-policy flags. Its unsigned
+application executable was byte-identical to the candidate; both bundles passed
+deep/strict ad-hoc signature verification. This is not an installed-app test.
+
+The baseline's marked playback interval contained 108 samples: captured-process
+footprint median **399.91 MiB**, peak **401.07 MiB**. The candidate's fresh-process
+marked interval contained 122 samples: median **411.80 MiB**, peak **415.82 MiB**.
+Component medians were respectively 259.86/279.70 MiB for the native main process,
+133.69/122.42 MiB for both Node processes combined, and 6.30/6.50 MiB for FFmpeg.
+Component medians are separate statistics and need not sum to the total median.
+No owned WebKit process was observed during these signed-out playback runs.
+
+**Scope correction, 2026-10-28:** the original collector enumerated only executable
+names matching ytmgo, Node, FFmpeg, yt-dlp and WebKit before checking responsibility.
+It could therefore miss responsible native system helpers such as Metal compiler
+and system view services. The figures above are incomplete application totals.
+The earlier MyGo Cloud Music 0.1.19 measurement included those helpers (playback
+main-process median 242.47 MiB; attributed total 288.53 MiB), so the two totals
+must not be treated as identical-scope measurements. Historical omitted process
+memory cannot be reconstructed or assigned a guessed amount. Collector repair
+does not retroactively validate the old totals; a complete comparison needs new
+sampling. The main-process and captured Node/FFmpeg figures remain observations.
+The collector has now been changed to PID-only responsibility discovery plus
+recursive descendant discovery, then `safe-processes --pid` for selected metadata.
+Unexpected metadata-collector errors stop sampling instead of silently omitting
+a process. Seventeen offline fixtures passed; the libproc adapter and a new
+complete application comparison have not yet been exercised live.
+
+**These samples do not establish a whole-app memory reduction.** Online Home and
+search results were not frozen, and the candidate's final observation was a
+different queue track. Its official-audio selection initially showed 4:08 and
+progress 10.168 s; the final observation showed the next 10-minute item at
+81.848 s. The first decoder disappeared during sampling. This prevents accepting
+the entire interval as a matched same-track comparison. An earlier candidate
+launch also produced `stream_resolution_failed`; retries and prior tracks make
+that process unsuitable as a clean baseline. These failures are not hidden by
+the successful isolated playback matrix.
+
+Evidence is in `build/diagnostics/jsdom-replacement-20261027/app-summary.json`,
+`app-baseline/`, `app-candidate/`, `app-candidate-steady/` and
+`app-candidate-fresh/`. The last two candidate runs must not be conflated. Both
+apps were quit. Metadata-only PID/start-identity checks confirmed that all 17
+observed owned process identities were gone (`app-cleanup.json`). No user
+installation was replaced.
+
+Minimum-width, complete accessibility, physical media keys and all four
+languages still require real-window coverage. Automated native view tests do
+not replace those checks.
+
+## Historical app-window run — previous package, incomplete process coverage
+
+The previous package in `build/diagnostics/runtime-final-proof-20261027/app/`
+passed signed-out Home/search, native audio, next track, mouse seek, pause,
+queue, video/artwork switching, wide and half-screen layouts, and light/dark
+appearance checks. No login was performed. Its five observed identities were
+gone after quit. These results predate the shared-engine and V8-policy changes.
+
+Its four-minute sample included the actual UI/artwork process, Node and FFmpeg.
+Across 241 samples, median was **466.48 MiB** and peak **600.80 MiB**. Sampling
+began after warm-up; manually marked phases include brief transitions. No owned
+WebKit process was observed. A later paused snapshot was 286.09 MiB, which is
+not an idle-memory guarantee. These are historical measurements, not the
+current package's footprint or a controlled old-WebKit comparison.
+The name-filtered collector also did not establish coverage of all responsible
+native system helpers in this run; its totals must not be presented as complete.
+
+That run established mouse seek, but AX `setValue` and keyboard attempts did
+not establish it. MyGo 0.7.1's Darwin AX value setter dispatches text edits, not
+slider assignments; a separate increment/decrement path was not exercised.
+Minimum-width, complete accessibility, physical media keys and all-language
+acceptance remained open.
+
+## Backdrop optimization evidence — 2026-10-27
+
+The current backdrop renders the existing cover crop and blur on two
+quarter-size canvases, then uses `Painter.ImageRegion` at the final size.
+Parent rounded clip, opacity and effective 70-DIP blur are preserved. No
+dependency fork, slower progress updates or compatibility path was added.
+
+The isolated Metal comparison used the same native view, eight synthetic
+768-square artworks, a 1440×940-DIP window, Retina 2× and 350-ms progress updates.
+It created no catalogue, player, account, tray or runtime helpers. Each row
+has a 20-second stable window and 20 footprint samples; runs were sequential.
+Go/Metal allocation counters are not added to physical footprint.
+
+| Renderer process only | Original backdrop | Current layer |
+| --- | ---: | ---: |
+| Normal page median | 276.99 MiB | 265.53 MiB |
+| Immersive page median | 308.45 MiB | 282.38 MiB |
+| Paused/idle median | 105.67 MiB | 109.53 MiB |
+
+Normal-page canvas allocation fell from 18.62 to 2.47 MiB; immersive sampling
+fell from 35.84 to 7.22 MiB, including briefly retained normal-page layers.
+Image textures stayed at 6.53 MiB. These allocation figures are not physical
+memory savings. Both runs showed idle GPU trim; no idle-memory reduction is
+claimed. All fixture processes were confirmed gone afterward.
+
+Fifteen software comparisons against the original had maximum channel
+difference 2/255 and mean absolute error 0.095–0.332/255; parent-clip exterior
+pixels were unchanged. Five same-instance invalidation checks matched fresh
+renders. The backdrop was also inspected in real Metal windows. A discarded
+Scale(4) variant increased footprint and is absent from production.
+
+An earlier whole-app follow-up was blocked by an anonymous bootstrap redirect
+classified only as `www.google.com` / `sorry`, consistent with a verification
+page. Its cause was not established; no redirect was followed or bypassed.
+Empty/error-page samples were excluded. That historical interruption is not
+presented as the status of the current acceptance run.
+
+Evidence: `build/diagnostics/runtime-memory-opt-20261027/`, including
+`isolated-renderer-fixture/comparison.json`, `backdrop-layer-comparison.json`
+and `backdrop-layer-invalidation.json`.
+
+## Earlier playback evidence and failures
+
+The earlier bootstrap-isolated runtime, before SDK/proof merging, recorded a
+native matrix median/peak of 300.84/375.66 MiB. Its preceding runtime recorded
+328.70/576.51 MiB for that workload. These archived measurements belong to
+different implementations and are not substituted for the current matching
+baseline comparison. Evidence: `build/diagnostics/runtime-final-proof-20261027/`
+and `build/diagnostics/runtime-production-proof-20261027/`.
+
+The earlier `TestNativeEndedRestartLive` passed immediate tail seek, actual EOF
+and restart without resolving again. Proof-free prototypes had returned 403 on
+middle/tail reads; a controlled same-URL proof/no-proof comparison established
+that proof affected access, not an advertising timer. One historical prototype
+matrix failed after closing its first player without an established cause.
+Current passing matrices do not retroactively explain those failures.
+
+## Remaining application acceptance
+
+- The account-aware implementation at the top of this file replaces the old
+  login and playback paths. Its real-account, restoration and whole-app memory
+  results must be validated independently of the historical records above.
+- Normal advertising media, sequencing, interactions/progress reporting and
+  transitions are not implemented. Content PCM does not validate advertisements.
+- Current whole-app acceptance is partial in its dedicated section above;
+  the matched comparison and candidate queue-transition behavior are unresolved.
+  Native tests and historical screenshots do not establish all current UI/UX.
+- The provider is GPL-3.0. Original source/maps/reconstruction files and notices
+  ship with the package. Licensing-material gaps remain recorded in notices;
+  public distribution has not been accepted. No public release, installation,
+  Developer ID signing or notarization is claimed by this document.
+
+## Historical local artifact
+
+`make build` completed for `build/darwin-arm64/ytmgo.app` and
+`build/darwin-arm64/ytmgo-0.4.0-arm64.dmg`, containing the shared SDK/proof engine,
+JSDOM, both Node size-policy flags and the backdrop layer. Target: arm64,
+minimum macOS 27, ad-hoc signing.
+
+Build record: `build/diagnostics/jsdom-replacement-20261027/artifact.json`.
+Version 0.4.0 was built at **2026-10-28 00:06:29.760971 +08:00**. This artifact
+has **not been installed**; the older installed application is not evidence for
+this working tree.
+
+| Artifact | SHA-256 |
 | --- | --- |
-| `make check` | Go 测试、40 项前端回归和 `go vet` 通过 |
-| `go test -count=1 ./...` | 无缓存通过 |
-| `go test -race -count=1 ./internal/...` | 通过 |
-| 真实匿名曲库请求 | 返回 11 条歌曲/视频结果 |
-| 浏览器交互 | 19 条通过；使用独立音乐库，覆盖收藏、歌单增改删、持久化、队列、焦点、空结果和故障恢复 |
-| 页面/主题/窗口尺寸 | 首页、发现、收藏、长名称歌单 × 浅/深色 × 1000×688、1001×720、1440×900，共 24 组，无横向溢出 |
-| macOS arm64 打包应用 | 真实播放、系统 Light → Dark → Light、原生最小窗口、队列、窗口关闭恢复、冷启动偏好恢复通过 |
-| macOS x86_64 / Rosetta 打包应用 | 冷启动、真实播放、浅深切换与恢复通过 |
-| Linux arm64 原生 GTK/WebKit 容器 | 真实搜索、播放、自然切歌、浅深切换、收藏、歌单和重启持久化通过；使用虚拟音频输出 |
-| macOS 安装包 | arm64/amd64 构建、ad-hoc 签名与 DMG 完整性验证通过 |
-| Windows amd64 | 编译通过；按用户确认不纳入本轮原生运行验收 |
+| App executable | `b3146047315c67ae3fb2b375d2ca56ba0b9fcd86a2e506aaa0caeb6bfcd5a56d` |
+| DMG, 43,407,641 bytes | `a143212b10bd662d7f3bf35a08b76aa21dcb42857fe9cd744b07e16e5b388b44` |
 
-本轮删除未引用样式、颜色变量、动画与图标，简化资源内联和重复焦点恢复；修复长歌单名撑宽弹窗、焦点回到另一创建入口的问题。Linux 导航例外、封面回退、保存失败保护、并发竞态检查、浏览器预览与原生双入口均有实际用途，保留。
-
-清理清单、源码差异、截图、产物哈希与边界详见 [清理与 E2E 报告](evidence/20261026/cleanup-e2e/REPORT.md)。历史报告仍在 `evidence/20261026/`，其中的旧安装包与回滚目录已于本轮删除。
-
-## 范围
-
-macOS 实机为 Apple Silicon，系统 27.0.1；Rosetta 结果不代表物理 Intel Mac。Linux 使用 Debian arm64 容器、GTK/WebKit 原生窗口和虚拟音频输出，不代表其他发行版或实体音频硬件。Windows 原生运行、macOS 12 最低系统、硬件媒体键、后台物理全局快捷键冲突和长时间后台播放不在本轮验收结论内。
-
-0.1.4 当时没有 Google 登录、云端同步或离线下载；音乐嵌入是否可用仍由 YouTube、权利人、地区和网络决定。构建采用 ad-hoc 签名，未完成 Apple Developer ID 签名、公证或公开发布。
+Package review confirmed that all **14 runtime `.mjs` files match their source**
+and that the runtime manifest checksums pass. The package contains Node 26.12.1
+and JSDOM 29.1.1; both bootstrap and engine use `--optimize-for-size`. The old
+separate proof helper and Happy DOM are absent. Deep, strict code-signature
+verification passed for the ad-hoc-signed app. These package checks do not
+establish installation, notarization or completion of the whole-app UI and
+memory acceptance above.

@@ -1,0 +1,64 @@
+package main
+
+import (
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"time"
+)
+
+// Only fixed categories cross this boundary. Never store dependency messages,
+// URLs, headers, track metadata, account identifiers, secrets, argv, or environments.
+func recordPlaybackDiagnostic(directory, component, category string, stages ...string) {
+	if directory == "" || (component != "audio" && component != "video") {
+		return
+	}
+	switch category {
+	case "ready", "stream_resolution_failed", "invalid_media_response", "audio_stream_failed",
+		"audio_decoder_unavailable", "audio_output_unavailable", "runtime_missing", "audio_access_denied",
+		"audio_rate_limited", "audio_server_error", "audio_network_timeout", "audio_connection_failed",
+		"audio_range_mismatch", "audio_stream_truncated",
+		"playback_timeout", "playback_failed", "video_resolution_failed", "video_decoder_unavailable",
+		"video_stream_failed", "video_access_denied", "video_rate_limited", "video_server_error",
+		"video_network_timeout", "video_connection_failed", "proof_failed", "proof_expired",
+		"proof_request_rejected", "bootstrap_cache_miss",
+		"unexpected_request_host", "unexpected_authentication", "unexpected_client", "resolver_http_error",
+		"init_failed", "resolver_response_limit", "cache_limit":
+	default:
+		category = "playback_failed"
+	}
+	stage := ""
+	if len(stages) == 1 {
+		switch stages[0] {
+		case "bootstrap", "sdk_create", "account_validation", "proof_config_request", "proof_config_parse", "proof_init", "player_request", "decipher", "proof_mint":
+			stage = stages[0]
+		}
+	}
+	data, _ := json.Marshal(struct {
+		Time, Version, Component, Category string
+		Stage                              string `json:"Stage,omitempty"`
+	}{time.Now().UTC().Format(time.RFC3339), version, component, category, stage})
+	if os.MkdirAll(directory, 0700) == nil {
+		_ = os.WriteFile(filepath.Join(directory, component+"-status.json"), data, 0600)
+	}
+}
+
+// Account diagnostics retain only a fixed lifecycle category, never the
+// transferred session or an account identifier. This makes status acceptance
+// observable without opening a credential store or inspecting process memory.
+func recordAccountDiagnostic(directory, category string) {
+	if directory == "" {
+		return
+	}
+	switch category {
+	case "restoring", "signed_out", "standard", "premium", "refresh_failed", "session_failed":
+	default:
+		category = "session_failed"
+	}
+	data, _ := json.Marshal(struct{ Time, Version, Component, Category string }{
+		time.Now().UTC().Format(time.RFC3339), version, "account", category,
+	})
+	if os.MkdirAll(directory, 0700) == nil {
+		_ = os.WriteFile(filepath.Join(directory, "account-status.json"), data, 0600)
+	}
+}

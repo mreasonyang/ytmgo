@@ -1,76 +1,85 @@
 # ytmgo
 
-使用 [MyGo](https://github.com/egoist/mygo) 开发的 YouTube Music 桌面客户端。当前版本 **0.3.0**：从零重写的界面——侧栏与歌单、可停靠的正在播放面板、沉浸模式、紧凑窗口的底部标签栏与迷你播放器；深色 / 浅色 / 跟随系统外观；界面支持 English、简体中文、繁體中文、日本語。设计规范见 [DESIGN.md](DESIGN.md)。
+YouTube Music 桌面客户端，当前开发版本 **0.4.0**。主界面用 **MyGo 0.7.1 原生 UI** 绘制，曲库由 Go 访问，媒体由按需 YouTube.js 引擎与有界流式传输处理，音频由 MyGo 输出到系统音频设备。保留侧栏、搜索、歌曲与专辑列表、底部播放条、正在播放面板、队列、歌词、沉浸模式、封面/视频切换，以及四语言和深浅色设计。
+
+音乐界面、播放控件与账号引导均使用原生 UI。登录在 Brave 的官方 YouTube Music 页面完成，扩展仅在用户点击后把所选账号会话直接交给本机应用；应用不创建 WebKit 登录窗口。原有侧栏、列表、播放条、队列、歌词与四语言设计保持不变。
+
+账号状态由服务端明确返回的 `logged_in` 和 `has_unlimited_entitlement` 决定，每五分钟及应用回到前台时刷新。Premium 模式不加载 jsdom 或播放证明模块；普通账号和未登录模式在需要播放时启动证明引擎。切换时退出并回收旧引擎，同账号的会员变化保留正在播放的音频，换账号或退出则撤销旧账号的媒体流。请求失败或字段缺失不会被当成会员过期。
+
+账号、整曲播放、内存与安装包测试记录在 [VERIFICATION.md](VERIFICATION.md)。Premium 原生播放实测整应用中位数约 359 MiB，不能把约 74 MiB 的 Node 辅助进程当成整应用占用。匿名、普通账号和 Premium 的代码与实际验证范围分别记录；新版钥匙串恢复仍需用户完成 macOS 授权。设计约定见 [DESIGN.md](DESIGN.md)。
+
+## 运行和构建
+
+当前交付目标为 **macOS 27 / Apple Silicon**，需要 Go **1.27.3+**。准备发行组件需要 Python 3、Xcode Command Line Tools 和 make；安装后的应用无需 Python、Homebrew、终端 PATH 或额外安装解码器。
+
+```sh
+make check
+make build
+open build/darwin-arm64/ytmgo.app
+```
+
+`make build` 会打包锁定的 YouTube.js 18.3.0、Node 26.12.1、完整标准证明客户端及精简 FFmpeg 9.0.2。播放源代码及新包中不包含 yt-dlp；没有客户端切换或旧播放器 fallback。版本、校验值、许可证、上游源码和构建信息随包保存。证明客户端采用 GPL-3.0，依赖许可材料的剩余缺口已单独记录，尚未做公开分发验收。详细说明见 [scripts/runtime/README.md](scripts/runtime/README.md)。
+
+产物为 `build/darwin-arm64/ytmgo.app` 和 `build/darwin-arm64/ytmgo-0.4.0-arm64.dmg`。App 采用 ad-hoc 签名，DMG 本体未签名；未做 Apple Developer ID 签名或公证。重新构建导致 ad-hoc 身份变化时，macOS 可能要求重新授权访问本应用保存的钥匙串会话。其他操作系统未作为本轮交付目标。
+
+开发运行：
+
+```sh
+make runtime
+YTMGO_RUNTIME_DIR="$PWD/build/runtime" go tool mygo dev
+```
 
 ## 使用
 
-右上角「登录」会打开独立的应用窗口，显示 Google 官方登录页。完成登录并返回音乐服务后，登录窗口关闭，主界面刷新。会话由应用内的原生 WebView 管理；不需要复制 cookie、粘贴请求头或安装 Python。
-
-界面的导航、顶栏、播放栏、正在播放面板与设置均由 ytmgo 绘制；首页、探索、搜索、音乐库、歌单、播放队列与歌词使用 YouTube Music 的实时页面内容，并按 ytmgo 的设计系统重新排版。点一首歌即可播放，画布保持在当前页面；宽窗口首次播放时自动停靠正在播放面板（队列 / 歌词 / 相关内容），⤢ 进入沉浸模式。
-
-界面语言默认跟随系统（zh-TW、zh-HK → 繁體中文；zh-CN → 简体中文；未匹配 → English），可在「设置 → 语言」或「视图 → 语言」中指定；切换后音乐界面重新加载，服务内容也随之切换为同一语言。
-
-它依赖服务的网页结构，服务更新后可能需要适配（集中在 `web/shell/bridge.js`、`canvas.css` 与 `nowplaying.css` 的播放页部分）。这不是独立重写的 YouTube Music 数据 API。
-
-## 开发与构建
-
-需要 Go **1.27.3+**，MyGo 固定为 **v0.6.4**。Go 默认工具链自动下载可以获取所需版本；没有 Node/Bun 前端打包步骤。
-
-```sh
-go tool mygo dev
-make check
-make build
-```
-
-macOS Apple Silicon 产物：`build/darwin-arm64/ytmgo.app` 和 `build/darwin-arm64/ytmgo 0.3.0 arm64.dmg`。构建使用 ad-hoc 签名，未做 Apple 公证。此版本原生运行检查仅覆盖 macOS arm64，历史版本的跨平台结果不能代替本版本验收。
-
-界面文本全部来自 `locales/*.json`（ARB / ICU MessageFormat）；修改后运行 `go tool mygo generate` 重新生成 `locales/catalog_gen.go`。`make check` 同时运行 `mygo i18n check`。
-
-## 控制
-
-| 操作 | 快捷键 |
-| --- | --- |
-| 播放 / 暂停 | ⌘/Ctrl + P；全局 ⌘/Ctrl + Shift + Space |
-| 上一首 / 下一首 | ⌘/Ctrl + ← / → |
-| 音量 / 静音 | ⌘/Ctrl + ↑ / ↓；⌘/Ctrl + Shift + M |
-| 搜索 | ⌘/Ctrl + K，或 / |
-| 正在播放面板 / 沉浸模式 / 侧栏 | ⌘/Ctrl + J / ⌘/Ctrl + Shift + F / ⌘/Ctrl + B |
-| 首页 / 音乐库 | ⌘/Ctrl + Shift + H / ⌘/Ctrl + L |
-| 后退 / 前进 | ⌘/Ctrl + [ / ] |
-| 快捷键一览 | ⌘/Ctrl + / |
-| 关闭一层（弹层 → 沉浸 → 浮动面板） | Esc |
-
-macOS 关闭主窗口后保留应用，Dock、托盘或菜单可恢复；⌘Q 彻底退出。外部链接使用 Brave，未安装时提示，不自动切换浏览器。
+- 首页、探索、搜索和专辑/歌单页面直接访问 YouTube Music。首页支持继续加载，前进/后退保留浏览位置所对应的页面数据。
+- 点击歌曲开始播放；支持播放/暂停、上一首/下一首、seek、音量、静音、随机与单曲/列表循环。右键曲目可加入队列。
+- 点击底部封面打开正在播放，可查看队列或歌词。视频由独立原生解码器按需显示，最高 480p / 24fps，按音频时钟同步；隐藏窗口、关闭播放视图或切回封面会释放视频解码器。
+- 宽窗口使用完整侧栏和停靠面板；中等窗口使用图标侧栏与浮动面板；紧凑窗口使用底部导航和迷你播放器。
+- 设置支持 English、简体中文、繁體中文、日本語，以及深色、浅色、跟随系统。修改语言或外观会即时重绘，不重建窗口或播放器。
+- 原生菜单、托盘、全局播放快捷键和系统 Now Playing 共用同一播放状态。
 
 ## 账号与数据
 
-- 登录窗口只在允许的 Google / YouTube 官方主机之间导航；密码、验证码直接输入 Google 页面。应用代码不读取或导出它们，也不读取浏览器的账号数据。
-- 主窗口和登录窗口共用系统 WebView 的持久化会话。Cookie、网页存储与缓存会保存在本机；这不是“敏感信息完全不落盘”的设计。应用没有额外实现凭据钥匙串方案。
-- 未登录或登录状态尚未确定时，侧栏隐藏退出/清理操作，原生账号菜单只显示登录入口；确认官方导航栏已显示登录后的账号头像时，两处退出入口才显示。
-- 登录后，侧栏底部「退出登录 / 清除账号数据」，或原生「账号 → 退出登录并清除本机账号数据…」会先确认，再停止播放、销毁音乐/登录/旧版页面，并通过运行时清除所有账号的 Cookie、local/session storage、IndexedDB、Service Worker 和缓存。成功后显示退出结果，点击「返回首页」重新浏览；首页随后可能生成新的匿名 Cookie。
-- 清理保留外观、语言设置及云端音乐库，不清除其他浏览器的会话，也不撤销 Google 服务端或其他设备的会话。它不负责擦除系统诊断、系统备份或磁盘历史副本。仅退出程序（⌘Q）仍保留登录状态。
-- 清理失败显示重试入口；清理前持久化不含账号数据的 `signout-pending` 标记。若中途关闭，下一次启动先继续清理，再允许打开服务页面。
-- 已使用独立测试应用验证模拟会话的原生清理和重启后的消失；真实 Google 账号的登录、云端音乐库及会话恢复仍需账号验收。
-- 远程音乐页面和账号页均没有受信任的 Go IPC 权限。外观切换仅允许音乐来源发起三种固定指令；账号状态只传递固定的已登录/未登录标记，不传递账号身份；退出指令还要求用户点击，且仅打开原生确认框。
-- 外观与语言偏好分别保存在应用数据目录的 `appearance` 与 `language` 文件。
-- 0.3.0 移除了旧版「本地收藏」窗口及其匿名曲库请求；已有的 `library.json` 不会被读取或删除。
-- 播放、广告、账号验证、Premium 权益、曲目可用性与地区限制由原服务决定；不提供离线下载。隐藏迷你视频只是界面行为，不代表独立音频流或减少视频流量。
+点击登录后，在原生引导窗口打开 Brave 与扩展目录，首次使用时按引导加载应用随包提供的扩展。切到要使用的 YouTube Music 账号，明确点击扩展的连接按钮。传输仅发生在扩展与 `127.0.0.1` 之间，采用限时、单次握手；账号索引随会话传递，不默认选择浏览器的第一个账号。
 
-## 验证与结构
+会话由本应用的系统安全存储保管，macOS 使用 Keychain。重启后先重新核验服务端状态，再启用对应播放模式。没有明文凭据文件、旧 WebKit 数据迁移或存储 fallback。确认退出会停止播放、清空本应用的个人数据与已保存会话；外部浏览器的 Google 登录状态不受影响。
 
-[验收记录](VERIFICATION.md) 记录各版本检查。`make check` 包含 Go 测试、Go vet、28 项界面外壳测试（无浏览器的 DOM 替身）与 `mygo i18n check`；自动测试不代表真实账号已经登录成功。
+播放器创建时只启动轻量控制/媒体桥接进程，不预热 SDK 或 jsdom。当前曲目播放时最多准备下一首的媒体和首批 PCM；随机点播与初次启动仍需网络解析。快速切歌、账号切换、队列变化及 seek 会取消过期准备。
+
+播放器脚本分析在临时 bootstrap 子进程中完成，回收后由一个受限引擎恢复有界缓存。Premium 引擎仅加载 SDK 与签名处理；普通/未登录引擎按需加载标准证明客户端和 jsdom。会员变化会销毁旧引擎并在需要解析时创建新引擎，不让两种模式长期同时驻留。凭据与签名媒体地址只走私有内存管道，不进入 argv、环境、日志或证据文件。
+
+当前实现没有官方广告素材序列和真实广告进度上报；不能把公开歌曲播放成功描述成广告流程验收通过，也不使用推算等待时间模拟广告。
+
+远端媒体地址只留在 Node 内存中；Go 与 FFmpeg 仅连接有界回环流式通道，私有地址通过 stdin/stdout 管道传递，不进入命令行或日志。远端按 64 KiB 区间读取、本地按 32 KiB 背压转发，最多四个媒体能力和四条上游连接，覆盖音频、下一首、按需视频及切换期间的资源。停止对应媒体会取消该流并回收解码器；退出应用或终止会话会回收所属 runtime 子进程，不保留整首媒体缓存。
+
+本地 `native-diagnostics/audio-status.json` 与 `video-status.json` 仅保存启动状态或最近一次失败的固定类别、时间和应用版本；不保存媒体地址、请求头、账号数据或原始日志。
+
+## 代码与测试
 
 ```text
-main.go                 窗口生命周期、菜单（含语言菜单）、托盘
-music.go                音乐主窗口、注入外壳、独立登录窗口与页面边界
-i18n.go                 外壳文本载荷、语言切换与重新本地化
-logout.go               退出确认、页面销毁、清理结果及重试
-locales/                四种语言的消息目录与生成的 Go 访问器
-web/shell/              界面外壳：设计令牌、组件与样式（顺序见 bundle.json）
-internal/navigation/    音乐、登录、外部链接、外观与语言指令边界
-internal/language/      界面语言、服务 hl 映射与选择存储
-internal/appearance/    外观偏好
-internal/session/       不读取凭据的清理流程与中断恢复标记
+main.go / controller.go      原生窗口、菜单、导航、队列与请求生命周期
+native_views.go              原生屏幕、响应式布局和交互
+native_style.go              原有色板与矢量图标
+account.go                  浏览器交接、权益轮询和退出
+internal/accountbridge/     单次会话交接与系统安全存储
+scripts/account-extension/  用户主动连接的浏览器扩展
+artwork.go                  有界图片下载与解码缓存
+video_controller.go         视频视图可见性及帧更新
+internal/catalog/           类型化曲库、分页、队列、歌词和账号接口
+internal/player/            独立解析、有界音视频解码、系统音频输出
+locales/                    四语言目录
+scripts/runtime/            可重现的播放器组件打包
+scripts/diagnostics/        不读取 argv/env 的内存测量
 ```
 
-本项目是独立客户端，与 YouTube、Google 无隶属关系。音乐、图片和账号服务由原服务及权利人提供。
+```sh
+make check
+go test -race ./...
+YTMGO_RUNTIME_DIR="$PWD/build/runtime" go test ./internal/player
+YTMGO_LIVE_CATALOG=1 go test -v -run TestLive ./internal/catalog
+YTMGO_RUNTIME_DIR="$PWD/build/runtime" YTMGO_LIVE_PLAYBACK=1 go test -v -run TestNativePlaybackLive ./internal/player
+YTMGO_RUNTIME_DIR="$PWD/build/runtime" YTMGO_LIVE_PREPARED=1 go test -v -run TestNativePreparedPlaybackLive ./internal/player
+YTMGO_UI_SNAPSHOT_DIR="$PWD/build/native-screenshots" go test -run '^TestNative' .
+```
+
+自动布局截图使用 MyGo 软件渲染器，属于原生视图测试；真实应用、音频设备、网络和内存证据分别记录，互不替代。历史 0.3 审计保留在 `docs/audits/`，只作为设计参考和历史证据。

@@ -104,7 +104,7 @@
   "@menuManageAccount": {
     "description": "Account menu, signed in."
   },
-  "menuSignOut": "Sign Out and Clear Local Account Data…",
+  "menuSignOut": "Sign Out of ytmgo…",
   "@menuSignOut": {
     "description": "Account menu: opens a confirmation."
   },
@@ -524,7 +524,7 @@
   "@shellLanguageSystem": {
     "description": "Language option: follow the system's languages."
   },
-  "shellLanguageNote": "Changing the language reloads the music view.",
+  "shellLanguageNote": "Language changes apply immediately without interrupting playback.",
   "@shellLanguageNote": {
     "description": "Hint under the language list."
   },
@@ -655,5 +655,33 @@
   "shellGreetingEvening": "Good evening",
   "@shellGreetingEvening": {
     "description": "Home greeting, 18:00–24:00."
-  }
+  },
+  "nativeRuntimeMissing": "The audio runtime is missing. Reinstall the complete ytmgo app.",
+  "nativePlaybackError": "Unable to play this track. Try again or choose another song.",
+  "nativeCatalogError": "Unable to load music. Check your connection and try again.",
+  "nativeNoLyrics": "Lyrics are not available for this track.",
+  "nativeLyricsUnavailable": "Lyrics are not available for this track.",
+  "nativeAccountError": "Could not complete the account request. Please sign in again.",
+  "nativeSignOutConfirm": "Sign out of ytmgo and remove its saved session? Brave will remain signed in.",
+  "nativeAbout": "Native MyGo interface and audio playback. Music catalogue provided by YouTube Music.",
+  "nativeEmptyResults": "No music found. Try another search.",
+  "nativeLibraryHint": "Sign in to see your YouTube Music library.",
+  "nativeAddToQueue": "Add to queue",
+  "nativeVideo": "Video",
+  "nativeArtwork": "Cover",
+  "nativeLoadMore": "Load more",
+  "nativeVideoUnavailable": "Video is temporarily unavailable.",
+  "nativeAccountGuide": "1. Open the extension folder.\n2. Copy the Brave extensions address and paste it into Brave’s address bar. Enable Developer mode, choose Load unpacked, and select that folder.\n3. Open YouTube Music and select your account. Open ytmgo Account in Brave, confirm the account, then click Connect account.",
+  "nativeAccountExtensionFolder": "Open extension folder",
+  "nativeAccountOpenMusic": "Open YouTube Music in Brave",
+  "nativeAccountPrivacy": "ytmgo verifies membership with YouTube and remembers this session in the system secret store. Signing out here leaves Brave signed in.",
+  "nativeAccountWaiting": "Waiting for your explicit account transfer from Brave. This window accepts one transfer for five minutes.",
+  "nativeAccountChecking": "Verifying the account and configuring playback…",
+  "nativeAccountExpired": "The connection window expired. Choose Retry to open a new five-minute window.",
+  "nativeAccountBridgeError": "Could not open the local account connection. Close any other ytmgo login window and retry.",
+  "nativeAccountStorageError": "Could not access the system secret store. Allow ytmgo access, then retry. No unencrypted session will be saved.",
+  "nativeAccountBrowserError": "Could not open Brave. Install or open Brave Browser, then retry.",
+  "nativeAccountCopyExtensions": "Copy Brave extensions address",
+  "nativeAccountAddressCopied": "Copied brave://extensions/. Paste it into Brave’s address bar and press Return.",
+  "nativeAccountClipboardError": "Could not copy the address. Enter brave://extensions/ in Brave’s address bar."
 }

@@ -401,13 +401,13 @@ func (msgs Messages) MenuManageAccount() string {
 	return Catalog.Format(msgs.locale, "menuManageAccount", nil)
 }
 
-// MenuSignOut says "Sign Out and Clear Local Account Data…"
+// MenuSignOut says "Sign Out of ytmgo…"
 // in the language the app shows.
 //
 // Account menu: opens a confirmation.
 func MenuSignOut() string { return In(i18n.Locale()).MenuSignOut() }
 
-// MenuSignOut says "Sign Out and Clear Local Account Data…"
+// MenuSignOut says "Sign Out of ytmgo…"
 // in the language of msgs.
 //
 // Account menu: opens a confirmation.
@@ -1775,13 +1775,13 @@ func (msgs Messages) ShellLanguageSystem() string {
 	return Catalog.Format(msgs.locale, "shellLanguageSystem", nil)
 }
 
-// ShellLanguageNote says "Changing the language reloads the music view."
+// ShellLanguageNote says "Language changes apply immediately without interrupting playback."
 // in the language the app shows.
 //
 // Hint under the language list.
 func ShellLanguageNote() string { return In(i18n.Locale()).ShellLanguageNote() }
 
-// ShellLanguageNote says "Changing the language reloads the music view."
+// ShellLanguageNote says "Language changes apply immediately without interrupting playback."
 // in the language of msgs.
 //
 // Hint under the language list.
@@ -2235,4 +2235,284 @@ func ShellGreetingEvening() string { return In(i18n.Locale()).ShellGreetingEveni
 // Home greeting, 18:00–24:00.
 func (msgs Messages) ShellGreetingEvening() string {
 	return Catalog.Format(msgs.locale, "shellGreetingEvening", nil)
+}
+
+// NativeRuntimeMissing says "The audio runtime is missing. Reinstall the complete ytmgo app."
+// in the language the app shows.
+func NativeRuntimeMissing() string { return In(i18n.Locale()).NativeRuntimeMissing() }
+
+// NativeRuntimeMissing says "The audio runtime is missing. Reinstall the complete ytmgo app."
+// in the language of msgs.
+func (msgs Messages) NativeRuntimeMissing() string {
+	return Catalog.Format(msgs.locale, "nativeRuntimeMissing", nil)
+}
+
+// NativePlaybackError says "Unable to play this track. Try again or choose another song."
+// in the language the app shows.
+func NativePlaybackError() string { return In(i18n.Locale()).NativePlaybackError() }
+
+// NativePlaybackError says "Unable to play this track. Try again or choose another song."
+// in the language of msgs.
+func (msgs Messages) NativePlaybackError() string {
+	return Catalog.Format(msgs.locale, "nativePlaybackError", nil)
+}
+
+// NativeCatalogError says "Unable to load music. Check your connection and try again."
+// in the language the app shows.
+func NativeCatalogError() string { return In(i18n.Locale()).NativeCatalogError() }
+
+// NativeCatalogError says "Unable to load music. Check your connection and try again."
+// in the language of msgs.
+func (msgs Messages) NativeCatalogError() string {
+	return Catalog.Format(msgs.locale, "nativeCatalogError", nil)
+}
+
+// NativeNoLyrics says "Lyrics are not available for this track."
+// in the language the app shows.
+func NativeNoLyrics() string { return In(i18n.Locale()).NativeNoLyrics() }
+
+// NativeNoLyrics says "Lyrics are not available for this track."
+// in the language of msgs.
+func (msgs Messages) NativeNoLyrics() string {
+	return Catalog.Format(msgs.locale, "nativeNoLyrics", nil)
+}
+
+// NativeLyricsUnavailable says "Lyrics are not available for this track."
+// in the language the app shows.
+func NativeLyricsUnavailable() string { return In(i18n.Locale()).NativeLyricsUnavailable() }
+
+// NativeLyricsUnavailable says "Lyrics are not available for this track."
+// in the language of msgs.
+func (msgs Messages) NativeLyricsUnavailable() string {
+	return Catalog.Format(msgs.locale, "nativeLyricsUnavailable", nil)
+}
+
+// NativeAccountError says "Could not complete the account request. Please sign in again."
+// in the language the app shows.
+func NativeAccountError() string { return In(i18n.Locale()).NativeAccountError() }
+
+// NativeAccountError says "Could not complete the account request. Please sign in again."
+// in the language of msgs.
+func (msgs Messages) NativeAccountError() string {
+	return Catalog.Format(msgs.locale, "nativeAccountError", nil)
+}
+
+// NativeSignOutConfirm says "Sign out of ytmgo and remove its saved session? Brave will remain signed in."
+// in the language the app shows.
+func NativeSignOutConfirm() string { return In(i18n.Locale()).NativeSignOutConfirm() }
+
+// NativeSignOutConfirm says "Sign out of ytmgo and remove its saved session? Brave will remain signed in."
+// in the language of msgs.
+func (msgs Messages) NativeSignOutConfirm() string {
+	return Catalog.Format(msgs.locale, "nativeSignOutConfirm", nil)
+}
+
+// NativeAbout says "Native MyGo interface and audio playback. Music catalogue provided by YouTube Music."
+// in the language the app shows.
+func NativeAbout() string { return In(i18n.Locale()).NativeAbout() }
+
+// NativeAbout says "Native MyGo interface and audio playback. Music catalogue provided by YouTube Music."
+// in the language of msgs.
+func (msgs Messages) NativeAbout() string {
+	return Catalog.Format(msgs.locale, "nativeAbout", nil)
+}
+
+// NativeEmptyResults says "No music found. Try another search."
+// in the language the app shows.
+func NativeEmptyResults() string { return In(i18n.Locale()).NativeEmptyResults() }
+
+// NativeEmptyResults says "No music found. Try another search."
+// in the language of msgs.
+func (msgs Messages) NativeEmptyResults() string {
+	return Catalog.Format(msgs.locale, "nativeEmptyResults", nil)
+}
+
+// NativeLibraryHint says "Sign in to see your YouTube Music library."
+// in the language the app shows.
+func NativeLibraryHint() string { return In(i18n.Locale()).NativeLibraryHint() }
+
+// NativeLibraryHint says "Sign in to see your YouTube Music library."
+// in the language of msgs.
+func (msgs Messages) NativeLibraryHint() string {
+	return Catalog.Format(msgs.locale, "nativeLibraryHint", nil)
+}
+
+// NativeAddToQueue says "Add to queue"
+// in the language the app shows.
+func NativeAddToQueue() string { return In(i18n.Locale()).NativeAddToQueue() }
+
+// NativeAddToQueue says "Add to queue"
+// in the language of msgs.
+func (msgs Messages) NativeAddToQueue() string {
+	return Catalog.Format(msgs.locale, "nativeAddToQueue", nil)
+}
+
+// NativeVideo says "Video"
+// in the language the app shows.
+func NativeVideo() string { return In(i18n.Locale()).NativeVideo() }
+
+// NativeVideo says "Video"
+// in the language of msgs.
+func (msgs Messages) NativeVideo() string {
+	return Catalog.Format(msgs.locale, "nativeVideo", nil)
+}
+
+// NativeArtwork says "Cover"
+// in the language the app shows.
+func NativeArtwork() string { return In(i18n.Locale()).NativeArtwork() }
+
+// NativeArtwork says "Cover"
+// in the language of msgs.
+func (msgs Messages) NativeArtwork() string {
+	return Catalog.Format(msgs.locale, "nativeArtwork", nil)
+}
+
+// NativeLoadMore says "Load more"
+// in the language the app shows.
+func NativeLoadMore() string { return In(i18n.Locale()).NativeLoadMore() }
+
+// NativeLoadMore says "Load more"
+// in the language of msgs.
+func (msgs Messages) NativeLoadMore() string {
+	return Catalog.Format(msgs.locale, "nativeLoadMore", nil)
+}
+
+// NativeVideoUnavailable says "Video is temporarily unavailable."
+// in the language the app shows.
+func NativeVideoUnavailable() string { return In(i18n.Locale()).NativeVideoUnavailable() }
+
+// NativeVideoUnavailable says "Video is temporarily unavailable."
+// in the language of msgs.
+func (msgs Messages) NativeVideoUnavailable() string {
+	return Catalog.Format(msgs.locale, "nativeVideoUnavailable", nil)
+}
+
+// NativeAccountGuide says "1. Open the extension folder.\n2. Copy the Brave extensions address and paste it into Brave’s address bar. Enable De…"
+// in the language the app shows.
+func NativeAccountGuide() string { return In(i18n.Locale()).NativeAccountGuide() }
+
+// NativeAccountGuide says "1. Open the extension folder.\n2. Copy the Brave extensions address and paste it into Brave’s address bar. Enable De…"
+// in the language of msgs.
+func (msgs Messages) NativeAccountGuide() string {
+	return Catalog.Format(msgs.locale, "nativeAccountGuide", nil)
+}
+
+// NativeAccountExtensionFolder says "Open extension folder"
+// in the language the app shows.
+func NativeAccountExtensionFolder() string { return In(i18n.Locale()).NativeAccountExtensionFolder() }
+
+// NativeAccountExtensionFolder says "Open extension folder"
+// in the language of msgs.
+func (msgs Messages) NativeAccountExtensionFolder() string {
+	return Catalog.Format(msgs.locale, "nativeAccountExtensionFolder", nil)
+}
+
+// NativeAccountOpenMusic says "Open YouTube Music in Brave"
+// in the language the app shows.
+func NativeAccountOpenMusic() string { return In(i18n.Locale()).NativeAccountOpenMusic() }
+
+// NativeAccountOpenMusic says "Open YouTube Music in Brave"
+// in the language of msgs.
+func (msgs Messages) NativeAccountOpenMusic() string {
+	return Catalog.Format(msgs.locale, "nativeAccountOpenMusic", nil)
+}
+
+// NativeAccountPrivacy says "ytmgo verifies membership with YouTube and remembers this session in the system secret store. Signing out here leaves…"
+// in the language the app shows.
+func NativeAccountPrivacy() string { return In(i18n.Locale()).NativeAccountPrivacy() }
+
+// NativeAccountPrivacy says "ytmgo verifies membership with YouTube and remembers this session in the system secret store. Signing out here leaves…"
+// in the language of msgs.
+func (msgs Messages) NativeAccountPrivacy() string {
+	return Catalog.Format(msgs.locale, "nativeAccountPrivacy", nil)
+}
+
+// NativeAccountWaiting says "Waiting for your explicit account transfer from Brave. This window accepts one transfer for five minutes."
+// in the language the app shows.
+func NativeAccountWaiting() string { return In(i18n.Locale()).NativeAccountWaiting() }
+
+// NativeAccountWaiting says "Waiting for your explicit account transfer from Brave. This window accepts one transfer for five minutes."
+// in the language of msgs.
+func (msgs Messages) NativeAccountWaiting() string {
+	return Catalog.Format(msgs.locale, "nativeAccountWaiting", nil)
+}
+
+// NativeAccountChecking says "Verifying the account and configuring playback…"
+// in the language the app shows.
+func NativeAccountChecking() string { return In(i18n.Locale()).NativeAccountChecking() }
+
+// NativeAccountChecking says "Verifying the account and configuring playback…"
+// in the language of msgs.
+func (msgs Messages) NativeAccountChecking() string {
+	return Catalog.Format(msgs.locale, "nativeAccountChecking", nil)
+}
+
+// NativeAccountExpired says "The connection window expired. Choose Retry to open a new five-minute window."
+// in the language the app shows.
+func NativeAccountExpired() string { return In(i18n.Locale()).NativeAccountExpired() }
+
+// NativeAccountExpired says "The connection window expired. Choose Retry to open a new five-minute window."
+// in the language of msgs.
+func (msgs Messages) NativeAccountExpired() string {
+	return Catalog.Format(msgs.locale, "nativeAccountExpired", nil)
+}
+
+// NativeAccountBridgeError says "Could not open the local account connection. Close any other ytmgo login window and retry."
+// in the language the app shows.
+func NativeAccountBridgeError() string { return In(i18n.Locale()).NativeAccountBridgeError() }
+
+// NativeAccountBridgeError says "Could not open the local account connection. Close any other ytmgo login window and retry."
+// in the language of msgs.
+func (msgs Messages) NativeAccountBridgeError() string {
+	return Catalog.Format(msgs.locale, "nativeAccountBridgeError", nil)
+}
+
+// NativeAccountStorageError says "Could not access the system secret store. Allow ytmgo access, then retry. No unencrypted session will be saved."
+// in the language the app shows.
+func NativeAccountStorageError() string { return In(i18n.Locale()).NativeAccountStorageError() }
+
+// NativeAccountStorageError says "Could not access the system secret store. Allow ytmgo access, then retry. No unencrypted session will be saved."
+// in the language of msgs.
+func (msgs Messages) NativeAccountStorageError() string {
+	return Catalog.Format(msgs.locale, "nativeAccountStorageError", nil)
+}
+
+// NativeAccountBrowserError says "Could not open Brave. Install or open Brave Browser, then retry."
+// in the language the app shows.
+func NativeAccountBrowserError() string { return In(i18n.Locale()).NativeAccountBrowserError() }
+
+// NativeAccountBrowserError says "Could not open Brave. Install or open Brave Browser, then retry."
+// in the language of msgs.
+func (msgs Messages) NativeAccountBrowserError() string {
+	return Catalog.Format(msgs.locale, "nativeAccountBrowserError", nil)
+}
+
+// NativeAccountCopyExtensions says "Copy Brave extensions address"
+// in the language the app shows.
+func NativeAccountCopyExtensions() string { return In(i18n.Locale()).NativeAccountCopyExtensions() }
+
+// NativeAccountCopyExtensions says "Copy Brave extensions address"
+// in the language of msgs.
+func (msgs Messages) NativeAccountCopyExtensions() string {
+	return Catalog.Format(msgs.locale, "nativeAccountCopyExtensions", nil)
+}
+
+// NativeAccountAddressCopied says "Copied brave://extensions/. Paste it into Brave’s address bar and press Return."
+// in the language the app shows.
+func NativeAccountAddressCopied() string { return In(i18n.Locale()).NativeAccountAddressCopied() }
+
+// NativeAccountAddressCopied says "Copied brave://extensions/. Paste it into Brave’s address bar and press Return."
+// in the language of msgs.
+func (msgs Messages) NativeAccountAddressCopied() string {
+	return Catalog.Format(msgs.locale, "nativeAccountAddressCopied", nil)
+}
+
+// NativeAccountClipboardError says "Could not copy the address. Enter brave://extensions/ in Brave’s address bar."
+// in the language the app shows.
+func NativeAccountClipboardError() string { return In(i18n.Locale()).NativeAccountClipboardError() }
+
+// NativeAccountClipboardError says "Could not copy the address. Enter brave://extensions/ in Brave’s address bar."
+// in the language of msgs.
+func (msgs Messages) NativeAccountClipboardError() string {
+	return Catalog.Format(msgs.locale, "nativeAccountClipboardError", nil)
 }

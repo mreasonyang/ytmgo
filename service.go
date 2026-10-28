@@ -9,9 +9,7 @@ import (
 	"ytmgo/locales"
 )
 
-// Preferences holds the appearance. (The language choice lives beside it,
-// see i18n.go.) No page is granted a native bridge; the music page may only
-// request one of three fixed appearance values through the ytmgo:// guard.
+// Preferences holds the appearance chosen by the native settings view.
 type Preferences struct {
 	path string
 	mu   sync.Mutex

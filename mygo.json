@@ -1,11 +1,11 @@
 {
   "name": "ytmgo",
   "identifier": "si.kyun.ytmgo",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "out": "build",
   "icon": "resources/icon.png",
   "macos": {
-    "minimumSystemVersion": "12.0",
+    "minimumSystemVersion": "27.0",
     "signingIdentity": "-",
     "infoPlist": {
       "CFBundleDisplayName": "ytmgo",
@@ -19,10 +19,13 @@
       "Audio",
       "Player"
     ],
-    "webview": true
+    "webview": false
   },
   "i18n": {
     "dir": "locales",
     "source": "en"
-  }
+  },
+  "resources": [
+    "build/runtime"
+  ]
 }

@@ -3,48 +3,74 @@ package main
 import (
 	"context"
 	"embed"
-	"encoding/json"
 	"log"
-	"os/exec"
 	"path/filepath"
 	"runtime"
+	"sync/atomic"
 	"time"
 
 	"github.com/egoist/mygo"
-	"github.com/egoist/mygo/i18n"
+	"github.com/egoist/mygo/ui"
+	"ytmgo/internal/catalog"
 	"ytmgo/internal/language"
-	"ytmgo/internal/navigation"
-	"ytmgo/internal/session"
+	"ytmgo/internal/player"
 	"ytmgo/locales"
 )
 
-const version = "0.3.0"
+const version = "0.4.0"
 
-//go:embed web/shell locales/en.json resources/icon.png resources/tray.png
+//go:embed locales/en.json resources/icon.png resources/tray.png
 var assets embed.FS
 
+type historyEntry struct {
+	route, query string
+	params       string
+	page         catalog.Page
+}
+
+// UI state belongs to the main thread. Workers deliver results through post;
+// request generations prevent an old search or track from replacing a new one.
 type desktop struct {
-	window           *mygo.Window
-	tray             *mygo.Tray
-	quitting         bool
-	account          *mygo.Window
-	prefs            *Preferences
-	languagePath     string
-	sessionMarker    string
-	logoutWindow     *mygo.Window
-	logoutBusy       bool
-	logoutBlocked    bool
-	logoutComplete   bool
-	logoutLoading    bool
-	logoutNextHTML   string
-	signedIn         bool
-	accountItem      *mygo.MenuItem
-	signOutItem      *mygo.MenuItem
-	accountSeparator *mygo.MenuItem
+	window, account                 *mygo.Window
+	tray                            *mygo.Tray
+	prefs                           *Preferences
+	languagePath                    string
+	diagnosticPath                  string
+	model                           UIModel
+	catalog                         *catalog.Client
+	player                          *player.Player
+	video                           *player.Video
+	videoID                         string
+	videoFrame                      *ui.Bitmap
+	videoFrameNumber                uint64
+	videoActive                     atomic.Bool
+	windowVisible                   bool
+	art                             *artworkCache
+	ctx                             context.Context
+	cancel                          context.CancelFunc
+	pageCancel, playCancel          context.CancelFunc
+	prepareCancel                   context.CancelFunc
+	seekCancel                      context.CancelFunc
+	resumeCancel                    context.CancelFunc
+	preparedID                      string
+	likeCancel                      context.CancelFunc
+	pageGeneration, playGeneration  uint64
+	accountGeneration               uint64
+	accountState                    accountState
+	queueGeneration, seekGeneration uint64
+	likeGeneration                  uint64
+	accountBusy                     bool
+	videoGeneration                 atomic.Uint64
+	loadPending                     bool
+	queueIndex                      int
+	history                         []historyEntry
+	historyIndex                    int
+	browseParams                    string
+	quitting, endedHandled          bool
+	unmutedVolume                   float64
 }
 
 func main() {
-	// Preserve the CLI's separate packaged production/development identities.
 	if !mygo.App.IsPackaged() {
 		mygo.App.SetName("ytmgo Dev")
 	}
@@ -53,45 +79,110 @@ func main() {
 	}
 	dataDir, err := mygo.App.Path(mygo.PathUserData)
 	if err != nil {
-		log.Fatal("ytmgo could not locate its application data directory")
+		log.Fatal("ytmgo: application data directory unavailable")
 	}
-	a := &desktop{prefs: &Preferences{path: filepath.Join(dataDir, "appearance")}, languagePath: filepath.Join(dataDir, "language"), sessionMarker: filepath.Join(dataDir, "signout-pending")}
-	mygo.Theme.SetSource(mygo.ThemeSource(a.prefs.Appearance()))
+	ctx, cancel := context.WithCancel(context.Background())
+	a := &desktop{ctx: ctx, cancel: cancel, prefs: &Preferences{path: filepath.Join(dataDir, "appearance")}, languagePath: filepath.Join(dataDir, "language"), queueIndex: -1, historyIndex: -1, unmutedVolume: 0.7}
+	a.diagnosticPath = filepath.Join(dataDir, "native-diagnostics")
+	recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
+	recordPlaybackDiagnostic(a.diagnosticPath, "video", "ready")
+	a.model = UIModel{Route: "home", Appearance: a.prefs.Appearance(), Language: language.Load(a.languagePath), Volume: 0.7, PanelTab: "queue"}
+	mygo.Theme.SetSource(mygo.ThemeSource(a.model.Appearance))
 	mygo.App.SetLanguages(language.Supported...)
 	a.applyLanguage()
+	a.catalog = catalog.NewWithOptions(catalog.Options{Language: language.ServiceLanguage(mygo.App.Locale())})
+	mygo.App.OnLocaleChanged(func(string) { a.localeChanged() })
 	mygo.App.SetMenu(a.menu())
-	mygo.App.OnLocaleChanged(func(string) { a.relocalize() })
-	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { a.quitting = true })
 	mygo.App.OnActivate(func(bool) { a.show() })
 	mygo.App.OnSecondInstance(func([]string, string) { a.show() })
-	mygo.App.OnWillQuit(func(*mygo.QuitEvent) { mygo.GlobalShortcut.UnregisterAll() })
-	mygo.App.WhenReady(func() {
-		pending, pendingErr := session.Pending(a.sessionMarker)
-		if pending || pendingErr != nil {
-			a.clearAccountData()
-		} else {
-			a.openMusic()
+	mygo.App.OnWindowAllClosed(func() {
+		if runtime.GOOS != "darwin" && a.tray == nil {
+			mygo.App.Quit()
 		}
+	})
+	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { a.quitting = true; a.cancelResume(); a.closeAccount(); a.cancel() })
+	mygo.App.OnWillQuit(func(*mygo.QuitEvent) {
+		mygo.GlobalShortcut.UnregisterAll()
+		mygo.NowPlaying.Clear()
+		if a.video != nil {
+			a.video.Close()
+		}
+		if a.player != nil {
+			a.player.Close()
+		}
+	})
+	mygo.App.WhenReady(func() {
+		a.player, err = player.New()
+		a.video, _ = player.NewVideo(a.player)
+		if err != nil {
+			a.model.Error = a.tr("nativeRuntimeMissing")
+		}
+		if a.player != nil {
+			a.player.SetVolume(a.model.Volume)
+		}
+		mygo.NowPlaying.OnCommand(func(cmd mygo.MediaCommand, pos time.Duration) {
+			if a.player == nil {
+				return
+			}
+			switch cmd {
+			case mygo.MediaPlay:
+				a.resume()
+			case mygo.MediaPause:
+				a.pause()
+			case mygo.MediaNext:
+				a.next()
+			case mygo.MediaPrevious:
+				a.previous()
+			case mygo.MediaSeek:
+				a.seek(pos.Seconds())
+			}
+			a.invalidate()
+		})
+		a.art = newArtworkCache(a.ctx, func() {
+			a.invalidate()
+		})
+		a.window = mygo.NewWindow(mygo.WindowOptions{Title: locales.AppName(), Width: 1440, Height: 940, MinWidth: 380, MinHeight: 640, StateKey: "native-main", BackgroundColor: "light-dark(#e7e7ea, #050506)", Content: ui.View(func(c *ui.Context) { nativeView(c, &a.model, a.actions()); a.syncVideo() })})
+		a.windowVisible = true
+		a.window.OnHide(func() { a.windowVisible = false; a.syncVideo() })
+		a.window.OnShow(func() { a.windowVisible = true; a.syncVideo() })
+		a.window.OnMinimize(func() { a.windowVisible = false; a.syncVideo() })
+		a.window.OnRestore(func() { a.windowVisible = true; a.syncVideo() })
+		a.window.OnFocus(func() { a.refreshAccount() })
+		a.window.OnClose(func(e *mygo.CloseEvent) {
+			if !a.quitting && (runtime.GOOS == "darwin" || a.tray != nil) {
+				e.PreventDefault()
+				a.window.Hide()
+			}
+		})
 		icon, _ := assets.ReadFile("resources/tray.png")
 		a.tray, err = mygo.NewTray(mygo.TrayOptions{ID: "si.kyun.ytmgo.player", Icon: icon, IconIsTemplate: true, ToolTip: locales.AppName(), Menu: a.trayMenu()})
 		if err != nil {
-			log.Print("ytmgo: tray unavailable; window and Dock controls remain available")
+			log.Print("ytmgo: tray unavailable")
 		}
-		if err = mygo.GlobalShortcut.Register("CmdOrCtrl+Shift+Space", func() { a.control("toggle") }); err != nil {
-			log.Print("ytmgo: global playback shortcut unavailable; use the Playback menu")
-		}
+		_ = mygo.GlobalShortcut.Register("CmdOrCtrl+Shift+Space", a.toggle)
+		a.navigate("home")
+		a.startAccountPolling()
+		go a.pollPlayback()
+		go a.pollVideo()
 	})
 	if err = mygo.App.Run(); err != nil {
-		log.Fatal("ytmgo could not start its desktop runtime")
+		log.Fatal("ytmgo: desktop runtime could not start")
 	}
 }
 
-func (a *desktop) show() {
-	if a.logoutBlocked && a.logoutWindow != nil && !a.logoutWindow.IsDestroyed() {
-		a.logoutWindow.Show()
-		a.logoutWindow.Focus()
+func (a *desktop) post(fn func()) {
+	if a.ctx.Err() != nil {
 		return
 	}
+	mygo.RunOnMain(func() {
+		if a.ctx.Err() == nil {
+			fn()
+			a.invalidate()
+		}
+	})
+}
+
+func (a *desktop) show() {
 	if a.window != nil && !a.window.IsDestroyed() {
 		a.window.Show()
 		a.window.Restore()
@@ -99,123 +190,96 @@ func (a *desktop) show() {
 	}
 }
 
-// control forwards one word of the shell's fixed action vocabulary
-// (web/shell/main.js runAction) to the music page.
-func (a *desktop) control(action string) {
-	if a.logoutBlocked {
-		a.show()
-		return
-	}
-	if a.window == nil || a.window.IsDestroyed() {
-		return
-	}
-	w := a.window
-	encoded, _ := json.Marshal(action)
-	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
-		_, _ = w.Page().EvalContext(ctx, `location.origin === 'https://music.youtube.com' && window.ytmgoControls?.(`+string(encoded)+`)`)
-	}()
+func (a *desktop) actions() ViewActions {
+	return ViewActions{Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, RetryPlayback: func() { a.startTrack(a.model.Current) }, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, Account: a.signIn, SignOut: a.signOut, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: a.art.get}
 }
 
-func (a *desktop) external(raw string) {
-	if !navigation.External(raw) {
-		return
+func (a *desktop) pollPlayback() {
+	t := time.NewTicker(350 * time.Millisecond)
+	defer t.Stop()
+	var previous player.State
+	for {
+		select {
+		case <-a.ctx.Done():
+			return
+		case <-t.C:
+			if a.player == nil {
+				continue
+			}
+			current := a.player.Snapshot()
+			if current == previous {
+				continue
+			}
+			previous = current
+			a.post(func() {
+				if a.loadPending {
+					return
+				}
+				state := a.player.Snapshot()
+				a.model.Playing = state.Playing
+				a.model.PlaybackLoading = state.Loading
+				a.model.Position = state.Position.Seconds()
+				if state.Duration > 0 {
+					a.model.Duration = state.Duration.Seconds()
+				}
+				if state.Error != "" {
+					recordPlaybackDiagnostic(a.diagnosticPath, "audio", state.Error, state.ErrorStage)
+					a.model.PlaybackError = a.tr("nativePlaybackError")
+				}
+				if state.Ended && !a.endedHandled {
+					a.endedHandled = true
+					if a.model.Repeat == 2 {
+						a.resume()
+					} else {
+						a.next()
+					}
+				}
+				playState := mygo.PlaybackPaused
+				if state.Playing {
+					playState = mygo.PlaybackPlaying
+				}
+				mygo.NowPlaying.SetPlayback(playState, state.Position)
+			})
+		}
 	}
-	go func() {
-		var err error
-		if runtime.GOOS == "darwin" {
-			// The workspace's browser preference is Brave. Do not silently choose
-			// another browser if it is absent. No URL is printed to diagnostics.
-			err = exec.Command("open", "-b", "com.brave.Browser", raw).Run()
-		} else {
-			err = mygo.Shell.OpenExternal(raw)
-		}
-		if err != nil {
-			_, _ = mygo.Dialog.Message(mygo.MessageOptions{Parent: a.window, Title: locales.LinkErrorTitle(), Message: locales.LinkErrorMessage(), Detail: locales.LinkErrorDetail(), Buttons: []string{locales.ButtonOK()}})
-		}
-	}()
 }
 
-func item(label, shortcut string, fn func()) *mygo.MenuItem {
+func menuItem(label, shortcut string, fn func()) *mygo.MenuItem {
 	return &mygo.MenuItem{Label: label, Accelerator: shortcut, Click: func(*mygo.MenuItem, *mygo.Window) { fn() }}
 }
 
-// shell brings the window forward, then runs a shell action.
-func (a *desktop) shell(action string) func() {
-	return func() { a.show(); a.control(action) }
-}
-
 func (a *desktop) menu() *mygo.Menu {
-	a.accountItem = item(locales.MenuSignIn(), "", a.shell("account"))
-	a.signOutItem = item(locales.MenuSignOut(), "", a.requestSignOut)
-	a.signOutItem.Hidden = true
-	a.accountSeparator = mygo.Separator()
-	a.accountSeparator.Hidden = true
 	return mygo.NewMenu([]*mygo.MenuItem{
 		{Role: mygo.RoleAppMenu},
-		{Label: locales.MenuFile(), Submenu: []*mygo.MenuItem{item(locales.MenuShowApp(), "CmdOrCtrl+1", a.show), {Role: mygo.RoleClose}, mygo.Separator(), {Role: mygo.RoleQuit}}},
+		{Label: locales.MenuFile(), Submenu: []*mygo.MenuItem{menuItem(locales.MenuShowApp(), "CmdOrCtrl+1", a.show), {Role: mygo.RoleClose}, mygo.Separator(), {Role: mygo.RoleQuit}}},
 		{Role: mygo.RoleEditMenu},
 		{Label: locales.MenuPlayback(), Submenu: []*mygo.MenuItem{
-			item(locales.MenuPlayPause(), "CmdOrCtrl+P", func() { a.control("toggle") }),
-			item(locales.MenuNext(), "CmdOrCtrl+Right", func() { a.control("next") }),
-			item(locales.MenuPrevious(), "CmdOrCtrl+Left", func() { a.control("previous") }),
-			mygo.Separator(),
-			item(locales.MenuLike(), "", func() { a.control("like") }),
-			mygo.Separator(),
-			item(locales.MenuVolumeUp(), "CmdOrCtrl+Up", func() { a.control("volume-up") }),
-			item(locales.MenuVolumeDown(), "CmdOrCtrl+Down", func() { a.control("volume-down") }),
-			item(locales.MenuMute(), "CmdOrCtrl+Shift+M", func() { a.control("mute") }),
-		}},
+			menuItem(locales.MenuPlayPause(), "CmdOrCtrl+P", a.toggle), menuItem(locales.MenuNext(), "CmdOrCtrl+Right", a.next), menuItem(locales.MenuPrevious(), "CmdOrCtrl+Left", a.previous), mygo.Separator(), menuItem(locales.MenuLike(), "", a.like), menuItem(locales.MenuVolumeUp(), "CmdOrCtrl+Up", func() { a.volume(a.model.Volume + 0.05) }), menuItem(locales.MenuVolumeDown(), "CmdOrCtrl+Down", func() { a.volume(a.model.Volume - 0.05) }), menuItem(locales.MenuMute(), "CmdOrCtrl+Shift+M", a.mute)}},
 		{Label: locales.MenuView(), Submenu: []*mygo.MenuItem{
-			item(locales.MenuSearch(), "CmdOrCtrl+K", a.shell("search")),
-			item(locales.MenuHome(), "CmdOrCtrl+Shift+H", a.shell("home")),
-			item(locales.MenuExplore(), "", a.shell("explore")),
-			item(locales.MenuLibrary(), "CmdOrCtrl+L", a.shell("library")),
-			mygo.Separator(),
-			item(locales.MenuPanel(), "CmdOrCtrl+J", a.shell("panel")),
-			item(locales.MenuLyrics(), "", a.shell("lyrics")),
-			item(locales.MenuImmersive(), "CmdOrCtrl+Shift+F", a.shell("immersive")),
-			item(locales.MenuSidebar(), "CmdOrCtrl+B", a.shell("sidebar")),
-			mygo.Separator(),
-			{Label: locales.MenuLanguage(), Submenu: a.languageMenu()},
-			mygo.Separator(),
-			{Role: mygo.RoleReload}, {Role: mygo.RoleResetZoom}, {Role: mygo.RoleZoomIn}, {Role: mygo.RoleZoomOut}, {Role: mygo.RoleToggleFullScreen},
-		}},
+			menuItem(locales.MenuHome(), "CmdOrCtrl+Shift+H", func() { a.navigate("home") }), menuItem(locales.MenuExplore(), "", func() { a.navigate("explore") }), menuItem(locales.MenuLibrary(), "CmdOrCtrl+L", func() { a.navigate("library") }), mygo.Separator(), menuItem(locales.MenuPanel(), "CmdOrCtrl+J", func() { a.model.Panel = !a.model.Panel; a.invalidate() }), menuItem(locales.MenuLyrics(), "", func() { a.model.Panel = true; a.model.PanelTab = "lyrics"; a.invalidate() }), menuItem(locales.MenuImmersive(), "CmdOrCtrl+Shift+F", func() { a.model.Immersive = !a.model.Immersive; a.invalidate() }), menuItem(locales.MenuSidebar(), "CmdOrCtrl+B", func() { a.model.SidebarCollapsed = !a.model.SidebarCollapsed; a.invalidate() }), {Label: locales.MenuLanguage(), Submenu: a.languageMenu()}, {Role: mygo.RoleToggleFullScreen}}},
 		{Role: mygo.RoleWindowMenu},
-		{Label: locales.MenuAccount(), Submenu: []*mygo.MenuItem{a.accountItem, a.accountSeparator, a.signOutItem}},
-		{Label: locales.MenuHelp(), Submenu: []*mygo.MenuItem{
-			item(locales.MenuShortcuts(), "CmdOrCtrl+/", a.shell("shortcuts")),
-			item(locales.MenuAbout(), "", func() {
-				go func() {
-					_, _ = mygo.Dialog.Message(mygo.MessageOptions{Parent: a.window, Title: locales.MenuAbout(), Message: locales.AboutMessage(version), Detail: locales.AboutDetail(), Buttons: []string{locales.ButtonOK()}})
-				}()
-			}),
-			item(locales.ServiceName(), "", func() { a.external(navigation.Home) }),
-		}},
+		{Label: locales.MenuAccount(), Submenu: a.accountMenuItems()},
+		{Label: locales.MenuHelp(), Submenu: []*mygo.MenuItem{menuItem(locales.MenuShortcuts(), "CmdOrCtrl+/", func() { a.model.Shortcuts = true; a.invalidate() }), menuItem(locales.MenuAbout(), "", func() {
+			go func() {
+				_, _ = mygo.Dialog.Message(mygo.MessageOptions{Parent: a.window, Title: locales.MenuAbout(), Message: locales.AboutMessage(version), Detail: a.tr("nativeAbout"), Buttons: []string{locales.ButtonOK()}})
+			}()
+		})}},
 	})
 }
 
-// languageMenu lists "Match System" and each language named in itself.
-func (a *desktop) languageMenu() []*mygo.MenuItem {
-	choice := language.Load(a.languagePath)
-	radio := func(label, value string) *mygo.MenuItem {
-		return &mygo.MenuItem{Label: label, Type: mygo.MenuItemRadio, Checked: choice == value, Click: func(*mygo.MenuItem, *mygo.Window) { a.setLanguage(value) }}
-	}
-	items := []*mygo.MenuItem{radio(locales.MenuLanguageSystem(), language.System), mygo.Separator()}
-	for _, tag := range language.Supported {
-		items = append(items, radio(i18n.Autonym(tag), tag))
+func (a *desktop) accountMenuItems() []*mygo.MenuItem {
+	items := []*mygo.MenuItem{menuItem(locales.MenuSignIn(), "", a.signIn)}
+	if a.model.SignedIn {
+		items = append(items, menuItem(locales.MenuSignOut(), "", a.signOut))
 	}
 	return items
 }
 
+func (a *desktop) invalidate() {
+	if a.window != nil {
+		a.window.Update(func() {})
+	}
+}
 func (a *desktop) trayMenu() *mygo.Menu {
-	return mygo.NewMenu([]*mygo.MenuItem{
-		item(locales.TrayOpen(), "", a.show), mygo.Separator(),
-		item(locales.MenuPlayPause(), "", func() { a.control("toggle") }),
-		item(locales.MenuNext(), "", func() { a.control("next") }),
-		item(locales.MenuPrevious(), "", func() { a.control("previous") }),
-		item(locales.MenuLike(), "", func() { a.control("like") }),
-		mygo.Separator(), item(locales.TrayQuit(), "", func() { mygo.App.Quit() }),
-	})
+	return mygo.NewMenu([]*mygo.MenuItem{menuItem(locales.TrayOpen(), "", a.show), mygo.Separator(), menuItem(locales.MenuPlayPause(), "", a.toggle), menuItem(locales.MenuNext(), "", a.next), menuItem(locales.MenuPrevious(), "", a.previous), mygo.Separator(), menuItem(locales.TrayQuit(), "", func() { mygo.App.Quit() })})
 }

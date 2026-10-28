@@ -1,0 +1,12 @@
+:root { color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+body { margin: 0; width: 350px; }
+main { padding: 18px; }
+h1 { margin: 0 0 14px; font-size: 18px; }
+p, label { font-size: 13px; line-height: 1.55; }
+.confirmation { display: flex; gap: 9px; align-items: flex-start; margin: 18px 0; }
+input { margin: 4px 0 0; flex: 0 0 auto; }
+.permissions, #status { opacity: .8; font-size: 12px; }
+button { width: 100%; border: 0; border-radius: 7px; padding: 11px; font-size: 14px; background: #c22d46; color: white; cursor: pointer; }
+button:disabled { opacity: .45; cursor: default; }
+button:focus-visible, input:focus-visible { outline: 3px solid #4587f5; outline-offset: 3px; }
+#status { min-height: 38px; margin-bottom: 0; }

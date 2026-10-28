@@ -1,0 +1,42 @@
+{
+  "checks": {
+    "runtime_manifest_policy": "pass",
+    "runtime_manifest_node_modules": "pass",
+    "packaged_music_protocol_matches_go_constant": "pass",
+    "runtime_source_modules": "pass",
+    "bootstrap_diagnostic_modules_present_and_matching": "pass",
+    "runtime_package_and_lock": "pass",
+    "runtime_manifest_files": "pass",
+    "application_runtime_tests_absent": "pass",
+    "retired_application_backends_absent": "pass",
+    "runtime_node_version": "pass",
+    "bundle_version_matches_go_and_config": "pass",
+    "locale_200_keys_complete": "pass",
+    "locale_sources_embedded_exactly": "pass",
+    "app_deep_strict_signature": "pass",
+    "dmg_strict_signature": "expected_unsigned_dmg",
+    "dmg_integrity": "pass",
+    "dmg_readonly_mount": "pass",
+    "dmg_embedded_app_matches": "pass",
+    "dmg_embedded_app_deep_strict_signature": "pass",
+    "dmg_unmounted": "pass"
+  },
+  "runtime_source_module_count": 19,
+  "runtime_manifest_file_count": 139,
+  "locale_count": 4,
+  "locale_message_key_count": 200,
+  "app_executable": {
+    "sha256": "b7058e83b5022a516693ccf517618d4f665ed33ef853ea76315f4aea04ba3991",
+    "bytes": 12568800
+  },
+  "dmg": {
+    "sha256": "85b356d6f9ae6535c7ceae8c5b7a8c3fff90d7a83f7386b6862397b86c7a1c13",
+    "bytes": 43471277
+  },
+  "app_tree": {
+    "sha256": "2e94787623a0e396cc6470af74b472e6ccd463107eb55de76b88f13b88453dee",
+    "files": 5437,
+    "bytes": 216787609
+  },
+  "result": "partial"
+}

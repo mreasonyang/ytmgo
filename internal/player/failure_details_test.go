@@ -81,3 +81,11 @@ func TestBootstrapCategoriesAreNotReducedToGenericFailure(t *testing.T) {
 		}
 	}
 }
+
+func TestExplicitLoginRequirementSurvivesIntoPlayerState(t *testing.T) {
+	p := &Player{gen: 1}
+	p.fail(1, resolverFailureError("login_required", FailureDetails{Stage: "player_request"}))
+	if p.Snapshot().Error != "login_required" {
+		t.Fatal("explicit service sign-in requirement was reduced to a generic playback failure")
+	}
+}

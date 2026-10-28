@@ -26,16 +26,43 @@ test('public bootstrap redirects stop before a challenge and retain only fixed m
 
 test('redirect destination taxonomy never follows or emits destination values', async () => {
   for (const [location, redirect] of [
+    ['https://www.google.com:443/sorry/index?synthetic=private', 'google_challenge'],
     ['https://accounts.google.com/ServiceLogin?synthetic=private', 'signin'],
+    ['https://accounts.google.com/v3/signin/identifier', 'signin'],
+    ['https://accounts.google.com/signin/v2/identifier', 'signin'],
+    ['/signin?synthetic=private', 'signin'],
     ['https://consent.youtube.com/m?synthetic=private', 'consent'],
+    ['https://consent.google.com/ml?synthetic=private', 'consent'],
     ['/changed?synthetic=private', 'same_origin'],
     ['https://example.invalid/path?synthetic=private', 'other'],
     ['https://example.invalid/signin?synthetic=private', 'other'],
+    ['http://www.google.com/sorry/index', 'other'],
+    ['https://www.google.com:8443/sorry/index', 'other'],
+    ['https://www.google.com.example.invalid/sorry/index', 'other'],
+    ['https://www.google.com@other.invalid/sorry/index', 'other'],
+    ['https://synthetic-private@www.google.com/sorry/index', 'other'],
+    ['https://@www.google.com/sorry/index', 'other'],
+    ['https://www.google.com/sorryish', 'other'],
+    ['https://www.google.com/%73orry/index', 'other'],
+    ['https://www.google.com/%2e%2e/sorry/index', 'other'],
+    ['https://www.%67oogle.com/sorry/index', 'other'],
+    ['https://www.google.com\\sorry\\index', 'other'],
+    ['https:////www.google.com/sorry/index', 'other'],
+    ['https:/www.google.com/sorry/index', 'other'],
+    ['https://accounts.google.com/unknown', 'other'],
+    ['https://accounts.google.com/ServiceLoginOther', 'other'],
+    ['https://consent.youtube.com/unknown', 'other'],
+    ['https://consent.youtube.com.example.invalid/m', 'other'],
+    ['javascript:synthetic-private', 'other'],
+    ['%', 'other'],
+    ['x'.repeat(8193), 'other'],
   ]) {
     let calls = 0;
     const transport = createBootstrapFetch(signal(), async () => { calls++; return new Response(null, { status: 302, headers: { location } }); });
     await assert.rejects(transport.fetch('https://www.youtube.com/iframe_api'));
-    assert.equal(metadata(transport.failure(new Error('wrapped'))).redirect, redirect);
+    const result = metadata(transport.failure(new Error('wrapped')));
+    assert.equal(result.redirect, redirect);
+    assert.equal(JSON.stringify(result).includes('synthetic'), false);
     assert.equal(calls, 1);
   }
   const absent = createBootstrapFetch(signal(), async () => new Response(new ReadableStream({

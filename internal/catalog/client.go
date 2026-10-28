@@ -85,10 +85,12 @@ type Page struct {
 	Continuation string  `json:"continuation,omitempty"`
 }
 
-// HTTPError contains only the operation and status, never response or URL data.
+// HTTPError contains only the operation, status and a fixed redirect category,
+// never upstream response text, headers or URLs.
 type HTTPError struct {
 	Stage      string
 	StatusCode int
+	Redirect   string
 }
 
 func (e *HTTPError) Error() string {
@@ -475,7 +477,11 @@ func (c *Client) request(req *http.Request, stage string, limit int64) ([]byte, 
 	}
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
-		return nil, &HTTPError{Stage: stage, StatusCode: response.StatusCode}
+		failure := &HTTPError{Stage: stage, StatusCode: response.StatusCode}
+		if response.StatusCode >= 300 && response.StatusCode < 400 {
+			failure.Redirect = redirectCategory(response.Header.Get("Location"), req.URL)
+		}
+		return nil, failure
 	}
 	if response.ContentLength > limit {
 		return nil, ErrResponseTooLarge

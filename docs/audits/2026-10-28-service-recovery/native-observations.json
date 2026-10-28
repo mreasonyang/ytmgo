@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "date": "2026-10-28",
+  "source": "direct CUA native interaction and fixed audit-state.json readbacks",
+  "fixture": "synthetic_catalog_302_then_200",
+  "real_account_used": false,
+  "real_captcha_tested": false,
+  "real_upstream_recovery_verified": false,
+  "diagnostic_executable_sha256": "f7f7ac2e61b3ef0c6244db83e6987c1c6a9c81bba90abf23210674a1df234481",
+  "anonymous": {
+    "before_browser": {
+      "requests": 1,
+      "status": 302,
+      "error_active": true,
+      "dialog_open": true
+    },
+    "after_browser": {
+      "requests": 1,
+      "status": 302,
+      "error_active": true,
+      "dialog_open": true
+    },
+    "after_retry": {
+      "requests": 2,
+      "status": 200,
+      "error_active": false,
+      "dialog_open": false
+    },
+    "browser_observed": "Brave address bar music.youtube.com",
+    "sign_in_hint_visible": true,
+    "sign_in_button_present_but_fixture_disabled": true
+  },
+  "standard": {
+    "before_retry": {
+      "requests": 1,
+      "status": 302,
+      "signed_in_ui": true,
+      "premium_ui": false
+    },
+    "after_retry": {
+      "requests": 2,
+      "status": 200,
+      "error_active": false,
+      "dialog_open": false,
+      "signed_in_ui": true,
+      "premium_ui": false
+    },
+    "connected_hint_visible": true,
+    "sign_in_action_absent": true
+  },
+  "premium": {
+    "before_retry": {
+      "requests": 1,
+      "status": 302,
+      "signed_in_ui": true,
+      "premium_ui": true
+    },
+    "after_retry": {
+      "requests": 2,
+      "status": 200,
+      "error_active": false,
+      "dialog_open": false,
+      "signed_in_ui": true,
+      "premium_ui": true
+    },
+    "connected_hint_visible": true,
+    "sign_in_action_absent": true,
+    "compact_width_points": 420,
+    "visual_review": "readable dialog; browser and retry actions visible; no text overlap"
+  },
+  "cleanup": {
+    "audit_app_closed": true,
+    "safe_processes_ytmgo_count": 0,
+    "new_browser_tab_closed": true
+  },
+  "limitations": [
+    "HTTP responses and account flags are synthetic",
+    "Formal package was built and audited but not launched",
+    "Browser challenge completion and cookie transfer were not tested",
+    "Opening Brave does not resolve the failed native operation"
+  ]
+}

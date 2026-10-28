@@ -21,7 +21,7 @@ type stagedSessionFixture struct {
 }
 
 func TestAccountErrorsOnlyRequestReconnectionForInvalidSessions(t *testing.T) {
-	for _, status := range []int{302, 401, 403, 429, 500, 503} {
+	for _, status := range []int{401, 403, 429, 500, 503} {
 		t.Run(fmt.Sprintf("http-%d", status), func(t *testing.T) {
 			err := fmt.Errorf("account request: %w", &catalog.HTTPError{Stage: "browse", StatusCode: status})
 			if accountErrorMessageKey(err) != "nativeAccountError" {

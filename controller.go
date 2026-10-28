@@ -52,6 +52,7 @@ func (a *desktop) loadPage(route, q string, record bool) {
 	a.model.Query = q
 	a.model.Loading = true
 	a.model.Error = ""
+	a.model.ErrorRecovery = recoveryNotice{}
 	a.model.Page = catalog.Page{}
 	if route == "library" && !a.model.SignedIn {
 		cancel()
@@ -87,7 +88,7 @@ func (a *desktop) loadPage(route, q string, record bool) {
 			}
 			a.model.Loading = false
 			if err != nil {
-				a.model.Error = a.tr("nativeCatalogError")
+				a.catalogFailure(err)
 				return
 			}
 			a.model.Page = page
@@ -152,6 +153,7 @@ func (a *desktop) travel(delta int) {
 	a.browseParams = e.params
 	a.model.Loading = false
 	a.model.Error = ""
+	a.model.ErrorRecovery = recoveryNotice{}
 	a.model.Immersive = false
 	a.model.CanBack = i > 0
 	a.model.CanForward = i+1 < len(a.history)
@@ -211,6 +213,7 @@ func (a *desktop) playItem(it catalog.Item) {
 func (a *desktop) startTrack(it catalog.Item) {
 	if a.player == nil {
 		a.model.Error = a.tr("nativeRuntimeMissing")
+		a.model.ErrorRecovery = recoveryNotice{}
 		return
 	}
 	a.cancelResume()
@@ -236,9 +239,9 @@ func (a *desktop) startTrack(it catalog.Item) {
 	a.model.PlaybackLoading = true
 	a.loadPending = true
 	a.model.Lyrics = a.tr("shellLoading")
-	a.model.Error = ""
 	a.model.Liked = it.Liked
 	a.model.PlaybackError = ""
+	a.model.PlaybackRecovery = recoveryNotice{}
 	a.endedHandled = true
 	mygo.NowPlaying.Set(mygo.NowPlayingInfo{Title: it.Title, Artist: it.Artist, Album: it.Album, Duration: it.Duration, State: mygo.PlaybackPaused, Commands: mygo.MediaPlay | mygo.MediaPause | mygo.MediaNext | mygo.MediaPrevious | mygo.MediaSeek})
 	a.invalidate()
@@ -267,7 +270,7 @@ func (a *desktop) startTrack(it catalog.Item) {
 			if err != nil && ctx.Err() == nil {
 				state := a.player.Snapshot()
 				recordPlaybackDiagnostic(a.diagnosticPath, "audio", state.Error, state.ErrorDetails)
-				a.model.PlaybackError = a.tr("nativePlaybackError")
+				a.playbackFailure(state)
 			} else if err == nil {
 				a.endedHandled = false
 				state := a.player.Snapshot()
@@ -452,9 +455,10 @@ func (a *desktop) resume() {
 			if errors.Is(err, context.Canceled) {
 				return
 			} else if err != nil {
-				a.model.PlaybackError = a.tr("nativePlaybackError")
+				a.playbackFailure(a.player.Snapshot())
 			} else {
 				a.model.PlaybackError = ""
+				a.model.PlaybackRecovery = recoveryNotice{}
 				a.endedHandled = false
 			}
 		})
@@ -469,6 +473,7 @@ func (a *desktop) loadMore() {
 	generation := a.pageGeneration
 	a.model.Loading = true
 	a.model.Error = ""
+	a.model.ErrorRecovery = recoveryNotice{}
 	go func() {
 		ctx, cancel := context.WithTimeout(a.ctx, 25*time.Second)
 		defer cancel()
@@ -479,7 +484,7 @@ func (a *desktop) loadMore() {
 			}
 			a.model.Loading = false
 			if err != nil {
-				a.model.Error = a.tr("nativeCatalogError")
+				a.catalogFailure(err)
 				return
 			}
 			a.model.Page.Items = append(a.model.Page.Items, page.Items...)
@@ -496,6 +501,7 @@ func (a *desktop) seek(seconds float64) {
 	a.cancelResume()
 	seconds = math.Max(0, math.Min(a.model.Duration, seconds))
 	a.model.PlaybackError = ""
+	a.model.PlaybackRecovery = recoveryNotice{}
 	generation := a.playGeneration
 	a.seekGeneration++
 	if a.seekCancel != nil {
@@ -514,7 +520,7 @@ func (a *desktop) seek(seconds float64) {
 		a.post(func() {
 			if generation == a.playGeneration && seekGeneration == a.seekGeneration {
 				if err != nil && !errors.Is(err, context.Canceled) {
-					a.model.PlaybackError = a.tr("nativePlaybackError")
+					a.playbackFailure(a.player.Snapshot())
 				} else if err == nil {
 					a.endedHandled = false
 					a.prepareNext()
@@ -582,6 +588,7 @@ func (a *desktop) like() {
 			}
 			if err != nil {
 				a.model.Error = a.tr("nativeAccountError")
+				a.model.ErrorRecovery = recoveryNotice{}
 			} else {
 				a.setLiked(id, liked)
 			}

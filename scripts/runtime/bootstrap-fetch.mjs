@@ -11,13 +11,22 @@ const mimeFor = value => value?.includes('text/html') ? 'html'
   : value?.startsWith('text/') ? 'text' : value ? 'other' : 'missing';
 
 function redirectFor(location, source) {
-  if (!location) return 'other';
+  if (!location || location.length > 8192) return 'other';
   try {
+    // URL normalizes escapes and backslashes, so keep ambiguous authority or
+    // path spellings from becoming a confirmed verification destination.
+    const address = location.split(/[?#]/, 1)[0];
+    const authority = address.match(/^(?:[a-z][a-z0-9+.-]*:)?\/\/([^/]*)/i)?.[1];
+    if (/^[a-z][a-z0-9+.-]*:/i.test(address) && !authority) return 'other';
+    if (authority?.includes('@') || authority?.includes('%') || /[\\\u0000-\u0020\u007f]/.test(address) || /%(?![0-9a-f]{2})/i.test(address)) return 'other';
     const target = new URL(location, source);
-    if (['www.google.com', 'google.com'].includes(target.hostname) && /^\/sorry(?:\/|$)/.test(target.pathname)) return 'google_challenge';
-    if (target.hostname === 'accounts.google.com' ||
-        (['www.youtube.com', 'youtube.com', 'music.youtube.com', 'www.google.com', 'google.com'].includes(target.hostname) && /^\/signin(?:\/|$)/.test(target.pathname))) return 'signin';
-    if (['consent.google.com', 'consent.youtube.com'].includes(target.hostname)) return 'consent';
+    if (target.username || target.password) return 'other';
+    if (target.protocol === 'https:' && !target.port && !address.includes('%') && !target.pathname.includes('%')) {
+      if (['www.google.com', 'google.com'].includes(target.hostname) && /^\/sorry(?:\/|$)/.test(target.pathname)) return 'google_challenge';
+      if ((target.hostname === 'accounts.google.com' && /^\/(?:ServiceLogin|signin|v3\/signin|InteractiveLogin)(?:\/|$)/.test(target.pathname)) ||
+          (['www.youtube.com', 'youtube.com', 'music.youtube.com', 'www.google.com', 'google.com'].includes(target.hostname) && /^\/signin(?:\/|$)/.test(target.pathname))) return 'signin';
+      if (['consent.google.com', 'consent.youtube.com'].includes(target.hostname) && ['/m', '/ml'].includes(target.pathname)) return 'consent';
+    }
     return target.origin === source.origin ? 'same_origin' : 'other';
   } catch { return 'other'; }
 }

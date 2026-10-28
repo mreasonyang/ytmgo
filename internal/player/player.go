@@ -579,7 +579,7 @@ func safeError(err error) string {
 		err = failure.err
 	}
 	switch err.Error() {
-	case "stream_resolution_failed", "invalid_media_response", "audio_stream_failed", "audio_decoder_unavailable", "runtime_missing",
+	case "login_required", "stream_resolution_failed", "invalid_media_response", "audio_stream_failed", "audio_decoder_unavailable", "runtime_missing",
 		"audio_access_denied", "audio_rate_limited", "audio_server_error", "audio_network_timeout", "audio_connection_failed",
 		"audio_range_mismatch", "audio_stream_truncated",
 		"proof_failed", "proof_expired", "proof_request_rejected", "bootstrap_cache_miss",

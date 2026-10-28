@@ -411,6 +411,75 @@ Local request and native observations are under
 `build/diagnostics/sdk-bootstrap-20261028/`. The previous exact HTTP cause
 remains unknown; current successful initialization cannot retroactively prove it.
 
+### User-guided service verification recovery (2026-10-28)
+
+Catalog/account HTTP errors now retain a closed redirect classification, just
+as the playback bootstrap does. Both implementations recognize challenge,
+sign-in, and consent only for exact trusted HTTPS hosts and explicit paths,
+with no userinfo, ambiguous encoded path, or unusual port. Unknown 3xx
+responses are described as unsupported service redirects; ordinary 403/429
+and connection failures are not presented as proof of a CAPTCHA.
+
+The native catalog and playback error surfaces link to a recovery dialog in
+all four languages. It opens the fixed YouTube Music homepage in Brave, asks
+the user to follow any website prompt, and provides explicit retry. No
+arbitrary upstream redirect URL is stored or opened. The interface explains
+that in-app verification is unavailable and browser steps may not unblock the
+native request. Anonymous users can connect an account; connected accounts
+and membership remain intact. Opening or returning from Brave does not mark
+the failure resolved.
+
+Retry remains scoped to the failed operation. A successful account focus
+refresh cannot clear a catalog failure or the failed transfer of a different
+account. A failed new-account transfer offers an explicit fresh connection
+instead of refreshing the previously retained account. No failed candidate
+credentials are retained for automatic replay. Dialogs whose failure is
+cleared or whose classification/scope no longer matches cannot retry.
+
+The supported recovery scope here is catalog loading, account verification,
+and audio playback initialization. Existing video-specific and mutation error
+surfaces are not claimed to have new recovery flows.
+
+Research checked on 2026-10-28:
+[Google's unusual-traffic help](https://support.google.com/websearch/answer/86640?hl=en)
+describes user-completed browser verification, while the
+[yt-dlp FAQ](https://github.com/yt-dlp/yt-dlp/wiki/FAQ#http-error-429-too-many-requests-or-402-payment-required)
+notes that transferring a browser result to a separate client can also depend
+on matching cookies, IP, and sometimes User-Agent. The current public SDK
+bootstrap does not receive the browser account session. Thus this feature is
+honest guidance and explicit retry, not a verified CAPTCHA-state transfer or
+a guarantee that logging in removes the restriction.
+
+Validation of this change:
+
+- `go test -race ./... -timeout=180s` and `make check`: PASS. This includes
+  89 runtime tests, manifest/protocol checks, vet, and 200 message keys in
+  each of four locales.
+- Native view tests cover four languages, 420/1100 widths, anonymous and
+  connected accounts, new-account connection failures, and existing retry
+  actions. An independent native AUDIT app then exercised the production
+  catalog/controller/recovery callbacks using a synthetic 302 followed by
+  a synthetic 200. Real UI interaction confirmed request counts `1 → 1 → 2`
+  before opening Brave, after opening Brave, and after explicit retry.
+  Brave visibly opened the fixed YouTube Music homepage. Standard and
+  Premium UI fixtures retained their account/membership flags after retry;
+  the 420-point Premium dialog was readable with both actions visible.
+- Those native scenarios used synthetic account flags and HTTP responses,
+  no real account or CAPTCHA. They establish interaction behavior only,
+  not successful transfer of a browser verification result. The AUDIT app
+  was closed, and its new browser tab was closed after the test.
+- `make build`: PASS. The formal app was not launched in this validation.
+  Package audit passed for 19 runtime modules, 139 manifest entries, four
+  embedded locales, app signing, DMG integrity, and identical app content
+  inside the DMG. Distribution signing remains PARTIAL: the app uses ad-hoc
+  signing and the DMG is unsigned.
+- App executable SHA256:
+  `b7058e83b5022a516693ccf517618d4f665ed33ef853ea76315f4aea04ba3991`.
+  DMG SHA256:
+  `85b356d6f9ae6535c7ceae8c5b7a8c3fff90d7a83f7386b6862397b86c7a1c13`.
+
+Portable evidence is in `docs/audits/2026-10-28-service-recovery/`.
+
 The measurements and hashes below describe earlier builds only.
 
 ## Historical anonymous implementation and measurements

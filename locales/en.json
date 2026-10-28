@@ -684,5 +684,19 @@
   "nativeAccountBrowserError": "Could not open Brave. Install or open Brave Browser, then retry.",
   "nativeAccountCopyExtensions": "Copy Brave extensions address",
   "nativeAccountAddressCopied": "Copied brave://extensions/. Paste it into Brave’s address bar and press Return.",
-  "nativeAccountClipboardError": "Could not copy the address. Enter brave://extensions/ in Brave’s address bar."
+  "nativeAccountClipboardError": "Could not copy the address. Enter brave://extensions/ in Brave’s address bar.",
+  "nativeVerificationRequired": "Google requires additional verification",
+  "nativeConsentRequired": "YouTube requires a consent step",
+  "nativeServiceSignInRequired": "YouTube requested sign-in",
+  "nativeRecoveryHelp": "How to resolve",
+  "nativeVerificationHelp": "ytmgo cannot complete this verification in the app. Open YouTube Music in Brave. If the website asks for verification, follow its instructions, then return here and retry.",
+  "nativeConsentHelp": "YouTube redirected this request to a consent page. Open YouTube Music in Brave, review any consent request on the website, then return here and retry.",
+  "nativeServiceSignInHelp": "YouTube redirected this request to sign-in. Open YouTube Music in Brave and follow any sign-in request on the website, then return here and retry.",
+  "nativeRecoveryLimits": "Browser steps may not unblock this app request. If retry still fails, try again later.",
+  "nativeRecoverySignInHint": "You can also try signing in to ytmgo, but signing in does not guarantee that this restriction will be removed.",
+  "nativeRecoveryConnectedHint": "Your account is still connected. This restriction does not establish that your session or membership has expired.",
+  "nativeServiceRedirect": "YouTube returned a page redirect that ytmgo cannot handle",
+  "nativeServiceRedirectHelp": "YouTube redirected this request to another page. ytmgo cannot confirm whether verification or another browser step is needed. Open YouTube Music in Brave, follow any website instructions, then return here and retry.",
+  "nativeRecoveryConnectionHint": "This account connection has not completed. Retrying will reopen the browser account transfer; your existing account, if any, will be kept.",
+  "nativeRecoveryReconnect": "Reconnect account"
 }

@@ -280,6 +280,18 @@ installed SDK and stops on disagreement; there is no automatic version change.
 manifest tests, five protocol-version tests, vet, and 186 localized messages.
 `make build` produced the updated ad-hoc signed arm64 app and DMG. No installed
 Keychain restore or public release is claimed by these checks.
+The bundle's protocol/dependency manifests, strict deep app signature, DMG
+integrity and embedded-app equality passed. The DMG itself remains unsigned.
+Evidence: `build/diagnostics/premium-direct-api-20261028/artifact-direct-api.json`.
+Updated executable SHA256:
+`6a44936a87a03a0544cbafbedd62209fcd4b3e90983445e3cf970f15531f2fd0`.
+Updated DMG SHA256:
+`6c3782fc49c1632a311296bf3a47ba73c72052dd08eab3cbfee985948082b0d0`.
+These replace the previous files at `build/darwin-arm64/`; earlier hashes in
+this document remain historical evidence. Additional public checks of the
+corrected catalog returned 30 anonymous Home items and 10 search items. One
+Home continuation request completed but produced no parsed items, so this is
+not a full live pagination acceptance claim.
 
 The valid Premium idle follow-up used a fresh sign-in, the native Library page,
 and no playback before the measurement. After at least 30 seconds of settling,

@@ -2,14 +2,44 @@ package main
 
 import "github.com/egoist/mygo/ui"
 
-// nativePalette preserves the original ytmgo design roles in native rendering.
-type nativePalette struct{ base, surface, raised, input, highlight, text, secondary, muted, accent, onAccent, line ui.Color }
+// nativePalette holds the Spotify-style roles: a black window frame, near-black
+// panels, neutral elevated surfaces and white text, with ytmgo's own accent
+// reserved for playback state and primary play actions.
+type nativePalette struct {
+	base, surface, raised, input, highlight ui.Color
+	text, secondary, muted                  ui.Color
+	accent, onAccent, line                  ui.Color
+	hover, press                            ui.Color
+	dark                                    bool
+}
 
 func palette(dark bool) nativePalette {
 	if dark {
-		return nativePalette{ui.Hex("#050506"), ui.Hex("#121214"), ui.Hex("#1b1b1e"), ui.Hex("#242428"), ui.Hex("#2f2f34"), ui.Hex("#f5f5f7"), ui.Hex("#a8a8af"), ui.Hex("#84848c"), ui.Hex("#ff5a4f"), ui.Hex("#0b0b0c"), ui.RGBA(255, 255, 255, 0.07)}
+		return nativePalette{
+			base: ui.Hex("#000000"), surface: ui.Hex("#121212"), raised: ui.Hex("#1f1f1f"), input: ui.Hex("#242424"), highlight: ui.Hex("#2a2a2a"),
+			text: ui.Hex("#ffffff"), secondary: ui.Hex("#b3b3b3"), muted: ui.Hex("#8f8f8f"),
+			accent: ui.Hex("#ff5a4f"), onAccent: ui.Hex("#000000"), line: ui.RGBA(255, 255, 255, 0.10),
+			hover: ui.RGBA(255, 255, 255, 0.07), press: ui.RGBA(255, 255, 255, 0.12), dark: true,
+		}
 	}
-	return nativePalette{ui.Hex("#e7e7ea"), ui.Hex("#ffffff"), ui.Hex("#f4f4f6"), ui.Hex("#ebebee"), ui.Hex("#e1e1e5"), ui.Hex("#121214"), ui.Hex("#55555c"), ui.Hex("#6b6b72"), ui.Hex("#e8382d"), ui.Hex("#ffffff"), ui.RGBA(0, 0, 0, 0.07)}
+	return nativePalette{
+		base: ui.Hex("#e9e9eb"), surface: ui.Hex("#ffffff"), raised: ui.Hex("#f2f2f3"), input: ui.Hex("#ececee"), highlight: ui.Hex("#e1e1e4"),
+		text: ui.Hex("#121212"), secondary: ui.Hex("#5a5a5f"), muted: ui.Hex("#6b6b70"),
+		accent: ui.Hex("#e8382d"), onAccent: ui.Hex("#ffffff"), line: ui.RGBA(0, 0, 0, 0.10),
+		hover: ui.RGBA(0, 0, 0, 0.05), press: ui.RGBA(0, 0, 0, 0.09),
+	}
+}
+
+// nativeHeaderTints colour the top of pages without artwork, as Spotify's
+// header gradients do. Each route keeps one stable tint.
+var nativeHeaderTints = []ui.Color{ui.Hex("#2d46b9"), ui.Hex("#8d67ab"), ui.Hex("#1e7a6b"), ui.Hex("#b0472b"), ui.Hex("#477d95"), ui.Hex("#7d4b32"), ui.Hex("#5179a1"), ui.Hex("#a13d63")}
+
+func nativeHeaderTint(key string) ui.Color {
+	h := uint32(2166136261)
+	for i := 0; i < len(key); i++ {
+		h = (h ^ uint32(key[i])) * 16777619
+	}
+	return nativeHeaderTints[h%uint32(len(nativeHeaderTints))]
 }
 
 func nativeTheme(dark bool) *ui.Theme {
@@ -30,14 +60,14 @@ func nativeTheme(dark bool) *ui.Theme {
 	t.AccentPressed = p.accent
 	t.AccentText = p.onAccent
 	t.Selection = p.accent.Alpha(0.18)
-	t.Focus = p.accent
+	t.Focus = p.text
 	t.FontSize = 14
-	t.Radius = 8
-	t.ScrollbarWidth = 4
+	t.Radius = 6
+	t.ScrollbarWidth = 6
 	return t
 }
 
-// Every glyph is the original 24 px / 1.8 px design, parsed once for the native renderer.
+// Every glyph shares one 24 px grid and 1.8 px round stroke, parsed once for the native renderer.
 var nativeIconSources = map[string]string{
 	"home":         `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .7-1.53l7-6a2 2 0 0 1 2.6 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>`,
 	"home-fill":    `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10a2 2 0 0 1 .7-1.53l7-6a2 2 0 0 1 2.6 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2h-4v-7a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v7H5a2 2 0 0 1-2-2z"/></svg>`,
@@ -79,6 +109,7 @@ var nativeIconSources = map[string]string{
 	"user":         `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg>`,
 	"gear":         `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>`,
 	"note":         `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><path d="M6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M18 19a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg>`,
+	"clock":        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"/><path d="M12 6v6l4 2"/></svg>`,
 }
 
 var nativeIcons = func() map[string]*ui.SVG {

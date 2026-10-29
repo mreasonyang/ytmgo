@@ -52,6 +52,20 @@ type ViewActions struct {
 	artClipped                                          bool
 }
 
+// Window geometry. Above 1180 DIPs the library is a full panel and Now Playing
+// docks on the right; down to 761 the library is a rail and Now Playing floats;
+// at 760 and below the window becomes a single column with a mini player and
+// a bottom tab bar.
+const (
+	nativeTopbarHeight  = 64
+	nativePlayerHeight  = 80
+	nativeLibraryWidth  = 300
+	nativeRailWidth     = 72
+	nativePanelWidth    = 360
+	nativeCompactTabbar = 64
+	nativeExpandedBar   = 140
+)
+
 func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 	before := nativePresentation(m)
 	nativeKeyboard(c, m, a)
@@ -70,320 +84,715 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 	}
 	c.SetTheme(nativeTheme(dark))
 	p := palette(dark)
-	compact := width <= 760
-	gutter, playerHeight := float32(8), float32(84)
-	if compact {
-		gutter, playerHeight = 0, 64
-		if m.Immersive {
-			playerHeight = 140
-		}
+	if width <= 760 {
+		nativeCompactFrame(c, m, a, p, width, height)
+	} else {
+		nativeDesktopFrame(c, m, a, p, width, height)
 	}
-	ui.Column(c).Fill().Background(p.base).TextColor(p.text).Gap(gutter).Children(func() {
-		ui.Row(c).Grow(1).MinHeight(0).AlignItems(ui.Stretch).Gap(gutter).Padding(gutter, gutter, 0).Children(func() {
-			if !compact && !m.Immersive {
-				nativeSidebar(c, m, a, p, width)
-			}
-			ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Radius(12).Background(p.surface).Clip().Children(func() {
-				nativeBackdrop(c, m, a)
-				if m.Immersive {
-					availableHeight := height - playerHeight
-					if compact {
-						availableHeight -= 64
-					}
-					nativeImmersive(c, m, a, p, width, availableHeight)
-				} else {
-					nativeTopbar(c, m, a, p, compact)
-					nativeContent(c, m, a, p, compact)
-				}
-			})
-			if m.Panel && !m.Immersive && width > 1180 {
-				nativeNowPlaying(c, m, a, p, 360, false).Width(360).Shrink(0)
-			}
-		})
-		nativeTransport(c, m, a, p, compact, width).Height(playerHeight).Shrink(0)
-		if compact {
-			nativeTabbar(c, m, a, p)
-		}
-	})
 	if m.Panel && !m.Immersive && width <= 1180 {
+		panelWidth := min(width-16, 380)
 		ui.DialogBase(c, &m.Panel, func(backdrop, panel ui.Element) {
-			backdrop.Background(ui.RGBA(0, 0, 0, 0.35))
-			panel.Width(min(width-16, 380)).Height(min(height-100, 760)).Radius(16).Background(p.surface).Clip().Children(func() { nativeNowPlaying(c, m, a, p, min(width-16, 380), true).Fill() })
+			backdrop.Background(ui.RGBA(0, 0, 0, 0.5))
+			panel.Width(panelWidth).Height(min(height-100, 760)).Radius(8).Background(p.surface).Shadow(0, 16, 48, 0, ui.RGBA(0, 0, 0, 0.5)).Clip().Children(func() {
+				nativeNowPlaying(c, m, a, p, panelWidth, true).Fill()
+			})
 		}).Label(a.Tr("shellNowPlaying"))
 	}
 	nativeSettings(c, m, a, p, width, height)
 	nativeShortcuts(c, m, a, p, width, height)
 }
 
+// nativeDesktopFrame is Spotify's desktop arrangement: a global bar on the
+// window frame, three rounded panels, and the player bar across the bottom.
+func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {
+	ui.Column(c).Fill().Background(p.base).TextColor(p.text).Children(func() {
+		top := float32(8)
+		if !m.Immersive {
+			nativeTopbar(c, m, a, p, width)
+			top = 0
+		}
+		ui.Row(c).Grow(1).MinHeight(0).AlignItems(ui.Stretch).Gap(8).Padding(top, 8, 0).Children(func() {
+			if !m.Immersive {
+				nativeLibrary(c, m, a, p, width)
+			}
+			ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Radius(8).Background(p.surface).Clip().Children(func() {
+				nativeBackdrop(c, m, a, p)
+				nativePageLayer(c).Children(func() {
+					if m.Immersive {
+						nativeImmersive(c, m, a, p, width, height-nativePlayerHeight-top)
+					} else {
+						nativeContent(c, m, a, p, false)
+					}
+				})
+			})
+			if m.Panel && !m.Immersive && width > 1180 {
+				nativeNowPlaying(c, m, a, p, nativePanelWidth, false).Width(nativePanelWidth).Shrink(0)
+			}
+		})
+		nativePlayerBar(c, m, a, p, width).Height(nativePlayerHeight).Shrink(0)
+	})
+}
+
+// nativeCompactFrame follows Spotify's phone layout: one full-bleed page, a
+// floating mini player and a tab bar.
+func nativeCompactFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {
+	ui.Column(c).Fill().Background(p.base).TextColor(p.text).Children(func() {
+		ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Background(p.surface).Clip().Children(func() {
+			nativeBackdrop(c, m, a, p)
+			nativePageLayer(c).Children(func() {
+				if m.Immersive {
+					nativeImmersive(c, m, a, p, width, height-nativeExpandedBar-nativeCompactTabbar)
+				} else {
+					nativeCompactTopbar(c, m, a, p)
+					nativeContent(c, m, a, p, true)
+				}
+			})
+		})
+		if m.Immersive {
+			nativeExpandedTransport(c, m, a, p).Height(nativeExpandedBar).Shrink(0)
+		} else {
+			nativeMiniPlayer(c, m, a, p)
+		}
+		nativeTabbar(c, m, a, p)
+	})
+}
+
+// nativePageLayer holds a panel's page above its colour wash. MyGo paints
+// absolute elements above their in-flow siblings, so the page is absolute too
+// and follows the backdrop in paint order.
+func nativePageLayer(c *ui.Context) ui.Element {
+	return ui.Column(c).Absolute().Left(0).Top(0).WidthPercent(100).HeightPercent(100).MinHeight(0)
+}
+
 func nativeIconButton(c *ui.Context, name, label string, p nativePalette, active bool, hit float32) ui.Element {
 	b := ui.ButtonBase(c).Size(hit, hit).Shrink(0).Radius(hit / 2).Label(label).Tooltip(label).TextColor(p.secondary)
 	if active {
-		b.Selected(true).Background(p.highlight).TextColor(p.accent)
+		b.Selected(true).Background(ui.Transparent).TextColor(p.accent)
 	} else if b.Hovered() {
-		b.Background(p.raised).TextColor(p.text)
+		b.Background(p.hover).TextColor(p.text)
 	}
 	b.Children(func() {
-		ui.Icon(c, nativeIcons[name]).Size(22, 22)
+		icon := min(hit*0.6, 22)
+		ui.Icon(c, nativeIcons[name]).Size(icon, icon)
 		if active {
-			ui.Box(c).Absolute().Left((hit-3)/2).Bottom(2).Size(3, 3).Radius(2).Background(p.accent).PassThrough()
+			ui.Box(c).Absolute().Left((hit-4)/2).Bottom(1).Size(4, 4).Radius(2).Background(p.accent).PassThrough()
 		}
 	})
 	return b
 }
 
-func nativePill(c *ui.Context, label string, p nativePalette, selected bool) ui.Element {
-	b := ui.Button(c, label).MinHeight(36).Padding(7, 18).Radius(24).BorderWidth(0).FontWeight(600).Background(p.input).TextColor(p.text)
+// nativeCircleButton is the filled round button of the global bar.
+func nativeCircleButton(c *ui.Context, name, label string, p nativePalette, size float32, active bool) ui.Element {
+	b := ui.ButtonBase(c).Size(size, size).Shrink(0).Radius(size / 2).Label(label).Tooltip(label).Background(p.raised).TextColor(p.secondary)
+	if active {
+		b.Selected(true).Background(p.raised).TextColor(p.text)
+	}
+	if b.Hovered() {
+		b.Background(p.highlight).TextColor(p.text)
+	}
+	b.Children(func() { ui.Icon(c, nativeIcons[name]).Size(size/2, size/2) })
+	return b
+}
+
+// nativePill is a rounded text button; the primary form is Spotify's white
+// (in light appearance, black) call to action.
+func nativePill(c *ui.Context, label string, p nativePalette, primary bool) ui.Element {
+	b := ui.Button(c, label).MinHeight(36).Padding(7, 18).Radius(24).BorderWidth(0).FontWeight(700).Background(p.input).TextColor(p.text)
+	if primary {
+		b.Selected(true).Background(p.text).TextColor(p.base)
+		if b.Hovered() {
+			b.Background(p.text.Alpha(0.86))
+		}
+	} else if b.Hovered() {
+		b.Background(p.highlight)
+	}
+	return b
+}
+
+// nativeChip is a filter chip: translucent at rest, inverted when selected.
+func nativeChip(c *ui.Context, label string, p nativePalette, selected bool) ui.Element {
+	b := ui.Button(c, label).Height(32).MinHeight(32).Padding(0, 12).Radius(16).BorderWidth(0).FontSize(13).FontWeight(500).Background(p.hover).TextColor(p.text)
 	if selected {
 		b.Selected(true).Background(p.text).TextColor(p.base)
+	} else if b.Hovered() {
+		b.Background(p.press)
 	}
 	return b
 }
 
-func nativeSidebar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) {
-	full := width > 1180 && !m.SidebarCollapsed
-	sidebarWidth := float32(72)
-	if full {
-		sidebarWidth = 280
-	}
-	ui.Column(c).Width(sidebarWidth).Shrink(0).Gap(8).Children(func() {
-		ui.Column(c).Background(p.surface).Radius(12).Padding(16, 12).Gap(6).Children(func() {
-			ui.Row(c).Height(44).Gap(12).PaddingX(8).AlignItems(ui.Center).Children(func() {
-				brand := ui.ButtonBase(c).Size(32, 32).Radius(10).Background(p.accent).TextColor(p.onAccent).Label(a.Tr("shellBrandHome")).Children(func() { ui.Icon(c, nativeIcons["play"]).Size(23, 23) })
-				if brand.Clicked() {
-					a.Navigate("home")
-				}
-				if full {
-					ui.Text(c, "ytmgo").FontSize(22).FontWeight(800).Grow(1)
-					if nativeIconButton(c, "sidebar", a.Tr("shellSidebarCollapse"), p, false, 32).Clicked() {
-						m.SidebarCollapsed = true
-					}
-				}
-			})
-			for _, nav := range []struct{ route, key, icon string }{{"home", "shellNavHome", "home"}, {"explore", "shellNavExplore", "explore"}, {"library", "shellNavLibrary", "library"}} {
-				active := m.Route == nav.route
-				b := ui.ButtonBase(c.Key("nav-" + nav.route)).Height(44).PaddingX(10).Gap(16).Justify(ui.Start).Radius(8).Label(a.Tr(nav.key)).Tooltip(a.Tr(nav.key)).TextColor(p.secondary)
-				if active {
-					b.Selected(true).Background(ui.Transparent).TextColor(p.text)
-				}
-				if b.Hovered() {
-					b.Background(p.raised)
-				}
-				b.Children(func() {
-					icon := nav.icon
-					if active {
-						icon += "-fill"
-					}
-					ui.Icon(c, nativeIcons[icon]).Size(24, 24)
-					if full {
-						ui.Text(c, a.Tr(nav.key)).FontWeight(600)
-					}
-				})
-				if b.Clicked() {
-					a.Navigate(nav.route)
-				}
+func nativeTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) {
+	ui.Row(c).Height(nativeTopbarHeight).Shrink(0).PaddingX(16).Gap(16).AlignItems(ui.Center).Children(func() {
+		ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
+			brand := ui.ButtonBase(c).Size(32, 32).Shrink(0).Radius(16).Background(p.accent).TextColor(p.onAccent).Label(a.Tr("shellBrandHome")).Tooltip(a.Tr("shellBrandHome")).Children(func() { ui.Icon(c, nativeIcons["play"]).Size(18, 18) })
+			if brand.Clicked() {
+				a.Navigate("home")
+			}
+			ui.Box(c).Width(8).Shrink(0)
+			if nativeCircleButton(c, "back", a.Tr("shellBack"), p, 32, false).Disabled(!m.CanBack).Clicked() {
+				a.Back()
+			}
+			if nativeCircleButton(c, "forward", a.Tr("shellForward"), p, 32, false).Disabled(!m.CanForward).Clicked() {
+				a.Forward()
 			}
 		})
-		ui.Column(c).Grow(1).MinHeight(0).Background(p.surface).Radius(12).Padding(16, 12).Gap(20).Children(func() {
-			ui.Row(c).Height(32).PaddingX(8).Gap(16).AlignItems(ui.Center).TextColor(p.secondary).Children(func() {
-				if !full {
-					if width > 1180 {
-						if nativeIconButton(c, "sidebar", a.Tr("shellSidebarExpand"), p, false, 32).Clicked() {
-							m.SidebarCollapsed = false
-						}
-					} else {
-						ui.Icon(c, nativeIcons["library"]).Size(24, 24)
-					}
-				} else {
-					ui.Icon(c, nativeIcons["library"]).Size(24, 24)
-					ui.Text(c, a.Tr("shellLibraryTitle")).FontWeight(600)
-				}
-			})
-			if m.SignedIn && len(m.LibraryItems) > 0 {
-				scroll := ui.Scroll(c).Grow(1).MinHeight(0).Gap(4).Label(a.Tr("shellLibraryRegion"))
-				clipped := nativeArtworkViewport(c, a, scroll)
-				scroll.Children(func() {
-					for i, item := range m.LibraryItems {
-						b := ui.ButtonBase(c.Key(fmt.Sprintf("library-%d", i))).Height(56).Padding(4).Gap(10).Radius(8).Justify(ui.Start).Label(item.Title + " · " + item.Artist).Tooltip(item.Title)
-						if b.Hovered() {
-							b.Background(p.raised)
-						}
-						b.Children(func() {
-							nativeArtwork(c, item.Artwork, 40, 4, clipped, p)
-							if full {
-								ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
-									ui.Text(c, item.Title).FontWeight(600).MaxLines(1).Ellipsis("…")
-									ui.Text(c, item.Artist).FontSize(12).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
-								})
-							}
-						})
-						if b.Clicked() {
-							if item.ID != "" {
-								a.Play(item)
-							} else {
-								a.Open(item)
-							}
-						}
-					}
-				})
-			} else if full {
-				ui.Column(c).Padding(16).Gap(12).Radius(8).Background(p.raised).Children(func() {
-					ui.Text(c, a.Tr("shellLibraryEmptyTitle")).FontWeight(650)
-					hint := "shellLibraryEmptyBody"
-					if m.SignedIn {
-						hint = "nativeLibraryHint"
-					}
-					ui.Text(c, a.Tr(hint)).FontSize(13).TextColor(p.secondary).LineHeight(1.6)
-					if !m.SignedIn {
-						if nativePill(c, a.Tr("shellSignIn"), p, true).AlignSelf(ui.Start).Clicked() {
-							a.Account()
-						}
-					} else {
-						if nativePill(c, a.Tr("shellNavLibrary"), p, false).AlignSelf(ui.Start).Clicked() {
-							a.Navigate("library")
-						}
-					}
-				})
+		ui.Row(c).Width(min(560, width*0.46)).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
+			home := m.Route == "home"
+			icon := "home"
+			if home {
+				icon = "home-fill"
 			}
+			if nativeCircleButton(c, icon, a.Tr("shellNavHome"), p, 48, home).Clicked() {
+				a.Navigate("home")
+			}
+			nativeSearchField(c, m, a, p, 48, true).Grow(1)
+		})
+		ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(8).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+			if nativeIconButton(c, "settings", a.Tr("shellSettings"), p, m.Settings, 32).Clicked() {
+				m.Settings = !m.Settings
+			}
+			nativeAccount(c, m, a, p, width > 1180)
 		})
 	})
 }
 
-func nativeTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool) {
-	h, hit, pad := float32(64), float32(32), float32(16)
-	if compact {
-		h, hit, pad = 56, 44, 8
-	}
-	ui.Row(c).Height(h).Shrink(0).Padding(8, pad).Gap(8).AlignItems(ui.Center).Children(func() {
-		if nativeIconButton(c, "back", a.Tr("shellBack"), p, false, hit).Disabled(!m.CanBack).Clicked() {
+func nativeCompactTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
+	ui.Row(c).Height(60).Shrink(0).Padding(8, 8).Gap(4).AlignItems(ui.Center).Children(func() {
+		if nativeIconButton(c, "back", a.Tr("shellBack"), p, false, 44).Disabled(!m.CanBack).Clicked() {
 			a.Back()
 		}
-		if !compact {
-			if nativeIconButton(c, "forward", a.Tr("shellForward"), p, false, hit).Disabled(!m.CanForward).Clicked() {
-				a.Forward()
-			}
-		}
-		ui.Row(c).Grow(1).MinWidth(0).MaxWidth(560).Height(40).PaddingX(12).Gap(10).Radius(22).Background(p.input).AlignItems(ui.Center).Children(func() {
-			ui.Icon(c, nativeIcons["search"]).Size(20, 20).TextColor(p.secondary)
-			input := ui.TextInput(c.Key("search-input"), &m.Query).Grow(1).MinWidth(0).Height(38).Padding(0).BorderWidth(0).Background(ui.Transparent).Placeholder(a.Tr("shellSearchPlaceholder")).Label(a.Tr("shellNavSearch")).FontSize(15)
-			if m.FocusSearch {
-				input.Focus()
-				m.FocusSearch = false
-			}
-			if input.Submitted() && strings.TrimSpace(m.Query) != "" {
-				a.Search(m.Query)
-			}
-		})
-		if !compact {
-			ui.Spacer(c)
-			if m.SignedIn {
-				if nativeIconButton(c, "user", a.Tr("shellAccountManage"), p, false, 36).Clicked() {
-					a.Account()
-				}
-			} else {
-				if nativePill(c, a.Tr("shellSignIn"), p, true).Clicked() {
-					a.Account()
-				}
-			}
-		}
-		if nativeIconButton(c, "settings", a.Tr("shellSettings"), p, m.Settings, hit).Clicked() {
+		nativeSearchField(c, m, a, p, 44, false).Grow(1)
+		if nativeIconButton(c, "settings", a.Tr("shellSettings"), p, m.Settings, 44).Clicked() {
 			m.Settings = !m.Settings
 		}
 	})
 }
 
-func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool) {
-	inset := float32(32)
-	if compact {
-		inset = 16
+// nativeSearchField is the persistent search pill. On desktop it ends with the
+// Explore button, where Spotify places Browse.
+func nativeSearchField(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, h float32, explore bool) ui.Element {
+	field := ui.Row(c).MinWidth(0).Height(h).PaddingStart(12).PaddingEnd(6).Gap(10).Radius(h/2).Background(p.raised).Border(2, ui.Transparent).AlignItems(ui.Center)
+	if field.FocusWithin() {
+		field.BorderColor(p.text)
+	} else if field.Hovered() {
+		field.Background(p.highlight).BorderColor(p.line)
 	}
-	scroll := ui.Scroll(c.Key("content-" + m.Route + "-" + m.Page.Title)).Grow(1).MinHeight(0).Padding(inset).Gap(28).Label(a.Tr("shellContent"))
-	a = nativeArtworkViewport(c, a, scroll)
-	scroll.Children(func() {
-		if m.Loading {
-			ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
-				ui.Spinner(c).Size(20, 20).Label(a.Tr("shellLoading"))
-				ui.Text(c, a.Tr("shellLoading")).TextColor(p.secondary)
-			})
+	return field.Children(func() {
+		ui.Icon(c, nativeIcons["search"]).Size(22, 22).TextColor(p.secondary)
+		input := ui.TextInput(c.Key("search-input"), &m.Query).Grow(1).MinWidth(0).Height(h - 6).Padding(0).BorderWidth(0).Background(ui.Transparent).Placeholder(a.Tr("shellSearchPlaceholder")).Label(a.Tr("shellNavSearch")).FontSize(15)
+		if m.FocusSearch {
+			input.Focus()
+			m.FocusSearch = false
 		}
-		if m.Error != "" {
-			ui.Column(c).Padding(20).Gap(12).Background(p.raised).Radius(12).Children(func() {
-				ui.Text(c, m.Error).TextColor(p.secondary)
-				if m.ErrorScope != errorAccount && m.ErrorScope != errorAccountConnect && nativePill(c, a.Tr("buttonRetry"), p, false).AlignSelf(ui.Start).Clicked() {
-					a.Reload()
+		if input.Submitted() && strings.TrimSpace(m.Query) != "" {
+			a.Search(m.Query)
+		}
+		if explore {
+			ui.Box(c).Size(1, 24).Shrink(0).Background(p.line)
+			active := m.Route == "explore"
+			icon := "explore"
+			if active {
+				icon = "explore-fill"
+			}
+			b := nativeIconButton(c, icon, a.Tr("shellNavExplore"), p, false, 36)
+			if active {
+				b.Selected(true).Background(ui.Transparent).TextColor(p.text)
+			}
+			if b.Clicked() {
+				a.Navigate("explore")
+			}
+		}
+	})
+}
+
+// nativeAccountStatus names the three account states the controller reports.
+func nativeAccountStatus(m *UIModel, a ViewActions) string {
+	switch {
+	case !m.SignedIn:
+		return a.Tr("shellAccountSignedOut")
+	case m.MusicPremium:
+		return a.Tr("shellAccountPremium")
+	}
+	return a.Tr("shellAccountStandard")
+}
+
+func nativeAvatar(c *ui.Context, m *UIModel, p nativePalette, size float32) ui.Element {
+	bg, fg := p.highlight, p.secondary
+	if m.SignedIn {
+		bg, fg = p.muted, p.surface
+	}
+	if m.SignedIn && m.MusicPremium {
+		bg, fg = p.accent, p.onAccent
+	}
+	return ui.Box(c).Size(size, size).Shrink(0).Radius(size / 2).Background(bg).TextColor(fg).Center().Children(func() {
+		ui.Icon(c, nativeIcons["user"]).Size(size*0.56, size*0.56)
+	})
+}
+
+// nativeAccount is the top-right control: a sign-in call to action when
+// signed out, otherwise an avatar whose menu states the account's plan.
+func nativeAccount(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, badge bool) {
+	if !m.SignedIn {
+		if nativePill(c, a.Tr("shellSignIn"), p, true).Clicked() {
+			a.Account()
+		}
+		return
+	}
+	status := nativeAccountStatus(m, a)
+	b := ui.ButtonBase(c.Key("account")).Height(48).MinWidth(48).Shrink(0).Padding(8).Gap(8).Radius(24).Background(p.raised).Label(a.Tr("menuAccount") + " · " + status).Tooltip(status)
+	if b.Hovered() {
+		b.Background(p.highlight)
+	}
+	b.Children(func() {
+		if m.MusicPremium && badge {
+			ui.Text(c, a.Tr("shellPremiumBadge")).PaddingStart(6).FontSize(12).FontWeight(700).TextColor(p.accent)
+		}
+		nativeAvatar(c, m, p, 32)
+	})
+	b.Menu(func(menu *ui.Menu) {
+		menu.Item(status).Disabled(true)
+		menu.Separator()
+		if menu.Item(a.Tr("shellAccountManage")).Chosen() {
+			a.Account()
+		}
+		if menu.Item(a.Tr("shellSettings")).Chosen() {
+			m.Settings = true
+		}
+		menu.Separator()
+		if menu.Item(a.Tr("shellSignOut")).Chosen() {
+			a.SignOut()
+		}
+	})
+}
+
+// Library filters, in Spotify's order. Songs include music videos.
+var nativeLibraryFilters = []struct{ kind, key string }{{"playlist", "shellFilterPlaylists"}, {"album", "shellFilterAlbums"}, {"artist", "shellFilterArtists"}, {"song", "shellFilterSongs"}}
+
+func nativeLibraryKind(item catalog.Item) string {
+	switch {
+	case item.Kind == "playlist" || item.Kind == "album" || item.Kind == "artist":
+		return item.Kind
+	case item.ID != "":
+		return "song"
+	}
+	return ""
+}
+
+func nativeKindLabel(item catalog.Item, a ViewActions) string {
+	switch nativeLibraryKind(item) {
+	case "playlist":
+		return a.Tr("shellKindPlaylist")
+	case "album":
+		return a.Tr("shellKindAlbum")
+	case "artist":
+		return a.Tr("shellKindArtist")
+	case "song":
+		if item.Kind == "video" {
+			return a.Tr("nativeVideo")
+		}
+		return a.Tr("shellKindSong")
+	}
+	return ""
+}
+
+func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) {
+	full := width > 1180 && !m.SidebarCollapsed
+	panelWidth := float32(nativeRailWidth)
+	if full {
+		panelWidth = nativeLibraryWidth
+	}
+	panel := ui.Column(c).Width(panelWidth).Shrink(0).MinHeight(0).Background(p.surface).Radius(8).Clip()
+	filter := ui.Local(panel, "library-filter", func() string { return "" })
+	panel.Children(func() {
+		libraryIcon := "library"
+		if m.Route == "library" {
+			libraryIcon = "library-fill"
+		}
+		if full {
+			ui.Row(c).Height(56).Shrink(0).Padding(8, 12).Gap(8).AlignItems(ui.Center).Children(func() {
+				b := ui.ButtonBase(c.Key("library-title")).Grow(1).MinWidth(0).Height(40).PaddingX(8).Gap(12).Justify(ui.Start).Radius(6).Label(a.Tr("shellNavLibrary")).Tooltip(a.Tr("shellNavLibrary")).TextColor(p.secondary)
+				if m.Route == "library" || b.Hovered() {
+					b.TextColor(p.text)
+				}
+				b.Children(func() {
+					ui.Icon(c, nativeIcons[libraryIcon]).Size(24, 24)
+					ui.Text(c, a.Tr("shellLibraryTitle")).FontSize(16).FontWeight(700).MaxLines(1).Ellipsis("…")
+				})
+				if b.Clicked() {
+					a.Navigate("library")
+				}
+				if nativeIconButton(c, "sidebar", a.Tr("shellSidebarCollapse"), p, false, 32).Clicked() {
+					m.SidebarCollapsed = true
+				}
+			})
+		} else {
+			ui.Column(c).Shrink(0).Padding(12, 0, 4).Gap(4).AlignItems(ui.Center).Children(func() {
+				if width > 1180 {
+					if nativeIconButton(c, "sidebar", a.Tr("shellSidebarExpand"), p, false, 40).Clicked() {
+						m.SidebarCollapsed = false
+					}
+				}
+				b := nativeIconButton(c, libraryIcon, a.Tr("shellNavLibrary"), p, false, 40)
+				if m.Route == "library" {
+					b.Selected(true).Background(ui.Transparent).TextColor(p.text)
+				}
+				if b.Clicked() {
+					a.Navigate("library")
 				}
 			})
 		}
-		if m.Page.Title != "" {
-			ui.Column(c).Gap(8).Children(func() {
-				ui.Text(c, m.Page.Title).FontSize(32).FontWeight(760).LineHeight(1.2).Role(ui.RoleHeading)
+		var items []catalog.Item
+		if m.SignedIn {
+			items = m.LibraryItems
+		}
+		if len(items) == 0 {
+			if full {
+				nativeLibraryPrompt(c, m, a, p)
+			}
+			return
+		}
+		present := map[string]bool{}
+		for _, item := range items {
+			present[nativeLibraryKind(item)] = true
+		}
+		if !present[*filter] {
+			*filter = ""
+		}
+		kinds := 0
+		for _, f := range nativeLibraryFilters {
+			if present[f.kind] {
+				kinds++
+			}
+		}
+		// Chips appear only when they separate at least two kinds of item.
+		if full && kinds > 1 {
+			ui.Row(c).Shrink(0).Padding(0, 16, 8).Gap(8).AlignItems(ui.Center).Children(func() {
+				if *filter != "" {
+					clear := nativeIconButton(c, "close", a.Tr("shellFilterClear"), p, false, 32).Background(p.hover)
+					if clear.Clicked() {
+						*filter = ""
+					}
+				}
+				for _, f := range nativeLibraryFilters {
+					if !present[f.kind] || (*filter != "" && *filter != f.kind) {
+						continue
+					}
+					if nativeChip(c, a.Tr(f.key), p, *filter == f.kind).Clicked() {
+						if *filter == f.kind {
+							*filter = ""
+						} else {
+							*filter = f.kind
+						}
+					}
+				}
+			})
+		}
+		pad := float32(8)
+		if !full {
+			pad = 4
+		}
+		scroll := ui.Scroll(c).Grow(1).MinHeight(0).Padding(0, pad, 8).Label(a.Tr("shellLibraryRegion"))
+		clipped := nativeArtworkViewport(c, a, scroll)
+		scroll.Children(func() {
+			for i, item := range items {
+				if *filter != "" && nativeLibraryKind(item) != *filter {
+					continue
+				}
+				nativeLibraryRow(c.Key(fmt.Sprintf("library-%d", i)), item, m, clipped, p, full)
+			}
+		})
+	})
+}
+
+func nativeLibraryPrompt(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
+	ui.Column(c).Padding(8, 8).Children(func() {
+		ui.Column(c).Padding(20).Gap(12).Radius(8).Background(p.raised).Children(func() {
+			ui.Text(c, a.Tr("shellLibraryEmptyTitle")).FontSize(16).FontWeight(700)
+			hint := "shellLibraryEmptyBody"
+			if m.SignedIn {
+				hint = "nativeLibraryHint"
+			}
+			ui.Text(c, a.Tr(hint)).FontSize(14).LineHeight(1.5).TextColor(p.secondary)
+			if !m.SignedIn {
+				if nativePill(c, a.Tr("shellSignIn"), p, true).AlignSelf(ui.Start).MarginY(8).Clicked() {
+					a.Account()
+				}
+			} else if nativePill(c, a.Tr("shellNavLibrary"), p, true).AlignSelf(ui.Start).MarginY(8).Clicked() {
+				a.Navigate("library")
+			}
+		})
+	})
+}
+
+func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p nativePalette, full bool) {
+	open := item.BrowseID != "" && m.Route == "browse:"+item.BrowseID
+	playing := item.ID != "" && item.ID == m.Current.ID
+	b := ui.ButtonBase(c).Height(64).Padding(8).Gap(12).Radius(6).Justify(ui.Start).Label(item.Title + " · " + item.Artist).Tooltip(item.Title)
+	if !full {
+		b.Padding(4).Justify(ui.Center)
+	}
+	if open {
+		b.Selected(true).Background(p.press)
+	} else if b.Hovered() {
+		b.Background(p.hover)
+	}
+	b.Children(func() {
+		radius := float32(4)
+		if item.Kind == "artist" {
+			radius = 24
+		}
+		nativeArtwork(c, item.Artwork, 48, radius, a, p)
+		if !full {
+			return
+		}
+		ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
+			title := ui.Text(c, item.Title).FontSize(15).FontWeight(500).MaxLines(1).Ellipsis("…")
+			if playing || open {
+				title.TextColor(p.accent)
+			}
+			subtitle := nativeKindLabel(item, a)
+			if item.Artist != "" {
+				if subtitle != "" {
+					subtitle += " · "
+				}
+				subtitle += item.Artist
+			}
+			ui.Text(c, subtitle).FontSize(13).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+		})
+		if playing {
+			ui.Icon(c, nativeIcons["volume"]).Size(16, 16).TextColor(p.accent)
+		}
+	})
+	b.ContextMenu(nativeTrackMenu(item, a))
+	if b.Clicked() {
+		if item.ID != "" {
+			a.Play(item)
+		} else {
+			a.Open(item)
+		}
+	}
+}
+
+func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool) {
+	inset := float32(24)
+	if compact {
+		inset = 16
+	}
+	scroll := ui.Scroll(c.Key("content-" + m.Route + "-" + m.Page.Title)).Grow(1).MinHeight(0).Label(a.Tr("shellContent"))
+	contentWidth := scroll.Bounds().W
+	a = nativeArtworkViewport(c, a, scroll)
+	scroll.Children(func() {
+		if strings.HasPrefix(m.Route, "browse:") && m.Page.Title != "" {
+			nativeCollectionHeader(c, m, a, p, compact, inset, contentWidth)
+		} else if m.Page.Title != "" {
+			top := float32(32)
+			if compact {
+				top = 8
+			}
+			ui.Column(c).Padding(top, inset, 0).Gap(8).Children(func() {
+				size := float32(32)
+				if compact {
+					size = 26
+				}
+				ui.Text(c, m.Page.Title).FontSize(size).FontWeight(800).LineHeight(1.15).MaxLines(2).Ellipsis("…").Role(ui.RoleHeading)
 				if m.Page.Subtitle != "" {
 					ui.Text(c, m.Page.Subtitle).TextColor(p.secondary).FontSize(14)
 				}
 			})
 		}
-		if m.Route == "library" && !m.SignedIn {
-			ui.Column(c).Padding(24).Gap(14).Radius(12).Background(p.raised).Children(func() {
-				ui.Text(c, a.Tr("shellLibraryEmptyTitle")).FontSize(24).FontWeight(700)
-				ui.Text(c, a.Tr("shellLibraryEmptyBody")).TextColor(p.secondary)
-				if nativePill(c, a.Tr("shellSignIn"), p, true).AlignSelf(ui.Start).Clicked() {
-					a.Account()
-				}
-			})
+		ui.Column(c).Padding(20, inset, 32).Gap(32).Children(func() {
+			nativePageBody(c, m, a, p, compact, contentWidth)
+		})
+	})
+}
+
+func nativePageBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool, contentWidth float32) {
+	if m.Loading {
+		ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
+			ui.Spinner(c).Size(20, 20).Label(a.Tr("shellLoading"))
+			ui.Text(c, a.Tr("shellLoading")).TextColor(p.secondary)
+		})
+	}
+	if m.Error != "" {
+		ui.Column(c).Padding(20).Gap(12).Background(p.raised).Radius(8).Children(func() {
+			ui.Text(c, m.Error).TextColor(p.secondary)
+			if m.ErrorScope != errorAccount && m.ErrorScope != errorAccountConnect && nativePill(c, a.Tr("buttonRetry"), p, true).AlignSelf(ui.Start).Clicked() {
+				a.Reload()
+			}
+		})
+	}
+	if m.Route == "library" && !m.SignedIn {
+		ui.Column(c).Padding(24).Gap(14).Radius(8).Background(p.raised).Children(func() {
+			ui.Text(c, a.Tr("shellLibraryEmptyTitle")).FontSize(24).FontWeight(800)
+			ui.Text(c, a.Tr("shellLibraryEmptyBody")).TextColor(p.secondary)
+			if nativePill(c, a.Tr("shellSignIn"), p, true).AlignSelf(ui.Start).Clicked() {
+				a.Account()
+			}
+		})
+	}
+	if m.Route == "home" && m.SignedIn && len(m.LibraryItems) > 0 {
+		columns := 4
+		if compact || (contentWidth > 0 && contentWidth < 900) {
+			columns = 2
 		}
-		for i, shelf := range m.Page.Shelves {
-			ui.Column(c.Key(fmt.Sprintf("shelf-%d", i))).Gap(16).Children(func() {
-				if shelf.Title != "" {
-					ui.Text(c, shelf.Title).FontSize(24).FontWeight(720).Role(ui.RoleHeading)
+		ui.Grid(c).Columns(columns).Gap(8).Children(func() {
+			for i, item := range m.LibraryItems[:min(len(m.LibraryItems), 8)] {
+				nativeShortcutTile(c.Key(fmt.Sprintf("shortcut-%d", i)), item, m, a, p)
+			}
+		})
+	}
+	browse := strings.HasPrefix(m.Route, "browse:")
+	for i, shelf := range m.Page.Shelves {
+		ui.Column(c.Key(fmt.Sprintf("shelf-%d", i))).Gap(12).Children(func() {
+			if shelf.Title != "" {
+				size := float32(24)
+				if compact {
+					size = 20
 				}
-				if shelf.Title == "" || (m.Route == "search" && nativeSongShelf(shelf.Items)) {
-					ui.Column(c).Gap(4).Children(func() {
-						for j, item := range shelf.Items {
-							nativeTrack(c.Key(fmt.Sprintf("list-%d", j)), item, j, m, a, p, compact, false)
-						}
-					})
-				} else if nativeSongShelf(shelf.Items) {
-					shelfScroll := ui.ScrollHorizontal(c).Gap(16).PaddingY(4).Height(272)
-					clipped := nativeArtworkViewport(c, a, shelfScroll)
-					shelfScroll.Children(func() {
-						for start := 0; start < len(shelf.Items); start += 4 {
-							ui.Column(c.Key(fmt.Sprintf("songs-%d", start))).Width(312).Shrink(0).Gap(4).Children(func() {
-								for j := start; j < min(start+4, len(shelf.Items)); j++ {
-									nativeTrack(c.Key(fmt.Sprintf("song-%d", j)), shelf.Items[j], j, m, clipped, p, true, false)
-								}
-							})
-						}
-					})
-				} else {
-					shelfScroll := ui.ScrollHorizontal(c).Gap(16).PaddingY(4).Height(240)
-					clipped := nativeArtworkViewport(c, a, shelfScroll)
-					shelfScroll.Children(func() {
-						for j, item := range shelf.Items {
-							nativeCard(c.Key(fmt.Sprintf("card-%d", j)), item, clipped, p, compact)
-						}
-					})
+				ui.Text(c, shelf.Title).FontSize(size).FontWeight(800).MaxLines(1).Ellipsis("…").Role(ui.RoleHeading)
+			}
+			switch {
+			case shelf.Title == "" || (m.Route == "search" && nativeSongShelf(shelf.Items)):
+				nativeTrackList(c, shelf.Items, m, a, p, compact, browse)
+			case nativeSongShelf(shelf.Items):
+				columnWidth := float32(340)
+				if compact {
+					columnWidth = 300
 				}
-			})
-		}
-		if len(m.Page.Shelves) == 0 && len(m.Page.Items) > 0 {
-			ui.Column(c).Gap(4).Children(func() {
+				shelfScroll := ui.ScrollHorizontal(c).Gap(16).PaddingY(4).Height(4*56 + 8)
+				clipped := nativeArtworkViewport(c, a, shelfScroll)
+				shelfScroll.Children(func() {
+					for start := 0; start < len(shelf.Items); start += 4 {
+						ui.Column(c.Key(fmt.Sprintf("songs-%d", start))).Width(columnWidth).Shrink(0).Children(func() {
+							for j := start; j < min(start+4, len(shelf.Items)); j++ {
+								nativeTrack(c.Key(fmt.Sprintf("song-%d", j)), shelf.Items[j], j, m, clipped, p, nativeTrackRow, true)
+							}
+						})
+					}
+				})
+			default:
+				size := nativeCardArt(compact)
+				shelfScroll := ui.ScrollHorizontal(c).PaddingY(4).Height(size + 112).MarginX(-12)
+				clipped := nativeArtworkViewport(c, a, shelfScroll)
+				shelfScroll.Children(func() {
+					for j, item := range shelf.Items {
+						nativeCard(c.Key(fmt.Sprintf("card-%d", j)), item, m, clipped, p, compact)
+					}
+				})
+			}
+		})
+	}
+	if len(m.Page.Shelves) == 0 && len(m.Page.Items) > 0 {
+		if nativeSongShelf(m.Page.Items) {
+			nativeTrackList(c, m.Page.Items, m, a, p, compact, browse)
+		} else {
+			ui.Row(c).Wrap().MarginX(-12).Children(func() {
 				for i, item := range m.Page.Items {
-					nativeTrack(c.Key(fmt.Sprintf("track-%d", i)), item, i, m, a, p, compact, false)
+					nativeCard(c.Key(fmt.Sprintf("item-%d", i)), item, m, a, p, compact)
 				}
 			})
 		}
-		if m.Page.Continuation != "" {
-			if nativePill(c, a.Tr("nativeLoadMore"), p, false).AlignSelf(ui.Center).Disabled(m.Loading || a.LoadMore == nil).Clicked() {
-				a.LoadMore()
+	}
+	if m.Page.Continuation != "" {
+		if nativePill(c, a.Tr("nativeLoadMore"), p, false).AlignSelf(ui.Center).Disabled(m.Loading || a.LoadMore == nil).Clicked() {
+			a.LoadMore()
+		}
+	}
+	if !m.Loading && m.Error == "" && len(m.Page.Items) == 0 && len(m.Page.Shelves) == 0 && !(m.Route == "library" && !m.SignedIn) {
+		ui.Column(c).Padding(48, 16).Gap(12).AlignItems(ui.Center).Children(func() {
+			ui.Icon(c, nativeIcons["search"]).Size(48, 48).TextColor(p.muted)
+			ui.Text(c, a.Tr("nativeEmptyResults")).FontSize(20).FontWeight(700)
+			ui.Text(c, a.Tr("shellSearchPlaceholder")).TextColor(p.secondary)
+		})
+	}
+}
+
+// nativeCollectionHeader is the album/playlist/artist hero: cover, display
+// title and a primary play button over the page's colour wash.
+func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool, inset, contentWidth float32) {
+	if contentWidth == 0 {
+		contentWidth = 960
+	}
+	title := func(size float32) {
+		ui.Text(c, m.Page.Title).FontSize(size).FontWeight(800).LineHeight(1.08).MaxLines(2).Ellipsis("…").Role(ui.RoleHeading)
+		if m.Page.Subtitle != "" {
+			ui.Text(c, m.Page.Subtitle).FontSize(14).FontWeight(500).TextColor(p.secondary).MaxLines(2).Ellipsis("…")
+		}
+	}
+	if compact {
+		ui.Column(c).Padding(8, inset, 0).Gap(12).Children(func() {
+			if m.Page.Artwork != "" {
+				nativeArtwork(c, m.Page.Artwork, min(contentWidth-2*inset-64, 224), 6, a, p).AlignSelf(ui.Center).Shadow(0, 8, 32, 0, ui.RGBA(0, 0, 0, 0.45))
+			}
+			title(26)
+		})
+	} else {
+		art := float32(232)
+		if contentWidth < 900 {
+			art = 192
+		}
+		ui.Row(c).Padding(40, inset, 0).Gap(24).AlignItems(ui.End).Children(func() {
+			if m.Page.Artwork != "" {
+				nativeArtwork(c, m.Page.Artwork, art, 6, a, p).Shadow(0, 8, 32, 0, ui.RGBA(0, 0, 0, 0.45))
+			}
+			ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
+				title(max(32, min(72, contentWidth*0.055)))
+			})
+		})
+	}
+	items := playableItems(m.Page.Items)
+	if len(items) == 0 {
+		return
+	}
+	inPage := false
+	for _, item := range items {
+		inPage = inPage || item.ID == m.Current.ID
+	}
+	ui.Row(c).Padding(24, inset, 0).Gap(24).AlignItems(ui.Center).Children(func() {
+		icon, key := "play", "shellPlay"
+		if inPage && m.Playing {
+			icon, key = "pause", "shellPause"
+		}
+		b := ui.ButtonBase(c).Size(56, 56).Shrink(0).Radius(28).Background(p.accent).TextColor(p.onAccent).Shadow(0, 8, 16, 0, ui.RGBA(0, 0, 0, 0.3)).Label(a.Tr(key) + " · " + m.Page.Title).Tooltip(a.Tr(key)).Disabled(inPage && m.PlaybackLoading)
+		if b.Hovered() {
+			b.Background(p.accent.Mix(ui.Hex("#ffffff"), 0.12))
+		}
+		b.Children(func() { ui.Icon(c, nativeIcons[icon]).Size(26, 26) })
+		if b.Clicked() {
+			if inPage {
+				a.Toggle()
+			} else {
+				a.Play(items[0])
 			}
 		}
-		if !m.Loading && m.Error == "" && len(m.Page.Items) == 0 && len(m.Page.Shelves) == 0 && !(m.Route == "library" && !m.SignedIn) {
-			ui.Column(c).Padding(32, 16).Gap(12).AlignItems(ui.Center).Children(func() {
-				ui.Icon(c, nativeIcons["search"]).Size(40, 40).TextColor(p.muted)
-				ui.Text(c, a.Tr("nativeEmptyResults")).FontSize(18).FontWeight(650)
-				ui.Text(c, a.Tr("shellSearchPlaceholder")).TextColor(p.secondary)
-			})
+	})
+}
+
+// nativeShortcutTile is one of Home's quick-access tiles for library items.
+func nativeShortcutTile(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p nativePalette) {
+	playing := item.ID != "" && item.ID == m.Current.ID
+	b := ui.ButtonBase(c).Height(64).MinWidth(0).PaddingEnd(12).Gap(12).Radius(6).Justify(ui.Start).Background(p.hover).Clip().Label(item.Title).Tooltip(item.Title)
+	hovered := b.Hovered()
+	if hovered {
+		b.Background(p.press)
+	}
+	b.Children(func() {
+		nativeArtwork(c, item.Artwork, 64, 0, a, p)
+		t := ui.Text(c, item.Title).Grow(1).MinWidth(0).FontSize(14).FontWeight(700).MaxLines(2).Ellipsis("…")
+		if playing {
+			t.TextColor(p.accent)
+			ui.Icon(c, nativeIcons["volume"]).Size(16, 16).TextColor(p.accent)
+		} else if hovered && item.ID != "" {
+			ui.Box(c).Size(32, 32).Shrink(0).Radius(16).Background(p.accent).TextColor(p.onAccent).Center().PassThrough().Children(func() { ui.Icon(c, nativeIcons["play"]).Size(16, 16) })
 		}
 	})
+	b.ContextMenu(nativeTrackMenu(item, a))
+	if b.Clicked() {
+		if item.ID != "" {
+			a.Play(item)
+		} else {
+			a.Open(item)
+		}
+	}
 }
 
 func nativeArtwork(c *ui.Context, src string, size, radius float32, a ViewActions, p nativePalette) ui.Element {
@@ -406,11 +815,11 @@ func nativeArtwork(c *ui.Context, src string, size, radius float32, a ViewAction
 			}
 		}
 	}
-	return box.Background(p.input).Children(func() {
+	return box.Background(p.highlight).Children(func() {
 		if artwork != nil {
 			ui.Image(c, artwork).Fill().Fit(ui.Cover)
 		} else {
-			ui.Icon(c, nativeIcons["note"]).Size(min(size*0.45, 48), min(size*0.45, 48)).TextColor(p.muted)
+			ui.Icon(c, nativeIcons["note"]).Size(min(size*0.4, 48), min(size*0.4, 48)).TextColor(p.muted)
 		}
 	})
 }
@@ -444,19 +853,44 @@ func nativeIntersection(a, b ui.Rect) ui.Rect {
 	return ui.Rect{X: x, Y: y, W: max(float32(0), min(a.X+a.W, b.X+b.W)-x), H: max(float32(0), min(a.Y+a.H, b.Y+b.H)-y)}
 }
 
-func nativeCard(c *ui.Context, item catalog.Item, a ViewActions, p nativePalette, compact bool) {
-	size := float32(164)
+func nativeCardArt(compact bool) float32 {
 	if compact {
-		size = 148
+		return 140
 	}
-	b := ui.ButtonBase(c).Column().Width(size + 16).Shrink(0).Padding(8).Gap(10).Radius(8).AlignItems(ui.Stretch).Justify(ui.Start).Label(item.Title + " · " + item.Artist)
-	if b.Hovered() {
+	return 164
+}
+
+// nativeCard is Spotify's shelf card: cover, title and a two-line subtitle,
+// with a play button rising over playable covers on hover.
+func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p nativePalette, compact bool) {
+	size := nativeCardArt(compact)
+	b := ui.ButtonBase(c).Column().Width(size + 24).Shrink(0).Padding(12).Gap(8).Radius(8).AlignItems(ui.Stretch).Justify(ui.Start).Label(item.Title + " · " + item.Artist)
+	hovered := b.Hovered()
+	if hovered {
 		b.Background(p.raised)
 	}
 	b.Children(func() {
-		nativeArtwork(c, item.Artwork, size, 6, a, p)
-		ui.Text(c, item.Title).FontWeight(600).MaxLines(1).Ellipsis("…")
-		ui.Text(c, item.Artist).FontSize(13).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+		radius := float32(6)
+		if item.Kind == "artist" {
+			radius = size / 2
+		}
+		ui.Box(c).Size(size, size).Shrink(0).Children(func() {
+			nativeArtwork(c, item.Artwork, size, radius, a, p).Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, 0.3))
+			if hovered && item.ID != "" {
+				ui.Box(c).Absolute().Right(8).Bottom(8).Size(48, 48).Radius(24).Background(p.accent).TextColor(p.onAccent).Shadow(0, 8, 8, 0, ui.RGBA(0, 0, 0, 0.3)).Center().PassThrough().Children(func() {
+					ui.Icon(c, nativeIcons["play"]).Size(22, 22)
+				})
+			}
+		})
+		title := ui.Text(c, item.Title).FontSize(15).FontWeight(700).MaxLines(1).Ellipsis("…")
+		if item.ID != "" && item.ID == m.Current.ID {
+			title.TextColor(p.accent)
+		}
+		subtitle := item.Artist
+		if subtitle == "" {
+			subtitle = nativeKindLabel(item, a)
+		}
+		ui.Text(c, subtitle).FontSize(13).LineHeight(1.4).TextColor(p.secondary).MaxLines(2).Ellipsis("…")
 	})
 	b.ContextMenu(nativeTrackMenu(item, a))
 	if b.Clicked() {
@@ -468,36 +902,94 @@ func nativeCard(c *ui.Context, item catalog.Item, a ViewActions, p nativePalette
 	}
 }
 
-func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a ViewActions, p nativePalette, compact, queue bool) {
+type nativeTrackMode uint8
+
+const (
+	nativeTrackRow      nativeTrackMode = iota // search results and shelf columns
+	nativeTrackNumbered                        // album and playlist tables
+	nativeTrackQueue                           // the Now Playing queue
+)
+
+func nativeTrackList(c *ui.Context, items []catalog.Item, m *UIModel, a ViewActions, p nativePalette, compact, numbered bool) {
+	mode := nativeTrackRow
+	if numbered {
+		mode = nativeTrackNumbered
+	}
+	ui.Column(c).Children(func() {
+		if numbered && !compact {
+			ui.Row(c).Height(36).PaddingX(16).Gap(16).AlignItems(ui.Center).TextColor(p.secondary).Children(func() {
+				ui.Text(c, "#").Width(24).Shrink(0).FontSize(14).TextAlign(ui.Center)
+				ui.Text(c, a.Tr("shellColumnTitle")).Grow(1).Basis(0).MinWidth(0).FontSize(13).MaxLines(1).Ellipsis("…")
+				ui.Text(c, a.Tr("shellColumnAlbum")).Grow(0.75).Basis(0).MinWidth(0).FontSize(13).MaxLines(1).Ellipsis("…")
+				ui.Row(c).Width(48).Shrink(0).Justify(ui.End).Label(a.Tr("shellColumnDuration")).Children(func() {
+					ui.Icon(c, nativeIcons["clock"]).Size(16, 16)
+				})
+			})
+			ui.Box(c).Height(1).Margin(0, 0, 8).Background(p.line)
+		}
+		for j, item := range items {
+			nativeTrack(c.Key(fmt.Sprintf("list-%d", j)), item, j, m, a, p, mode, compact)
+		}
+	})
+}
+
+func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a ViewActions, p nativePalette, mode nativeTrackMode, compact bool) {
 	playing := item.ID != "" && item.ID == m.Current.ID
-	b := ui.ButtonBase(c).Height(64).Padding(6, 8).Gap(12).Radius(8).Justify(ui.Start).Label(item.Title + " · " + item.Artist)
+	pad := float32(16)
+	if compact {
+		pad = 8
+	}
+	b := ui.ButtonBase(c).Height(56).PaddingX(pad).Gap(16).Radius(6).Justify(ui.Start).Label(item.Title + " · " + item.Artist)
+	hovered := b.Hovered()
 	if playing {
-		b.Selected(true).Background(p.accent.Alpha(0.10)).TextColor(p.text)
-	} else if b.Hovered() {
-		b.Background(p.raised)
+		b.Selected(true).Background(p.hover)
+	}
+	if hovered {
+		b.Background(p.press)
 	}
 	b.Children(func() {
-		nativeArtwork(c, item.Artwork, 46, 4, a, p)
-		ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
-			t := ui.Text(c, item.Title).FontWeight(600).MaxLines(1).Ellipsis("…")
-			if playing {
-				t.TextColor(p.accent)
-			}
-			ui.Text(c, item.Artist).FontSize(13).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+		if mode == nativeTrackNumbered {
+			ui.Box(c).Width(24).Shrink(0).Center().Children(func() {
+				switch {
+				case playing:
+					ui.Icon(c, nativeIcons["volume"]).Size(16, 16).TextColor(p.accent)
+				case hovered:
+					ui.Icon(c, nativeIcons["play"]).Size(14, 14).TextColor(p.text)
+				default:
+					ui.Text(c, fmt.Sprint(index+1)).FontSize(15).TextColor(p.secondary)
+				}
+			})
+		}
+		ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(12).AlignItems(ui.Center).Children(func() {
+			nativeArtwork(c, item.Artwork, 40, 4, a, p)
+			ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
+				t := ui.Text(c, item.Title).FontSize(15).FontWeight(500).MaxLines(1).Ellipsis("…")
+				if playing {
+					t.TextColor(p.accent)
+				}
+				artist := ui.Text(c, item.Artist).FontSize(13).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+				if hovered {
+					artist.TextColor(p.text)
+				}
+			})
 		})
-		if !compact && !queue && item.Album != "" {
-			ui.Text(c, item.Album).Width(180).TextColor(p.secondary).FontSize(13).MaxLines(1).Ellipsis("…")
+		if !compact && mode != nativeTrackQueue {
+			ui.Text(c, item.Album).Grow(0.75).Basis(0).MinWidth(0).FontSize(13).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
 		}
-		if item.Duration > 0 {
-			ui.Text(c, nativeTime(item.Duration.Seconds())).TextColor(p.muted).FontSize(12).Width(40).TextAlign(ui.End)
+		if playing && mode != nativeTrackNumbered {
+			ui.Icon(c, nativeIcons["volume"]).Size(16, 16).TextColor(p.accent)
 		}
-		if playing {
-			ui.Icon(c, nativeIcons["volume"]).Size(18, 18).TextColor(p.accent)
+		if item.Duration > 0 || mode == nativeTrackNumbered {
+			duration := ""
+			if item.Duration > 0 {
+				duration = nativeTime(item.Duration.Seconds())
+			}
+			ui.Text(c, duration).Width(48).Shrink(0).FontSize(13).TextColor(p.secondary).TextAlign(ui.End)
 		}
 	})
 	b.ContextMenu(nativeTrackMenu(item, a))
 	if b.Clicked() {
-		if queue {
+		if mode == nativeTrackQueue {
 			a.PlayQueue(index)
 		} else if item.ID != "" {
 			a.Play(item)
@@ -507,119 +999,150 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 	}
 }
 
-func nativeTransport(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool, width float32) ui.Element {
-	if compact && m.Immersive {
-		return nativeExpandedTransport(c, m, a, p)
-	}
-	return ui.Column(c).Background(p.base).Padding(0, 16).Children(func() {
-		ui.Row(c).Grow(1).Gap(16).AlignItems(ui.Center).Children(func() {
-			infoWidth := max(float32(170), min(width*0.25, 320))
-			if compact {
-				infoWidth = width - 144
-				if m.PlaybackError != "" {
-					infoWidth = width - 168
-				}
+// nativePlayerBar is the desktop player: track and like on the left, the
+// transport centred, and view and volume controls on the right.
+func nativePlayerBar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) ui.Element {
+	return ui.Row(c).Background(p.base).Padding(0, 16).Gap(16).AlignItems(ui.Center).Label(a.Tr("shellPlayerControls")).Children(func() {
+		ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
+			info := ui.ButtonBase(c).MinWidth(0).Shrink(1).Height(64).Padding(4).Gap(12).Radius(6).Justify(ui.Start).Label(a.Tr("shellOpenNowPlaying"))
+			if info.Hovered() {
+				info.Background(p.hover)
 			}
-			info := ui.ButtonBase(c).Width(infoWidth).MinWidth(0).Gap(12).Justify(ui.Start).Label(a.Tr("shellOpenNowPlaying")).Children(func() {
-				size := float32(56)
-				if compact {
-					size = 44
-				}
-				nativeArtwork(c, m.Current.Artwork, size, 6, a, p)
-				ui.Column(c).Grow(1).MinWidth(0).Gap(5).Children(func() {
-					title, artist := m.Current.Title, m.Current.Artist
-					if title == "" {
-						title, artist = a.Tr("shellIdleTitle"), a.Tr("shellIdleSubtitle")
-					}
-					ui.Text(c, title).FontWeight(600).MaxLines(1).Ellipsis("…")
-					if m.PlaybackError != "" {
-						artist = m.PlaybackError
-					}
-					caption := ui.Text(c, artist).FontSize(13).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
-					if m.PlaybackError != "" {
-						caption.TextColor(p.accent)
-					}
-				})
+			info.Children(func() {
+				nativeArtwork(c, m.Current.Artwork, 56, 4, a, p)
+				nativeTrackCaption(c, m, a, p)
 			})
 			if info.Clicked() {
 				m.Panel = true
 			}
-			if !compact && m.PlaybackError == "" {
-				if nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 32).Disabled(m.Current.ID == "").Clicked() {
-					a.Like()
-				}
-			}
 			if m.PlaybackError != "" {
-				if nativePill(c, a.Tr("buttonRetry"), p, false).Width(64).PaddingX(6).Disabled(a.RetryPlayback == nil).Clicked() {
+				if nativePill(c, a.Tr("buttonRetry"), p, false).Width(72).PaddingX(6).Shrink(0).Disabled(a.RetryPlayback == nil).Clicked() {
 					a.RetryPlayback()
 				}
+			} else if nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 32).Disabled(m.Current.ID == "").Clicked() {
+				a.Like()
 			}
-			if compact {
-				if m.PlaybackError == "" && nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 40).Disabled(m.Current.ID == "").Clicked() {
+		})
+		ui.Column(c).Width(min(722, width*0.38)).Shrink(0).Gap(2).AlignItems(ui.Stretch).Children(func() {
+			ui.Row(c).Height(40).Gap(16).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
+				if nativeIconButton(c, "shuffle", a.Tr("shellShuffle"), p, m.Shuffle, 32).Disabled(len(m.Queue) < 2).Clicked() {
+					a.Shuffle()
+				}
+				if nativeIconButton(c, "previous", a.Tr("shellPrevious"), p, false, 32).Disabled(m.Current.ID == "").Clicked() {
+					a.Previous()
+				}
+				nativePlayButton(c, m, a, p, 36)
+				if nativeIconButton(c, "next", a.Tr("shellNext"), p, false, 32).Disabled(m.Current.ID == "").Clicked() {
+					a.Next()
+				}
+				icon, key := nativeRepeat(m)
+				if nativeIconButton(c, icon, a.Tr(key), p, m.Repeat > 0, 32).Clicked() {
+					a.Repeat()
+				}
+			})
+			nativeSeek(c, m, a, p)
+		})
+		ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(4).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+			if width > 1000 {
+				if nativeIconButton(c, "lyrics", a.Tr("shellLyrics"), p, m.Panel && m.PanelTab == "lyrics", 32).Clicked() {
+					nativeTogglePanel(m, "lyrics")
+				}
+			}
+			if nativeIconButton(c, "queue", a.Tr("shellQueue"), p, m.Panel && m.PanelTab != "lyrics", 32).Clicked() {
+				nativeTogglePanel(m, "queue")
+			}
+			nativeVolume(c, m, a, p, width > 1000)
+			if width > 1000 {
+				nativeIconButton(c, "more", a.Tr("shellMore"), p, false, 32).Disabled(m.Current.ID == "").Menu(nativeTrackMenu(m.Current, a))
+			}
+			if nativeIconButton(c, "expand", a.Tr("shellImmersive"), p, m.Immersive, 32).Clicked() {
+				m.Immersive = !m.Immersive
+			}
+		})
+	})
+}
+
+// nativeTogglePanel opens Now Playing on a tab, or closes it when that tab is
+// already showing, as Spotify's queue and lyrics buttons do.
+func nativeTogglePanel(m *UIModel, tab string) {
+	current := m.PanelTab
+	if current != "lyrics" {
+		current = "queue"
+	}
+	if m.Panel && current == tab {
+		m.Panel = false
+		return
+	}
+	m.Panel, m.PanelTab = true, tab
+}
+
+func nativeTrackCaption(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
+	ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
+		title, artist := m.Current.Title, m.Current.Artist
+		if title == "" {
+			title, artist = a.Tr("shellIdleTitle"), a.Tr("shellIdleSubtitle")
+		}
+		ui.Text(c, title).FontSize(14).FontWeight(600).MaxLines(1).Ellipsis("…")
+		if m.PlaybackError != "" {
+			artist = m.PlaybackError
+		}
+		caption := ui.Text(c, artist).FontSize(12).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+		if m.PlaybackError != "" {
+			caption.TextColor(p.accent)
+		}
+	})
+}
+
+func nativeRepeat(m *UIModel) (icon, key string) {
+	switch m.Repeat {
+	case 1:
+		return "repeat", "shellRepeatAll"
+	case 2:
+		return "repeat-one", "shellRepeatOne"
+	}
+	return "repeat", "shellRepeatOff"
+}
+
+// nativeMiniPlayer is the compact player card above the tab bar.
+func nativeMiniPlayer(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
+	ui.Column(c).Shrink(0).Background(p.base).Padding(6, 8, 0).Children(func() {
+		ui.Column(c).Height(60).Radius(8).Background(p.raised).Clip().Children(func() {
+			ui.Row(c).Grow(1).Padding(0, 4, 0, 8).Gap(4).AlignItems(ui.Center).Children(func() {
+				info := ui.ButtonBase(c).Grow(1).MinWidth(0).Height(52).Gap(10).Justify(ui.Start).Radius(6).Label(a.Tr("shellOpenNowPlaying")).Children(func() {
+					nativeArtwork(c, m.Current.Artwork, 40, 4, a, p)
+					nativeTrackCaption(c, m, a, p)
+				})
+				if info.Clicked() {
+					m.Panel = true
+				}
+				if m.PlaybackError != "" {
+					if nativePill(c, a.Tr("buttonRetry"), p, false).Width(64).PaddingX(6).Shrink(0).Disabled(a.RetryPlayback == nil).Clicked() {
+						a.RetryPlayback()
+					}
+				} else if nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 40).Disabled(m.Current.ID == "").Clicked() {
 					a.Like()
 				}
 				nativePlayButton(c, m, a, p, 40)
-				return
-			}
-			ui.Column(c).Grow(1).MinWidth(150).MaxWidth(640).Gap(1).AlignItems(ui.Stretch).Children(func() {
-				ui.Row(c).Height(44).Gap(12).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
-					if nativeIconButton(c, "shuffle", a.Tr("shellShuffle"), p, m.Shuffle, 32).Disabled(len(m.Queue) < 2).Clicked() {
-						a.Shuffle()
-					}
-					if nativeIconButton(c, "previous", a.Tr("shellPrevious"), p, false, 32).Disabled(m.Current.ID == "").Clicked() {
-						a.Previous()
-					}
-					nativePlayButton(c, m, a, p, 40)
-					if nativeIconButton(c, "next", a.Tr("shellNext"), p, false, 32).Disabled(m.Current.ID == "").Clicked() {
-						a.Next()
-					}
-					icon, key := "repeat", "shellRepeatOff"
-					if m.Repeat == 1 {
-						key = "shellRepeatAll"
-					}
-					if m.Repeat == 2 {
-						icon, key = "repeat-one", "shellRepeatOne"
-					}
-					if nativeIconButton(c, icon, a.Tr(key), p, m.Repeat > 0, 32).Clicked() {
-						a.Repeat()
-					}
-				})
-				nativeSeek(c, m, a, p)
 			})
-			ui.Row(c).Gap(4).AlignItems(ui.Center).Justify(ui.End).Children(func() {
-				if width > 1000 {
-					if nativeIconButton(c, "lyrics", a.Tr("shellLyrics"), p, m.Panel && m.PanelTab == "lyrics", 32).Clicked() {
-						m.Panel, m.PanelTab = true, "lyrics"
-					}
-				}
-				if nativeIconButton(c, "queue", a.Tr("shellQueue"), p, m.Panel && m.PanelTab != "lyrics", 32).Clicked() {
-					m.Panel, m.PanelTab = true, "queue"
-				}
-				nativeVolume(c, m, a, p, width > 1000)
-				if width > 1000 {
-					nativeIconButton(c, "more", a.Tr("shellMore"), p, false, 32).Disabled(m.Current.ID == "").Menu(nativeTrackMenu(m.Current, a))
-				}
-				if nativeIconButton(c, "expand", a.Tr("shellImmersive"), p, m.Immersive, 32).Clicked() {
-					m.Immersive = !m.Immersive
-				}
-			})
-		})
-		if compact {
 			nativeProgressLine(c, m, p)
-		}
+		})
 	})
 }
 
 func nativePlayButton(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, size float32) {
 	if m.PlaybackLoading {
-		ui.ButtonBase(c).Size(size, size).Shrink(0).Radius(size / 2).Background(p.text).TextColor(p.base).Disabled(true).Label(a.Tr("shellLoading")).Children(func() { ui.Spinner(c).Size(22, 22) })
+		ui.ButtonBase(c).Size(size, size).Shrink(0).Radius(size / 2).Background(p.text).TextColor(p.base).Disabled(true).Label(a.Tr("shellLoading")).Children(func() { ui.Spinner(c).Size(size*0.5, size*0.5) })
 		return
 	}
 	icon, key := "play", "shellPlay"
 	if m.Playing {
 		icon, key = "pause", "shellPause"
 	}
-	b := nativeIconButton(c, icon, a.Tr(key), p, false, size).Background(p.text).TextColor(p.base).Disabled(m.Current.ID == "")
+	b := ui.ButtonBase(c).Size(size, size).Shrink(0).Radius(size / 2).Label(a.Tr(key)).Tooltip(a.Tr(key)).Background(p.text).TextColor(p.base).Disabled(m.Current.ID == "")
+	if b.Hovered() {
+		b.Background(p.text.Alpha(0.86))
+	}
+	b.Children(func() { ui.Icon(c, nativeIcons[icon]).Size(size*0.5, size*0.5) })
 	if b.Clicked() {
 		a.Toggle()
 	}
@@ -642,7 +1165,7 @@ func nativeSeek(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 		state.value = m.Position
 	}
 	row.Children(func() {
-		ui.Text(c, nativeTime(state.value)).Width(36).TextAlign(ui.End).FontSize(11).TextColor(p.muted)
+		ui.Text(c, nativeTime(state.value)).Width(40).TextAlign(ui.End).FontSize(12).TextColor(p.secondary)
 		s := nativeSlider(c.Key("seek"), &state.value, max(1, m.Duration), p).Grow(1).Label(a.Tr("shellProgress")).Disabled(!enabled)
 		changed, pressed := s.Changed(), s.Pressed()
 		if changed {
@@ -662,17 +1185,17 @@ func nativeSeek(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 			a.Seek(state.value)
 		}
 		state.pressed = pressed
-		ui.Text(c, nativeTime(m.Duration)).Width(36).FontSize(11).TextColor(p.muted)
+		ui.Text(c, nativeTime(m.Duration)).Width(40).FontSize(12).TextColor(p.secondary)
 	})
 }
 
 func nativeSlider(c *ui.Context, value *float64, maximum float64, p nativePalette) ui.Element {
 	s := ui.SliderBase(c, value, 0, maximum).Height(24).PaddingX(5)
-	hovered := s.Hovered() || s.Focused()
+	hovered := s.Hovered() || s.Focused() || s.Pressed()
 	fraction := float32(max(0, min(1, *value/maximum)))
 	s.Draw(func(painter *ui.Painter, r ui.Rect) {
 		track := ui.Rect{X: r.X + 5, Y: r.Y + r.H/2 - 2, W: max(0, r.W-10), H: 4}
-		painter.Fill(track, p.highlight, 2)
+		painter.Fill(track, p.text.Alpha(0.3), 2)
 		fill := track
 		fill.W *= fraction
 		col := p.text
@@ -681,7 +1204,7 @@ func nativeSlider(c *ui.Context, value *float64, maximum float64, p nativePalett
 		}
 		painter.Fill(fill, col, 2)
 		if hovered {
-			painter.Fill(ui.Rect{X: track.X + fill.W - 5, Y: r.Y + r.H/2 - 5, W: 10, H: 10}, p.text, 5)
+			painter.Fill(ui.Rect{X: track.X + fill.W - 6, Y: r.Y + r.H/2 - 6, W: 12, H: 12}, p.text, 6)
 		}
 	})
 	return s
@@ -692,20 +1215,24 @@ func nativeProgressLine(c *ui.Context, m *UIModel, p nativePalette) {
 	if m.Duration > 0 {
 		value = float32(max(0, min(1, m.Position/m.Duration)))
 	}
-	ui.Box(c).Height(2).Background(p.input).Children(func() { ui.Box(c).Height(2).WidthPercent(value * 100).Background(p.accent) })
+	ui.Box(c).Height(2).Shrink(0).Margin(0, 8, 0).Radius(1).Background(p.text.Alpha(0.2)).Children(func() {
+		ui.Box(c).Height(2).Radius(1).WidthPercent(value * 100).Background(p.text)
+	})
 }
 
 func nativeVolume(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, showSlider bool) {
 	icon, key := "volume", "shellMute"
 	if m.Muted || m.Volume == 0 {
 		icon, key = "volume-off", "shellUnmute"
+	} else if m.Volume < 0.5 {
+		icon = "volume-low"
 	}
 	if nativeIconButton(c, icon, a.Tr(key), p, false, 32).Clicked() {
 		a.Mute()
 	}
 	if showSlider {
 		volume := m.Volume
-		s := nativeSlider(c.Key("volume"), &volume, 1, p).Width(92).Label(a.Tr("shellVolume"))
+		s := nativeSlider(c.Key("volume"), &volume, 1, p).Width(93).Label(a.Tr("shellVolume"))
 		if s.Changed() {
 			a.Volume(volume)
 		}
@@ -713,11 +1240,11 @@ func nativeVolume(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, sho
 }
 
 func nativeTabbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
-	ui.Row(c).Height(64).Shrink(0).Padding(4, 8).Label(a.Tr("shellNavMain")).Children(func() {
+	ui.Row(c).Height(nativeCompactTabbar).Shrink(0).Padding(4, 8).Background(p.base).Label(a.Tr("shellNavMain")).Children(func() {
 		for _, nav := range []struct{ route, key, icon string }{{"home", "shellNavHome", "home"}, {"search", "shellNavSearch", "search"}, {"explore", "shellNavExplore", "explore"}, {"library", "shellNavLibrary", "library"}} {
 			active := m.Route == nav.route
 			b := ui.ButtonBase(c.Key("tab-" + nav.route)).Column().Grow(1).Gap(4).Radius(8).Label(a.Tr(nav.key)).Selected(active).Background(ui.Transparent).TextColor(p.secondary)
-			if active {
+			if active || b.Hovered() {
 				b.TextColor(p.text)
 			}
 			b.Children(func() {
@@ -726,7 +1253,7 @@ func nativeTabbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 					icon += "-fill"
 				}
 				ui.Icon(c, nativeIcons[icon]).Size(24, 24)
-				ui.Text(c, a.Tr(nav.key)).FontSize(11).FontWeight(600)
+				ui.Text(c, a.Tr(nav.key)).FontSize(11).FontWeight(600).MaxLines(1).Ellipsis("…")
 			})
 			if b.Clicked() {
 				m.Immersive = false
@@ -741,15 +1268,17 @@ func nativeTabbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 	})
 }
 
+// nativeNowPlaying is the right-hand Now Playing view: large cover, title,
+// and a card holding the queue or lyrics.
 func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32, overlay bool) ui.Element {
 	_, windowHeight := c.Size()
 	gap := float32(16)
 	if windowHeight < 760 {
 		gap = 12
 	}
-	return ui.Column(c).Background(p.surface).Radius(12).Padding(20).Gap(gap).MinHeight(0).Children(func() {
-		ui.Row(c).Height(32).Shrink(0).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, a.Tr("shellNowPlaying")).FontWeight(700).Grow(1)
+	return ui.Column(c).Background(p.surface).Radius(8).Padding(16).Gap(gap).MinHeight(0).Children(func() {
+		ui.Row(c).Height(32).Shrink(0).Gap(4).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, a.Tr("shellNowPlaying")).FontSize(16).FontWeight(700).Grow(1).MinWidth(0).MaxLines(1).Ellipsis("…")
 			if nativeIconButton(c, "expand", a.Tr("shellImmersive")+" · "+a.Tr("shellNowPlaying"), p, false, 32).Clicked() {
 				m.Immersive = true
 				m.Panel = false
@@ -760,31 +1289,31 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 		})
 		if m.Current.ID == "" {
 			ui.Column(c).Grow(1).Gap(16).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
-				nativeArtwork(c, "", 100, 12, a, p)
-				ui.Text(c, a.Tr("shellEmptyTitle")).FontSize(20).FontWeight(700)
+				nativeArtwork(c, "", 112, 8, a, p)
+				ui.Text(c, a.Tr("shellEmptyTitle")).FontSize(20).FontWeight(800)
 				ui.Text(c, a.TrArgs("shellEmptyBody", map[string]any{"shortcut": "⌘ K"})).TextColor(p.secondary).TextAlign(ui.Center)
 			})
 			return
 		}
 		body := func() {
 			nativePlaybackNotice(c, m, a, p, false)
-			artSize := min(width-40, float32(280), max(float32(120), windowHeight-520))
+			artSize := min(width-32, max(float32(120), windowHeight-560))
 			if overlay {
-				artSize = min(artSize, max(float32(120), windowHeight-580))
+				artSize = min(artSize, max(float32(120), windowHeight-600))
 			}
-			nativeMediaSwitch(c, m, a, p)
 			nativeMedia(c, m, a, p, artSize).AlignSelf(ui.Center)
-			ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
-				ui.Column(c).Grow(1).MinWidth(0).Gap(6).Children(func() {
-					ui.Text(c, m.Current.Title).FontSize(24).FontWeight(720).MaxLines(2).Ellipsis("…")
-					ui.Text(c, m.Current.Artist).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+			nativeMediaSwitch(c, m, a, p)
+			ui.Row(c).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
+				ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
+					ui.Text(c, m.Current.Title).FontSize(22).FontWeight(800).LineHeight(1.2).MaxLines(2).Ellipsis("…")
+					ui.Text(c, m.Current.Artist).FontSize(15).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
 				})
 				if nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 36).Clicked() {
 					a.Like()
 				}
 			})
 			if overlay {
-				ui.Row(c).Gap(18).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
+				ui.Row(c).Shrink(0).Gap(18).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
 					if nativeIconButton(c, "previous", a.Tr("shellPrevious"), p, false, 44).Clicked() {
 						a.Previous()
 					}
@@ -794,12 +1323,13 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 					}
 				})
 				nativeSeek(c, m, a, p)
-				ui.Row(c).AlignItems(ui.Center).Justify(ui.Center).Children(func() { nativeVolume(c, m, a, p, true) })
+				ui.Row(c).Shrink(0).AlignItems(ui.Center).Justify(ui.Center).Children(func() { nativeVolume(c, m, a, p, true) })
 			}
-			nativePanelTabs(c, m, a, p)
-			queue := nativePanelBody(c, m, a, p)
+			card := nativePanelCard(c, m, a, p)
 			if overlay {
-				queue.Height(220).Grow(0).Shrink(0)
+				card.Height(300).Shrink(0)
+			} else {
+				card.Grow(1).MinHeight(120)
 			}
 		}
 		if overlay {
@@ -812,15 +1342,19 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 	})
 }
 
+// nativePanelCard holds the queue and lyrics behind a pair of chips.
+func nativePanelCard(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) ui.Element {
+	return ui.Column(c).MinHeight(0).Padding(12).Gap(12).Radius(8).Background(p.raised).Children(func() {
+		nativePanelTabs(c, m, a, p)
+		nativePanelBody(c, m, a, p)
+	})
+}
+
 func nativePanelTabs(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
-	ui.Row(c).Height(36).Padding(3).Gap(3).Radius(20).Background(p.raised).Children(func() {
+	ui.Row(c).Shrink(0).Gap(8).Children(func() {
 		for _, tab := range []struct{ id, key string }{{"queue", "shellQueue"}, {"lyrics", "shellLyrics"}} {
 			active := m.PanelTab == tab.id || (m.PanelTab == "" && tab.id == "queue")
-			b := ui.Button(c, a.Tr(tab.key)).Label(a.Tr(tab.key) + " · " + a.Tr("shellNowPlaying")).Grow(1).Height(30).Padding(0).Radius(16).BorderWidth(0).Background(ui.Transparent).Selected(active).Background(ui.Transparent).TextColor(p.secondary)
-			if active {
-				b.Background(p.highlight).TextColor(p.text)
-			}
-			if b.Clicked() {
+			if nativeChip(c, a.Tr(tab.key), p, active).Label(a.Tr(tab.key) + " · " + a.Tr("shellNowPlaying")).Clicked() {
 				m.PanelTab = tab.id
 			}
 		}
@@ -828,18 +1362,19 @@ func nativePanelTabs(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 }
 
 func nativePanelBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) ui.Element {
-	scroll := ui.Scroll(c.Key("panel-" + m.PanelTab)).Grow(1).MinHeight(68).Gap(4)
+	scroll := ui.Scroll(c.Key("panel-" + m.PanelTab)).Grow(1).MinHeight(68)
 	a = nativeArtworkViewport(c, a, scroll)
 	return scroll.Children(func() {
 		if m.PanelTab == "lyrics" {
 			lyrics := m.Lyrics
+			color := p.text
 			if lyrics == "" {
-				lyrics = a.Tr("nativeLyricsUnavailable")
+				lyrics, color = a.Tr("nativeLyricsUnavailable"), p.secondary
 			}
-			ui.Text(c, lyrics).FontSize(18).FontWeight(600).LineHeight(1.7).TextColor(p.secondary)
+			ui.Text(c, lyrics).FontSize(20).FontWeight(700).LineHeight(1.6).TextColor(color)
 		} else {
 			for i, item := range m.Queue {
-				nativeTrack(c.Key(fmt.Sprintf("queue-%d", i)), item, i, m, a, p, true, true)
+				nativeTrack(c.Key(fmt.Sprintf("queue-%d", i)), item, i, m, a, p, nativeTrackQueue, true)
 			}
 		}
 	})
@@ -852,7 +1387,7 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 			m.Immersive = false
 		}
 		ui.Spacer(c)
-		ui.Text(c, a.Tr("shellNowPlaying")).FontSize(12).FontWeight(700).TextColor(p.secondary)
+		ui.Text(c, a.Tr("shellNowPlaying")).FontSize(12).FontWeight(700).LetterSpacing(1).TextColor(p.secondary)
 		ui.Spacer(c)
 		if nativeIconButton(c, "settings", a.Tr("shellSettings"), p, false, 40).Clicked() {
 			m.Settings = true
@@ -864,65 +1399,102 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 		scroll.Children(func() {
 			nativePlaybackNotice(c, m, a, p, false)
 			artSize := min(width-64, max(float32(180), height-390))
-			nativeMediaSwitch(c, m, a, p)
 			nativeMedia(c, m, a, p, artSize).AlignSelf(ui.Center)
-			nativeImmersiveTitle(c, m, a, p)
-			nativePanelTabs(c, m, a, p)
-			ui.Box(c).Height(220).Children(func() { nativePanelBody(c, m, a, p) })
+			nativeMediaSwitch(c, m, a, p)
+			nativeImmersiveTitle(c, m, a, p, true)
+			nativePanelCard(c, m, a, p).Height(280)
 		})
-	} else {
-		ui.Row(c).Grow(1).MinHeight(0).Padding(24, 40).Gap(40).AlignItems(ui.Center).Children(func() {
-			ui.Column(c).Grow(1).MinWidth(0).Gap(24).AlignItems(ui.Center).Children(func() {
-				artSize := min(max(float32(220), width-540), max(float32(180), height-240))
-				nativeMediaSwitch(c, m, a, p)
-				nativeMedia(c, m, a, p, artSize)
-				nativeImmersiveTitle(c, m, a, p)
-				nativePlaybackNotice(c, m, a, p, false)
-			})
-			ui.Column(c).Width(min(360, width*0.32)).HeightPercent(90).Padding(24).Gap(20).Radius(16).Background(p.raised).Children(func() { nativePanelTabs(c, m, a, p); nativePanelBody(c, m, a, p) })
-		})
+		return
 	}
+	ui.Row(c).Grow(1).MinHeight(0).Padding(24, 40).Gap(40).AlignItems(ui.Center).Children(func() {
+		ui.Column(c).Grow(1).MinWidth(0).Gap(24).AlignItems(ui.Center).Children(func() {
+			artSize := min(max(float32(220), width-540), max(float32(180), height-260))
+			nativeMedia(c, m, a, p, artSize).Shadow(0, 24, 64, 0, ui.RGBA(0, 0, 0, 0.5))
+			nativeMediaSwitch(c, m, a, p)
+			nativeImmersiveTitle(c, m, a, p, false)
+			nativePlaybackNotice(c, m, a, p, false)
+		})
+		nativePanelCard(c, m, a, p).Width(min(380, width*0.32)).HeightPercent(90).Background(p.base.Alpha(0.35))
+	})
 }
 
-func nativeImmersiveTitle(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
-	ui.Column(c).Gap(10).AlignItems(ui.Center).Children(func() {
+func nativeImmersiveTitle(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool) {
+	ui.Column(c).Gap(8).AlignItems(ui.Center).Children(func() {
 		title, artist := m.Current.Title, m.Current.Artist
 		if title == "" {
 			title, artist = a.Tr("shellEmptyTitle"), a.Tr("shellIdleSubtitle")
 		}
-		ui.Text(c, title).FontSize(32).FontWeight(760).TextAlign(ui.Center).MaxLines(2).Ellipsis("…")
-		ui.Text(c, artist).FontSize(16).TextColor(p.secondary).TextAlign(ui.Center)
+		size := float32(40)
+		if compact {
+			size = 28
+		}
+		ui.Text(c, title).FontSize(size).FontWeight(800).LineHeight(1.1).TextAlign(ui.Center).MaxLines(2).Ellipsis("…")
+		ui.Text(c, artist).FontSize(17).FontWeight(500).TextColor(p.secondary).TextAlign(ui.Center)
 	})
 }
 
 func nativeSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {
 	ui.DialogBase(c, &m.Settings, func(backdrop, panel ui.Element) {
-		backdrop.Background(ui.RGBA(0, 0, 0, 0.40))
-		panel.Width(min(390, width-24)).MaxHeight(height-32).Padding(24).Gap(20).Radius(16).Background(p.surface).Border(1, p.line).Shadow(0, 20, 48, 0, ui.RGBA(0, 0, 0, 0.4)).Children(func() {
+		backdrop.Background(ui.RGBA(0, 0, 0, 0.5))
+		panel.Width(min(420, width-24)).MaxHeight(height-32).Padding(24).Gap(20).Radius(12).Background(p.raised).Border(1, p.line).Shadow(0, 16, 48, 0, ui.RGBA(0, 0, 0, 0.5)).Children(func() {
 			ui.Row(c).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, a.Tr("shellSettings")).FontSize(24).FontWeight(720).Grow(1)
+				ui.Text(c, a.Tr("shellSettings")).FontSize(24).FontWeight(800).Grow(1)
 				if nativeIconButton(c, "close", a.Tr("shellClose"), p, false, 32).Clicked() {
 					m.Settings = false
 				}
 			})
-			ui.Scroll(c).MinHeight(0).Gap(20).Children(func() {
+			ui.Scroll(c).MinHeight(0).Gap(24).Children(func() {
+				section := func(key string) {
+					ui.Text(c, a.Tr(key)).FontSize(16).FontWeight(700)
+				}
 				ui.Column(c).Gap(12).Children(func() {
-					ui.Text(c, a.Tr("shellAppearance")).FontSize(13).FontWeight(650).TextColor(p.secondary)
+					section("menuAccount")
+					ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
+						nativeAvatar(c, m, p, 40)
+						ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+							ui.Text(c, nativeAccountStatus(m, a)).FontWeight(600).MaxLines(1).Ellipsis("…")
+							if m.SignedIn && m.MusicPremium {
+								ui.Text(c, a.Tr("shellPremiumBadge")).FontSize(12).FontWeight(700).TextColor(p.accent)
+							}
+						})
+					})
+					ui.Row(c).Gap(8).Wrap().Children(func() {
+						key := "shellAccountSignIn"
+						if m.SignedIn {
+							key = "shellAccountManage"
+						}
+						if nativePill(c, a.Tr(key), p, !m.SignedIn).Clicked() {
+							m.Settings = false
+							a.Account()
+						}
+						if m.SignedIn {
+							if nativePill(c, a.Tr("shellSignOut"), p, false).TextColor(p.accent).Clicked() {
+								m.Settings = false
+								a.SignOut()
+							}
+						}
+					})
+				})
+				ui.Column(c).Gap(12).Children(func() {
+					section("shellAppearance")
 					ui.Row(c).Gap(8).Children(func() {
 						for _, option := range []struct{ id, key string }{{"system", "shellThemeSystem"}, {"dark", "shellThemeDark"}, {"light", "shellThemeLight"}} {
-							if nativePill(c, a.Tr(option.key), p, m.Appearance == option.id).Grow(1).PaddingX(8).Clicked() {
+							if nativeChip(c, a.Tr(option.key), p, m.Appearance == option.id).Grow(1).PaddingX(8).Clicked() {
 								a.Appearance(option.id)
 							}
 						}
 					})
 				})
-				ui.Column(c).Gap(8).Children(func() {
-					ui.Text(c, a.Tr("shellLanguage")).FontSize(13).FontWeight(650).TextColor(p.secondary)
+				ui.Column(c).Gap(4).Children(func() {
+					ui.Box(c).Height(8)
+					section("shellLanguage")
 					for _, option := range []struct{ id, title string }{{"system", a.Tr("shellLanguageSystem")}, {"en", "English"}, {"zh-Hans", "简体中文"}, {"zh-Hant", "繁體中文"}, {"ja", "日本語"}} {
 						active := m.Language == option.id
-						b := ui.Button(c, option.title).Height(36).Justify(ui.Start).PaddingX(12).Radius(8).BorderWidth(0).Background(ui.Transparent).Selected(active)
+						b := ui.Button(c, option.title).Height(40).Justify(ui.Start).PaddingX(12).Radius(6).BorderWidth(0).Background(ui.Transparent).TextColor(p.secondary).Selected(active)
 						if active {
-							b.Background(p.highlight).TextColor(p.accent)
+							b.Background(p.hover).TextColor(p.accent).FontWeight(700)
+						} else if b.Hovered() {
+							b.Background(p.hover).TextColor(p.text)
 						}
 						if b.Clicked() {
 							a.Language(option.id)
@@ -930,21 +1502,7 @@ func nativeSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, w
 					}
 				})
 				ui.Box(c).Height(1).Background(p.line)
-				key := "shellAccountSignIn"
-				if m.SignedIn {
-					key = "shellAccountManage"
-				}
-				if ui.Button(c, a.Tr(key)).Height(40).BorderWidth(0).Background(p.raised).Clicked() {
-					m.Settings = false
-					a.Account()
-				}
-				if m.SignedIn {
-					if ui.Button(c, a.Tr("shellSignOut")).Height(40).BorderWidth(0).Background(p.raised).TextColor(p.accent).Clicked() {
-						m.Settings = false
-						a.SignOut()
-					}
-				}
-				if ui.Button(c, a.Tr("shellShortcuts")).Height(40).BorderWidth(0).Background(p.raised).Clicked() {
+				if nativePill(c, a.Tr("shellShortcuts"), p, false).AlignSelf(ui.Start).Clicked() {
 					m.Settings = false
 					m.Shortcuts = true
 				}
@@ -956,10 +1514,10 @@ func nativeSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, w
 
 func nativeShortcuts(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {
 	ui.DialogBase(c, &m.Shortcuts, func(backdrop, panel ui.Element) {
-		backdrop.Background(ui.RGBA(0, 0, 0, 0.4))
-		panel.Width(min(480, width-24)).MaxHeight(height - 32).Padding(24).Gap(20).Radius(16).Background(p.surface).Children(func() {
+		backdrop.Background(ui.RGBA(0, 0, 0, 0.5))
+		panel.Width(min(480, width-24)).MaxHeight(height-32).Padding(24).Gap(20).Radius(12).Background(p.raised).Border(1, p.line).Shadow(0, 16, 48, 0, ui.RGBA(0, 0, 0, 0.5)).Children(func() {
 			ui.Row(c).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, a.Tr("shellShortcuts")).FontSize(24).FontWeight(720).Grow(1)
+				ui.Text(c, a.Tr("shellShortcuts")).FontSize(24).FontWeight(800).Grow(1)
 				if nativeIconButton(c, "close", a.Tr("shellClose"), p, false, 32).Clicked() {
 					m.Shortcuts = false
 				}
@@ -968,7 +1526,7 @@ func nativeShortcuts(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 				for _, shortcut := range []struct{ key, chord string }{{"shellShortcutPlayPause", "Space"}, {"shellShortcutNextPrevious", "⌘ → / ←"}, {"shellShortcutVolume", "⌘ ↑ / ↓"}, {"shellShortcutSearch", "⌘ K"}, {"shellShortcutPanel", "⌘ J"}, {"shellShortcutImmersive", "⌘ ⇧ F"}, {"shellShortcutHome", "⌘ ⇧ H"}, {"shellShortcutLibrary", "⌘ L"}, {"shellShortcutMute", "⌘ ⇧ M"}, {"shellShortcutSidebar", "⌘ B"}, {"shellShortcutDismiss", "Esc"}} {
 					ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
 						ui.Text(c, a.Tr(shortcut.key)).Grow(1)
-						ui.Text(c, shortcut.chord).FontSize(12).Padding(5, 8).Radius(6).Background(p.input).TextColor(p.secondary)
+						ui.Text(c, shortcut.chord).FontSize(12).FontWeight(600).Padding(5, 8).Radius(4).Background(p.highlight).TextColor(p.secondary)
 					})
 				}
 			})
@@ -1029,16 +1587,27 @@ func nativePresentation(m *UIModel) nativePresentationKey {
 	}
 }
 
-func nativeBackdrop(c *ui.Context, m *UIModel, a ViewActions) {
+// nativeBackdrop washes the top of the page in colour: the blurred cover of a
+// collection, the current track's cover in immersive mode, or a stable tint
+// for pages without artwork.
+func nativeBackdrop(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 	src := m.Page.Artwork
-	if m.Immersive || src == "" {
+	if m.Immersive {
 		src = m.Current.Artwork
 	}
-	if src == "" || a.Artwork == nil {
-		return
+	var artwork ui.ImageSource
+	if src != "" && a.Artwork != nil {
+		artwork = a.Artwork(src, artworkEdge)
 	}
-	artwork := a.Artwork(src, artworkEdge)
+	strength := float32(0.5)
+	if !p.dark {
+		strength = 0.32
+	}
 	if artwork == nil {
+		if m.Immersive {
+			return
+		}
+		ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(100).Height(320).LinearGradient(ui.LinearGradient{From: nativeHeaderTint(m.Route).Alpha(strength), To: nativeHeaderTint(m.Route).Alpha(0), Angle: 180}).PassThrough()
 		return
 	}
 	// Blur a small layer, then draw it at the final size without a transform.
@@ -1046,11 +1615,15 @@ func nativeBackdrop(c *ui.Context, m *UIModel, a ViewActions) {
 	// rounded parent clip, which would erase the smaller canvas's savings.
 	layer := ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(25).Effect(backdropLayer{}).PassThrough()
 	if m.Immersive {
-		layer.HeightPercent(25).Opacity(0.14)
+		layer.HeightPercent(25).Opacity(strength * 0.7)
 	} else {
-		layer.Height(80).Opacity(0.07)
+		layer.Height(80).Opacity(strength)
 	}
 	layer.Children(func() { ui.Image(c, artwork).Fill().Fit(ui.Cover).Blur(17.5).PassThrough() })
+	if !m.Immersive {
+		// The blur spills below its 320-DIP band; fade it into the panel.
+		ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(100).Height(560).LinearGradient(ui.LinearGradient{From: p.surface.Alpha(0), To: p.surface, Angle: 180, Start: 0.2, End: 0.7}).PassThrough()
+	}
 }
 
 // The inner blur extends three sigma beyond its quarter-size image. Drawing
@@ -1139,15 +1712,12 @@ func nativeKeyboard(c *ui.Context, m *UIModel, a ViewActions) {
 }
 
 func nativeMediaSwitch(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
-	ui.Row(c).Height(32).Shrink(0).Gap(4).Padding(2).Radius(20).Background(p.raised).AlignSelf(ui.Center).Children(func() {
+	ui.Row(c).Shrink(0).Gap(8).AlignSelf(ui.Center).Children(func() {
 		for _, option := range []struct {
 			video bool
 			key   string
 		}{{false, "nativeArtwork"}, {true, "nativeVideo"}} {
-			b := ui.Button(c, a.Tr(option.key)).MinWidth(88).Height(28).Padding(3, 12).Radius(16).BorderWidth(0).Selected(m.Video == option.video).Background(ui.Transparent).TextColor(p.secondary).Disabled(m.Current.ID == "" || a.Video == nil)
-			if m.Video == option.video {
-				b.Background(p.highlight).TextColor(p.text)
-			}
+			b := nativeChip(c, a.Tr(option.key), p, m.Video == option.video).MinWidth(80).Disabled(m.Current.ID == "" || a.Video == nil)
 			if b.Clicked() {
 				a.Video(option.video)
 			}
@@ -1157,9 +1727,9 @@ func nativeMediaSwitch(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 
 func nativeMedia(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, size float32) ui.Element {
 	if !m.Video {
-		return nativeArtwork(c, m.Current.Artwork, size, 12, a, p)
+		return nativeArtwork(c, m.Current.Artwork, size, 8, a, p)
 	}
-	return ui.Box(c).Size(size, size*9/16).Shrink(0).Radius(12).Background(ui.Hex("#000000")).Clip().Center().Label(a.Tr("nativeVideo")).Children(func() {
+	return ui.Box(c).Size(size, size*9/16).Shrink(0).Radius(8).Background(ui.Hex("#000000")).Clip().Center().Label(a.Tr("nativeVideo")).Children(func() {
 		if m.VideoFrame != nil {
 			ui.Image(c, m.VideoFrame).Size(size, size*9/16).Fit(ui.Contain)
 		} else if m.VideoLoading {
@@ -1169,7 +1739,7 @@ func nativeMedia(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, size
 			if message == "" {
 				message = a.Tr("nativeVideoUnavailable")
 			}
-			ui.Text(c, message).Padding(16).TextAlign(ui.Center).TextColor(ui.Hex("#a8a8af")).FontSize(13)
+			ui.Text(c, message).Padding(16).TextAlign(ui.Center).TextColor(ui.Hex("#b3b3b3")).FontSize(13)
 		}
 	})
 }
@@ -1192,13 +1762,7 @@ func nativeExpandedTransport(c *ui.Context, m *UIModel, a ViewActions, p nativeP
 			if nativeIconButton(c, "next", a.Tr("shellNext"), p, false, 44).Disabled(m.Current.ID == "").Clicked() {
 				a.Next()
 			}
-			key, icon := "shellRepeatOff", "repeat"
-			if m.Repeat == 1 {
-				key = "shellRepeatAll"
-			}
-			if m.Repeat == 2 {
-				key, icon = "shellRepeatOne", "repeat-one"
-			}
+			icon, key := nativeRepeat(m)
 			if nativeIconButton(c, icon, a.Tr(key), p, m.Repeat > 0, 44).Clicked() {
 				a.Repeat()
 			}
@@ -1217,7 +1781,7 @@ func nativePlaybackNotice(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 	if m.PlaybackError == "" {
 		return
 	}
-	row := ui.Row(c).Gap(8).Padding(10).Radius(8).Background(p.raised).AlignItems(ui.Center)
+	row := ui.Row(c).Shrink(0).Gap(8).Padding(10).Radius(8).Background(p.raised).AlignItems(ui.Center)
 	if footer {
 		row.Height(24).Padding(0).Background(ui.Transparent)
 	}
@@ -1226,7 +1790,7 @@ func nativePlaybackNotice(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 		if footer {
 			text.MaxLines(1).Ellipsis("…").FontSize(11)
 		}
-		button := nativePill(c, a.Tr("buttonRetry"), p, false).Width(64).PaddingX(6).Disabled(a.RetryPlayback == nil)
+		button := nativePill(c, a.Tr("buttonRetry"), p, false).Width(72).PaddingX(6).Disabled(a.RetryPlayback == nil)
 		if footer {
 			button.Height(24).MinHeight(24).PaddingY(0)
 		}

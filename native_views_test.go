@@ -571,7 +571,13 @@ func TestNativeArtworkOnlyRequestsVisibleCovers(t *testing.T) {
 	if !ok {
 		t.Fatal("content scroller missing")
 	}
-	tt.Scroll(content.X+content.W/2, content.Y+content.H/2, 0, 6800)
+	first, ok := tt.Find("Track 0 · ")
+	second, ok2 := tt.Find("Track 1 · ")
+	if !ok || !ok2 {
+		t.Fatal("track rows missing")
+	}
+	// Bring row 100 to the middle of the page, whatever the row pitch.
+	tt.Scroll(content.X+content.W/2, content.Y+content.H/2, 0, first.Y+100*(second.Y-first.Y)-content.Y-content.H/2)
 	if _, exists := requested["cover-100"]; !exists {
 		t.Fatalf("newly visible cover not requested after scrolling: %v", requested)
 	}
@@ -611,5 +617,126 @@ func TestNativeArtworkClipsHorizontalShelves(t *testing.T) {
 	}
 	if len(requested) > 14 {
 		t.Fatalf("horizontal scroll requested hidden covers: %d", len(requested))
+	}
+}
+
+func TestNativeAccountStates(t *testing.T) {
+	for _, state := range []struct {
+		name              string
+		signedIn, premium bool
+		status            string
+	}{{"signed-out", false, false, "shellAccountSignedOut"}, {"standard", true, false, "shellAccountStandard"}, {"premium", true, true, "shellAccountPremium"}} {
+		t.Run(state.name, func(t *testing.T) {
+			m, a := nativeViewFixture()
+			m.SignedIn, m.MusicPremium = state.signedIn, state.premium
+			if state.signedIn {
+				m.LibraryItems = []catalog.Item{
+					{Title: "Weekend mixes", Artist: "Your playlist", BrowseID: "library-weekend", Kind: "playlist", Artwork: "art-1"},
+					{Title: "Discovery", Artist: "Daft Punk", BrowseID: "album-1", Kind: "album", Artwork: "art-2"},
+					{Title: "Daft Punk", BrowseID: "artist-1", Kind: "artist", Artwork: "art-3"},
+				}
+			}
+			accounts, signOuts := 0, 0
+			a.Account = func() { accounts++ }
+			a.SignOut = func() { signOuts++ }
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
+			label := a.Tr("menuAccount") + " · " + a.Tr(state.status)
+			if !state.signedIn {
+				if _, exists := tt.Find(label); exists {
+					t.Fatal("signed-out window shows an account avatar")
+				}
+				if !tt.HasText(a.Tr("shellLibraryEmptyTitle")) {
+					t.Fatal("signed-out library has no sign-in prompt")
+				}
+				if err := tt.Click(a.Tr("shellSignIn")); err != nil {
+					t.Fatal(err)
+				}
+				if accounts != 1 {
+					t.Fatal("sign in did not reach the account action")
+				}
+				a.Navigate("library")
+				tt.Frame()
+				if !tt.HasText(a.Tr("shellLibraryEmptyBody")) {
+					t.Fatal("library route did not require sign-in")
+				}
+				nativeSnapshot(t, tt, "1440-account-"+state.name)
+				return
+			}
+			if _, exists := tt.Find(a.Tr("shellSignIn")); exists {
+				t.Fatal("signed-in window still offers sign-in")
+			}
+			nativeAssertVisible(t, tt, label, 1440, 900)
+			if tt.HasText(a.Tr("shellPremiumBadge")) != state.premium {
+				t.Fatalf("Premium badge shown=%v for premium=%v", !state.premium, state.premium)
+			}
+			// Signed-in Home leads with the library's quick-access tiles.
+			nativeAssertVisible(t, tt, "Weekend mixes", 1440, 900)
+			nativeAssertVisible(t, tt, a.Tr("shellFilterAlbums"), 1440, 900)
+			if err := tt.Click(a.Tr("shellFilterAlbums")); err != nil {
+				t.Fatal(err)
+			}
+			if _, exists := tt.Find("Weekend mixes · Your playlist"); exists {
+				t.Fatal("album filter kept a playlist")
+			}
+			nativeAssertVisible(t, tt, "Discovery · Daft Punk", 1440, 900)
+			nativeSnapshot(t, tt, "1440-account-"+state.name)
+			if err := tt.Click(a.Tr("shellFilterClear")); err != nil {
+				t.Fatal(err)
+			}
+			nativeAssertVisible(t, tt, "Weekend mixes · Your playlist", 1440, 900)
+			if err := tt.Click(label); err != nil {
+				t.Fatal(err)
+			}
+			if err := tt.ChooseMenuItem(a.Tr("shellAccountManage")); err != nil {
+				t.Fatalf("%v: %v", err, tt.Menu())
+			}
+			if err := tt.Click(label); err != nil {
+				t.Fatal(err)
+			}
+			if err := tt.ChooseMenuItem(a.Tr("shellSignOut")); err != nil {
+				t.Fatal(err)
+			}
+			if accounts != 1 || signOuts != 1 {
+				t.Fatalf("account menu actions: manage=%d sign out=%d", accounts, signOuts)
+			}
+			if err := tt.Click(a.Tr("shellSettings")); err != nil {
+				t.Fatal(err)
+			}
+			if !tt.HasText(a.Tr(state.status)) {
+				t.Fatal("settings do not state the account plan")
+			}
+		})
+	}
+}
+
+func TestNativeCollectionPage(t *testing.T) {
+	for _, width := range []int{420, 1100, 1440} {
+		t.Run(fmt.Sprint(width), func(t *testing.T) {
+			m, a := nativeViewFixture()
+			m.Route = "browse:album-0"
+			m.Current = catalog.Item{}
+			m.Playing = false
+			m.Page = catalog.Page{Title: "Random Access Memories", Subtitle: "Album · Daft Punk · 2013", Artwork: "art-0", Items: m.Queue, Shelves: []catalog.Shelf{{Items: m.Queue}}}
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, 900)
+			play := a.Tr("shellPlay") + " · " + m.Page.Title
+			nativeAssertVisible(t, tt, play, width, 900)
+			if width > 760 && !tt.HasText(a.Tr("shellColumnAlbum")) {
+				t.Fatal("track table has no column headings")
+			}
+			nativeSnapshot(t, tt, fmt.Sprintf("%d-collection", width))
+			if err := tt.Click(play); err != nil {
+				t.Fatal(err)
+			}
+			if m.Current.ID != m.Queue[0].ID {
+				t.Fatal("collection play did not start the first track")
+			}
+			tt.Frame()
+			if err := tt.Click(a.Tr("shellPause") + " · " + m.Page.Title); err != nil {
+				t.Fatal(err)
+			}
+			if m.Playing {
+				t.Fatal("collection button did not pause its own playback")
+			}
+		})
 	}
 }

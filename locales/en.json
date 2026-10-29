@@ -318,6 +318,54 @@
   "@shellLibraryRegion": {
     "description": "Accessible name of the playlist list."
   },
+  "shellFilterPlaylists": "Playlists",
+  "@shellFilterPlaylists": {
+    "description": "Library filter chip: show only playlists."
+  },
+  "shellFilterAlbums": "Albums",
+  "@shellFilterAlbums": {
+    "description": "Library filter chip: show only albums."
+  },
+  "shellFilterArtists": "Artists",
+  "@shellFilterArtists": {
+    "description": "Library filter chip: show only artists."
+  },
+  "shellFilterSongs": "Songs",
+  "@shellFilterSongs": {
+    "description": "Library filter chip: show only songs and videos."
+  },
+  "shellFilterClear": "Clear filter",
+  "@shellFilterClear": {
+    "description": "Button that removes the library filter."
+  },
+  "shellKindPlaylist": "Playlist",
+  "@shellKindPlaylist": {
+    "description": "Item type shown before the owner in library rows."
+  },
+  "shellKindAlbum": "Album",
+  "@shellKindAlbum": {
+    "description": "Item type shown before the artist in library rows."
+  },
+  "shellKindArtist": "Artist",
+  "@shellKindArtist": {
+    "description": "Item type shown for artists in library rows and cards."
+  },
+  "shellKindSong": "Song",
+  "@shellKindSong": {
+    "description": "Item type shown before the artist for songs in library rows."
+  },
+  "shellColumnTitle": "Title",
+  "@shellColumnTitle": {
+    "description": "Track table column heading."
+  },
+  "shellColumnAlbum": "Album",
+  "@shellColumnAlbum": {
+    "description": "Track table column heading."
+  },
+  "shellColumnDuration": "Duration",
+  "@shellColumnDuration": {
+    "description": "Accessible name of the track table's clock column heading."
+  },
   "shellLibraryEmptyTitle": "Build your library",
   "@shellLibraryEmptyTitle": {
     "description": "Signed-out card title in the sidebar."
@@ -535,6 +583,22 @@
   "shellAccountManage": "Manage Google account",
   "@shellAccountManage": {
     "description": "Settings menu item."
+  },
+  "shellAccountSignedOut": "Not signed in",
+  "@shellAccountSignedOut": {
+    "description": "Account status when no Google account is connected."
+  },
+  "shellAccountStandard": "Signed in with Google",
+  "@shellAccountStandard": {
+    "description": "Account status for a connected account without YouTube Music Premium."
+  },
+  "shellAccountPremium": "YouTube Music Premium",
+  "@shellAccountPremium": {
+    "description": "Account status for a connected account with YouTube Music Premium. Product name; keep it as the service shows it in this language."
+  },
+  "shellPremiumBadge": "Premium",
+  "@shellPremiumBadge": {
+    "description": "Short badge beside the account avatar for YouTube Music Premium accounts."
   },
   "shellServiceSettings": "YouTube Music settings",
   "@shellServiceSettings": {

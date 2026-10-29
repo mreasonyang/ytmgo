@@ -1,8 +1,7 @@
 # ytmgo 0.4 — Native Design Specification
 
-ytmgo is a native MyGo desktop client for YouTube Music. Version 0.4 keeps
-the 0.3 visual system and navigation model, while drawing the interface from
-Go through `ui.View`. Catalogue responses become typed Go models; audio plays
+ytmgo is a native MyGo desktop client for YouTube Music. Version 0.4 draws
+a Spotify-style interface from Go through `ui.View`. Catalogue responses become typed Go models; audio plays
 through the system output; video is decoded only when requested. Google sign-in
 is the only temporary web surface. The music interface has no HTML, CSS,
 JavaScript bridge, embedded music page, or compatibility implementation.
@@ -18,97 +17,95 @@ Every decision below exists to protect that model.
 
 ## 1. Design system foundations
 
-The palette and vector icons live in `native_style.go`. The layout and type
-scale live in `native_views.go`, with responsive behavior exercised by the
-native MyGo software-renderer tests.
+The interface follows Spotify's desktop language: a black window frame, three
+rounded near-black panels, a global bar with a centred search pill, and a
+three-zone player bar. ytmgo keeps its own accent for playback state and the
+primary play actions. The palette and vector icons live in `native_style.go`;
+layout and type live in `native_views.go`, exercised by the MyGo
+software-renderer tests in `native_views_test.go`.
 
-### 1.1 Color hierarchy
+### 1.1 Color roles
 
 Dark is the primary theme. Light uses the same roles with inverted values.
 
-| Role | Token | Dark | Light | Use |
+| Role | Field | Dark | Light | Use |
 |---|---|---|---|---|
-| Base | `--y-base` | `#050506` | `#e7e7ea` | Window gutter, player bar |
-| Surface 1 | `--y-surface-1` | `#121214` | `#ffffff` | Panels: sidebar cards, canvas, now playing |
-| Surface 2 | `--y-surface-2` | `#1b1b1e` | `#f4f4f6` | Raised: hovered cards, empty states, segmented track |
-| Surface 3 | `--y-surface-3` | `#242428` | `#ebebee` | Inputs, chips, mini player |
-| Surface 4 | `--y-surface-4` | `#2f2f34` | `#e1e1e5` | Highlight: selected segment, tooltips, chip hover |
-| Glass | `--y-glass` / `-strong` | 72% / 88% surface | same | Scrolled top bar, popovers, dialogs, immersive side panel |
-| Text 1 | `--y-text-1` | `#f5f5f7` | `#121214` | Titles, primary labels |
-| Text 2 | `--y-text-2` | `#a8a8af` | `#55555c` | Secondary labels, artists, idle icons |
-| Text 3 | `--y-text-3` | `#84848c` | `#6b6b72` | Meta, timestamps, eyebrows |
-| Accent | `--y-accent` | `#ff5a4f` | `#e8382d` | Active toggles, playing row, progress on hover, primary play on cards |
-| On accent | `--y-on-accent` | `#0b0b0c` | `#ffffff` | Glyphs on accent |
-| Lines | `--y-line` / `-strong` | 7% / 14% white | 7% / 13% black | Hairlines, input borders |
-| States | `--y-hover` / `--y-press` / `--y-selected` | 6% / 10% / 12% | 4.5% / 8% / 8% | Overlay washes on any surface |
+| Base | `base` | `#000000` | `#e9e9eb` | Window frame, global bar, player bar, tab bar |
+| Surface | `surface` | `#121212` | `#ffffff` | Library, page and Now Playing panels |
+| Raised | `raised` | `#1f1f1f` | `#f2f2f3` | Search pill, round buttons, cards on hover, panel cards, dialogs |
+| Input | `input` | `#242424` | `#ececee` | Secondary pills |
+| Highlight | `highlight` | `#2a2a2a` | `#e1e1e4` | Hovered round buttons, artwork placeholders |
+| Text | `text` / `secondary` / `muted` | `#fff` / `#b3b3b3` / `#8f8f8f` | `#121212` / `#5a5a5f` / `#6b6b70` | Titles / artists, meta / placeholders |
+| Accent | `accent` / `onAccent` | `#ff5a4f` / `#000` | `#e8382d` / `#fff` | Playing title, active toggles, collection play, Premium avatar |
+| Washes | `hover` / `press` / `line` | 7% / 12% / 10% white | 5% / 9% / 10% black | Row and chip states, hairlines |
 
-Contrast: Text 1 and Text 2 exceed WCAG AA (4.5:1) on Surfaces 1–3 in both
-themes; Text 3 is reserved for non-essential meta at ≥ 4.5:1 on Surface 1.
-Accent is never the sole carrier of state: active toggles also get a dot,
-and the playing row also gets a tinted background plus the service's
-equalizer glyph.
+The primary call to action (sign in, play/pause) is an inverted pill or circle
+in `text` on `base`. Accent is never the only carrier of state: active toggles
+also get a dot, and the playing row also gets a wash and a speaker glyph.
 
-**Dynamic color.** Page or current-track artwork is rendered as a blurred
-native image behind the content. Immersive mode expands the same backdrop.
-The native palette supplies the overlay and keeps text readable.
+**Header wash.** Collections blur their cover into the top of the page panel
+and fade it into the surface. Pages without artwork use a stable per-route
+tint from `nativeHeaderTints`. Immersive mode blurs the current track across
+the whole panel. MyGo paints absolute elements above in-flow siblings, so the
+page sits in an absolute layer after the wash.
 
 ### 1.2 Typography
 
 System stack (SF Pro / PingFang SC on macOS, Noto Sans CJK on Linux,
-Microsoft YaHei on Windows). Display sizes use the Display optical size.
+Microsoft YaHei on Windows).
 
-| Token | Spec | Use |
-|---|---|---|
-| `--y-type-display` | 800 · clamp(32–56px) / 1.04 · −0.035em | Album/artist hero, immersive title |
-| `--y-type-title-1` | 760 · 32 / 1.12 | Greeting, compact immersive title, dialogs' parent |
-| `--y-type-title-2` | 720 · 24 / 1.2 | Shelf headings, now-playing title, dialog titles |
-| `--y-type-title-3` | 680 · 18 / 1.3 | Empty-state titles, promo titles |
-| `--y-type-body` | 500 · 15 / 1.45 | Running text, search input |
-| `--y-type-label` | 600 · 14 / 1.3 | Navigation, buttons, row titles, menu items |
-| `--y-type-caption` | 500 · 13 / 1.4 | Artists, meta, descriptions |
-| `--y-type-micro` | 700 · 11 / 1.3 · +0.08em · uppercase | Eyebrows ("正在播放", section straplines) |
+| Use | Spec |
+|---|---|
+| Collection title | 800 · 32–72 (5.5% of the page width), 2 lines |
+| Page title, immersive title | 800 · 32 (26 compact) / 40 (28 compact) |
+| Shelf heading, settings title | 800 · 24 (20 compact) |
+| Now Playing title | 800 · 22 |
+| Library title, section heading | 700 · 16 |
+| Row and card title | 500–700 · 15 |
+| Artist, meta, table headings | 400–500 · 13 |
+| Player title / artist | 600 · 14 / 12 |
 
 Time readouts occupy fixed-width slots so progress labels do not shift
 adjacent controls.
 
-### 1.3 Spacing and grid
+### 1.3 Layout
 
-4 px base: `--y-s-1` 4 · `-2` 8 · `-3` 12 · `-4` 16 · `-5` 20 · `-6` 24 ·
-`-8` 32 · `-10` 40 · `-12` 48 · `-16` 64.
-
-Layout geometry (also tokens, switched by breakpoint):
-
-| Token | Wide (>1180) | Medium (761–1180) | Compact (≤760) |
+| Region | Wide (>1180) | Medium (761–1180) | Compact (≤760) |
 |---|---|---|---|
-| `--y-gap` (panel gutter) | 8 | 8 | 0 |
-| `--y-sidebar-w` | 280 (72 collapsed) | 72 rail | 0 |
-| `--y-panel-w` | 360, docked | 380, overlay | 100vw sheet |
-| `--y-topbar-h` | 64 | 64 | 56 |
-| `--y-playerbar-h` | 84 | 84 | 64 (mini) |
-| `--y-tabbar-h` | 0 | 0 | 64 |
-| `--y-hit` (min target) | 32 | 32 | 44 |
+| Global bar | 64: brand, back/forward · home + search (Explore inside) · settings, account | same | 60 in-page: back, search, settings |
+| Library | 300 panel, collapsible to 72 | 72 rail | Library tab |
+| Page panel | rounded 8, inset 24 | same | full bleed, inset 16 |
+| Now Playing | 360 docked | 380 floating | fitted sheet |
+| Player | 80 three-zone bar | same | 60 mini player card + 64 tab bar |
 
-Canvas content is inset 32 px (16 px compact) so shelves, headers and the
-greeting share one left edge.
+Panels sit 8 apart on the black frame. Minimum hit targets are 32 on desktop
+and 44 in compact windows.
 
-### 1.4 Radii
+### 1.4 Components
 
-`xs 4` list thumbnails · `sm 6` card art, tooltips · `md 8` cards, rows,
-menu items · `lg 12` panels, now-playing art · `xl 16` popovers, dialogs ·
-`pill` buttons, chips, search, segmented controls.
+- **Library row:** 64 high, 48 cover (round for artists), title and
+  "kind · owner". The open collection is washed and its title accented.
+  Filter chips (playlists, albums, artists, songs) appear when the library holds
+  at least two kinds; a selected chip hides the others and gains a clear button.
+- **Quick-access tiles:** signed-in Home leads with up to eight library items in
+  a 4- or 2-column grid of 64-high tiles.
+- **Card:** 164 cover (140 compact), title and two-line subtitle; playable
+  cards raise an accent play button on hover.
+- **Track row:** 56 high, 40 cover. Collections number their rows under a
+  `#  Title  Album  ⏱` heading; the number becomes a play glyph on hover and a
+  speaker while playing.
+- **Collection header:** 232 cover (192 medium) beside the display title, then
+  a 56 accent play button that starts the first track or toggles the page's
+  own playback.
+- **Chips and pills:** chips are 32-high translucent capsules, inverted when
+  selected; pills are 36-high buttons with the primary form inverted.
 
-### 1.5 Elevation
+### 1.5 Radii and elevation
 
-| Level | Surface | Shadow | Examples |
-|---|---|---|---|
-| e0 | Base | none | Gutter, player bar |
-| e1 | Surface 1 | none (separation by gutter) | Sidebar, canvas, docked panel |
-| e2 | Surface 2 | `0 8 24 / 32%` | Hovered card, card art, mini art, tooltips |
-| e3 | Glass strong + blur 28 + 1 px rim | `0 16 48 / 48%` | Popovers, service menus, toast, mini player |
-| e4 | Glass / art | `0 24 80 / 60%` | Dialogs, overlay panel, immersive art |
-
-Native view ordering: canvas, navigation, now-playing panel, immersive surface,
-player controls, then settings and shortcut overlays. Menus are native controls.
+`4` thumbnails and table covers · `6` rows, cards' covers, tiles · `8` panels,
+cards, Now Playing art · `12` dialogs · capsule for pills, chips, search and
+round buttons. Shadows are used only on covers, the collection play button,
+dialogs and the floating Now Playing panel.
 
 ### 1.6 Native feedback
 
@@ -135,27 +132,33 @@ and tooltip text.
 
 ## 2. Native screen and interaction contract
 
-- Sidebar: 280 pt above 1180 pt, 72 pt rail below that breakpoint; Home,
-  Explore and Library retain the same order and icons. At 760 pt and below,
-  navigation moves to a fixed bottom tab bar and minimum targets become 44 pt.
-- Top bar: back/forward navigation, persistent search field and settings.
-  Search submits on Enter; text editing retains its normal keyboard behavior.
-- Catalogue: four-song columns and album/playlist cover shelves retain service
-  ordering, with horizontal scrolling. Album and playlist pages open in place.
-  Continuations append to the current page; failures offer an explicit retry.
-- Transport: fixed 84 pt desktop bar and 64 pt compact bar. Artwork/title opens
-  Now Playing. Play/pause, previous/next, shuffle, repeat, seek and volume operate
-  the same player in every presentation. Muting remembers the previous volume.
-- Now Playing: 360 pt docked panel on wide windows, 380 pt overlay at medium
-  widths, fitted sheet in compact windows. Queue and lyrics share one tab strip.
-- Immersive: prominent artwork or contained video, title/artist, controls,
-  queue/lyrics and an explicit exit. Navigation exits immersive mode first.
+- Account: three states. Signed out shows an inverted "Sign in" pill and
+  sign-in prompts in the library panel and on the Library route. Signed in
+  shows a neutral avatar; Music Premium shows an accent avatar and a "Premium"
+  badge on wide windows. The avatar's menu states the plan and offers account
+  management, settings and sign-out; Settings repeats the plan. The view only
+  reads `SignedIn` and `MusicPremium`; detection and transitions stay in
+  `account.go`.
+- Global bar: back/forward history, Home, the persistent search field and
+  Explore. Search submits on Enter; ⌘K focuses it from anywhere.
+- Catalogue: song shelves scroll horizontally in four-row columns, other
+  shelves as cards, with service ordering. Album and playlist pages open in
+  place with a numbered table. Continuations append to the current page;
+  failures offer an explicit retry.
+- Transport: the player bar's artwork/title opens Now Playing. Play/pause,
+  previous/next, shuffle, repeat, seek and volume operate the same player in
+  every presentation. Queue and lyrics buttons open Now Playing on that tab and
+  close it when it is already showing. Muting remembers the previous volume.
+- Now Playing: cover or video, title and like, then a card with Queue and
+  Lyrics chips. Floating and compact forms add their own transport.
+- Immersive: prominent artwork or contained video, title/artist, the queue and
+  lyrics card, and an explicit exit. Navigation exits immersive mode first.
 - Video: an explicit cover/video choice. Frames preserve source aspect ratio;
   there is no crop. Closing the panel or immersive surface stops video decoding.
   Audio continues independently. A failed video load shows an error.
-- Settings: system/dark/light appearance and system/English/Japanese/Simplified
-  Chinese/Traditional Chinese. Changes redraw the current native window and
-  preserve playback. Explicit language choice remains distinct from system.
+- Settings: account status and actions, system/dark/light appearance and
+  system/English/Japanese/Simplified Chinese/Traditional Chinese. Changes
+  redraw the current native window and preserve playback.
 - Menus, tray, global shortcut and OS Now Playing send commands to the same Go
   controller. Closing the main window on macOS hides it; quitting releases
   the native player, decoder and resolver helpers.

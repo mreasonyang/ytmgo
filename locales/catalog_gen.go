@@ -1129,6 +1129,174 @@ func (msgs Messages) ShellLibraryRegion() string {
 	return Catalog.Format(msgs.locale, "shellLibraryRegion", nil)
 }
 
+// ShellFilterPlaylists says "Playlists"
+// in the language the app shows.
+//
+// Library filter chip: show only playlists.
+func ShellFilterPlaylists() string { return In(i18n.Locale()).ShellFilterPlaylists() }
+
+// ShellFilterPlaylists says "Playlists"
+// in the language of msgs.
+//
+// Library filter chip: show only playlists.
+func (msgs Messages) ShellFilterPlaylists() string {
+	return Catalog.Format(msgs.locale, "shellFilterPlaylists", nil)
+}
+
+// ShellFilterAlbums says "Albums"
+// in the language the app shows.
+//
+// Library filter chip: show only albums.
+func ShellFilterAlbums() string { return In(i18n.Locale()).ShellFilterAlbums() }
+
+// ShellFilterAlbums says "Albums"
+// in the language of msgs.
+//
+// Library filter chip: show only albums.
+func (msgs Messages) ShellFilterAlbums() string {
+	return Catalog.Format(msgs.locale, "shellFilterAlbums", nil)
+}
+
+// ShellFilterArtists says "Artists"
+// in the language the app shows.
+//
+// Library filter chip: show only artists.
+func ShellFilterArtists() string { return In(i18n.Locale()).ShellFilterArtists() }
+
+// ShellFilterArtists says "Artists"
+// in the language of msgs.
+//
+// Library filter chip: show only artists.
+func (msgs Messages) ShellFilterArtists() string {
+	return Catalog.Format(msgs.locale, "shellFilterArtists", nil)
+}
+
+// ShellFilterSongs says "Songs"
+// in the language the app shows.
+//
+// Library filter chip: show only songs and videos.
+func ShellFilterSongs() string { return In(i18n.Locale()).ShellFilterSongs() }
+
+// ShellFilterSongs says "Songs"
+// in the language of msgs.
+//
+// Library filter chip: show only songs and videos.
+func (msgs Messages) ShellFilterSongs() string {
+	return Catalog.Format(msgs.locale, "shellFilterSongs", nil)
+}
+
+// ShellFilterClear says "Clear filter"
+// in the language the app shows.
+//
+// Button that removes the library filter.
+func ShellFilterClear() string { return In(i18n.Locale()).ShellFilterClear() }
+
+// ShellFilterClear says "Clear filter"
+// in the language of msgs.
+//
+// Button that removes the library filter.
+func (msgs Messages) ShellFilterClear() string {
+	return Catalog.Format(msgs.locale, "shellFilterClear", nil)
+}
+
+// ShellKindPlaylist says "Playlist"
+// in the language the app shows.
+//
+// Item type shown before the owner in library rows.
+func ShellKindPlaylist() string { return In(i18n.Locale()).ShellKindPlaylist() }
+
+// ShellKindPlaylist says "Playlist"
+// in the language of msgs.
+//
+// Item type shown before the owner in library rows.
+func (msgs Messages) ShellKindPlaylist() string {
+	return Catalog.Format(msgs.locale, "shellKindPlaylist", nil)
+}
+
+// ShellKindAlbum says "Album"
+// in the language the app shows.
+//
+// Item type shown before the artist in library rows.
+func ShellKindAlbum() string { return In(i18n.Locale()).ShellKindAlbum() }
+
+// ShellKindAlbum says "Album"
+// in the language of msgs.
+//
+// Item type shown before the artist in library rows.
+func (msgs Messages) ShellKindAlbum() string {
+	return Catalog.Format(msgs.locale, "shellKindAlbum", nil)
+}
+
+// ShellKindArtist says "Artist"
+// in the language the app shows.
+//
+// Item type shown for artists in library rows and cards.
+func ShellKindArtist() string { return In(i18n.Locale()).ShellKindArtist() }
+
+// ShellKindArtist says "Artist"
+// in the language of msgs.
+//
+// Item type shown for artists in library rows and cards.
+func (msgs Messages) ShellKindArtist() string {
+	return Catalog.Format(msgs.locale, "shellKindArtist", nil)
+}
+
+// ShellKindSong says "Song"
+// in the language the app shows.
+//
+// Item type shown before the artist for songs in library rows.
+func ShellKindSong() string { return In(i18n.Locale()).ShellKindSong() }
+
+// ShellKindSong says "Song"
+// in the language of msgs.
+//
+// Item type shown before the artist for songs in library rows.
+func (msgs Messages) ShellKindSong() string {
+	return Catalog.Format(msgs.locale, "shellKindSong", nil)
+}
+
+// ShellColumnTitle says "Title"
+// in the language the app shows.
+//
+// Track table column heading.
+func ShellColumnTitle() string { return In(i18n.Locale()).ShellColumnTitle() }
+
+// ShellColumnTitle says "Title"
+// in the language of msgs.
+//
+// Track table column heading.
+func (msgs Messages) ShellColumnTitle() string {
+	return Catalog.Format(msgs.locale, "shellColumnTitle", nil)
+}
+
+// ShellColumnAlbum says "Album"
+// in the language the app shows.
+//
+// Track table column heading.
+func ShellColumnAlbum() string { return In(i18n.Locale()).ShellColumnAlbum() }
+
+// ShellColumnAlbum says "Album"
+// in the language of msgs.
+//
+// Track table column heading.
+func (msgs Messages) ShellColumnAlbum() string {
+	return Catalog.Format(msgs.locale, "shellColumnAlbum", nil)
+}
+
+// ShellColumnDuration says "Duration"
+// in the language the app shows.
+//
+// Accessible name of the track table's clock column heading.
+func ShellColumnDuration() string { return In(i18n.Locale()).ShellColumnDuration() }
+
+// ShellColumnDuration says "Duration"
+// in the language of msgs.
+//
+// Accessible name of the track table's clock column heading.
+func (msgs Messages) ShellColumnDuration() string {
+	return Catalog.Format(msgs.locale, "shellColumnDuration", nil)
+}
+
 // ShellLibraryEmptyTitle says "Build your library"
 // in the language the app shows.
 //
@@ -1815,6 +1983,64 @@ func ShellAccountManage() string { return In(i18n.Locale()).ShellAccountManage()
 // Settings menu item.
 func (msgs Messages) ShellAccountManage() string {
 	return Catalog.Format(msgs.locale, "shellAccountManage", nil)
+}
+
+// ShellAccountSignedOut says "Not signed in"
+// in the language the app shows.
+//
+// Account status when no Google account is connected.
+func ShellAccountSignedOut() string { return In(i18n.Locale()).ShellAccountSignedOut() }
+
+// ShellAccountSignedOut says "Not signed in"
+// in the language of msgs.
+//
+// Account status when no Google account is connected.
+func (msgs Messages) ShellAccountSignedOut() string {
+	return Catalog.Format(msgs.locale, "shellAccountSignedOut", nil)
+}
+
+// ShellAccountStandard says "Signed in with Google"
+// in the language the app shows.
+//
+// Account status for a connected account without YouTube Music Premium.
+func ShellAccountStandard() string { return In(i18n.Locale()).ShellAccountStandard() }
+
+// ShellAccountStandard says "Signed in with Google"
+// in the language of msgs.
+//
+// Account status for a connected account without YouTube Music Premium.
+func (msgs Messages) ShellAccountStandard() string {
+	return Catalog.Format(msgs.locale, "shellAccountStandard", nil)
+}
+
+// ShellAccountPremium says "YouTube Music Premium"
+// in the language the app shows.
+//
+// Account status for a connected account with YouTube Music Premium.
+// Product name; keep it as the service shows it in this language.
+func ShellAccountPremium() string { return In(i18n.Locale()).ShellAccountPremium() }
+
+// ShellAccountPremium says "YouTube Music Premium"
+// in the language of msgs.
+//
+// Account status for a connected account with YouTube Music Premium.
+// Product name; keep it as the service shows it in this language.
+func (msgs Messages) ShellAccountPremium() string {
+	return Catalog.Format(msgs.locale, "shellAccountPremium", nil)
+}
+
+// ShellPremiumBadge says "Premium"
+// in the language the app shows.
+//
+// Short badge beside the account avatar for YouTube Music Premium accounts.
+func ShellPremiumBadge() string { return In(i18n.Locale()).ShellPremiumBadge() }
+
+// ShellPremiumBadge says "Premium"
+// in the language of msgs.
+//
+// Short badge beside the account avatar for YouTube Music Premium accounts.
+func (msgs Messages) ShellPremiumBadge() string {
+	return Catalog.Format(msgs.locale, "shellPremiumBadge", nil)
 }
 
 // ShellServiceSettings says "YouTube Music settings"

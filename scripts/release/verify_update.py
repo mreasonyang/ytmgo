@@ -110,7 +110,7 @@ def main():
     EVIDENCE.mkdir(parents=True, exist_ok=False)
     app, baseline, baseline_digest = release(args.from_version)
     before = integrity(app)
-    if before["cli_version"] != args.from_version:
+    if before["cli_version"] != args.from_version or before["version"] != args.from_version:
         raise CheckError("baseline_version_mismatch")
     print("Public baseline verified", flush=True)
     checked = json.loads(command([app / "Contents/MacOS/ytmgo", "--check-for-updates"]))

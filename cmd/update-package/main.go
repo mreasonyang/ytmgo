@@ -201,7 +201,9 @@ func archiveBundle(out io.Writer, app string) error {
 				return errors.New("bundle link escapes app")
 			}
 		}
-		header, err := tar.FileInfoHeader(info, link)
+		// TAR link targets use slash-separated paths just like entry names.
+		// Readlink returns native separators on Windows.
+		header, err := tar.FileInfoHeader(info, filepath.ToSlash(link))
 		if err != nil {
 			return err
 		}

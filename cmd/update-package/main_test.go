@@ -32,7 +32,7 @@ func fixture(t *testing.T) (string, string, configuration, string) {
 			t.Fatal(err)
 		}
 	}
-	if err := os.Symlink("MacOS/ytmgo", filepath.Join(app, "Contents/current")); err != nil {
+	if err := os.Symlink(filepath.Join("MacOS", "ytmgo"), filepath.Join(app, "Contents/current")); err != nil {
 		t.Fatal(err)
 	}
 	pub, key, err := ed25519.GenerateKey(rand.Reader)
@@ -94,7 +94,7 @@ func TestPackagePreservesBundleAndRejectsTampering(t *testing.T) {
 	if got, want := entries["ytmgo.app/Contents/MacOS/ytmgo"].Mode&0o777, int64(source.Mode().Perm()); got != want {
 		t.Fatalf("bundle permissions changed: got %04o, want %04o", got, want)
 	}
-	if entries["ytmgo.app/Contents/current"].Linkname != "MacOS/ytmgo" {
+	if link := entries["ytmgo.app/Contents/current"]; link.Typeflag != tar.TypeSymlink || link.Linkname != "MacOS/ytmgo" {
 		t.Fatal("bundle symlink lost")
 	}
 	data[len(data)/2] ^= 1

@@ -7,6 +7,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"testing/synctest"
 	"time"
 )
 
@@ -168,41 +169,44 @@ func TestVideoStartupDeadlineIncludesDecoderOpen(t *testing.T) {
 }
 
 func TestVideoPersistentSlowFramesHaveFiniteCatchups(t *testing.T) {
-	v := testVideo()
-	defer v.Close()
-	v.policy = fastVideoPolicy()
-	v.policy.startupTimeout = 2 * time.Second
-	v.policy.stallTimeout = 500 * time.Millisecond
-	v.policy.healthyPeriod = 5 * time.Second
-	var opens atomic.Int64
-	var mu sync.Mutex
-	var streams []*pacedVideoStream
-	v.open = func(context.Context, videoMedia, time.Duration) (*videoDecoder, error) {
-		opens.Add(1)
-		d, s := pacedVideoDecoder(120*time.Millisecond, 200*time.Millisecond, -1)
-		mu.Lock()
-		streams = append(streams, s)
-		mu.Unlock()
-		return d, nil
-	}
-	start := time.Now()
-	if err := v.Start(context.Background(), "aaaaaaaaaaa", func() time.Duration { return 20*time.Second + time.Since(start) }, func() bool { return true }); err != nil {
-		t.Fatal(err)
-	}
-	deadline := time.Now().Add(4 * time.Second)
-	for v.Error() == "" && time.Now().Before(deadline) {
-		time.Sleep(5 * time.Millisecond)
-	}
-	if v.Error() != "video_network_timeout" || opens.Load() != 3 {
-		t.Fatalf("slow stream did not exhaust exactly two catchups: opens=%d", opens.Load())
-	}
-	mu.Lock()
-	defer mu.Unlock()
-	for _, stream := range streams {
-		if !stream.closed.Load() {
-			t.Fatal("catchup left an old decoder active")
+	synctest.Test(t, func(t *testing.T) {
+		v := testVideo()
+		defer v.Close()
+		v.policy = fastVideoPolicy()
+		v.policy.startupTimeout = 2 * time.Second
+		// Exercise the catch-up budget without a competing presentation-stall deadline.
+		v.policy.stallTimeout = 2 * time.Second
+		v.policy.healthyPeriod = 5 * time.Second
+		var opens atomic.Int64
+		var mu sync.Mutex
+		var streams []*pacedVideoStream
+		v.open = func(context.Context, videoMedia, time.Duration) (*videoDecoder, error) {
+			opens.Add(1)
+			d, s := pacedVideoDecoder(120*time.Millisecond, 200*time.Millisecond, -1)
+			mu.Lock()
+			streams = append(streams, s)
+			mu.Unlock()
+			return d, nil
 		}
-	}
+		start := time.Now()
+		if err := v.Start(context.Background(), "aaaaaaaaaaa", func() time.Duration { return 20*time.Second + time.Since(start) }, func() bool { return true }); err != nil {
+			t.Fatal(err)
+		}
+		deadline := time.Now().Add(4 * time.Second)
+		for v.Error() == "" && time.Now().Before(deadline) {
+			time.Sleep(5 * time.Millisecond)
+		}
+		if v.Error() != "video_network_timeout" || opens.Load() != 3 {
+			t.Fatalf("slow stream did not exhaust exactly two catchups: opens=%d", opens.Load())
+		}
+		mu.Lock()
+		defer mu.Unlock()
+		for _, stream := range streams {
+			if !stream.closed.Load() {
+				t.Fatal("catchup left an old decoder active")
+			}
+		}
+	})
 }
 
 func TestVideoCatchupsDoNotExtendWholeStartupDeadline(t *testing.T) {
@@ -600,26 +604,28 @@ func TestVideoRecoveryLeadIsBounded(t *testing.T) {
 }
 
 func TestVideoWaitingForFutureFrameKeepsWholeStartupDeadline(t *testing.T) {
-	v := testVideo()
-	defer v.Close()
-	v.policy = fastVideoPolicy()
-	v.policy.startupTimeout = 350 * time.Millisecond
-	v.policy.stallTimeout = 500 * time.Millisecond
-	var opens atomic.Int64
-	v.open = func(context.Context, videoMedia, time.Duration) (*videoDecoder, error) {
-		if opens.Add(1) == 1 {
-			d, _ := pacedVideoDecoder(120*time.Millisecond, videoFrameInterval, -1)
+	synctest.Test(t, func(t *testing.T) {
+		v := testVideo()
+		defer v.Close()
+		v.policy = fastVideoPolicy()
+		v.policy.startupTimeout = 350 * time.Millisecond
+		v.policy.stallTimeout = 500 * time.Millisecond
+		var opens atomic.Int64
+		v.open = func(context.Context, videoMedia, time.Duration) (*videoDecoder, error) {
+			if opens.Add(1) == 1 {
+				d, _ := pacedVideoDecoder(120*time.Millisecond, videoFrameInterval, -1)
+				return d, nil
+			}
+			d, _ := pacedVideoDecoder(0, 0, -1)
 			return d, nil
 		}
-		d, _ := pacedVideoDecoder(0, 0, -1)
-		return d, nil
-	}
-	start := time.Now()
-	if err := v.Start(context.Background(), "aaaaaaaaaaa", func() time.Duration { return 20*time.Second + time.Since(start) }, func() bool { return true }); err != nil {
-		t.Fatal(err)
-	}
-	waitVideo(t, func() bool { return v.Error() != "" })
-	if frame, _ := v.Frame(); frame != nil || v.Error() != "video_network_timeout" || opens.Load() != 2 || time.Since(start) > 600*time.Millisecond {
-		t.Fatalf("future-frame waiting escaped the first-frame deadline: opens=%d", opens.Load())
-	}
+		start := time.Now()
+		if err := v.Start(context.Background(), "aaaaaaaaaaa", func() time.Duration { return 20*time.Second + time.Since(start) }, func() bool { return true }); err != nil {
+			t.Fatal(err)
+		}
+		waitVideo(t, func() bool { return v.Error() != "" })
+		if frame, _ := v.Frame(); frame != nil || v.Error() != "video_network_timeout" || opens.Load() != 2 || time.Since(start) > 600*time.Millisecond {
+			t.Fatalf("future-frame waiting escaped the first-frame deadline: opens=%d", opens.Load())
+		}
+	})
 }

@@ -1,0 +1,45 @@
+name: macOS public update check
+
+on:
+  workflow_dispatch:
+    inputs:
+      from_version:
+        description: Released baseline version that already includes the updater
+        required: true
+        type: string
+      to_version:
+        description: Expected version in the current production feed
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  upgrade:
+    if: github.ref == 'refs/heads/main'
+    runs-on: xcode-27
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.13"
+      - name: Verify public release upgrade
+        env:
+          FROM_VERSION: ${{ inputs.from_version }}
+          TO_VERSION: ${{ inputs.to_version }}
+        run: python3 scripts/release/verify_update.py --from-version "$FROM_VERSION" --to-version "$TO_VERSION"
+      - name: Save upgrade receipt
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: ytmgo-public-upgrade-receipt-${{ github.run_number }}
+          path: evidence/auto-update-check/upgrade-receipt.json
+          if-no-files-found: error
+          retention-days: 30

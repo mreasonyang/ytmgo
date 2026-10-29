@@ -212,5 +212,5 @@
   "nativePlaybackAwaitingAccount": "アカウントが復元されると再生が始まります。",
   "nativeKindPodcast": "ポッドキャスト",
   "nativeKindEpisode": "エピソード",
-  "nativeAccountRestoreFailed": "保存したアカウントを復元できませんでした。もう一度ログインしてください。"
+  "nativeAccountRestoreFailed": "保存したアカウントを復元できませんでした。再試行してシステムが求めるアクセスを許可するか、もう一度ログインしてください。"
 }

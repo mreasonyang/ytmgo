@@ -759,5 +759,5 @@
   "nativePlaybackAwaitingAccount": "Playback starts once your account is restored.",
   "nativeKindPodcast": "Podcast",
   "nativeKindEpisode": "Episode",
-  "nativeAccountRestoreFailed": "Your saved account could not be restored. Sign in again to continue."
+  "nativeAccountRestoreFailed": "Your saved account could not be restored. Retry and allow access if the system asks, or sign in again."
 }

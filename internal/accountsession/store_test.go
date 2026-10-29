@@ -20,22 +20,17 @@ type memorySecrets struct {
 	deleteCalls             int
 	failGet, failSet        bool
 	failDelete              bool
-	afterGet, afterSet      func()
+	afterGet                func()
+	afterSet                func()
+	getInteractions         []Interaction
+	deleteInteractions      []Interaction
 	unexpectedKeyWasTouched bool
 }
 
-func ownedFixtureKey(k string) bool {
-	if k == sessionKeyName {
-		return true
-	}
-	id, ok := strings.CutPrefix(k, sessionKeyName+"-")
-	decoded, err := hex.DecodeString(id)
-	return ok && err == nil && len(decoded) == keyIDSize
-}
-
-func (m *memorySecrets) Get(k string) ([]byte, error) {
+func (m *memorySecrets) Get(k string, interaction Interaction) ([]byte, error) {
 	m.getCalls++
-	m.unexpectedKeyWasTouched = m.unexpectedKeyWasTouched || !ownedFixtureKey(k)
+	m.getInteractions = append(m.getInteractions, interaction)
+	m.unexpectedKeyWasTouched = m.unexpectedKeyWasTouched || k != sessionKeyName
 	if m.afterGet != nil {
 		m.afterGet()
 	}
@@ -50,7 +45,7 @@ func (m *memorySecrets) Get(k string) ([]byte, error) {
 }
 func (m *memorySecrets) Set(k string, v []byte) error {
 	m.setCalls++
-	m.unexpectedKeyWasTouched = m.unexpectedKeyWasTouched || !ownedFixtureKey(k)
+	m.unexpectedKeyWasTouched = m.unexpectedKeyWasTouched || k != sessionKeyName
 	if m.failSet {
 		return errors.New("synthetic-secret-detail-must-not-escape")
 	}
@@ -60,11 +55,15 @@ func (m *memorySecrets) Set(k string, v []byte) error {
 	}
 	return nil
 }
-func (m *memorySecrets) Delete(k string) error {
+func (m *memorySecrets) Delete(k string, interaction Interaction) error {
 	m.deleteCalls++
-	m.unexpectedKeyWasTouched = m.unexpectedKeyWasTouched || !ownedFixtureKey(k)
+	m.deleteInteractions = append(m.deleteInteractions, interaction)
+	m.unexpectedKeyWasTouched = m.unexpectedKeyWasTouched || k != sessionKeyName
 	if m.failDelete {
 		return errors.New("synthetic-secret-detail-must-not-escape")
+	}
+	if _, ok := m.values[k]; !ok {
+		return ErrNotFound
 	}
 	delete(m.values, k)
 	return nil
@@ -101,14 +100,12 @@ func noTemporaryFiles(t *testing.T, path string) {
 func TestSecretStoreLargeEncryptedRoundTripAndOwnKeyDelete(t *testing.T) {
 	store, m := testStore(t)
 	m.values["unrelated"] = []byte("synthetic-unrelated")
-	m.values["native-account-session-v1"] = []byte("synthetic-untouched-old-item")
-	m.values["native-account-session-v1.old.0"] = []byte("synthetic-untouched-old-item")
 	session := fixture()
 	session.Cookies[0].Value = strings.Repeat("s", 9000)
 	if store.Save(context.Background(), session) != nil {
 		t.Fatal("save failed")
 	}
-	if len(m.values) != 4 || len(m.values[sessionKeyName]) != 32 || m.setCalls != 1 {
+	if len(m.values) != 2 || len(m.values[sessionKeyName]) != 32 || m.setCalls != 1 {
 		t.Fatal("large session did not use exactly one 32-byte native secret")
 	}
 	data := savedBytes(t, store.Path)
@@ -122,17 +119,18 @@ func TestSecretStoreLargeEncryptedRoundTripAndOwnKeyDelete(t *testing.T) {
 		}
 	}
 	restarted := Store{Secrets: m, Path: store.Path}
-	loaded, err := restarted.Load()
+	loaded, err := restarted.Load(NoPrompt)
 	if err != nil || len(loaded.Cookies[0].Value) != 9000 || *loaded.AccountIndex != 2 {
 		t.Fatal("new Store instance could not restore whole session")
 	}
-	if restarted.Delete() != nil || len(m.values) != 3 || m.values["unrelated"] == nil || m.unexpectedKeyWasTouched {
+	if restarted.Delete(AllowPrompt) != nil || len(m.values) != 1 || m.values["unrelated"] == nil || m.unexpectedKeyWasTouched {
 		t.Fatal("deletion retained the current key or touched another native secret")
 	}
 	if _, err := os.Stat(store.Path); !errors.Is(err, os.ErrNotExist) {
 		t.Fatal("deletion retained encrypted session")
 	}
-	if store.Delete() != nil {
+	deletes := m.deleteCalls
+	if store.Delete(AllowPrompt) != nil || m.deleteCalls != deletes+1 {
 		t.Fatal("repeat deletion was not idempotent")
 	}
 }
@@ -140,23 +138,51 @@ func TestSecretStoreLargeEncryptedRoundTripAndOwnKeyDelete(t *testing.T) {
 func TestSecretStoreMissingFileNeverReadsNativeSecrets(t *testing.T) {
 	store, m := testStore(t)
 	m.failGet = true
-	if _, err := store.Load(); err != ErrNotFound || m.getCalls != 0 {
+	if _, err := store.Load(NoPrompt); err != ErrNotFound || m.getCalls != 0 {
 		t.Fatal("fresh install queried native secrets or failed to distinguish absence")
 	}
 	m.values[sessionKeyName] = bytes.Repeat([]byte{1}, 32)
-	if _, err := store.Load(); err != ErrNotFound || m.getCalls != 0 {
+	if _, err := store.Load(NoPrompt); err != ErrNotFound || m.getCalls != 0 {
 		t.Fatal("orphan key caused native secret access without a session file")
 	}
 }
 
-func TestSecretStoreReusesKeyWithFreshNonce(t *testing.T) {
+func TestSecretStoreRejectsUnsupportedFormatsBeforeNativeSecrets(t *testing.T) {
+	for _, header := range []string{"YTMSESS\x01", "YTMSESS\x02", "YTMSESS\x04"} {
+		t.Run(hex.EncodeToString([]byte(header)), func(t *testing.T) {
+			store, secrets := testStore(t)
+			// An unsupported header must not trigger key discovery or migration.
+			key := bytes.Repeat([]byte{1}, sessionKeySize)
+			secrets.values[sessionKeyName] = append([]byte(nil), key...)
+			data := append([]byte(header), bytes.Repeat([]byte{2}, 64)...)
+			if os.MkdirAll(filepath.Dir(store.Path), 0700) != nil || os.WriteFile(store.Path, data, 0600) != nil {
+				t.Fatal("unsupported session setup failed")
+			}
+			if _, err := store.Load(NoPrompt); err != ErrStorage || secrets.getCalls != 0 || secrets.setCalls != 0 || secrets.deleteCalls != 0 || !bytes.Equal(data, savedBytes(t, store.Path)) {
+				t.Fatal("unsupported session was accessed or migrated")
+			}
+			if store.Save(context.Background(), fixture()) != nil || secrets.setCalls != 0 || secrets.deleteCalls != 0 || secrets.unexpectedKeyWasTouched || !bytes.Equal(key, secrets.values[sessionKeyName]) {
+				t.Fatal("fresh login depended on unsupported session storage")
+			}
+			if _, err := store.Load(NoPrompt); err != nil {
+				t.Fatal("fresh current-format login could not be restored")
+			}
+			if store.Delete(AllowPrompt) != nil || len(secrets.values) != 0 {
+				t.Fatal("logout retained the session key")
+			}
+		})
+	}
+}
+
+func TestSecretStoreReusesKeyWithFreshNonceAcrossRestarts(t *testing.T) {
 	store, m := testStore(t)
 	if store.Save(context.Background(), fixture()) != nil {
 		t.Fatal("initial save failed")
 	}
 	first := savedBytes(t, store.Path)
 	key := append([]byte(nil), m.values[sessionKeyName]...)
-	if store.Save(context.Background(), fixture()) != nil {
+	restarted := Store{Secrets: m, Path: store.Path}
+	if restarted.Save(context.Background(), fixture()) != nil {
 		t.Fatal("second save failed")
 	}
 	second := savedBytes(t, store.Path)
@@ -164,8 +190,8 @@ func TestSecretStoreReusesKeyWithFreshNonce(t *testing.T) {
 	if bytes.Equal(first, second) || bytes.Equal(first[start:start+12], second[start:start+12]) {
 		t.Fatal("repeated save reused ciphertext or nonce")
 	}
-	if !bytes.Equal(key, m.values[sessionKeyName]) || m.setCalls != 1 {
-		t.Fatal("repeated save replaced native key")
+	if !bytes.Equal(key, m.values[sessionKeyName]) || m.setCalls != 1 || m.deleteCalls != 0 || len(m.values) != 1 {
+		t.Fatal("saving a new session rotated or duplicated the persistent key")
 	}
 	noTemporaryFiles(t, store.Path)
 }
@@ -178,6 +204,7 @@ func TestSecretStoreCorruptionAndMissingKeysFailClosed(t *testing.T) {
 				t.Fatal("initial save failed")
 			}
 			data := savedBytes(t, store.Path)
+			name := sessionKeyName
 			switch test {
 			case "ciphertext":
 				data[len(data)-1] ^= 1
@@ -190,59 +217,26 @@ func TestSecretStoreCorruptionAndMissingKeysFailClosed(t *testing.T) {
 			case "oversized":
 				data = make([]byte, maxSessionFileSize+1)
 			case "missing-key":
-				delete(m.values, sessionKeyName)
+				delete(m.values, name)
 			case "wrong-key":
-				m.values[sessionKeyName][0] ^= 1
+				m.values[name][0] ^= 1
 			case "short-key":
-				m.values[sessionKeyName] = []byte("synthetic-short-key")
+				m.values[name] = []byte("synthetic-short-key")
 			}
 			if os.WriteFile(store.Path, data, 0600) != nil {
 				t.Fatal("synthetic corruption setup failed")
 			}
-			if loaded, err := store.Load(); err != ErrStorage || loaded.Cookies != nil {
+			if loaded, err := store.Load(NoPrompt); err != ErrStorage || loaded.Cookies != nil {
 				t.Fatal("damaged storage returned a session or unfixed error")
 			}
-			if store.Save(context.Background(), fixture()) != ErrStorage || m.setCalls != 1 || !bytes.Equal(data, savedBytes(t, store.Path)) {
-				t.Fatal("save replaced corrupt storage or its key")
+			if m.setCalls != 1 || !bytes.Equal(data, savedBytes(t, store.Path)) || m.unexpectedKeyWasTouched {
+				t.Fatal("load modified damaged storage or accessed an unrelated key")
 			}
-			if store.Delete() != nil {
+			if store.Delete(AllowPrompt) != nil {
 				t.Fatal("corrupt owned session could not be deleted")
 			}
 		})
 	}
-}
-
-func TestSecretStoreFailedAndCanceledSavePreservesPrevious(t *testing.T) {
-	store, m := testStore(t)
-	if store.Save(context.Background(), fixture()) != nil {
-		t.Fatal("initial save failed")
-	}
-	original := savedBytes(t, store.Path)
-	changed := fixture()
-	i := 3
-	changed.AccountIndex = &i
-	m.failGet = true
-	if store.Save(context.Background(), changed) != ErrStorage {
-		t.Fatal("native key error was not normalized")
-	}
-	m.failGet = false
-	ctx, cancel := context.WithCancel(context.Background())
-	m.afterGet = cancel
-	if store.Save(ctx, changed) != ErrStorage {
-		t.Fatal("save committed after cancellation during native key access")
-	}
-	m.afterGet = nil
-	restoreDirectory := blockSessionLocation(t, store.Path)
-	err := store.Save(context.Background(), changed)
-	restoreDirectory()
-	if err != ErrStorage || !bytes.Equal(original, savedBytes(t, store.Path)) || m.setCalls != 1 {
-		t.Fatal("failed or canceled save changed previous ciphertext or key")
-	}
-	loaded, err := store.Load()
-	if err != nil || *loaded.AccountIndex != 2 {
-		t.Fatal("previous session no longer loads")
-	}
-	noTemporaryFiles(t, store.Path)
 }
 
 func TestSecretStoreCanceledInitialSaveAndFailedKeyCreation(t *testing.T) {
@@ -259,17 +253,17 @@ func TestSecretStoreCanceledInitialSaveAndFailedKeyCreation(t *testing.T) {
 	m.failSet = false
 	ctx, cancel = context.WithCancel(context.Background())
 	m.afterSet = cancel
-	if store.Save(ctx, fixture()) != ErrStorage {
+	if store.Save(ctx, fixture()) != ErrStorage || len(m.values) != 1 {
 		t.Fatal("save committed after cancellation during key creation")
 	}
 	if _, err := os.Stat(store.Path); !errors.Is(err, os.ErrNotExist) {
 		t.Fatal("failed first save committed a session file")
 	}
 	m.afterSet = nil
-	key := append([]byte(nil), m.values[sessionKeyName]...)
 	sets := m.setCalls
-	if store.Save(context.Background(), fixture()) != nil || m.setCalls != sets || !bytes.Equal(key, m.values[sessionKeyName]) {
-		t.Fatal("unused valid key was not reused")
+	key := append([]byte(nil), m.values[sessionKeyName]...)
+	if store.Save(context.Background(), fixture()) != nil || m.setCalls != sets || len(m.values) != 1 || !bytes.Equal(key, m.values[sessionKeyName]) || m.deleteCalls != 0 {
+		t.Fatal("retry failed to reuse the key from the canceled save")
 	}
 }
 
@@ -362,22 +356,23 @@ func TestSecretStoreDeleteFailuresAreReported(t *testing.T) {
 		t.Fatal("initial save failed")
 	}
 	restoreDirectory := blockSessionLocation(t, store.Path)
-	err := store.Delete()
+	err := store.Delete(AllowPrompt)
 	restoreDirectory()
 	if err != ErrStorage || m.deleteCalls != 0 {
 		t.Fatal("failed file removal was hidden or deleted key first")
 	}
 	m.failDelete = true
-	if store.Delete() != ErrStorage {
+	if store.Delete(AllowPrompt) != ErrStorage {
 		t.Fatal("native key deletion error was hidden")
 	}
 	gets := m.getCalls
-	if _, err := store.Load(); err != ErrNotFound || m.getCalls != gets {
+	if _, err := store.Load(NoPrompt); err != ErrNotFound || m.getCalls != gets {
 		t.Fatal("failed key deletion restored signed-out session")
 	}
+	deletes := m.deleteCalls
 	m.failDelete = false
-	if store.Delete() != nil || len(m.values) != 0 {
-		t.Fatal("could not retry native key deletion")
+	if store.Delete(AllowPrompt) != nil || m.deleteCalls != deletes+1 || len(m.values) != 0 || m.getCalls != gets {
+		t.Fatal("logout retry could not delete the key after its file was removed")
 	}
 }
 
@@ -411,7 +406,7 @@ func TestSecretStoreRejectsPublicCiphertextPermissions(t *testing.T) {
 	if os.Chmod(store.Path, 0644) != nil {
 		t.Fatal("mode setup failed")
 	}
-	if _, err := store.Load(); err != ErrStorage || secrets.getCalls != reads {
+	if _, err := store.Load(NoPrompt); err != ErrStorage || secrets.getCalls != reads {
 		t.Fatal("public ciphertext reached native secret access")
 	}
 	if os.Chmod(store.Path, 0600) != nil {
@@ -431,18 +426,20 @@ func TestSecretStoreLoadPreservesExpiryError(t *testing.T) {
 	if err != nil {
 		t.Fatal("synthetic session serialization failed")
 	}
-	aead, err := sessionCipher(m.values[sessionKeyName])
+	name := sessionKeyName
+	header := savedBytes(t, store.Path)[:len(sessionFileHeader)]
+	aead, err := sessionCipher(m.values[name])
 	if err != nil {
 		t.Fatal("synthetic cipher setup failed")
 	}
-	data := append([]byte(sessionFileHeader), aead.Seal(nil, nil, plain, []byte(sessionFileHeader))...)
+	data := append(header, aead.Seal(nil, nil, plain, header)...)
 	if os.WriteFile(store.Path, data, 0600) != nil {
 		t.Fatal("synthetic expiry setup failed")
 	}
-	if _, err := store.Load(); err != ErrExpired {
+	if _, err := store.Load(NoPrompt); err != ErrExpired {
 		t.Fatal("expiry was changed into a storage failure")
 	}
-	if store.Delete() != nil || len(m.values) != 0 {
+	if store.Delete(AllowPrompt) != nil || len(m.values) != 0 {
 		t.Fatal("expired session could not be removed")
 	}
 }

@@ -11,14 +11,9 @@ import (
 )
 
 // MyGo uses the file-based login Keychain. Its interaction flag is process-wide,
-// so serialize all of this app's secret operations while a restore reads without
-// UI. A denied/locked old item becomes a recoverable error, never a hidden prompt.
+// so serialize this app's secret operations while setting the requested policy.
+// Background restoration is silent; explicit account actions may request access.
 var accountSecretMu sync.Mutex
-
-type keychainInteraction struct {
-	get func(*uint8) int32
-	set func(uint8) int32
-}
 
 var accountKeychainInteraction = sync.OnceValue(func() *keychainInteraction {
 	lib, err := purego.Dlopen("/System/Library/Frameworks/Security.framework/Security", purego.RTLD_NOW|purego.RTLD_LOCAL)
@@ -39,30 +34,26 @@ var accountKeychainInteraction = sync.OnceValue(func() *keychainInteraction {
 	return api
 })
 
-func readNativeAccountSecret(key string) ([]byte, error) {
+func withNativeAccountSecret(interaction accountsession.Interaction, operation func() error) error {
 	accountSecretMu.Lock()
 	defer accountSecretMu.Unlock()
-	api := accountKeychainInteraction()
-	return readAccountSecretWithoutPrompt(api, func() ([]byte, error) { return mygo.Secrets.Get(key) })
+	return withKeychainInteraction(accountKeychainInteraction(), interaction, operation)
 }
 
-func readAccountSecretWithoutPrompt(api *keychainInteraction, read func() ([]byte, error)) ([]byte, error) {
-	var previous uint8
-	if api == nil || api.get(&previous) != 0 || api.set(0) != 0 {
-		return nil, accountsession.ErrStorage
-	}
-	defer api.set(previous)
-	return read()
+func readNativeAccountSecret(key string, interaction accountsession.Interaction) ([]byte, error) {
+	var value []byte
+	err := withNativeAccountSecret(interaction, func() error {
+		var err error
+		value, err = mygo.Secrets.Get(key)
+		return err
+	})
+	return value, err
 }
 
 func setNativeAccountSecret(key string, value []byte) error {
-	accountSecretMu.Lock()
-	defer accountSecretMu.Unlock()
-	return mygo.Secrets.Set(key, value)
+	return withNativeAccountSecret(accountsession.AllowPrompt, func() error { return mygo.Secrets.Set(key, value) })
 }
 
-func deleteNativeAccountSecret(key string) error {
-	accountSecretMu.Lock()
-	defer accountSecretMu.Unlock()
-	return mygo.Secrets.Delete(key)
+func deleteNativeAccountSecret(key string, interaction accountsession.Interaction) error {
+	return withNativeAccountSecret(interaction, func() error { return mygo.Secrets.Delete(key) })
 }

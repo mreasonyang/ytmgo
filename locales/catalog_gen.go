@@ -2855,11 +2855,11 @@ func (msgs Messages) NativeKindEpisode() string {
 	return Catalog.Format(msgs.locale, "nativeKindEpisode", nil)
 }
 
-// NativeAccountRestoreFailed says "Your saved account could not be restored. Sign in again to continue."
+// NativeAccountRestoreFailed says "Your saved account could not be restored. Retry and allow access if the system asks, or sign in again."
 // in the language the app shows.
 func NativeAccountRestoreFailed() string { return In(i18n.Locale()).NativeAccountRestoreFailed() }
 
-// NativeAccountRestoreFailed says "Your saved account could not be restored. Sign in again to continue."
+// NativeAccountRestoreFailed says "Your saved account could not be restored. Retry and allow access if the system asks, or sign in again."
 // in the language of msgs.
 func (msgs Messages) NativeAccountRestoreFailed() string {
 	return Catalog.Format(msgs.locale, "nativeAccountRestoreFailed", nil)

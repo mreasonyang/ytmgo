@@ -212,5 +212,5 @@
   "nativePlaybackAwaitingAccount": "帳戶還原後將開始播放。",
   "nativeKindPodcast": "Podcast",
   "nativeKindEpisode": "單集",
-  "nativeAccountRestoreFailed": "無法還原已儲存的帳戶，請重新登入。"
+  "nativeAccountRestoreFailed": "無法還原已儲存的帳戶。請重試並允許系統要求的存取權限，或重新登入。"
 }

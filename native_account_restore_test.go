@@ -53,6 +53,15 @@ func TestNativeAccountRestoreStatesAreExplained(t *testing.T) {
 					}
 					m.Settings = true
 					tt.Frame()
+					if state == accountRestoreDeferred {
+						cleared := 0
+						a.SignOut = func() { cleared++ }
+						if err := tt.Click(a.Tr("shellSignOut")); err != nil || cleared != 1 {
+							t.Fatalf("unrestorable account cannot be cleared from settings: %v", err)
+						}
+						m.Settings = true
+						tt.Frame()
+					}
 					if !tt.HasText(nativeAccountStatus(m, a)) || nativeAccountStatus(m, a) == a.Tr("shellAccountSignedOut") {
 						t.Fatal("settings reports a restoring account as signed out")
 					}

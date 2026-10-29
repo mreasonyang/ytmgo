@@ -2,8 +2,15 @@
 
 package main
 
-import "github.com/egoist/mygo"
+import (
+	"github.com/egoist/mygo"
+	"ytmgo/internal/accountsession"
+)
 
-func readNativeAccountSecret(key string) ([]byte, error)    { return mygo.Secrets.Get(key) }
+func readNativeAccountSecret(key string, _ accountsession.Interaction) ([]byte, error) {
+	return mygo.Secrets.Get(key)
+}
 func setNativeAccountSecret(key string, value []byte) error { return mygo.Secrets.Set(key, value) }
-func deleteNativeAccountSecret(key string) error            { return mygo.Secrets.Delete(key) }
+func deleteNativeAccountSecret(key string, _ accountsession.Interaction) error {
+	return mygo.Secrets.Delete(key)
+}

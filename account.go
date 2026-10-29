@@ -73,15 +73,15 @@ type nativeAccountSecrets struct{}
 func (nativeAccountSecrets) Set(key string, value []byte) error {
 	return setNativeAccountSecret(key, value)
 }
-func (nativeAccountSecrets) Get(key string) ([]byte, error) {
-	value, err := readNativeAccountSecret(key)
+func (nativeAccountSecrets) Get(key string, interaction accountsession.Interaction) ([]byte, error) {
+	value, err := readNativeAccountSecret(key, interaction)
 	if errors.Is(err, mygo.ErrSecretNotFound) {
 		return nil, accountsession.ErrNotFound
 	}
 	return value, err
 }
-func (nativeAccountSecrets) Delete(key string) error {
-	err := deleteNativeAccountSecret(key)
+func (nativeAccountSecrets) Delete(key string, interaction accountsession.Interaction) error {
+	err := deleteNativeAccountSecret(key, interaction)
 	if errors.Is(err, mygo.ErrSecretNotFound) {
 		return accountsession.ErrNotFound
 	}
@@ -145,18 +145,18 @@ func verifyAccountSession(ctx context.Context, candidate accountSessionClient, s
 }
 
 type accountSessionStore interface {
-	Load() (accountsession.Session, error)
-	Delete() error
+	Load(accountsession.Interaction) (accountsession.Session, error)
+	Delete(accountsession.Interaction) error
 }
 
-func restoreAccountSession(store accountSessionStore) (accountsession.Session, error) {
-	session, err := store.Load()
+func restoreAccountSession(store accountSessionStore, interaction accountsession.Interaction) (accountsession.Session, error) {
+	session, err := store.Load(interaction)
 	if !errors.Is(err, accountsession.ErrExpired) {
 		return session, err
 	}
 	// Delete this app's encrypted session and its key. A failed deletion remains
 	// a storage failure, never an apparently successful anonymous restore.
-	if store.Delete() != nil {
+	if store.Delete(interaction) != nil {
 		return accountsession.Session{}, accountsession.ErrStorage
 	}
 	return accountsession.Session{}, accountsession.ErrNotFound
@@ -195,7 +195,7 @@ func (a *desktop) refreshAccount() {
 		// A deferred store read waits for an explicit retry: rereading can
 		// raise the same system authorization prompt on every poll.
 		if a.model.AccountRestore != accountRestoreDeferred {
-			a.restoreAccount()
+			a.restoreAccount(accountsession.NoPrompt)
 		}
 		return
 	}
@@ -204,7 +204,7 @@ func (a *desktop) refreshAccount() {
 	}
 	a.updateAccount(s.session, false)
 }
-func (a *desktop) restoreAccount() {
+func (a *desktop) restoreAccount(interaction accountsession.Interaction) {
 	s := &a.accountState
 	if a.accountBusy {
 		return
@@ -215,7 +215,7 @@ func (a *desktop) restoreAccount() {
 	ctx := s.flow.begin(a.ctx, generation)
 	go func() {
 		s.work.Lock()
-		session, err := restoreAccountSession(s.store)
+		session, err := restoreAccountSession(s.store, interaction)
 		s.work.Unlock()
 		a.post(func() {
 			accepted, flowErr := s.flow.finish(ctx, generation, a.accountGeneration, nil, func() error { return nil })
@@ -277,7 +277,7 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 		}
 		errorKey := accountErrorMessageKey(err)
 		if err == nil && newIdentity {
-			err = s.store.Replace(ctx, *session)
+			err = s.store.Save(ctx, *session)
 			if err != nil {
 				errorKey = "nativeAccountStorageError"
 			}
@@ -288,7 +288,7 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 			revision++
 			session = nil
 			credentials = catalog.SessionCredentials{}
-			storageErr = s.store.Delete()
+			storageErr = s.store.Delete(accountsession.NoPrompt)
 			if storageErr != nil {
 				errorKey = "nativeAccountStorageError"
 			}
@@ -350,6 +350,12 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 				}
 			}
 			if err != nil {
+				if errors.Is(err, accountsession.ErrStorage) && !a.model.SignedIn {
+					// A failed first save can leave only the persistent key. Offer
+					// restore/clear actions even when there is no saved session yet.
+					s.restored = false
+					a.deferAccountRestore()
+				}
 				if restoring && !verified {
 					// The saved session stays for the next refresh or an explicit
 					// retry; public tracks must not wait for it meanwhile.
@@ -430,7 +436,7 @@ func (a *desktop) retryAccountRestore() {
 	}
 	a.clearAccountRequestFailure(false)
 	if !s.restored {
-		a.restoreAccount()
+		a.restoreAccount(accountsession.AllowPrompt)
 		return
 	}
 	a.beginAccountRestore()
@@ -653,7 +659,7 @@ func (a *desktop) clearAccountPlayback() {
 	mygo.NowPlaying.Clear()
 }
 func (a *desktop) signOut() {
-	if a.accountBusy || !a.model.SignedIn {
+	if a.accountBusy || (!a.model.SignedIn && !nativeRestoreDeferred(&a.model)) {
 		return
 	}
 	a.stopAccountLogin()
@@ -675,6 +681,7 @@ func (a *desktop) signOut() {
 			s.session = nil
 			s.restored = true
 			s.ready = false
+			a.model.AccountRestore = ""
 			a.accountBusy = true
 			if a.playCancel != nil {
 				a.playCancel()
@@ -710,7 +717,7 @@ func (a *desktop) signOut() {
 			ctx := s.flow.begin(a.ctx, generation)
 			go func() {
 				s.work.Lock()
-				storageErr := s.store.Delete()
+				storageErr := s.store.Delete(accountsession.AllowPrompt)
 				configureErr := a.player.SetAccount(ctx, player.AccountSession{Revision: revision})
 				s.work.Unlock()
 				a.post(func() {
@@ -724,6 +731,9 @@ func (a *desktop) signOut() {
 						s.configured = player.AccountSession{Revision: revision}
 					}
 					if storageErr != nil {
+						// Keep the clear-local-data action available for a retry.
+						a.model.AccountRestore = accountRestoreDeferred
+						s.restored = false
 						a.accountMessage("nativeAccountStorageError")
 					} else if configureErr != nil || flowErr != nil {
 						a.accountMessage("nativeAccountError")

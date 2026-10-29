@@ -213,14 +213,20 @@ func TestAccountRequiredExpiryReturnsExplicitSignedOutWithoutNetwork(t *testing.
 }
 
 type restoreSessionFixture struct {
-	loadErr, deleteErr error
-	deletes            int
+	loadErr, deleteErr                 error
+	deletes                            int
+	loadInteraction, deleteInteraction accountsession.Interaction
 }
 
-func (f *restoreSessionFixture) Load() (accountsession.Session, error) {
+func (f *restoreSessionFixture) Load(interaction accountsession.Interaction) (accountsession.Session, error) {
+	f.loadInteraction = interaction
 	return accountsession.Session{}, f.loadErr
 }
-func (f *restoreSessionFixture) Delete() error { f.deletes++; return f.deleteErr }
+func (f *restoreSessionFixture) Delete(interaction accountsession.Interaction) error {
+	f.deletes++
+	f.deleteInteraction = interaction
+	return f.deleteErr
+}
 func TestAccountRestoreDistinguishesExpiryStorageAndMalformedSession(t *testing.T) {
 	for _, test := range []struct {
 		loadErr, deleteErr, want error
@@ -232,10 +238,15 @@ func TestAccountRestoreDistinguishesExpiryStorageAndMalformedSession(t *testing.
 		{accountsession.ErrSession, nil, accountsession.ErrSession, 0},
 		{accountsession.ErrNotFound, nil, accountsession.ErrNotFound, 0},
 	} {
-		store := &restoreSessionFixture{loadErr: test.loadErr, deleteErr: test.deleteErr}
-		_, err := restoreAccountSession(store)
-		if !errors.Is(err, test.want) || store.deletes != test.deletes {
-			t.Fatal("restore conflated expiration with a storage or validation failure")
+		for _, interaction := range []accountsession.Interaction{accountsession.NoPrompt, accountsession.AllowPrompt} {
+			store := &restoreSessionFixture{loadErr: test.loadErr, deleteErr: test.deleteErr}
+			_, err := restoreAccountSession(store, interaction)
+			if !errors.Is(err, test.want) || store.deletes != test.deletes {
+				t.Fatal("restore conflated expiration with a storage or validation failure")
+			}
+			if store.loadInteraction != interaction || store.deletes != 0 && store.deleteInteraction != interaction {
+				t.Fatal("restore lost the caller's authorization policy")
+			}
 		}
 	}
 }

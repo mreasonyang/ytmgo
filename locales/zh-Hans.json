@@ -212,5 +212,5 @@
   "nativePlaybackAwaitingAccount": "账号恢复后将开始播放。",
   "nativeKindPodcast": "播客",
   "nativeKindEpisode": "单集",
-  "nativeAccountRestoreFailed": "无法恢复已保存的账号，请重新登录。"
+  "nativeAccountRestoreFailed": "无法恢复已保存的账号。请重试并允许系统请求的访问权限，或重新登录。"
 }

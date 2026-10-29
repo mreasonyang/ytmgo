@@ -136,15 +136,18 @@ and tooltip text.
 - Account restoration: while a saved session is read and verified, the top
   bar, library and Settings say the account is being restored and do not offer
   sign-in; a track selected meanwhile explains that it waits for the account.
-  On macOS the saved key is read without system authorization UI; inaccessible
-  storage offers sign-in again. After 12 s a remaining verification wait is
+  On macOS automatic restoration reads without system authorization UI; an
+  explicit restore or sign-in may request access to the existing key. After 12 s a remaining verification wait is
   explained with "Continue without account". A failed or skipped restore keeps
   the saved session, plays anonymously and offers "Restore account" beside
-  sign-in; polling never rereads the store in that state. A newly verified sign-in
-  creates an independent key and atomically replaces the encrypted session without
-  reading or decrypting the old login. Failed commits preserve the old session;
-  only the fresh attempt's key is cleaned up. Inaccessible retired keys are not
-  accessed during reconnect.
+  sign-in; polling never rereads the store in that state. Settings also offers
+  explicit clearing of unrestorable account data through the sign-out action.
+  A newly verified sign-in reuses the persistent key, generates a fresh GCM nonce
+  and atomically replaces the encrypted session without reading the old file.
+  Failed commits preserve the old file and the key. Only a missing key permits
+  creation; locked, denied or malformed keys fail without replacement. A key
+  created before a failed first file commit stays available for retry. Only one
+  encrypted session format is read and written; no migration or fallback exists.
 - Account: three states. Signed out shows an inverted "Sign in" pill and
   sign-in prompts in the library panel and on the Library route. Signed in
   shows a neutral avatar; Music Premium shows an accent avatar and a "Premium"
@@ -194,19 +197,29 @@ FFmpeg only reads a local relay; remote URLs and headers stay inside Node.
 `artwork.go` bounds the decoded image cache and download
 concurrency. Settings remain small files in the application data directory.
 
-Acceptance requires no WebKit anywhere in the application, including sign-in.
 External links use the system default browser through MyGo Shell. Account
-authorization uses a user-clicked, short-lived loopback extension handoff in a
-Chromium-compatible browser. The current extension does not support Safari or
-Firefox; the guide lets users copy the Music URL to the browser containing the
-extension. It does not select or require a browser vendor. A single 32-byte key belongs to
-this app in the system secret store. The entire session is authenticated-encrypted
-with AES-256-GCM in `account/session.enc` under the app data directory, using
-atomic replacement, a private directory and an owner-only file. Missing ciphertext
-returns signed out without touching the secret store. Signing out removes the
-ciphertext before deleting the key. Old chunked sessions are not read or migrated;
-those users reconnect their account. No WebKit store or legacy fallback exists. Session data
-must never enter logs, argv, environment variables or evidence files.
+authorization uses a separate, temporary native WebView login process. The helper
+returns the selected YouTube session through private pipes; the app verifies it
+with the service before saving. There is no browser-extension or HTTP handoff.
+A single random 32-byte AES key belongs to this app in the system secret store
+under the fixed name `account-session-key`; Cookies are never stored there.
+The session file contains the authenticated `YTMSESS\x03` header, a fresh 12-byte
+nonce, ciphertext and a 16-byte GCM tag, with no key ID. It is stored at
+`account/session.enc` under the app data directory using atomic replacement, a
+private directory and an owner-only file. Missing ciphertext returns signed out
+without touching the secret store. Signing out removes the ciphertext before
+deleting the key, and retries key deletion even when the file is already absent
+or damaged. Confirmed expiry or server sign-out also clears the saved account;
+network and authorization errors retain it. Session data must never enter logs,
+argv, environment variables or evidence files.
+
+The key lifecycle follows Chromium's
+[KeychainPassword implementation](https://github.com/chromium/chromium/blob/main/components/os_crypt/common/keychain_password_mac.mm):
+read one stable item and create it only on an explicit not-found result. As in
+[Electron safeStorage](https://www.electronjs.org/docs/latest/api/safe-storage),
+the OS protects the encryption key while application data stays encrypted on disk;
+temporary key-store unavailability is an error, not a reason to replace the key.
+The app's single-instance lock and serial account worker protect key/file writes.
 The service supplies logged-in and Music Premium booleans. A five-minute poll
 and foreground refresh update them only after a valid response. Premium engines
 must not import DOM/proof modules. Other modes create the proof engine only on

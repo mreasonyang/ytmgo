@@ -1631,7 +1631,7 @@ func nativeSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, w
 							a.Account()
 						}
 						nativeRestoreActions(c, m, a, p, nativeRestoring(m))
-						if m.SignedIn {
+						if m.SignedIn || nativeRestoreDeferred(m) {
 							if nativePill(c, a.Tr("shellSignOut"), p, false).TextColor(p.accentText).Clicked() {
 								m.Settings = false
 								a.SignOut()

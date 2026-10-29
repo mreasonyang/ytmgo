@@ -1,7 +1,12 @@
 {
   "name": "ytmgo",
   "identifier": "si.kyun.ytmgo",
-  "version": "0.4.0",
+  "version": "0.5.0",
+  "updates": {
+    "publicKey": "QdNGPq3cMZgxGD4axj0uOJFhUy6hHpmR710PRm3oovE=",
+    "github": "mreasonyang/ytmgo",
+    "deltas": 0
+  },
   "out": "build",
   "icon": "resources/icon.png",
   "macos": {

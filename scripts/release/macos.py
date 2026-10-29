@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SECRET_NAMES = (
     "MACOS_CERTIFICATE_P12_BASE64", "MACOS_CERTIFICATE_PASSWORD",
     "APPLE_ID", "APPLE_APP_SPECIFIC_PASSWORD",
+    "MYGO_UPDATER_PRIVATE_KEY",
 )
 MACH_HEADERS = {bytes.fromhex(value) for value in (
     "feedface", "cefaedfe", "feedfacf", "cffaedfe", "cafebabe", "bebafeca",
@@ -300,6 +301,12 @@ def package(mode):
                 staple(dmg)
                 run(["spctl", "--assess", "--type", "open", "--context", "context:primary-signature", dmg],
                     "Disk image Gatekeeper assessment")
+        update_files = []
+        if mode == "notarized" and config.get("updates"):
+            run([ROOT / "build/release/update-package", "--app", app, "--out", output],
+                "Signed updater package creation", input_bytes=required("MYGO_UPDATER_PRIVATE_KEY").encode())
+            update_files = [output / ("ytmgo-" + version + "-darwin-arm64.tar.gz"),
+                            output / "update-darwin-arm64.json"]
         metadata = {
             "version": version, "architecture": "arm64", "mode": mode,
             "minimum_macos": config["macos"]["minimumSystemVersion"],
@@ -307,10 +314,11 @@ def package(mode):
             "run_url": "https://github.com/" + os.environ.get("GITHUB_REPOSITORY", "mreasonyang/ytmgo")
                        + "/actions/runs/" + os.environ.get("GITHUB_RUN_ID", "local"),
             "developer_id_signed": mode != "unsigned", "notarized": mode == "notarized",
+            "signed_updates": bool(update_files),
         }
         (output / "build.json").write_text(json.dumps(metadata, indent=2) + "\n")
         (output / "SHA256SUMS").write_text("".join(
-            digest(path) + "  " + path.name + "\n" for path in (archive, dmg, output / "build.json")))
+            digest(path) + "  " + path.name + "\n" for path in (archive, dmg, output / "build.json", *update_files)))
         print("Packaged macOS arm64 build: " + mode, flush=True)
     finally:
         if directory is not None:

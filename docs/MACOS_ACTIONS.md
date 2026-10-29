@@ -9,7 +9,7 @@
 | `developer-id` | Developer ID `.p12`、导出密码、Team ID | Developer ID 签名 App / DMG，未公证 |
 | `notarized` | 上述配置及 Apple ID、应用专用密码 | 签名并公证 App / DMG，附带 stapled tickets |
 
-所有模式先逐步执行与 `make check` 相同的检查，再执行 `make build-app` 构建完整 App，最终在签名步骤制作 DMG，避免重复生成一个未使用的 ad-hoc DMG。各检查分开显示，失败时可直接定位命令，无需提取原始诊断日志。成功后在对应运行页面的 **Artifacts** 下载 DMG、保留 App bundle 的 ZIP、`SHA256SUMS` 与 `build.json`，保留 14 天。`build.json` 记录版本、提交、模式和最低系统要求。工作流不创建 GitHub Release；公开仓库的运行记录和构建 artifacts 对有相应 GitHub 访问权限的人可见。
+所有模式先逐步执行与 `make check` 相同的检查，再执行 `make build-app` 构建完整 App，最终在签名步骤制作 DMG，避免重复生成一个未使用的 ad-hoc DMG。各检查分开显示，失败时可直接定位命令，无需提取原始诊断日志。成功后在对应运行页面的 **Artifacts** 下载 DMG、保留 App bundle 的 ZIP、`SHA256SUMS` 与 `build.json`，保留 14 天。`build.json` 记录版本、提交、模式和最低系统要求。勾选 `publish_release` 时，仅允许 `notarized` 模式：先创建 draft，上传并核验全部资产的 SHA-256 后再公开发布。发布版本不可覆盖；`X.Y.Z-rc.N` 发布为预发行版，不改变稳定更新 feed，普通 `X.Y.Z` 设为最新稳定版。`release_version` 留空时使用 `mygo.json` 的版本。公开 Release 的 DMG、ZIP 和更新包无需 GitHub 登录即可下载。
 
 ## 1. 导出 Developer ID Application 证书
 
@@ -23,7 +23,7 @@
 
 环境：[macos-release](https://github.com/mreasonyang/ytmgo/settings/environments)。部署分支策略只允许 `main`，工作流也只接受 `main`。普通 pull request 的登录测试没有签名 secrets。
 
-在该环境配置以下 **Environment secrets**：
+可以在仓库 [Actions secrets](https://github.com/mreasonyang/ytmgo/settings/secrets/actions) 配置以下 **Repository secrets**，或使用环境 secrets（同名时环境配置优先）。当前仓库使用 Repository secrets：
 
 | 名称 | 内容 |
 | --- | --- |
@@ -72,3 +72,38 @@ gh workflow run macos-package.yml --repo mreasonyang/ytmgo --ref main -f mode=no
 缺少 setting 时按报错名称补齐。`Certificate import failed` 检查 `.p12` 是否含私钥、密码是否正确；`Expected exactly one valid Developer ID…` 检查证书有效期、类型和 Team ID。`Notarization credential validation failed` 检查 Apple ID 是否属于该 Team、应用专用密码是否有效；修改或重置 Apple Account 常用登录密码会撤销应用专用密码，需要重新生成和上传。Apple 延迟时可重新运行，证书与 Apple 公证服务结果需分别验证。
 
 参考：[Apple notarization](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)、[notarytool 应用专用密码与钥匙串认证](https://developer.apple.com/documentation/technotes/tn3147-migrating-to-the-latest-notarization-tool)、[GitHub Xcode 27 runner image](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md)。
+
+
+## 5. 自动升级发布
+
+应用使用 MyGo 0.7.1 的原生更新窗口。稳定 feed 是：
+
+```text
+https://github.com/mreasonyang/ytmgo/releases/latest/download/update-darwin-arm64.json
+```
+
+更新器只接受内置公钥对应的 Ed25519 签名。这个密钥与 Apple Developer ID 证书用途不同：Apple 签名和公证用于系统分发信任，更新签名用于确认下载的压缩包来自本项目。不要重新生成密钥来替换已发布版本的公钥，否则已有安装将不能接收更新。
+
+`MYGO_UPDATER_PRIVATE_KEY` 已通过 stdin 配置为本仓库 Actions secret，公钥在 `mygo.json`。私钥备份在维护者机器的仓库外目录 `~/.config/ytmgo/update-signing/mygo-update.key`（0600）；应另行保存在自己的安全备份中，不提交、不输出、不放入截图。它只在签名步骤绑定，通过 stdin 传给提前编译的打包助手，其他子进程会移除该变量。
+
+工作流先给最终 App 完成签名、公证和 staple，再生成 `ytmgo-X.Y.Z-darwin-arm64.tar.gz` 与 `update-darwin-arm64.json`。签名覆盖压缩包的 SHA-256；包保留完整 `.app`、执行权限和内部符号链接。发布前使用公钥独立验签，并核对 GitHub 返回的每个资产摘要。失败会保留未公开 draft，不发布部分更新。修正失败后如已存在 draft/tag，先检查该 draft，使用新版本号重新构建，不覆盖已公开版本。
+
+发布新稳定版：修改 `mygo.json` 和 `main.go` 的开发版本并推送 `main`，运行 **macOS package → notarized → publish_release**。或使用：
+
+```sh
+gh workflow run macos-package.yml --repo mreasonyang/ytmgo --ref main -f mode=notarized -F publish_release=true
+```
+
+仅测试打包时保持 `publish_release=false`，不会影响线上更新。验证预发行版时可填写 `release_version=0.5.0-rc.1`。客户端默认只接收稳定版，预发行版也能升级到版本号更高的稳定版。
+
+0.4.0 需要从 [Releases](https://github.com/mreasonyang/ytmgo/releases) 手动安装一次。将应用从 DMG 拖入自己可写的 Applications 目录再运行；只读 DMG 内运行无法替换自身。安装 0.5.0 后启动自动检查，菜单可随时检查。更新窗口内可开启自动下载，默认先征询安装；更新替换 App bundle，不主动清理账号、语言或外观数据。
+
+维护命令不启动音乐窗口或读取账号，用于隔离的已发布包验收：
+
+```sh
+/path/to/ytmgo.app/Contents/MacOS/ytmgo --version
+/path/to/ytmgo.app/Contents/MacOS/ytmgo --check-for-updates
+/path/to/ytmgo.app/Contents/MacOS/ytmgo --install-update
+```
+
+最后一个命令只在当前执行的 bundle 中暂存更新，进程退出后由 MyGo helper 替换；之后再次打开。正式验收应保留公开发布的旧版作为起点，验证公开 feed、下载签名、替换后的版本、Apple 签名和 stapled ticket；本地伪造旧版或源码测试不能代替这个结果。

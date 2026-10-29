@@ -115,6 +115,35 @@ class PackagingTests(unittest.TestCase):
                 macos.package("developer-id")
             cleanup.assert_called_once()
 
+    def test_updater_packages_final_stapled_app_and_uses_stdin(self):
+        app = self.root / "build/darwin-arm64/ytmgo.app"
+        app.mkdir(parents=True)
+        (self.root / "mygo.json").write_text(json.dumps({"version": "0.5.0", "updates": {"publicKey": "fixture"},
+                                                       "macos": {"minimumSystemVersion": "27.0"}}))
+        events = []
+        def command(args, stage, **kwargs):
+            events.append(stage)
+            if stage == "Signed updater package creation":
+                self.assertEqual(kwargs["input_bytes"], b"synthetic update fixture")
+                self.assertNotIn("synthetic update fixture", args)
+                self.assertIn("App Gatekeeper assessment", events)
+                self.assertIn("Disk image Gatekeeper assessment", events)
+                for name in ("ytmgo-0.5.0-darwin-arm64.tar.gz", "update-darwin-arm64.json"):
+                    (self.root / "dist/macos" / name).write_bytes(b"signed fixture")
+            return b""
+        with patch.object(macos, "ROOT", self.root), patch.dict(os.environ, {"MYGO_UPDATER_PRIVATE_KEY": "synthetic update fixture"}), \
+             patch.object(macos, "signing_directory", return_value=self.root / "private"), \
+             patch.object(macos, "import_identity", return_value=("fixture", self.root / "keychain")), \
+             patch.object(macos, "sign_app"), patch.object(macos, "sign"), patch.object(macos, "notarize"), \
+             patch.object(macos, "staple"), patch.object(macos, "create_disk_image"), \
+             patch.object(macos, "run", side_effect=command), patch.object(macos, "digest", return_value="a" * 64), \
+             patch.object(macos, "cleanup") as cleanup, patch("builtins.print"):
+            macos.package("notarized")
+        metadata = json.loads((self.root / "dist/macos/build.json").read_text())
+        self.assertTrue(metadata["signed_updates"])
+        self.assertIn("update-darwin-arm64.json", (self.root / "dist/macos/SHA256SUMS").read_text())
+        cleanup.assert_called_once()
+
     def test_rejected_notarization_cannot_proceed_to_stapling(self):
         (self.root / "notary-profile-ready").touch()
         with patch.object(macos, "run", return_value=b'{"status":"Invalid","id":"fixture"}'):

@@ -1,6 +1,6 @@
 # ytmgo
 
-YouTube Music 桌面客户端，当前开发版本 **0.4.0**。主界面用 **MyGo 0.7.1 原生 UI** 绘制，曲库由 Go 访问，媒体由按需 YouTube.js 引擎与有界流式传输处理，音频由 MyGo 输出到系统音频设备。保留侧栏、搜索、歌曲与专辑列表、底部播放条、正在播放面板、队列、歌词、沉浸模式、封面/视频切换，以及四语言和深浅色设计。
+YouTube Music 桌面客户端，当前开发版本 **0.5.0**。主界面用 **MyGo 0.7.1 原生 UI** 绘制，曲库由 Go 访问，媒体由按需 YouTube.js 引擎与有界流式传输处理，音频由 MyGo 输出到系统音频设备。保留侧栏、搜索、歌曲与专辑列表、底部播放条、正在播放面板、队列、歌词、沉浸模式、封面/视频切换，以及四语言和深浅色设计。
 
 音乐界面与播放控件使用 MyGo 原生 UI。登录时单独启动 Wry 系统 WebView：macOS 使用 WKWebView，Windows 使用 WebView2，Linux 使用 WebKitGTK。登录会话通过私有父子进程管道交接后，登录子进程退出；主界面与播放不依赖这个窗口。没有浏览器扩展、HTTP 登录桥或 OAuth 配置。外部链接仍使用系统默认浏览器。
 
@@ -20,7 +20,7 @@ open build/darwin-arm64/ytmgo.app
 
 `make build` 会打包锁定的 YouTube.js 18.3.0、Node 26.12.1、完整标准证明客户端及精简 FFmpeg 9.0.2。播放源代码及新包中不包含 yt-dlp；没有客户端切换或旧播放器 fallback。版本、校验值、许可证、上游源码和构建信息随包保存。证明客户端采用 GPL-3.0，依赖许可材料的剩余缺口已单独记录，尚未做公开分发验收。详细说明见 [scripts/runtime/README.md](scripts/runtime/README.md)。
 
-本地默认产物为 `build/darwin-arm64/ytmgo.app` 和 `build/darwin-arm64/ytmgo-0.4.0-arm64.dmg`，采用 ad-hoc App 签名和未签名 DMG。GitHub Actions 已提供手动触发的测试打包、Developer ID 签名及 Apple 公证模式；配置证书、私钥和使用方法见 [macOS Actions 配置指南](docs/MACOS_ACTIONS.md)。证书尚未配置或签名流程尚未成功时，不代表已有签名/公证发行包。重新构建导致 ad-hoc 身份变化时，macOS 可能要求重新授权访问本应用保存在钥匙串中的加密密钥。其他操作系统未作为本轮交付目标。
+本地默认产物为 `build/darwin-arm64/ytmgo.app` 和 `build/darwin-arm64/ytmgo-0.5.0-arm64.dmg`，采用 ad-hoc App 签名和未签名 DMG。GitHub Actions 已提供手动触发的测试打包、Developer ID 签名及 Apple 公证模式；配置证书、私钥和使用方法见 [macOS Actions 配置指南](docs/MACOS_ACTIONS.md)。选择 `notarized` 并勾选 `publish_release` 后，工作流会发布可下载的 GitHub Release 和签名更新 feed。重新构建导致 ad-hoc 身份变化时，macOS 可能要求重新授权访问本应用保存在钥匙串中的加密密钥。其他操作系统未作为本轮交付目标。
 
 开发运行：
 
@@ -36,6 +36,7 @@ make dev
 - 宽窗口使用完整侧栏和停靠面板；中等窗口使用图标侧栏与浮动面板；紧凑窗口使用底部导航和迷你播放器。
 - 设置支持 English、简体中文、繁體中文、日本語，以及深色、浅色、跟随系统。修改语言或外观会即时重绘，不重建窗口或播放器。
 - 原生菜单、托盘、全局播放快捷键和系统 Now Playing 共用同一播放状态。
+- 安装到可写目录后自动检查更新（启动后最早 10 秒，之后每日一次），也可使用 **ytmgo → 检查更新**。原生更新窗口支持立即安装、稍后、跳过，以及可选的自动下载；下载完成后重启安装。0.4.0 没有更新器，需要先手动安装一次 0.5.0。
 
 ## 账号与数据
 
@@ -60,6 +61,7 @@ macOS 登录窗口目前不支持 Google passkey。Apple 要求 WKWebView 的 pa
 ## 代码与测试
 
 ```text
+updates.go                  原生更新窗口、菜单与维护命令
 main.go / controller.go      原生窗口、菜单、导航、队列与请求生命周期
 native_views.go              原生屏幕、响应式布局和交互
 native_style.go              原有色板与矢量图标

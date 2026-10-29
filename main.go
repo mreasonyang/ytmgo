@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"log"
+	"os"
 	"path/filepath"
 	"runtime"
 	"sync/atomic"
@@ -18,7 +19,7 @@ import (
 	"ytmgo/locales"
 )
 
-const version = "0.4.0"
+const version = "0.5.0"
 
 //go:embed locales/en.json resources/icon.png resources/tray.png
 var assets embed.FS
@@ -72,6 +73,10 @@ type desktop struct {
 }
 
 func main() {
+	if handled, code := runUpdateCommand(); handled {
+		os.Exit(code)
+	}
+	setupUpdater()
 	if !mygo.App.IsPackaged() {
 		mygo.App.SetName("ytmgo Dev")
 	}
@@ -258,7 +263,7 @@ func menuItem(label, shortcut string, fn func()) *mygo.MenuItem {
 
 func (a *desktop) menu() *mygo.Menu {
 	return mygo.NewMenu([]*mygo.MenuItem{
-		{Role: mygo.RoleAppMenu},
+		applicationMenuWithUpdates(),
 		{Label: locales.MenuFile(), Submenu: []*mygo.MenuItem{menuItem(locales.MenuShowApp(), "CmdOrCtrl+1", a.show), {Role: mygo.RoleClose}, mygo.Separator(), {Role: mygo.RoleQuit}}},
 		{Role: mygo.RoleEditMenu},
 		{Label: locales.MenuPlayback(), Submenu: []*mygo.MenuItem{
@@ -269,7 +274,7 @@ func (a *desktop) menu() *mygo.Menu {
 		{Label: locales.MenuAccount(), Submenu: a.accountMenuItems()},
 		{Label: locales.MenuHelp(), Submenu: []*mygo.MenuItem{menuItem(locales.MenuShortcuts(), "CmdOrCtrl+/", func() { a.model.Shortcuts = true; a.invalidate() }), menuItem(locales.MenuAbout(), "", func() {
 			go func() {
-				_, _ = mygo.Dialog.Message(mygo.MessageOptions{Parent: a.window, Title: locales.MenuAbout(), Message: locales.AboutMessage(version), Detail: a.tr("nativeAbout"), Buttons: []string{locales.ButtonOK()}})
+				_, _ = mygo.Dialog.Message(mygo.MessageOptions{Parent: a.window, Title: locales.MenuAbout(), Message: locales.AboutMessage(applicationVersion()), Detail: a.tr("nativeAbout"), Buttons: []string{locales.ButtonOK()}})
 			}()
 		})}},
 	})

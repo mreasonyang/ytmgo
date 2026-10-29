@@ -23,6 +23,7 @@ build: runtime login
 build-app: runtime login
 	python3 scripts/login/prepare.py --verify
 	CGO_ENABLED=0 go tool mygo build -skip-dmg
+	CGO_ENABLED=0 go build -o build/release/update-package ./cmd/update-package
 
 test:
 	go test ./...

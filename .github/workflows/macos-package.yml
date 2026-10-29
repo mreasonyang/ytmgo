@@ -12,6 +12,14 @@ on:
           - unsigned
           - developer-id
           - notarized
+      release_version:
+        description: Optional version override (for example 0.5.0-rc.1)
+        required: false
+        type: string
+      publish_release:
+        description: Publish the notarized package and signed update feed to GitHub Releases
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -31,6 +39,8 @@ jobs:
     environment: macos-release
     runs-on: xcode-27
     timeout-minutes: 90
+    permissions:
+      contents: write
     env:
       CGO_ENABLED: "0"
       CARGO_BUILD_JOBS: "2"
@@ -48,6 +58,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
       - name: Check packaging scripts
         run: python3 -m unittest discover -s scripts/release -p 'test_*.py'
+      - name: Configure release version
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+          PUBLISH_RELEASE: ${{ inputs.publish_release }}
+          PACKAGE_MODE: ${{ inputs.mode }}
+        run: python3 scripts/release/publish.py configure
       # Keep the make check stages separate so a failed run identifies the
       # command without requiring raw diagnostic-log retrieval.
       - name: Go tests
@@ -79,17 +95,26 @@ jobs:
           MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          MYGO_UPDATER_PRIVATE_KEY: ${{ secrets.MYGO_UPDATER_PRIVATE_KEY }}
         run: python3 scripts/release/macos.py package --mode "$PACKAGE_MODE"
       - name: Remove temporary signing materials
         if: always()
         run: python3 scripts/release/macos.py cleanup
+      - name: Publish signed release and update feed
+        if: inputs.publish_release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/release/publish.py publish
       - name: Upload DMG, app ZIP, checksums and build metadata
+        continue-on-error: ${{ inputs.publish_release }}
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: ytmgo-macos-arm64-${{ inputs.mode }}-${{ github.run_number }}
           path: |
             dist/macos/*.dmg
             dist/macos/*.zip
+            dist/macos/*.tar.gz
+            dist/macos/update-darwin-arm64.json
             dist/macos/SHA256SUMS
             dist/macos/build.json
           if-no-files-found: error

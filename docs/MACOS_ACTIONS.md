@@ -19,50 +19,41 @@
 
 `.p12` 放在仓库外自己的私有目录。不要将它、私钥或导出密码放入聊天、提交、日志或截图。
 
-## 2. 在 GitHub 网页配置 Repository secrets
+## 2. 配置 GitHub environment
 
-打开 [Actions Secrets 页面](https://github.com/mreasonyang/ytmgo/settings/secrets/actions)，点击 **New repository secret**，将下表左侧填入 **Name**、对应值填入 **Secret**，然后点 **Add secret**。每项分别创建，已经创建的项无需重复填写。
+环境：[macos-release](https://github.com/mreasonyang/ytmgo/settings/environments)。部署分支策略只允许 `main`，工作流也只接受 `main`。普通 pull request 的登录测试没有签名 secrets。
 
-名称与 KeyPin 的 Apple 签名、公证配置一致：
+在该环境配置以下 **Environment secrets**：
 
 | 名称 | 内容 |
 | --- | --- |
 | `MACOS_CERTIFICATE_P12_BASE64` | 完整 `.p12` 文件的 base64 |
 | `MACOS_CERTIFICATE_PASSWORD` | `.p12` 导出密码 |
-| `AC_APPLE_ID` | 属于该开发者团队的 Apple Account 登录邮箱 |
-| `AC_PASSWORD` | 在 Apple Account 创建的应用专用密码，用于公证 |
-| `AC_TEAM_ID` | 证书对应的 10 位 Team ID，当前已配置 |
+| `APPLE_ID` | 属于该开发者团队的 Apple Account 登录邮箱 |
+| `APPLE_APP_SPECIFIC_PASSWORD` | 在 Apple Account 创建的应用专用密码，用于公证 |
 
-`AC_TEAM_ID` 必须与证书括号中的 10 位 Team ID 相同，签名脚本会拒绝错误团队或多个匹配身份。ytmgo 打包流程不使用 KeyPin 自动更新所需的 `SPARKLE_PRIVATE_KEY`。
+环境 **Variables** 的 `APPLE_TEAM_ID` 必须与证书括号中的 10 位 Team ID 相同。签名脚本会拒绝错误团队或多个匹配身份。
 
-第一项需要先把 `.p12` 编码到剪贴板。替换为你导出的证书路径，在本机终端运行以下命令，再把剪贴板内容粘贴到 GitHub 的 **Secret** 输入框。它不会把证书内容打印到终端：
-
-```sh
-base64 -i "/你的路径/ytmgo.p12" | tr -d '\r\n' | pbcopy
-```
-
-工作流仍使用 [macos-release 环境](https://github.com/mreasonyang/ytmgo/settings/environments) 限制部署分支为 `main`，但这五项凭据统一放在 **Repository secrets**。普通 pull request 的登录测试不引用签名 secrets。
-
-也可以选择本地配置助手；它会询问文件路径，隐藏输入密码，再通过 `gh` 的 stdin 直接上传 Repository secrets，不产生 base64 中间文件，也不把秘密值放入命令行参数：
+推荐在你自己的交互终端运行配置助手；它会询问文件路径，隐藏输入密码，再通过 `gh` 的 stdin 直接上传 encrypted secrets，不产生 base64 中间文件，也不把秘密值放入命令行参数。
 
 ```sh
 cd /Users/easonyang/Documents/projects/ytmgo
 python3 scripts/release/configure_secrets.py signing
 ```
 
-助手使用当前 `gh` 登录，固定写入 `mreasonyang/ytmgo` 的 Repository secrets。如果尚未登录，先运行 `gh auth login`。可在上述网页或 `gh secret list --repo mreasonyang/ytmgo` 检查名称；不要读取或输出值。
+助手使用当前 `gh` 登录，固定写入 `mreasonyang/ytmgo` 的 `macos-release`。如果尚未登录，先运行 `gh auth login`。可在 GitHub 环境页面或 `gh secret list --repo mreasonyang/ytmgo --env macos-release` 检查名称；不要读取或输出值。
 
 ## 3. 配置 Apple 公证
 
 使用 **Apple ID + 应用专用密码 + Team ID** 认证 `notarytool`。到 [Apple Account](https://account.apple.com/) 登录，在 **登录和安全性 → 应用专用密码** 创建一个密码，名称可用 `ytmgo-actions`。Apple Account 需要启用双重认证。步骤见 [Apple 官方说明](https://support.apple.com/en-us/102654)。
 
-在上述 Secrets 网页，将 Apple ID 邮箱填入 `AC_APPLE_ID`、刚生成的应用专用密码填入 `AC_PASSWORD`。不用准备 `.p8`、Key ID 或 Issuer ID。也可在自己的终端运行以下可选助手，隐藏输入密码并直接经 stdin 上传到 GitHub：
+在你自己的终端运行以下助手，输入 Apple ID 邮箱和刚生成的应用专用密码。密码会隐藏输入并直接经 stdin 上传到 GitHub encrypted secrets；不用准备 `.p8`、Key ID 或 Issuer ID。
 
 ```sh
 python3 scripts/release/configure_secrets.py notarization
 ```
 
-两种密码用途不同：`MACOS_CERTIFICATE_PASSWORD` 是 `.p12` 导出密码，用于导入签名证书；`AC_PASSWORD` 是 Apple 生成的应用专用密码，用于登录公证服务。不要填 Apple Account 的常用登录密码或双重认证验证码。`AC_APPLE_ID` 必须属于 `AC_TEAM_ID` 对应的开发者团队。
+两种密码用途不同：`MACOS_CERTIFICATE_PASSWORD` 是 `.p12` 导出密码，用于导入签名证书；`APPLE_APP_SPECIFIC_PASSWORD` 是 Apple 生成的应用专用密码，用于登录公证服务。不要填 Apple Account 的常用登录密码或双重认证验证码。`APPLE_ID` 必须属于 `APPLE_TEAM_ID` 对应的开发者团队。
 
 ## 4. 运行与验证
 

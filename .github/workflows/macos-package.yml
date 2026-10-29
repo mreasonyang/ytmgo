@@ -74,11 +74,11 @@ jobs:
         if: inputs.mode != 'unsigned'
         env:
           PACKAGE_MODE: ${{ inputs.mode }}
-          AC_TEAM_ID: ${{ secrets.AC_TEAM_ID }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
           MACOS_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 }}
           MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
-          AC_APPLE_ID: ${{ secrets.AC_APPLE_ID }}
-          AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
         run: python3 scripts/release/macos.py package --mode "$PACKAGE_MODE"
       - name: Remove temporary signing materials
         if: always()

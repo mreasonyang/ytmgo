@@ -136,10 +136,15 @@ and tooltip text.
 - Account restoration: while a saved session is read and verified, the top
   bar, library and Settings say the account is being restored and do not offer
   sign-in; a track selected meanwhile explains that it waits for the account.
-  After 12 s the wait is explained (the system may be asking for access to the
-  saved key) with "Continue without account". A failed or skipped restore keeps
+  On macOS the saved key is read without system authorization UI; inaccessible
+  storage offers sign-in again. After 12 s a remaining verification wait is
+  explained with "Continue without account". A failed or skipped restore keeps
   the saved session, plays anonymously and offers "Restore account" beside
-  sign-in; polling never rereads the store in that state.
+  sign-in; polling never rereads the store in that state. A newly verified sign-in
+  creates an independent key and atomically replaces the encrypted session without
+  reading or decrypting the old login. Failed commits preserve the old session;
+  only the fresh attempt's key is cleaned up. Inaccessible retired keys are not
+  accessed during reconnect.
 - Account: three states. Signed out shows an inverted "Sign in" pill and
   sign-in prompts in the library panel and on the Library route. Signed in
   shows a neutral avatar; Music Premium shows an accent avatar and a "Premium"

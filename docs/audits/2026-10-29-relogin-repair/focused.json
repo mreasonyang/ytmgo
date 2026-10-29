@@ -1,0 +1,144 @@
+{
+  "phase": "focused",
+  "command": [
+    "go",
+    "test",
+    "-json",
+    "-count=1",
+    "-run",
+    "TestVerifiedLogin|TestRotatedSession|TestAccountRestoreDisallows|TestAccountRestoreFailsClosed",
+    "./..."
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 3.757,
+  "raw_output_saved": false,
+  "events": [
+    {
+      "Action": "skip",
+      "Package": "ytmgo/cmd/icon",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/preference",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/locales",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/language",
+      "Elapsed": 0.247
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Elapsed": 0.264
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Elapsed": 0.284
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/appearance",
+      "Elapsed": 0.61
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/cmd/update-package",
+      "Elapsed": 0.615
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestVerifiedLoginReplacementDoesNotReadOldKey/locked-key",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestVerifiedLoginReplacementDoesNotReadOldKey/missing-key",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Elapsed": 0.65
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestVerifiedLoginReplacementDoesNotReadOldKey/corrupt-file",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestVerifiedLoginReplacementDoesNotReadOldKey",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestVerifiedLoginReplacementFailurePreservesOldSession/set",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestVerifiedLoginReplacementFailurePreservesOldSession/cancel-after-set",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountRestoreDisallowsKeychainPromptsAndRestoresPolicy",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountRestoreFailsClosedWhenPromptPolicyCannotBeSet",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Elapsed": 0.711
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestVerifiedLoginReplacementFailurePreservesOldSession/file-commit",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestVerifiedLoginReplacementFailurePreservesOldSession",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestRotatedSessionRefreshAndHeaderAuthentication",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestVerifiedLoginRejectsUnsafeOrCanceledReplacementBeforeKeyCreation",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Elapsed": 0.748
+    }
+  ]
+}

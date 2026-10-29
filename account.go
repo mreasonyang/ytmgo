@@ -70,16 +70,18 @@ type accountState struct {
 }
 type nativeAccountSecrets struct{}
 
-func (nativeAccountSecrets) Set(key string, value []byte) error { return mygo.Secrets.Set(key, value) }
+func (nativeAccountSecrets) Set(key string, value []byte) error {
+	return setNativeAccountSecret(key, value)
+}
 func (nativeAccountSecrets) Get(key string) ([]byte, error) {
-	value, err := mygo.Secrets.Get(key)
+	value, err := readNativeAccountSecret(key)
 	if errors.Is(err, mygo.ErrSecretNotFound) {
 		return nil, accountsession.ErrNotFound
 	}
 	return value, err
 }
 func (nativeAccountSecrets) Delete(key string) error {
-	err := mygo.Secrets.Delete(key)
+	err := deleteNativeAccountSecret(key)
 	if errors.Is(err, mygo.ErrSecretNotFound) {
 		return accountsession.ErrNotFound
 	}
@@ -223,7 +225,7 @@ func (a *desktop) restoreAccount() {
 			a.accountBusy = false
 			if flowErr != nil || (err != nil && !errors.Is(err, accountsession.ErrNotFound)) {
 				a.deferAccountRestore()
-				a.accountMessage("nativeAccountStorageError")
+				a.accountMessage("nativeAccountRestoreFailed")
 				return
 			}
 			s.restored = true
@@ -275,7 +277,7 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 		}
 		errorKey := accountErrorMessageKey(err)
 		if err == nil && newIdentity {
-			err = s.store.Save(ctx, *session)
+			err = s.store.Replace(ctx, *session)
 			if err != nil {
 				errorKey = "nativeAccountStorageError"
 			}
@@ -536,6 +538,7 @@ func (a *desktop) signIn() {
 		return
 	}
 	a.clearAccountRequestFailure(true)
+	a.clearAccountRequestFailure(false)
 	ctx, cancel := context.WithCancel(a.ctx)
 	login, err := accountlogin.Start(ctx, accountlogin.Options{Title: locales.LoginWindowTitle()})
 	if err != nil {

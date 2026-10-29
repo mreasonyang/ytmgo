@@ -46,7 +46,7 @@ make dev
 
 macOS 登录窗口目前不支持 Google passkey。Apple 要求 WKWebView 的 passkey 服务与应用建立关联域关系，ytmgo 无法自行取得 Google 的关联授权；请使用 Google 页面提供的其他验证方式。没有其他验证方式的账号目前无法完成登录。Windows 的 WebView2 支持 FIDO2，但本应用与具体 Google passkey 提供者的组合尚未实测；Linux 使用 WebKitGTK 4.1 ≥2.50.2，避免旧版本在带 WebAuthn 第二因子的 Google 账号上卡住，这不代表 Linux 已支持 passkey。[Apple 说明](https://developer.apple.com/documentation/authenticationservices/supporting-passkeys)、[WebKitGTK 修复说明](https://webkitgtk.org/2025/11/19/webkitgtk2.50.2-released.html)。
 
-完整会话使用 AES-256-GCM 加密保存在应用数据目录的 `account/session.enc`；系统安全存储只保管一个 32 字节密钥，macOS 使用 Keychain。文件按原子替换保存；macOS/Linux 目录权限为 0700、文件为 0600，Windows 使用当前用户的数据目录和 Credential Manager。重启后先重新核验服务端状态，再启用对应播放模式。没有明文凭据文件、旧分片读取、旧 WebKit 数据迁移或存储 fallback；使用过分片版本的用户需要重新连接一次账号。确认退出会停止播放、清空本应用的个人数据，并删除加密会话文件与密钥；外部浏览器的 Google 登录状态不受影响。
+完整会话使用 AES-256-GCM 加密保存在应用数据目录的 `account/session.enc`；系统安全存储保管当前会话的 32 字节密钥，macOS 使用 Keychain。重新登录成功后创建独立的新密钥，再原子替换加密会话；不需要读取或解密旧登录记录，保存失败保留原记录。文件中的随机密钥编号也经过加密认证。旧格式仍可恢复；macOS 自动恢复不弹出钥匙串授权，无法读取时提供重新登录。无法访问的旧密钥不会在重新登录时被读取或删除。macOS/Linux 目录权限为 0700、文件为 0600，Windows 使用当前用户的数据目录和 Credential Manager。重启后先重新核验服务端状态，再启用对应播放模式。没有明文凭据文件、旧分片读取、旧 WebKit 数据迁移或存储 fallback；使用过分片版本的用户需要重新连接一次账号。确认退出会停止播放、清空本应用的个人数据，并删除当前加密会话文件与密钥；外部浏览器的 Google 登录状态不受影响。
 
 遇到 Google 验证、登录或同意页面跳转时，应用直接说明服务端要求及当前请求无法完成；未知跳转也会如实说明。曲库和播放保留普通重试，不提供未经证实的网页验证步骤。已连接账号会保留，不会把请求限制认定为会员过期。普通 403、429 或网络错误不会被称为验证码，服务端返回的跳转地址不会被保存或打开。
 

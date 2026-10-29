@@ -204,12 +204,13 @@
   "nativeLyricsError": "暂时无法获取歌词。",
   "nativeAccountRestoring": "正在恢复你的账号…",
   "nativeAccountRestoringBody": "已保存的账号恢复后，你的歌单、专辑与喜欢的音乐会出现在这里。",
-  "nativeAccountRestoreSlow": "恢复账号的时间比平常更长。如果系统询问是否允许 ytmgo 使用已保存的密钥，请允许。在此期间，你也可以先不使用账号继续收听。",
+  "nativeAccountRestoreSlow": "恢复账号的时间比平常更长，你可以先不使用账号继续收听。",
   "nativeAccountRestoreSkip": "不使用账号继续",
   "nativeAccountRestoreDeferred": "已保存的账号尚未恢复",
   "nativeAccountRestoreDeferredBody": "已保存的账号仍然保留，但当前未使用。恢复后即可查看你的音乐库，也可以重新登录。",
   "nativeAccountRestoreRetry": "恢复账号",
   "nativePlaybackAwaitingAccount": "账号恢复后将开始播放。",
   "nativeKindPodcast": "播客",
-  "nativeKindEpisode": "单集"
+  "nativeKindEpisode": "单集",
+  "nativeAccountRestoreFailed": "无法恢复已保存的账号，请重新登录。"
 }

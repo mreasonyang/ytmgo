@@ -2773,11 +2773,11 @@ func (msgs Messages) NativeAccountRestoringBody() string {
 	return Catalog.Format(msgs.locale, "nativeAccountRestoringBody", nil)
 }
 
-// NativeAccountRestoreSlow says "Restoring your account is taking longer than usual. If your system asks to let ytmgo use its saved key, allow it. You…"
+// NativeAccountRestoreSlow says "Restoring your account is taking longer than usual. You can keep listening without your account meanwhile."
 // in the language the app shows.
 func NativeAccountRestoreSlow() string { return In(i18n.Locale()).NativeAccountRestoreSlow() }
 
-// NativeAccountRestoreSlow says "Restoring your account is taking longer than usual. If your system asks to let ytmgo use its saved key, allow it. You…"
+// NativeAccountRestoreSlow says "Restoring your account is taking longer than usual. You can keep listening without your account meanwhile."
 // in the language of msgs.
 func (msgs Messages) NativeAccountRestoreSlow() string {
 	return Catalog.Format(msgs.locale, "nativeAccountRestoreSlow", nil)
@@ -2853,4 +2853,14 @@ func NativeKindEpisode() string { return In(i18n.Locale()).NativeKindEpisode() }
 // in the language of msgs.
 func (msgs Messages) NativeKindEpisode() string {
 	return Catalog.Format(msgs.locale, "nativeKindEpisode", nil)
+}
+
+// NativeAccountRestoreFailed says "Your saved account could not be restored. Sign in again to continue."
+// in the language the app shows.
+func NativeAccountRestoreFailed() string { return In(i18n.Locale()).NativeAccountRestoreFailed() }
+
+// NativeAccountRestoreFailed says "Your saved account could not be restored. Sign in again to continue."
+// in the language of msgs.
+func (msgs Messages) NativeAccountRestoreFailed() string {
+	return Catalog.Format(msgs.locale, "nativeAccountRestoreFailed", nil)
 }

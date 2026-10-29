@@ -6,6 +6,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -31,12 +32,14 @@ const (
 	sessionKeySize = 32
 	// The versioned header is also authenticated as GCM additional data.
 	sessionFileHeader = "YTMSESS\x01"
+	rotatedFileHeader = "YTMSESS\x02"
+	keyIDSize         = 16
 	// NewGCMWithRandomNonce prepends a 12-byte nonce and appends a 16-byte tag.
 	sessionFileOverhead = len(sessionFileHeader) + 12 + 16
-	maxSessionFileSize  = MaxPayload + sessionFileOverhead
+	maxSessionFileSize  = MaxPayload + sessionFileOverhead + keyIDSize
 )
 
-// Store keeps one native secret and one encrypted session file. Path must be an
+// Store keeps one active native key and one encrypted session file. Path must be an
 // absolute path in a dedicated private directory. Callers serialize mutations.
 type Store struct {
 	Secrets Secrets
@@ -92,10 +95,26 @@ func readSessionFile(path string) ([]byte, error) {
 		return nil, ErrStorage
 	}
 	data, err := io.ReadAll(io.LimitReader(file, int64(maxSessionFileSize+1)))
-	if err != nil || len(data) <= sessionFileOverhead || len(data) > maxSessionFileSize || !bytes.HasPrefix(data, []byte(sessionFileHeader)) {
+	if err != nil || len(data) > maxSessionFileSize {
 		return nil, ErrStorage
 	}
+	if _, _, err := sessionEnvelope(data); err != nil {
+		return nil, err
+	}
 	return data, nil
+}
+
+// The public key ID selects only this app's session-key namespace. The whole
+// header is authenticated, so moving ciphertext to another key ID fails closed.
+func sessionEnvelope(data []byte) (string, int, error) {
+	if bytes.HasPrefix(data, []byte(sessionFileHeader)) && len(data) > sessionFileOverhead {
+		return sessionKeyName, len(sessionFileHeader), nil
+	}
+	headerSize := len(rotatedFileHeader) + keyIDSize
+	if bytes.HasPrefix(data, []byte(rotatedFileHeader)) && len(data) > headerSize+12+16 {
+		return sessionKeyName + "-" + hex.EncodeToString(data[len(rotatedFileHeader):headerSize]), headerSize, nil
+	}
+	return "", 0, ErrStorage
 }
 
 func sessionCipher(key []byte) (cipher.AEAD, error) {
@@ -114,7 +133,11 @@ func sessionCipher(key []byte) (cipher.AEAD, error) {
 }
 
 func openSessionFile(aead cipher.AEAD, data []byte) ([]byte, error) {
-	plain, err := aead.Open(nil, nil, data[len(sessionFileHeader):], []byte(sessionFileHeader))
+	_, size, err := sessionEnvelope(data)
+	if err != nil {
+		return nil, err
+	}
+	plain, err := aead.Open(nil, nil, data[size:], data[:size])
 	if err != nil {
 		return nil, ErrStorage
 	}
@@ -144,10 +167,19 @@ func (s Store) Save(ctx context.Context, session Session) error {
 		return ErrStorage
 	}
 	fileExists := err == nil
+	keyName, header := sessionKeyName, []byte(sessionFileHeader)
+	if fileExists {
+		var size int
+		keyName, size, err = sessionEnvelope(previous)
+		if err != nil {
+			return err
+		}
+		header = previous[:size]
+	}
 	if ctx.Err() != nil {
 		return ErrStorage
 	}
-	key, err := s.Secrets.Get(sessionKeyName)
+	key, err := s.Secrets.Get(keyName)
 	defer func() { clear(key) }()
 	if ctx.Err() != nil {
 		return ErrStorage
@@ -180,8 +212,67 @@ func (s Store) Save(ctx context.Context, session Session) error {
 			return err
 		}
 	}
-	data := append([]byte(sessionFileHeader), aead.Seal(nil, nil, plain, []byte(sessionFileHeader))...)
+	data := append(append([]byte(nil), header...), aead.Seal(nil, nil, plain, header)...)
 	return writeSessionFile(ctx, s.Path, data)
+}
+
+// Replace is for a newly verified interactive sign-in. It never reads, decrypts,
+// overwrites or deletes the previous native key. A fresh key is created first;
+// only the atomic file commit makes it active. Failed saves preserve the old
+// login and remove only the fresh key created by this attempt.
+func (s Store) Replace(ctx context.Context, session Session) error {
+	if ctx.Err() != nil || !s.validPath() || s.Secrets == nil {
+		return ErrStorage
+	}
+	if _, err := session.HTTPCookies(time.Now()); err != nil {
+		if errors.Is(err, ErrExpired) {
+			return ErrExpired
+		}
+		return ErrStorage
+	}
+	plain, err := json.Marshal(session)
+	defer clear(plain)
+	if err != nil || len(plain) > MaxPayload {
+		return ErrStorage
+	}
+	if privateSessionDirectory(s.Path, true) != nil || !safeSessionTarget(s.Path) {
+		return ErrStorage
+	}
+	header := make([]byte, len(rotatedFileHeader)+keyIDSize)
+	copy(header, rotatedFileHeader)
+	if _, err := rand.Read(header[len(rotatedFileHeader):]); err != nil {
+		return ErrStorage
+	}
+	keyName := sessionKeyName + "-" + hex.EncodeToString(header[len(rotatedFileHeader):])
+	key := make([]byte, sessionKeySize)
+	defer clear(key)
+	if _, err := rand.Read(key); err != nil {
+		return ErrStorage
+	}
+	aead, err := sessionCipher(key)
+	if err != nil {
+		return err
+	}
+	data := append(append([]byte(nil), header...), aead.Seal(nil, nil, plain, header)...)
+	if ctx.Err() != nil || s.Secrets.Set(keyName, key) != nil {
+		return ErrStorage
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			_ = s.Secrets.Delete(keyName)
+		}
+	}()
+	if err := writeSessionFile(ctx, s.Path, data); err != nil {
+		return err
+	}
+	committed = true
+	return nil
+}
+
+func safeSessionTarget(path string) bool {
+	info, err := os.Lstat(path)
+	return errors.Is(err, os.ErrNotExist) || err == nil && info.Mode().IsRegular() && privateStorageMode(info.Mode(), 0600)
 }
 
 func writeSessionFile(ctx context.Context, path string, data []byte) error {
@@ -204,8 +295,7 @@ func writeSessionFile(ctx context.Context, path string, data []byte) error {
 	}
 	// Never replace a link or special file, including one introduced while a
 	// native secret-store prompt was open.
-	info, err := os.Lstat(path)
-	if err != nil && !errors.Is(err, os.ErrNotExist) || err == nil && (!info.Mode().IsRegular() || !privateStorageMode(info.Mode(), 0600)) {
+	if !safeSessionTarget(path) {
 		return ErrStorage
 	}
 	if ctx.Err() != nil || os.Rename(file.Name(), path) != nil {
@@ -225,7 +315,11 @@ func (s Store) Load() (Session, error) {
 	if s.Secrets == nil {
 		return Session{}, ErrStorage
 	}
-	key, err := s.Secrets.Get(sessionKeyName)
+	keyName, _, err := sessionEnvelope(data)
+	if err != nil {
+		return Session{}, err
+	}
+	key, err := s.Secrets.Get(keyName)
 	defer clear(key)
 	if err != nil {
 		return Session{}, ErrStorage
@@ -257,15 +351,24 @@ func (s Store) Delete() error {
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return ErrStorage
 	}
+	keyName := sessionKeyName
 	if err == nil {
+		// Decode only the owned encrypted file's public header, never its key.
+		if data, readErr := readSessionFile(s.Path); readErr == nil {
+			keyName, _, _ = sessionEnvelope(data)
+		} else {
+			keyName = ""
+		}
 		if !info.Mode().IsRegular() || !privateStorageMode(info.Mode(), 0600) || privateSessionDirectory(s.Path, false) != nil || os.Remove(s.Path) != nil {
 			return ErrStorage
 		}
 	}
 	// Remove the file first: a failure deleting the key must not restore a
 	// signed-out session on the next launch.
-	if err := s.Secrets.Delete(sessionKeyName); err != nil && !errors.Is(err, ErrNotFound) {
-		return ErrStorage
+	if keyName != "" {
+		if err := s.Secrets.Delete(keyName); err != nil && !errors.Is(err, ErrNotFound) {
+			return ErrStorage
+		}
 	}
 	return nil
 }

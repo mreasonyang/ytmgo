@@ -3,6 +3,7 @@ package accountsession
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"os"
@@ -23,9 +24,18 @@ type memorySecrets struct {
 	unexpectedKeyWasTouched bool
 }
 
+func ownedFixtureKey(k string) bool {
+	if k == sessionKeyName {
+		return true
+	}
+	id, ok := strings.CutPrefix(k, sessionKeyName+"-")
+	decoded, err := hex.DecodeString(id)
+	return ok && err == nil && len(decoded) == keyIDSize
+}
+
 func (m *memorySecrets) Get(k string) ([]byte, error) {
 	m.getCalls++
-	m.unexpectedKeyWasTouched = m.unexpectedKeyWasTouched || k != sessionKeyName
+	m.unexpectedKeyWasTouched = m.unexpectedKeyWasTouched || !ownedFixtureKey(k)
 	if m.afterGet != nil {
 		m.afterGet()
 	}
@@ -40,7 +50,7 @@ func (m *memorySecrets) Get(k string) ([]byte, error) {
 }
 func (m *memorySecrets) Set(k string, v []byte) error {
 	m.setCalls++
-	m.unexpectedKeyWasTouched = m.unexpectedKeyWasTouched || k != sessionKeyName
+	m.unexpectedKeyWasTouched = m.unexpectedKeyWasTouched || !ownedFixtureKey(k)
 	if m.failSet {
 		return errors.New("synthetic-secret-detail-must-not-escape")
 	}
@@ -52,7 +62,7 @@ func (m *memorySecrets) Set(k string, v []byte) error {
 }
 func (m *memorySecrets) Delete(k string) error {
 	m.deleteCalls++
-	m.unexpectedKeyWasTouched = m.unexpectedKeyWasTouched || k != sessionKeyName
+	m.unexpectedKeyWasTouched = m.unexpectedKeyWasTouched || !ownedFixtureKey(k)
 	if m.failDelete {
 		return errors.New("synthetic-secret-detail-must-not-escape")
 	}

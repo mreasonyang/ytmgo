@@ -85,10 +85,13 @@ class ReleaseTests(unittest.TestCase):
         with patch.object(publish, "ROOT", self.root), patch.dict(os.environ, {
                 "GITHUB_REF": "refs/heads/main", "GITHUB_REPOSITORY": publish.REPOSITORY, "GITHUB_SHA": self.commit}), \
                 patch.object(publish, "validate", return_value=[self.directory / self.names[0]]), \
-                patch.object(publish, "gh", side_effect=[None, b'[]', b'', b'', b'{"draft":true,"assets":[]}']) as gh:
+                patch.object(publish, "gh", side_effect=[None, b'[]', b'', b'',
+                    b'{"apiUrl":"https://api.github.com/repos/mreasonyang/ytmgo/releases/123"}',
+                    b'{"draft":true,"assets":[]}']) as gh:
             with self.assertRaisesRegex(publish.ReleaseError, "asset set mismatch"):
                 publish.publish()
         self.assertFalse(any(call.args[0][:2] == ["release", "edit"] for call in gh.call_args_list))
+        self.assertIn(["api", "https://api.github.com/repos/mreasonyang/ytmgo/releases/123"], [call.args[0] for call in gh.call_args_list])
 
 
 if __name__ == "__main__":

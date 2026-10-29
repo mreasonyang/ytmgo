@@ -117,7 +117,14 @@ def publish():
             args.append("--prerelease")
         gh(args, "Draft release creation")
     gh(["release", "upload", tag, "--repo", REPOSITORY, *map(str, files)], "Release asset upload")
-    release = json.loads(gh(["api", "repos/" + REPOSITORY + "/releases/tags/" + tag], "Uploaded release verification"))
+    # Draft releases may have no Git ref until publication, so the REST
+    # releases/tags endpoint returns 404 even for their author. The CLI resolves
+    # drafts too and returns the release ID endpoint that can read their assets.
+    draft = json.loads(gh(["release", "view", tag, "--repo", REPOSITORY, "--json", "apiUrl"], "Draft release lookup"))
+    api_url = draft.get("apiUrl", "")
+    if not re.fullmatch(r"https://api\.github\.com/repos/" + REPOSITORY + r"/releases/[0-9]+", api_url):
+        raise ReleaseError("Invalid draft release endpoint")
+    release = json.loads(gh(["api", api_url], "Uploaded release verification"))
     remote = {asset["name"]: asset for asset in release["assets"]}
     if not release["draft"] or set(remote) != {path.name for path in files}:
         raise ReleaseError("Draft asset set mismatch")

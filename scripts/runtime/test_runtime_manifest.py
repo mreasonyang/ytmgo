@@ -12,6 +12,34 @@ from prepare import failure_category
 from runtime_manifest import NODE_MODULES_HASH_POLICY, node_modules_digest
 
 
+class RemovedProviderTests(unittest.TestCase):
+    def test_incremental_build_removes_gpl_source_maps_and_notices(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            provider = output / "vendor/bgutil/build"
+            provider.mkdir(parents=True)
+            for name in ("session_manager.js", "session_manager.js.map"):
+                (provider / name).write_text("synthetic old provider")
+            notices = output / "licenses"
+            notices.mkdir()
+            for name in ("bgutil-provider-GPL-3.0", "bgutil-provider-SOURCE.md", "node-LICENSE"):
+                (notices / name).write_text("synthetic notice")
+            prepare.remove_legacy_provider(output)
+            prepare.remove_legacy_provider(output)
+            self.assertFalse((output / "vendor").exists())
+            self.assertEqual([p.name for p in notices.iterdir()], ["node-LICENSE"])
+
+    def test_full_prepare_rebuilds_all_notices_without_touching_binaries(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            (output / "node").write_text("synthetic binary")
+            (output / "licenses").mkdir()
+            (output / "licenses/removed-dependency-LICENSE").write_text("synthetic notice")
+            prepare.reset_notices(output)
+            self.assertEqual(list((output / "licenses").iterdir()), [])
+            self.assertEqual((output / "node").read_text(), "synthetic binary")
+
+
 class PreparationDiagnosticsTests(unittest.TestCase):
     def test_arbitrary_error_values_do_not_enter_diagnostics(self):
         for error in (RuntimeError("synthetic private fixture"), ValueError("synthetic private fixture"),

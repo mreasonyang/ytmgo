@@ -70,12 +70,15 @@ the provider. `engine-session.mjs` owns one restricted `engine-worker.mjs`
 process. That process restores the selected account's SDK session from the
 public bootstrap cache. A Premium engine never imports the proof provider or
 jsdom; a module guard rejects those imports in that child. For anonymous/free
-playback it invokes the complete, unmodified standard SessionManager API from
-the pinned provider;
-protocol configuration is kept internal to that dependency. Its original source,
-source map, license and reconstruction information live under `vendor/bgutil`.
-There is one YouTube.js dependency version throughout the runtime. Both SDK
-consumers resolve the same package in this child, sharing its ESM module graph.
+playback, `EngineProof` creates the independent `ProofSession`, which calls
+MIT-licensed `bgutils-js` directly. No GPL provider is shipped or imported.
+The session parses the anonymous YouTube page's `ytcfg` and `ytAtN` data without
+executing page scripts, fetches the allowed interpreter, and initializes one
+BotGuard client and WebPO minter. It uses a host-realm JSDOM environment to match
+the library's Function/Uint8Array contracts; globals are restored on close.
+Account cookies and the Music SDK context are not passed to this session.
+There is one YouTube.js dependency version and one restored playback SDK in the
+engine. The proof session does not initialize another SDK.
 The proof engine retains its DOM and generator while in use. Switching modes
 terminates and reaps that process before another can start; dropping JavaScript
 references alone is not used as a memory-reclamation mechanism.
@@ -92,8 +95,10 @@ configuration text without executing the page or creating another DOM. Its
 experiment flags determine whether GVS binds to the video ID, the signed-in
 account's dataSyncId, or the anonymous visitor data. Subsequent resolves reuse
 the generator with that binding. Proofs stay in Node memory
-and private pipes. The provider's `expiresAt` is a local cache refresh deadline,
-not a server validity guarantee; media leases still use signed media URL expiry.
+and private pipes. `expiresAt` is calculated from the integrity response's TTL
+minus its refresh threshold. Missing, invalid, or near-expiry lifetimes fail
+without a fallback token. This is a local refresh deadline, not a server validity
+guarantee; media leases still use signed media URL expiry.
 
 Warm-up and ordinary track changes reuse this engine and its generator. The
 root retains one bounded bootstrap seed so an explicit request after engine
@@ -119,8 +124,18 @@ root media bridge survives engine replacement. Native shutdown kills its
 owned process group as well. Upstream media URLs and proof values may travel
 only across these private Node pipes; they never enter native IPC or logs.
 
-The provider is GPL-3.0. Bundled notices explicitly record upstream license
-material gaps; a local build is not public-distribution acceptance.
+The proof session is Apache-2.0 with the MIT example attribution and dependency
+notices retained in `licenses`. See `licenses/README.md` for provenance. The
+GPL provider and its build metadata are removed; incremental preparation purges
+old vendor files and regenerates notices. FFmpeg retains its separate LGPL
+license. These changes do not establish public-distribution acceptance.
+
+The replacement has offline coverage using the real locked BgUtils and JSDOM
+packages with synthetic page, interpreter and integrity responses, including
+account/video binding, minter reuse, cancellation and Premium import isolation.
+Live playback with the replacement still requires macOS acceptance: the Linux
+implementation environment's proxy denied access to YouTube (HTTP 403). Prior
+live measurements in this repository describe the previous implementation.
 
 Successful responses are `{id, ok:true, media?, safe?}`. Resolve returns
 `media: {url, duration}` (seconds), plus integer `width` and `height` for video.

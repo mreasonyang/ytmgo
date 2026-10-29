@@ -4,15 +4,15 @@ import { PROOF_REASONS } from './engine-ipc.mjs';
 
 const failed = category => Object.assign(new Error(category), { safeCategory: category });
 
-// Used only inside the restricted engine child. The provider stays unmodified;
-// one process owns its module graph, DOM, generator, anonymous context and SDK.
+// Used only inside the restricted engine child. All proof requests pass through
+// this policy boundary; the independent session uses the MIT BgUtils API.
 export class EngineProof {
   #manager; #context; #binding; #active; #failed = false; #closed = false;
   #agent = new https.Agent({ keepAlive: true, maxSockets: 2, maxFreeSockets: 1 });
-  #axios; #requestInterceptor; #responseInterceptor; #onFailure; #loadAxios; #loadProvider;
+  #axios; #onFailure; #loadAxios; #loadSession;
   #phase = 'init'; #failureDetail;
-  constructor({ onFailure = () => {}, loadAxios = () => import('axios'), loadProvider = () => import('./vendor/bgutil/build/session_manager.js') } = {}) {
-    this.#onFailure = onFailure; this.#loadAxios = loadAxios; this.#loadProvider = loadProvider;
+  constructor({ onFailure = () => {}, loadAxios = () => import('axios'), loadSession = () => import('./proof-session.mjs') } = {}) {
+    this.#onFailure = onFailure; this.#loadAxios = loadAxios; this.#loadSession = loadSession;
   }
 
   #terminal(category, reason = 'other') {
@@ -29,19 +29,26 @@ export class EngineProof {
   async #initialize() {
     this.#phase = 'init';
     const { default: axios } = await this.#loadAxios();
-    this.#axios = axios;
-    this.#requestInterceptor = axios.interceptors.request.use(config => {
-      this.#phase = 'network';
-      if (!this.#active || this.#failed || this.#closed) throw this.#terminal('proof_request_rejected');
-      try { return proofRequest(config, { signal: this.#active.signal, httpsAgent: this.#agent }); }
-      catch (failure) { throw this.#terminal('proof_request_rejected', failure.safeReason); }
-    });
-    this.#responseInterceptor = axios.interceptors.response.use(response => {
+    this.#axios = axios.create();
+    const { ProofSession } = await this.#loadSession();
+    if (this.#failed || this.#closed || this.#active?.signal.aborted) throw this.#terminal('proof_failed');
+    this.#manager = new ProofSession({ request: config => this.#request(config) });
+    await this.#manager.initialize();
+  }
+
+  async #request(config) {
+    this.#phase = 'network';
+    if (!this.#active || this.#failed || this.#closed || this.#active.signal.aborted) throw this.#terminal('proof_request_rejected');
+    let request;
+    try { request = proofRequest(config, { signal: this.#active.signal, httpsAgent: this.#agent }); }
+    catch (failure) { throw this.#terminal('proof_request_rejected', failure.safeReason); }
+    try {
+      const response = await this.#axios.request({ ...request, responseType: 'text', transformResponse: [data => data] });
       if (this.#failed || this.#closed || this.#active?.signal.aborted) throw this.#terminal('proof_failed');
-      this.#phase = 'mint'; return response;
-    }, failure => { throw this.#terminal('proof_failed', failure?.code === 'ERR_ACCESS_DENIED' ? 'permission' : failure?.response ? 'http' : 'other'); });
-    const { SessionManager } = await this.#loadProvider();
-    this.#manager = new SessionManager(false, undefined);
+      this.#phase = 'mint'; return response.data;
+    } catch (failure) {
+      throw this.#terminal('proof_failed', failure?.code === 'ERR_ACCESS_DENIED' ? 'permission' : failure?.response ? 'http' : 'other');
+    }
   }
 
   async #generate(binding, signal) {
@@ -53,15 +60,15 @@ export class EngineProof {
       if (!this.#manager) await this.#initialize();
       if (signal?.aborted || this.#failed || this.#closed) throw this.#terminal('proof_failed');
       this.#phase = 'mint';
-      const result = await this.#manager.generatePoToken(binding, '', false, undefined, false, undefined, this.#context);
+      const result = await this.#manager.mint(binding);
       if (signal?.aborted || this.#failed || this.#closed) throw this.#terminal('proof_failed');
-      if (result?.contentBinding !== binding || typeof result.poToken !== 'string' || !result.poToken || result.poToken.length > 24 * 1024) throw this.#terminal('proof_failed');
+      if (typeof result?.token !== 'string' || !result.token || result.token.length > 24 * 1024) throw this.#terminal('proof_failed');
       this.#phase = 'deadline';
-      const expiry = result.expiresAt instanceof Date ? result.expiresAt.getTime() : NaN;
+      const expiry = result.expiresAt;
       if (!Number.isSafeInteger(expiry) || expiry <= Date.now() + 60_000 || expiry > Date.now() + 24 * 60 * 60_000) throw this.#terminal('proof_expired');
-      return { token: result.poToken, expiresAt: expiry };
+      return { token: result.token, expiresAt: expiry };
     } catch (error) {
-      throw this.#terminal(['proof_failed', 'proof_expired', 'proof_request_rejected'].includes(error?.safeCategory) ? error.safeCategory : 'proof_failed');
+      throw this.#terminal(['proof_failed', 'proof_expired', 'proof_request_rejected'].includes(error?.safeCategory) ? error.safeCategory : 'proof_failed', error?.safeReason);
     } finally { signal?.removeEventListener('abort', abort); this.#active = undefined; }
   }
 
@@ -83,11 +90,8 @@ export class EngineProof {
   close() {
     if (this.#closed) return;
     this.#closed = true; this.#active?.abort();
-    try { this.#manager?.invalidateCaches(); } catch {}
-    if (this.#axios) {
-      this.#axios.interceptors.request.eject(this.#requestInterceptor);
-      this.#axios.interceptors.response.eject(this.#responseInterceptor);
-    }
+    try { this.#manager?.close(); } catch {}
+    this.#axios = undefined;
     this.#context = this.#manager = this.#binding = undefined; this.#agent.destroy();
   }
 }

@@ -4,7 +4,7 @@ import { guardPremiumModules } from '../../premium-module-guard.mjs';
 
 let proofImports = 0;
 registerHooks({ resolve(specifier, context, next) {
-  if (/engine-proof|vendor\/bgutil|jsdom|happy-dom|linkedom|bgutils/.test(specifier)) proofImports++;
+  if (/engine-proof|proof-session|vendor\/bgutil|jsdom|happy-dom|linkedom|bgutils/.test(specifier)) proofImports++;
   return next(specifier, context);
 } });
 const guard = guardPremiumModules();
@@ -26,7 +26,7 @@ try {
   assert.equal(new URL(result.media.url).searchParams.has('pot'), false);
   assert.equal(result.safe.proof_ms, 0); assert.equal(result.safe.proof_init_ms, 0);
   assert.equal(proofImports, 0); assert.equal(typeof globalThis.document, 'undefined');
-  for (const name of ['jsdom', 'happy-dom', 'linkedom', 'bgutils-js', '../../engine-proof.mjs', '../../vendor/bgutil/build/session_manager.js']) {
+  for (const name of ['jsdom', 'happy-dom', 'linkedom', 'bgutils-js', '../../engine-proof.mjs', '../../proof-session.mjs', '../../vendor/bgutil/build/session_manager.js']) {
     await assert.rejects(import(name), e => e.safeCategory === 'unexpected_authentication');
   }
   engine.close();

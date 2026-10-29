@@ -13,7 +13,7 @@ export function proofRequest(config, { signal, httpsAgent } = {}) {
   const allowed =
     (target.hostname === 'www.youtube.com' && target.pathname === '/' && method === 'GET') ||
     (target.hostname === 'www.google.com' && target.pathname.startsWith('/js/th/') && method === 'GET') ||
-    (target.hostname === 'jnn-pa.googleapis.com' && target.pathname.endsWith('/GenerateIT') && method === 'POST');
+    (target.hostname === 'jnn-pa.googleapis.com' && target.pathname === '/$rpc/google.internal.waa.v1.Waa/GenerateIT' && method === 'POST');
   if (!allowed) throw rejected(
     !['www.youtube.com', 'www.google.com', 'jnn-pa.googleapis.com'].includes(target.hostname) ? 'origin' :
     target.pathname.includes('/att/get') || target.pathname.endsWith('/Create') ? 'challenge' : 'route');

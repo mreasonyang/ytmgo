@@ -13,8 +13,8 @@ const createFormat = async raw => {
   return new Format(raw, new Map());
 };
 
-// Only the permission-restricted child imports this module. Its SDK and the
-// unmodified provider resolve youtubei.js to one ESM module graph.
+// Only the permission-restricted child imports this module. The independent
+// proof session shares this process and does not create another SDK session.
 export class PlaybackEngine {
   #proof; #proofFactory; #account; #createSession; #createFormat; #session; #cache; #active; #closed = false; #expiresAt = 0; #network; #stage;
   constructor({ proof, proofFactory = async () => new (await import('./engine-proof.mjs')).EngineProof(), createSession = createAccountSession, formatFactory = createFormat, network = globalThis.fetch } = {}) {

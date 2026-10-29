@@ -94,20 +94,25 @@ test('late cancelled publish is revoked without closing already active streams',
   assert.deepEqual(released, ['new-capability']); await resolver.close();
 });
 
-test('provider failure is terminal even when supplier catches it and returns success', async () => {
-  let requestHook, responseFailure, invalidated = 0, generated = 0;
+test('proof network failure is terminal even when a session catches it and returns success', async () => {
+  let invalidated = 0, generated = 0;
   const callbacks = [];
-  const axios = { interceptors: { request: { use(fn) { requestHook = fn; return 1; }, eject() {} }, response: { use(_fn, fail) { responseFailure = fail; return 2; }, eject() {} } } };
-  class SessionManager {
-    async generatePoToken(binding) {
+  const axios = { create: () => ({ async request(config) {
+    assert.equal(config.proxy, false); assert.equal(config.maxRedirects, 0);
+    if (generated > 1) throw new Error('synthetic private transport error');
+    return { data: 'synthetic' };
+  } }) };
+  class ProofSession {
+    constructor({ request }) { this.request = request; }
+    async initialize() {}
+    async mint() {
       generated++;
-      if (generated === 1) { const config = requestHook({ url: 'https://www.youtube.com/', method: 'GET', headers: {} }); assert.equal(config.proxy, false); assert.equal(config.maxRedirects, 0); }
-      else { try { responseFailure(new Error('synthetic ignored supplier error')); } catch {} }
-      return { contentBinding: binding, poToken: 'synthetic-proof', expiresAt: new Date(Date.now() + 120000) };
+      try { await this.request({ url: 'https://www.youtube.com/', method: 'GET', headers: {} }); } catch {}
+      return { token: 'synthetic-proof', expiresAt: Date.now() + 120000 };
     }
-    invalidateCaches() { invalidated++; }
+    close() { invalidated++; }
   }
-  const proof = new EngineProof({ onFailure: category => callbacks.push(category), loadAxios: async () => ({ default: axios }), loadProvider: async () => ({ SessionManager }) });
+  const proof = new EngineProof({ onFailure: category => callbacks.push(category), loadAxios: async () => ({ default: axios }), loadSession: async () => ({ ProofSession }) });
   try {
     await proof.warm({ client: { clientName: 'WEB_REMIX', visitorData: 'anonymous-fixture' } }, signal(), { sessionBinding: 'anonymous-fixture', videoBound: true });
     await assert.rejects(proof.mint('abcdefghijk', signal()), fixed('proof_failed'));

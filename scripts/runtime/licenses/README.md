@@ -15,26 +15,33 @@ their origin explicit:
   section from each integrity-locked npm README, including its copyright.
 - `saxes` 6.0.0: the upstream license at the package's published gitHead,
   https://github.com/lddubeau/saxes/blob/211fa0ebec9b628affc09219199639887174bfc3/LICENSE.
-- `quickjs-wasi` 2.2.0: its npm metadata declares MIT, but its npm archive and
-  release source do not include the wrapper notice. The wrapper's upstream
-  notice was added later in
-  https://github.com/vercel-labs/quickjs-wasi/blob/066475d399936cd40a38cabde6935d5f7b080dec/LICENSE.
-  It is retained with this timing distinction; this does not independently
-  establish license completeness for the earlier archive.
-- The QuickJS-NG notice is from the exact submodule used by that 2.2.0 release,
-  https://github.com/quickjs-ng/quickjs/blob/dec012362bd93876449f3ecff4f835b2eba89bab/LICENSE.
-  The bundled mbedTLS notice is from
-  https://github.com/vercel-labs/quickjs-wasi/blob/cc1fea4a6a4ac1d960e0db68d35e1459064a1a23/extensions/crypto/mbedtls/LICENSE.
-- `proxy-agent-negotiate` 1.1.0: the npm manifest declares MIT but supplies no
-  copyright/license text. Its source release also lacks a package notice.
-  The supplied NOTICE records that gap and the exact release source. It is
-  not a fabricated copyright grant or a claim of public-release readiness.
 
 All remaining dependency licenses come directly from their integrity-locked
 npm archives, including `decimal.js`'s British-spelled `LICENCE.md`. Node and
-FFmpeg notices come from their verified source distributions. The complete
-upstream provider client, GPL-3.0 license, and source reconstruction inputs are
-retained in `vendor/bgutil`; they do not change the project's overall license.
+FFmpeg notices come from their verified source distributions.
 
-The two notice gaps described above and the overall GPL distribution obligations
-remain release review items. Preparing a local runtime is not public release.
+## Independent proof session
+
+`proof-session.mjs` is licensed under Apache-2.0; its license text is included
+as `proof-session-APACHE-2.0`. Its integration uses the public MIT BgUtils API
+and the MIT example at this exact revision:
+
+- https://github.com/LuanRT/BgUtils/blob/f842f8a14435a35800ff469d315bb1a7e6d7a64a/examples/index-innertube.ts
+- https://github.com/LuanRT/BgUtils/blob/f842f8a14435a35800ff469d315bb1a7e6d7a64a/LICENSE
+
+The example's attribution, Copyright (c) 2024 LuanRT, and MIT permission notice
+are preserved in `bgutils-examples-MIT`. The runtime library itself remains
+pinned to `bgutils-js` 4.0.3; its MIT notice is also copied from the verified
+npm package. The new session does not copy or translate the removed GPL
+provider implementation.
+
+The GPL provider's source, compiled output, source map and reconstruction inputs
+are removed from the current source tree and build. Incremental preparation
+removes its previous vendor directory and notices. The unused `proxy-agent`
+dependency was removed as well, including the transitive `quickjs-wasi` and
+`proxy-agent-negotiate` packages that previously had notice gaps.
+
+These changes concern the proof implementation and its dependencies. They do
+not relicense other project files or third-party components. FFmpeg remains
+LGPL-2.1-or-later with its own distribution obligations. Historical Git commits
+containing the GPL provider retain their original licensing.

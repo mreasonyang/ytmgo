@@ -29,12 +29,9 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "build/runtime"
 CACHE = ROOT / "build/runtime-cache"
 YOUTUBEJS = "18.3.0"
-BGUTIL_PROVIDER = "2.0.2"
-BGUTIL_PROVIDER_COMMIT = "26475e9d3665b972c4aeb83b4dbaafcf64b88438"
 BGUTILS = "4.0.3"
 JSDOM = "29.1.1"
 AXIOS = "1.20.0"
-PROXY_AGENT = "8.0.2"
 NODE = "26.12.1"
 FFMPEG = "9.0.2"
 FFMPEG_SHA256 = "8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e"
@@ -126,6 +123,23 @@ def run(args, cwd=None, env=None):
         raise RuntimeError("runtime preparation command failed: " + Path(args[0]).name)
 
 
+def remove_legacy_provider(output):
+    """Incremental builds must not redistribute the removed GPL implementation."""
+    vendor = output / "vendor"
+    if vendor.exists():
+        shutil.rmtree(vendor)
+    for notice in (output / "licenses").glob("bgutil-provider-*"):
+        notice.unlink()
+
+
+def reset_notices(output):
+    """Rebuild notices so removed npm dependencies leave no stale material."""
+    notices = output / "licenses"
+    if notices.exists():
+        shutil.rmtree(notices)
+    notices.mkdir()
+
+
 def prepare_resolver():
     source = ROOT / "scripts/runtime"
     # Ship only this implementation; removed helper modules must not survive
@@ -136,15 +150,10 @@ def prepare_resolver():
             path.unlink()
     for path in [*source.glob("*.mjs"), source / "package.json", source / "package-lock.json"]:
         shutil.copy2(path, OUT / path.name)
-    # The standard supplier module is copied as an opaque dependency. Its
-    # source, source map, reconstruction inputs and GPL notice ship with it.
-    vendor = OUT / "vendor"
-    if vendor.exists():
-        shutil.rmtree(vendor)
-    shutil.copytree(source / "vendor", vendor)
+    remove_legacy_provider(OUT)
     lock = json.loads((OUT / "package-lock.json").read_text())
     pins = {"youtubei.js": YOUTUBEJS, "bgutils-js": BGUTILS, "jsdom": JSDOM,
-            "axios": AXIOS, "proxy-agent": PROXY_AGENT}
+            "axios": AXIOS}
     for package, version in pins.items():
         if lock["packages"]["node_modules/" + package]["version"] != version:
             raise RuntimeError("runtime dependency lock version mismatch")
@@ -183,8 +192,6 @@ def prepare_resolver():
         supplemental = {
             ("agent-base", "6.0.2"): "agent-base-6.0.2-*",
             ("https-proxy-agent", "5.0.1"): "https-proxy-agent-5.0.1-*",
-            ("proxy-agent-negotiate", "1.1.0"): "proxy-agent-negotiate-1.1.0-*",
-            ("quickjs-wasi", "2.2.0"): "quickjs-wasi-2.2.0-*",
             ("saxes", "6.0.0"): "saxes-6.0.0-*",
         }.get((folder.name, metadata.get("version")))
         if supplemental:
@@ -200,12 +207,12 @@ def prepare_resolver():
             target = path.name if path.parent == source / "licenses" else name + "-" + path.name
             shutil.copy2(path, OUT / "licenses" / target)
     shutil.copy2(source / "licenses/README.md", OUT / "licenses/SOURCES.md")
-    shutil.copy2(vendor / "bgutil/LICENSE", OUT / "licenses/bgutil-provider-GPL-3.0")
-    shutil.copy2(vendor / "bgutil/SOURCE.md", OUT / "licenses/bgutil-provider-SOURCE.md")
+    shutil.copy2(source / "licenses/bgutils-examples-MIT", OUT / "licenses/bgutils-examples-MIT")
+    shutil.copy2(source / "licenses/proof-session-APACHE-2.0", OUT / "licenses/proof-session-APACHE-2.0")
     # Old generated runtime components must not enter a new app bundle.
     for path in [OUT / "yt-dlp", OUT / "licenses/yt-dlp-LICENSE"]:
         path.unlink(missing_ok=True)
-    print("Prepared YouTube.js " + YOUTUBEJS + " and standard proof client " + BGUTIL_PROVIDER + " with locked dependencies", flush=True)
+    print("Prepared YouTube.js " + YOUTUBEJS + " and MIT BgUtils " + BGUTILS + " with locked dependencies", flush=True)
 
 
 def prepare_node():
@@ -271,7 +278,7 @@ def main():
     if shutil.disk_usage(ROOT).free < 2 * 1024**3:
         raise RuntimeError("at least 2 GiB free is required")
     OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "licenses").mkdir(exist_ok=True)
+    reset_notices(OUT)
     CACHE.mkdir(parents=True, exist_ok=True)
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
         tasks = [pool.submit(step) for step in [prepare_node, prepare_ffmpeg]]
@@ -290,13 +297,10 @@ def main():
         run(["/usr/bin/codesign", "--force", "--sign", "-", str(OUT / binary)])
     files = ["node", "ffmpeg", "package.json", "package-lock.json"]
     files.extend(path.name for path in sorted((ROOT / "scripts/runtime").glob("*.mjs")))
-    files.extend(str(path.relative_to(OUT)) for path in sorted((OUT / "vendor").rglob("*")) if path.is_file())
     files.extend(str(path.relative_to(OUT)) for path in sorted((OUT / "licenses").rglob("*")) if path.is_file())
     manifest = {"platform": "darwin", "architecture": ARCH,
                 "versions": {"youtubei.js": YOUTUBEJS, "node": NODE, "ffmpeg": FFMPEG,
-                             "bgutil-provider": BGUTIL_PROVIDER, "bgutils-js": BGUTILS,
-                             "jsdom": JSDOM, "axios": AXIOS, "proxy-agent": PROXY_AGENT},
-                "bgutil_provider_commit": BGUTIL_PROVIDER_COMMIT,
+                             "bgutils-js": BGUTILS, "jsdom": JSDOM, "axios": AXIOS},
                 "sha256": {name: digest(OUT / name) for name in files},
                 "node_modules_hash_policy": NODE_MODULES_HASH_POLICY,
                 "node_modules_sha256": node_modules_digest(OUT)}

@@ -8,7 +8,7 @@ test('proof transport bounds requests and rejects accounts, redirects and altern
   for (const [url, method] of [
     ['https://www.youtube.com/', 'get'],
     ['https://www.google.com/js/th/fixture.js', 'get'],
-    ['https://jnn-pa.googleapis.com/fixture/GenerateIT', 'post'],
+    ['https://jnn-pa.googleapis.com/$rpc/google.internal.waa.v1.Waa/GenerateIT', 'post'],
   ]) {
     const request = proofRequest({ url, method, maxRedirects: 5, timeout: 0, proxy: {} }, { signal, httpsAgent: agent });
     assert.equal(request.signal, signal);
@@ -24,6 +24,8 @@ test('proof transport bounds requests and rejects accounts, redirects and altern
     { url: 'http://www.youtube.com/' }, { url: 'https://example.com/' },
     { url: 'https://www.youtube.com/youtubei/v1/player' },
     { url: 'https://www.google.com/other' },
+    { url: 'https://jnn-pa.googleapis.com/other/GenerateIT', method: 'post' },
+    { url: 'https://jnn-pa.googleapis.com/$rpc/google.internal.waa.v1.Waa/Create', method: 'post' },
     { url: 'https://www.youtube.com/', method: 'post' },
     ...['Authorization', 'Cookie', 'Proxy-Authorization'].map(key => ({ url: 'https://www.youtube.com/', headers: { [key]: 'fixture' } })),
     { url: 'https://www.youtube.com/', auth: {} },

@@ -27,18 +27,20 @@ test('ordinary account binding is from selected server session, never anonymous 
   assert.equal(anonymous.sessionBinding, 'anonymous-visitor'); assert.equal(anonymous.videoBound, false);
 });
 
-test('provider mints exact account or video bindings with no account cookie transfer', async () => {
+test('proof session mints exact account or video bindings without receiving account context', async () => {
   for (const videoBound of [false, true]) {
     const bindings = [];
-    const axios = { interceptors: { request: { use() {}, eject() {} }, response: { use() {}, eject() {} } } };
-    class SessionManager {
-      async generatePoToken(binding, proxy, bypass, address, tls, challenge, context) {
-        bindings.push(binding); assert.equal(context.cookie, undefined); assert.equal(context.user.onBehalfOfUser, undefined);
-        return { contentBinding: binding, poToken: 'synthetic-proof', expiresAt: new Date(Date.now() + 120000) };
+    const axios = { create: () => ({}) };
+    class ProofSession {
+      constructor(options) { assert.deepEqual(Object.keys(options), ['request']); }
+      async initialize() {}
+      async mint(binding) {
+        bindings.push(binding);
+        return { token: 'synthetic-proof', expiresAt: Date.now() + 120000 };
       }
-      invalidateCaches() {}
+      close() {}
     }
-    const proof = new EngineProof({ loadAxios: async () => ({ default: axios }), loadProvider: async () => ({ SessionManager }) });
+    const proof = new EngineProof({ loadAxios: async () => ({ default: axios }), loadSession: async () => ({ ProofSession }) });
     try {
       await proof.warm({ client: { clientName: 'WEB_REMIX', visitorData: 'synthetic-visitor' } }, signal(), { sessionBinding: 'synthetic-account||', videoBound });
       await proof.mint('abcdefghijk', signal()); await proof.mint('zyxwvutsrqp', signal());

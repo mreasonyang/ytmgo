@@ -113,7 +113,9 @@ test('cancellation reaps work before rejecting and permits a later explicit warm
 });
 
 test('timeout terminates a child even after a complete reply and never publishes late success', async () => {
-  const f = await fixture('reply_hold', { timeoutMS: 100 });
+  // Include process startup under concurrent DOM tests in the budget. The held
+  // reply never exits on its own, so timeout/reaping remains the assertion.
+  const f = await fixture('reply_hold', { timeoutMS: 1000 });
   try {
     await assert.rejects(f.session.warm(), fixed('request_timeout'));
     await f.setMode('normal');

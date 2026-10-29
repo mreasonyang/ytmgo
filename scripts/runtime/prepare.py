@@ -38,6 +38,8 @@ PROXY_AGENT = "8.0.2"
 NODE = "26.12.1"
 FFMPEG = "9.0.2"
 FFMPEG_SHA256 = "8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e"
+FFMPEG_SOURCE_URL = "https://ffmpeg.org/releases/ffmpeg-" + FFMPEG + ".tar.xz"
+FFMPEG_DOWNLOAD_URL = "https://distfiles.macports.org/ffmpeg/ffmpeg-" + FFMPEG + ".tar.xz"
 ARCH = {"arm64": "arm64", "x86_64": "x64"}.get(platform.machine())
 
 
@@ -231,8 +233,10 @@ def prepare_node():
 
 def prepare_ffmpeg():
     name = "ffmpeg-" + FFMPEG
-    source = verified("https://ffmpeg.org/releases/" + name + ".tar.xz",
-                      CACHE / (name + ".tar.xz"), FFMPEG_SHA256)
+    # The MacPorts distfile is the unmodified upstream archive, verified with
+    # the same pinned SHA256. ffmpeg.org intermittently times out on hosted
+    # macOS runners; do not change versions, codecs or integrity checks.
+    source = verified(FFMPEG_DOWNLOAD_URL, CACHE / (name + ".tar.xz"), FFMPEG_SHA256)
     folder = CACHE / name
     if not folder.exists():
         run(["/usr/bin/tar", "-xf", str(source), "-C", str(CACHE)])
@@ -254,7 +258,7 @@ def prepare_ffmpeg():
     (OUT / "ffmpeg.new").replace(OUT / "ffmpeg")
     shutil.copy2(folder / "COPYING.LGPLv2.1", OUT / "licenses/ffmpeg-LGPLv2.1")
     (OUT / "licenses/ffmpeg-build.json").write_text(json.dumps({
-        "version": FFMPEG, "source": "https://ffmpeg.org/releases/" + name + ".tar.xz",
+        "version": FFMPEG, "source": FFMPEG_SOURCE_URL, "download_url": FFMPEG_DOWNLOAD_URL,
         "sha256": FFMPEG_SHA256, "configure": config,
         "license": "LGPL-2.1-or-later", "modifications": "None; build configuration only"
     }, indent=2) + "\n")

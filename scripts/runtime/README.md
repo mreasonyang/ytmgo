@@ -5,6 +5,11 @@ FFmpeg 9.0.2 decoder, the IPC worker, and integrity-locked YouTube.js 18.3.0
 dependencies and licenses. npm is used only at build time. The app needs no
 external resolver, Python, npm installation, or browser engine.
 
+The FFmpeg source tarball is fetched from the MacPorts distfile cache and
+verified against the same pinned SHA-256 as the upstream 9.0.2 release.
+`licenses/ffmpeg-build.json` records both the upstream source URL and the
+download URL. The version, source bytes and decoder build flags are unchanged.
+
 Run `node worker.mjs` with private stdin/stdout pipes. Never display or retain
 stdout: it carries local capability URLs. stderr and SDK logging are silent.
 The worker imports paths relative to its own files, so its working directory

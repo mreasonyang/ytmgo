@@ -1,0 +1,13 @@
+{
+  "captured_at_utc": "2026-10-29T11:12:22.451133+00:00",
+  "version": "0.5.0",
+  "identifier": "si.kyun.ytmgo",
+  "binary_sha256": "d1d572ce6f22fbc9d3b72d94e1acfeb00e13f28bad7406e02c3a225d55c77cbc",
+  "signature": [
+    "Identifier=si.kyun.ytmgo",
+    "Authority=Developer ID Application: YANHUA YU (2V4TX79LUZ)",
+    "Authority=Developer ID Certification Authority",
+    "Authority=Apple Root CA",
+    "TeamIdentifier=2V4TX79LUZ"
+  ]
+}

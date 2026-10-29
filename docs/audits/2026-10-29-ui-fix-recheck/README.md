@@ -2,6 +2,8 @@
 
 Date: 2026-10-29, Asia/Shanghai. Reviewed product commit: [`bb579ff9628051d79427235d689acb525a60fa93`](https://github.com/mreasonyang/ytmgo/commit/bb579ff9628051d79427235d689acb525a60fa93).
 
+**Signing-scope correction:** The earlier native recheck used an ad-hoc build. Its account-restoration wait does not establish a code defect, because Keychain authorization and signing identity were not controlled. A [Developer ID signed and notarized Actions build has now been installed](actions-signed/README.md); the local authorization check is pending. F01 must not be described as a confirmed failed fix on the strength of the ad-hoc wait.
+
 **Verdict: PARTIAL. F02–F06 pass the checks below. F01's misleading status and blocked public-playback recovery are corrected, but successful real-account restoration remains unverified. The Windows CI job also fails.** This does not establish full product or release acceptance.
 
 The checkout was clean before a fast-forward pull from `5ee89f6` to `bb579ff`. No product source was edited during this recheck. Findings refer to the [original audit](../2026-10-29-full-ui-visual/README.md).
@@ -37,10 +39,10 @@ Structured results: [check](check.json), [focused repetitions](focused.json), [r
 
 ## Remaining Gates and Observations
 
-1. **Real-account acceptance remains open.** Restoration still waited in this local original-identity build. The fix provides accurate state and working anonymous recovery; it does not establish that a saved real account can successfully recover. Credentials, session contents, Keychain values, process argv and environments were not inspected, and no cloud account writes were performed.
+1. **Real-account acceptance remains open.** The earlier restoration wait was in an ad-hoc build and cannot separate Keychain authorization from an application defect. The fix provides accurate state and working anonymous recovery. The Actions-signed installation is documented in the follow-up above; successful restoration still requires a completed authorization check. Credentials, session contents, Keychain values, process argv and environments were not inspected, and no cloud account writes were performed.
 2. **Windows CI is red.** [Run 40860720119](https://github.com/mreasonyang/ytmgo/actions/runs/40860720119) completed with macOS and Linux passing and Windows failing. The failing assertions are `TestPackagePreservesBundleAndRejectsTampering` at `cmd/update-package/main_test.go:84` (executable permissions lost) and `TestVideoPersistentSlowFramesHaveFiniteCatchups` at `internal/player/video_startup_test.go:197` (catchup-count/timeout assertion). Those source/test files were unchanged in this UI commit; that alone does not establish the cause or absolve the failures. See [ci.json](ci.json).
 3. **A live video startup timed out once.** Audio continued, and the video status category was `video_network_timeout`. Reopening the playback panel while paused obtained a real frame, subsequently visible in compact immersive mode. F05's layout is verified, but this run does not establish reliable cold video startup.
 
-After testing, playback was paused; Traditional Chinese, dark appearance and the original wide window size were restored. The candidate was quit and the pre-existing installed app reopened idle. The candidate was not installed into Applications and no release was published. Only this English report, selected evidence and a link from the historical audit were added to the repository.
+After the earlier local recheck, playback was paused; Traditional Chinese, dark appearance and the original wide window size were restored. That ad-hoc candidate was quit and was not installed into Applications. The subsequent Actions follow-up installed the verified signed app, retaining the previous installed bundle for rollback. No release was published and no product source was edited.
 
 Evidence integrity: [SHA256SUMS](SHA256SUMS).

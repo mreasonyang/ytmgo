@@ -1,0 +1,13 @@
+{
+  "observed_at_utc": "2026-10-29T11:34:22.667131+00:00",
+  "checks": {
+    "installed_codesign": 0,
+    "installed_gatekeeper": 0,
+    "installed_stapled_ticket": 0
+  },
+  "main_binary_sha256": "d59e4b0c32646271b27d0767124351020b0175f83a6299742375f0c46ec4c62f",
+  "native_account_restore": "waiting_for_authorization_check",
+  "system_authorization_ui_access": "denied_by_computer_use_safety_restriction",
+  "credential_values_read": false,
+  "release_published": false
+}

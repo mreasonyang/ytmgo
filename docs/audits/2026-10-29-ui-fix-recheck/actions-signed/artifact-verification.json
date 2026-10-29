@@ -1,0 +1,32 @@
+{
+  "build": {
+    "version": "0.5.0",
+    "architecture": "arm64",
+    "mode": "notarized",
+    "minimum_macos": "27.0",
+    "commit": "ef120bf2a44af140cc920df44c050013a0eb2e1d",
+    "run_url": "https://github.com/mreasonyang/ytmgo/actions/runs/40863518962",
+    "developer_id_signed": true,
+    "notarized": true,
+    "signed_updates": true
+  },
+  "verified_checksum_files": [
+    "ytmgo-0.5.0-arm64-notarized.zip",
+    "build.json"
+  ],
+  "signature": [
+    "Identifier=si.kyun.ytmgo",
+    "Authority=Developer ID Application: YANHUA YU (2V4TX79LUZ)",
+    "Authority=Developer ID Certification Authority",
+    "Authority=Apple Root CA",
+    "TeamIdentifier=2V4TX79LUZ"
+  ],
+  "checks": {
+    "codesign": 0,
+    "gatekeeper": 0,
+    "stapled_ticket": 0
+  },
+  "bundle_version": "0.5.0",
+  "main_binary_sha256": "d59e4b0c32646271b27d0767124351020b0175f83a6299742375f0c46ec4c62f",
+  "extracted_app": "/Users/easonyang/Documents/projects/ytmgo/build/diagnostics/actions-signed-40863518962/unpacked/ytmgo.app"
+}

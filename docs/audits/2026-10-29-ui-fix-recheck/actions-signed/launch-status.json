@@ -1,0 +1,23 @@
+{
+  "observed_at_utc": "2026-10-29T11:33:23.992415+00:00",
+  "categories": [
+    {
+      "Time": "2026-10-29T11:33:18Z",
+      "Version": "0.5.0",
+      "Component": "account",
+      "Category": "restore_slow"
+    },
+    {
+      "Time": "2026-10-29T11:33:06Z",
+      "Version": "0.5.0",
+      "Component": "audio",
+      "Category": "ready"
+    },
+    {
+      "Time": "2026-10-29T11:33:06Z",
+      "Version": "0.5.0",
+      "Component": "video",
+      "Category": "ready"
+    }
+  ]
+}

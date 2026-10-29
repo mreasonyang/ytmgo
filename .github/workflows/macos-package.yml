@@ -1,0 +1,82 @@
+name: macOS package
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Package signing (unsigned is for build testing only)
+        required: true
+        default: notarized
+        type: choice
+        options:
+          - unsigned
+          - developer-id
+          - notarized
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-package-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  package:
+    # Only reviewed main-branch code may access the signing environment.
+    if: github.ref == 'refs/heads/main'
+    environment: macos-release
+    runs-on: xcode-27
+    timeout-minutes: 90
+    env:
+      CGO_ENABLED: "0"
+      CARGO_BUILD_JOBS: "2"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+          cache: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.13"
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - name: Check packaging scripts
+        run: python3 -m unittest discover -s scripts/release -p 'test_*.py'
+      - name: Test source and media runtime
+        run: make check
+      - name: Build app with bundled runtime and login helper
+        run: make build
+      - name: Package unsigned test build
+        if: inputs.mode == 'unsigned'
+        run: python3 scripts/release/macos.py package --mode unsigned
+      - name: Sign and optionally notarize
+        if: inputs.mode != 'unsigned'
+        env:
+          PACKAGE_MODE: ${{ inputs.mode }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          MACOS_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          APPLE_API_KEY_P8_BASE64: ${{ secrets.APPLE_API_KEY_P8_BASE64 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+        run: python3 scripts/release/macos.py package --mode "$PACKAGE_MODE"
+      - name: Remove temporary signing materials
+        if: always()
+        run: python3 scripts/release/macos.py cleanup
+      - name: Upload DMG, app ZIP, checksums and build metadata
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: ytmgo-macos-arm64-${{ inputs.mode }}-${{ github.run_number }}
+          path: |
+            dist/macos/*.dmg
+            dist/macos/*.zip
+            dist/macos/SHA256SUMS
+            dist/macos/build.json
+          if-no-files-found: error
+          retention-days: 14

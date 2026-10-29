@@ -16,5 +16,8 @@
 *.app/
 node_modules/
 __pycache__/
+*.p12
+*.p8
+*.keychain-db
 
 /native/account-login/target/

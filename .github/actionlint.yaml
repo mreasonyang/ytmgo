@@ -1,0 +1,6 @@
+# GitHub-hosted public-preview label documented by actions/runner-images.
+# actionlint 1.7.12 does not yet include it in its built-in hosted labels;
+# its configurable label allowlist is named self-hosted-runner.
+self-hosted-runner:
+  labels:
+    - xcode-27

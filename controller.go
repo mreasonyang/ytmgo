@@ -39,6 +39,12 @@ func (a *desktop) openItem(it catalog.Item) {
 }
 func (a *desktop) reload() { a.loadPage(a.model.Route, a.model.Query, false) }
 
+// signedOutLibraryPage leaves the explanation and its action to the library
+// card instead of repeating them under the heading.
+func signedOutLibraryPage(tr func(string) string) catalog.Page {
+	return catalog.Page{Title: tr("shellLibraryTitle")}
+}
+
 func (a *desktop) loadPage(route, q string, record bool) {
 	if a.pageCancel != nil {
 		a.pageCancel()
@@ -57,7 +63,7 @@ func (a *desktop) loadPage(route, q string, record bool) {
 	if route == "library" && !a.model.SignedIn {
 		cancel()
 		a.model.Loading = false
-		a.model.Page = catalog.Page{Title: a.tr("shellLibraryTitle"), Subtitle: a.tr("shellLibraryEmptyBody")}
+		a.model.Page = signedOutLibraryPage(a.tr)
 		a.pushHistory(record)
 		a.invalidate()
 		return

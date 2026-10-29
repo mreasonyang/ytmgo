@@ -740,3 +740,55 @@ func TestNativeCollectionPage(t *testing.T) {
 		})
 	}
 }
+
+func nativeContrast(a, b ui.Color) float64 {
+	luminance := func(c ui.Color) float64 {
+		channel := func(v uint8) float64 {
+			x := float64(v) / 255
+			if x <= 0.04045 {
+				return x / 12.92
+			}
+			return math.Pow((x+0.055)/1.055, 2.4)
+		}
+		return 0.2126*channel(c.R) + 0.7152*channel(c.G) + 0.0722*channel(c.B)
+	}
+	la, lb := luminance(a), luminance(b)
+	return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+}
+
+func TestNativeAccentTextMeetsNormalTextContrast(t *testing.T) {
+	for _, dark := range []bool{false, true} {
+		p := palette(dark)
+		for _, bg := range []ui.Color{p.base, p.surface, p.raised, p.input, p.highlight} {
+			if got := nativeContrast(p.accentText, bg); got < 4.5 {
+				t.Errorf("dark=%v accent text on %v: %.2f:1", dark, bg, got)
+			}
+		}
+	}
+	if light := palette(false); light.accent != ui.Hex("#e8382d") {
+		t.Fatal("non-text accent fills changed")
+	}
+}
+
+func TestNativeSearchResultsNameTheirType(t *testing.T) {
+	for _, language := range locales.Catalog.Languages() {
+		t.Run(language, func(t *testing.T) {
+			m, a := nativeViewFixture()
+			m.Language, m.Route, m.Query = language, "search", "Daft Punk"
+			results := []catalog.Item{m.Queue[2], {Title: "Daft Punk", Kind: "artist", BrowseID: "UCartist"}, {Title: "Discovery", Artist: "Daft Punk", Kind: "album", BrowseID: "MPREalbum"}, {Title: "Daft Punk Mix", Artist: "YouTube Music", Kind: "playlist", BrowseID: "VLmix"}, {Title: "Daft Punk Stories", Artist: "Host", Kind: "podcast", BrowseID: "MPSPshow"}}
+			m.Page = catalog.Page{Title: "Daft Punk", Shelves: []catalog.Shelf{{Items: results}}}
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
+			for _, item := range results {
+				want := nativeLibrarySubtitle(item, a)
+				if !strings.HasPrefix(want, nativeKindLabel(item, a)) || nativeKindLabel(item, a) == "" || !tt.HasText(want) {
+					t.Errorf("%s result lacks its type: want %q in %v", item.Kind, want, tt.Texts())
+				}
+			}
+			m.Route = "home"
+			tt.Frame()
+			if tt.HasText(nativeLibrarySubtitle(m.Queue[2], a)) {
+				t.Fatal("type labels leaked into browsing shelves")
+			}
+		})
+	}
+}

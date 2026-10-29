@@ -100,3 +100,41 @@ func TestNativeImmersiveOverflowCanScroll(t *testing.T) {
 	}
 	nativeSnapshot(t, tt, "fixed-short-immersive-scrolled")
 }
+
+func TestNativeQueueArtworkVisibleInEveryPresentation(t *testing.T) {
+	for _, layout := range []struct {
+		name          string
+		width, height int
+		immersive     bool
+	}{{"docked", 1440, 900, false}, {"floating", 1100, 900, false}, {"immersive", 1440, 900, true}, {"compact-immersive", 420, 900, true}} {
+		t.Run(layout.name, func(t *testing.T) {
+			m, a := nativeViewFixture()
+			m.Panel, m.Immersive, m.PanelTab = true, layout.immersive, "queue"
+			m.Page.Items, m.Page.Shelves = nil, nil
+			for i := len(m.Queue); i < 40; i++ {
+				m.Queue = append(m.Queue, catalog.Item{ID: fmt.Sprintf("extra-%d", i), Title: fmt.Sprintf("Queued %d", i), Artist: "Daft Punk", Kind: "song", Artwork: fmt.Sprintf("extra-art-%d", i)})
+			}
+			requested := map[string]bool{}
+			original := a.Artwork
+			a.Artwork = func(src string, edge int) ui.ImageSource {
+				if edge <= 128 && src != m.Current.Artwork {
+					requested[src] = true
+				}
+				return original(src, edge)
+			}
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, layout.width, layout.height)
+			if layout.name == "floating" || layout.name == "compact-immersive" {
+				// The queue card starts below the fold in these presentations.
+				chip := nativeAssertVisible(t, tt, a.Tr("shellQueue")+" · "+a.Tr("shellNowPlaying"), layout.width, layout.height)
+				tt.Scroll(chip.X, chip.Y, 0, 400)
+			}
+			if !requested[m.Queue[1].Artwork] {
+				t.Fatalf("visible queue rows show placeholders instead of artwork: %v", requested)
+			}
+			if requested[m.Queue[len(m.Queue)-1].Artwork] {
+				t.Fatal("offscreen queue artwork was requested")
+			}
+			nativeSnapshot(t, tt, "queue-artwork-"+layout.name)
+		})
+	}
+}

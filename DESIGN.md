@@ -36,7 +36,8 @@ Dark is the primary theme. Light uses the same roles with inverted values.
 | Input | `input` | `#242424` | `#ececee` | Secondary pills |
 | Highlight | `highlight` | `#2a2a2a` | `#e1e1e4` | Hovered round buttons, artwork placeholders |
 | Text | `text` / `secondary` / `muted` | `#fff` / `#b3b3b3` / `#8f8f8f` | `#121212` / `#5a5a5f` / `#6b6b70` | Titles / artists, meta / placeholders |
-| Accent | `accent` / `onAccent` | `#ff5a4f` / `#000` | `#e8382d` / `#fff` | Playing title, active toggles, collection play, Premium avatar |
+| Accent | `accent` / `onAccent` | `#ff5a4f` / `#000` | `#e8382d` / `#fff` | Active toggles, playing glyphs, collection play, Premium avatar |
+| Accent text | `accentText` | `#ff5a4f` | `#b8261c` | Playing titles, Premium badge, error and selected text (≥4.5:1 on every light surface) |
 | Washes | `hover` / `press` / `line` | 7% / 12% / 10% white | 5% / 9% / 10% black | Row and chip states, hairlines |
 
 The primary call to action (sign in, play/pause) is an inverted pill or circle
@@ -132,6 +133,13 @@ and tooltip text.
 
 ## 2. Native screen and interaction contract
 
+- Account restoration: while a saved session is read and verified, the top
+  bar, library and Settings say the account is being restored and do not offer
+  sign-in; a track selected meanwhile explains that it waits for the account.
+  After 12 s the wait is explained (the system may be asking for access to the
+  saved key) with "Continue without account". A failed or skipped restore keeps
+  the saved session, plays anonymously and offers "Restore account" beside
+  sign-in; polling never rereads the store in that state.
 - Account: three states. Signed out shows an inverted "Sign in" pill and
   sign-in prompts in the library panel and on the Library route. Signed in
   shows a neutral avatar; Music Premium shows an accent avatar and a "Premium"
@@ -141,6 +149,9 @@ and tooltip text.
   `account.go`.
 - Global bar: back/forward history, Home, the persistent search field and
   Explore. Search submits on Enter; ⌘K focuses it from anywhere.
+- Search: results lead their subtitle with their type (song, video, artist,
+  album, playlist, podcast, episode); artist rows use round artwork. A top-result
+  card is headed by its section header, never by the result's own title.
 - Catalogue: song shelves scroll horizontally in four-row columns, other
   shelves as cards, with service ordering. Album and playlist pages open in
   place with a numbered table. Continuations append to the current page;
@@ -154,7 +165,8 @@ and tooltip text.
 - Immersive: prominent artwork or contained video, title/artist, the queue and
   lyrics card, and an explicit exit. Navigation exits immersive mode first.
 - Video: an explicit cover/video choice. Frames preserve source aspect ratio;
-  there is no crop. Closing the panel or immersive surface stops video decoding.
+  there is no crop. Landscape video keeps the cover's height budget and uses
+  the extra width, in compact and desktop immersive alike. Closing the panel or immersive surface stops video decoding.
   Audio continues independently. A failed video load shows an error.
 - Settings: account status and actions, system/dark/light appearance and
   system/English/Japanese/Simplified Chinese/Traditional Chinese. Changes

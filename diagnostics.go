@@ -56,7 +56,7 @@ func recordAccountDiagnostic(directory, category string) {
 		return
 	}
 	switch category {
-	case "restoring", "signed_out", "standard", "premium", "refresh_failed", "session_failed":
+	case "restoring", "restore_slow", "restore_deferred", "signed_out", "standard", "premium", "refresh_failed", "session_failed":
 	default:
 		category = "session_failed"
 	}

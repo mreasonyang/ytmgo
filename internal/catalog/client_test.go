@@ -111,7 +111,7 @@ func TestPagePreservesGroupingAndBrowseDestinations(t *testing.T) {
 }
 
 func TestCardShelfAndSelectedSearchTab(t *testing.T) {
-	card := object{"musicCardShelfRenderer": object{"title": words("Top result"), "subtitle": words("Song • Artist"), "navigationEndpoint": object{"watchEndpoint": object{"videoId": "abc123DEF_-"}}, "contents": []any{responsiveSong("def456ABC_-", "Related")}}}
+	card := object{"musicCardShelfRenderer": object{"header": object{"musicCardShelfHeaderBasicRenderer": object{"title": words("Top result")}}, "title": words("Get Lucky"), "subtitle": words("Song • Artist"), "navigationEndpoint": object{"watchEndpoint": object{"videoId": "abc123DEF_-"}}, "contents": []any{responsiveSong("def456ABC_-", "Related")}}}
 	response := object{"contents": object{"tabbedSearchResultsRenderer": object{"tabs": []any{
 		object{"tabRenderer": object{"selected": false, "content": catalogResponse(responsiveSong("hidden00000", "Hidden"))["contents"]}},
 		object{"tabRenderer": object{"selected": true, "content": object{"sectionListRenderer": object{"contents": []any{card}}}}},
@@ -119,6 +119,10 @@ func TestCardShelfAndSelectedSearchTab(t *testing.T) {
 	page, _, err := parsePage(response)
 	if err != nil || len(page.Items) != 2 || page.Items[0].ID != "abc123DEF_-" {
 		t.Fatal("selected search tab or top card not preserved")
+	}
+	// The top result's own title is an item, not the section heading.
+	if len(page.Shelves) != 1 || page.Shelves[0].Title != "Top result" || page.Items[0].Title != "Get Lucky" {
+		t.Fatalf("card shelf heading took the top result's title: %+v", page.Shelves)
 	}
 }
 

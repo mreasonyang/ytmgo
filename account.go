@@ -63,6 +63,10 @@ type accountState struct {
 	pollCancel               context.CancelFunc
 	login                    *accountlogin.Login
 	loginCancel              context.CancelFunc
+	// fallback marks revision as configured (or being configured) for
+	// anonymous playback while a saved account is not active.
+	fallback       bool
+	restoreAttempt uint64
 }
 type nativeAccountSecrets struct{}
 
@@ -186,7 +190,11 @@ func (a *desktop) refreshAccount() {
 		return
 	}
 	if !s.restored {
-		a.restoreAccount()
+		// A deferred store read waits for an explicit retry: rereading can
+		// raise the same system authorization prompt on every poll.
+		if a.model.AccountRestore != accountRestoreDeferred {
+			a.restoreAccount()
+		}
 		return
 	}
 	if s.session == nil && s.ready {
@@ -200,7 +208,7 @@ func (a *desktop) restoreAccount() {
 		return
 	}
 	a.accountBusy = true
-	recordAccountDiagnostic(a.diagnosticPath, "restoring")
+	a.beginAccountRestore()
 	generation := a.accountGeneration
 	ctx := s.flow.begin(a.ctx, generation)
 	go func() {
@@ -214,12 +222,15 @@ func (a *desktop) restoreAccount() {
 			}
 			a.accountBusy = false
 			if flowErr != nil || (err != nil && !errors.Is(err, accountsession.ErrNotFound)) {
+				a.deferAccountRestore()
 				a.accountMessage("nativeAccountStorageError")
 				return
 			}
 			s.restored = true
 			if err == nil {
 				s.session = &session
+			} else {
+				a.model.AccountRestore = ""
 			}
 			a.updateAccount(s.session, false)
 		})
@@ -241,7 +252,7 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 	}
 	generation := a.accountGeneration
 	revision := s.revision
-	if newIdentity {
+	if newIdentity || (s.fallback && session != nil) {
 		revision++
 	}
 	ctx := s.flow.begin(a.ctx, generation)
@@ -298,7 +309,11 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 				return
 			}
 			a.accountBusy = false
+			restoring := a.model.AccountRestore == accountRestoring || a.model.AccountRestore == accountRestoreSlow
 			if flowErr != nil {
+				if restoring {
+					a.deferAccountRestore()
+				}
 				a.accountFailure("nativeAccountError", failureCategory)
 				return
 			}
@@ -307,7 +322,9 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 				s.session, s.revision, s.restored, s.ready = session, revision, true, configured
 				if configured {
 					s.configured = next
+					s.fallback = false
 				}
+				a.model.AccountRestore = ""
 				if session != nil && status.LoggedIn && (newIdentity || !hadCredentials || credentials != previousCredentials) {
 					cookies, cookieErr := session.HTTPCookies(time.Now())
 					if cookieErr == nil {
@@ -331,6 +348,11 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 				}
 			}
 			if err != nil {
+				if restoring && !verified {
+					// The saved session stays for the next refresh or an explicit
+					// retry; public tracks must not wait for it meanwhile.
+					a.deferAccountRestore()
+				}
 				a.accountRequestFailure(errorKey, failureCategory, newIdentity)
 				return
 			}
@@ -361,6 +383,93 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 	}()
 }
 
+// accountRestoreSlowAfter is how long restoration may run before the view
+// explains the wait and offers anonymous playback.
+var accountRestoreSlowAfter = 12 * time.Second
+
+func (a *desktop) beginAccountRestore() {
+	s := &a.accountState
+	recordAccountDiagnostic(a.diagnosticPath, "restoring")
+	a.model.AccountRestore = accountRestoring
+	s.restoreAttempt++
+	attempt := s.restoreAttempt
+	// The secret store can wait on a system authorization prompt that never
+	// reports progress, so the wait itself becomes visible state.
+	time.AfterFunc(accountRestoreSlowAfter, func() {
+		a.post(func() {
+			if s.restoreAttempt == attempt && a.model.AccountRestore == accountRestoring {
+				recordAccountDiagnostic(a.diagnosticPath, "restore_slow")
+				a.model.AccountRestore = accountRestoreSlow
+			}
+		})
+	})
+}
+
+// skipAccountRestore stops waiting for a slow restoration. A late store read
+// or verification is ignored; the saved session stays for an explicit retry.
+func (a *desktop) skipAccountRestore() {
+	s := &a.accountState
+	if a.model.AccountRestore != accountRestoreSlow {
+		return
+	}
+	s.flow.cancelPending()
+	a.accountBusy = false
+	// Supersede any configuration the abandoned flow may still send.
+	s.revision++
+	recordAccountDiagnostic(a.diagnosticPath, "restore_deferred")
+	a.deferAccountRestore()
+}
+
+// retryAccountRestore rereads or reverifies the saved session on request.
+func (a *desktop) retryAccountRestore() {
+	s := &a.accountState
+	if a.accountBusy || s.login != nil || a.model.AccountRestore != accountRestoreDeferred {
+		return
+	}
+	a.clearAccountRequestFailure(false)
+	if !s.restored {
+		a.restoreAccount()
+		return
+	}
+	a.beginAccountRestore()
+	a.updateAccount(s.session, false)
+}
+
+func (a *desktop) deferAccountRestore() {
+	a.model.AccountRestore = accountRestoreDeferred
+	a.useAnonymousPlayback()
+}
+
+// useAnonymousPlayback lets public tracks play while a saved account is not
+// active instead of waiting for it. It never replaces a configured account.
+func (a *desktop) useAnonymousPlayback() {
+	s := &a.accountState
+	if s.ready || s.fallback || a.player == nil {
+		return
+	}
+	s.fallback = true
+	generation, next := a.accountGeneration, player.AccountSession{Revision: s.revision}
+	ctx, cancel := context.WithTimeout(a.ctx, 90*time.Second)
+	go func() {
+		defer cancel()
+		// Not under s.work: a stalled store read can hold it. The player orders
+		// this against later account changes by revision.
+		replay, err := a.beforeAccountConfigure(ctx, generation, next, false)
+		if err == nil {
+			err = a.player.SetAccount(ctx, next)
+		}
+		a.post(func() {
+			if err != nil || !s.fallback || s.ready || s.revision != next.Revision || generation != a.accountGeneration {
+				return
+			}
+			s.ready, s.configured = true, next
+			if replay.pending && replay.generation == a.playGeneration {
+				a.startTrack(replay.item)
+			}
+		})
+	}()
+}
+
 type accountReplay struct {
 	item       catalog.Item
 	generation uint64
@@ -375,7 +484,7 @@ func (a *desktop) beforeAccountConfigure(ctx context.Context, generation uint64,
 		if ctx.Err() != nil || generation != a.accountGeneration {
 			return
 		}
-		identityChanged := newIdentity || (a.model.SignedIn && !next.LoggedIn)
+		identityChanged := newIdentity || (a.model.SignedIn && !next.LoggedIn) || (a.accountState.fallback && next.LoggedIn)
 		changed := accountConfigurationChanged(a.accountState.configured, next, a.accountState.ready)
 		replay := accountReplay{}
 		if changed {

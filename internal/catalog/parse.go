@@ -99,12 +99,16 @@ func parsePage(response map[string]any) (Page, pageCursor, error) {
 						token = continuationToken(shelf)
 					}
 					items := collectItems(shelf)
+					title := shelfTitle(shelf)
 					if kind == "musicCardShelfRenderer" {
 						if card, ok := parseItem(shelf, kind); ok {
 							items = uniqueItems(append([]Item{card}, items...))
 						}
+						// A card's own title names its top result; only the
+						// header names the section, such as "Top result".
+						title = joinedText(at(shelf, "header", "musicCardShelfHeaderBasicRenderer", "title"))
 					}
-					appendShelf(shelfTitle(shelf), items)
+					appendShelf(title, items)
 					return
 				}
 			}
@@ -380,6 +384,10 @@ func browseKind(endpoint any) string {
 		return "artist"
 	case "MUSIC_PAGE_TYPE_PLAYLIST":
 		return "playlist"
+	case "MUSIC_PAGE_TYPE_PODCAST_SHOW_DETAIL_PAGE":
+		return "podcast"
+	case "MUSIC_PAGE_TYPE_NON_MUSIC_AUDIO_TRACK_PAGE":
+		return "episode"
 	}
 	id := textAt(endpoint, "browseId")
 	switch {

@@ -748,5 +748,15 @@
   "nativeLyricsFollow": "Follow playback",
   "nativeLyricsFollowing": "Following playback",
   "nativeLyricsUnsynced": "Synchronized timing is unavailable for this track.",
-  "nativeLyricsError": "Unable to load lyrics right now."
+  "nativeLyricsError": "Unable to load lyrics right now.",
+  "nativeAccountRestoring": "Restoring your account…",
+  "nativeAccountRestoringBody": "Your playlists, albums and liked music appear here once your saved account is restored.",
+  "nativeAccountRestoreSlow": "Restoring your account is taking longer than usual. If your system asks to let ytmgo use its saved key, allow it. You can keep listening without your account meanwhile.",
+  "nativeAccountRestoreSkip": "Continue without account",
+  "nativeAccountRestoreDeferred": "Saved account not restored",
+  "nativeAccountRestoreDeferredBody": "Your saved account is kept but not in use. Restore it to see your library, or sign in again.",
+  "nativeAccountRestoreRetry": "Restore account",
+  "nativePlaybackAwaitingAccount": "Playback starts once your account is restored.",
+  "nativeKindPodcast": "Podcast",
+  "nativeKindEpisode": "Episode"
 }

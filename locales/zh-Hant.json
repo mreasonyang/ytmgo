@@ -201,5 +201,15 @@
   "nativeLyricsFollow": "跟隨播放",
   "nativeLyricsFollowing": "正在跟隨播放",
   "nativeLyricsUnsynced": "這首歌暫不提供同步歌詞時間軸。",
-  "nativeLyricsError": "暫時無法取得歌詞。"
+  "nativeLyricsError": "暫時無法取得歌詞。",
+  "nativeAccountRestoring": "正在還原你的帳戶…",
+  "nativeAccountRestoringBody": "已儲存的帳戶還原後，你的播放清單、專輯和喜歡的音樂都會顯示在這裡。",
+  "nativeAccountRestoreSlow": "還原帳戶的時間比平常更久。如果系統詢問是否允許 ytmgo 使用已儲存的金鑰，請允許。在此期間，你也可以先不使用帳戶繼續收聽。",
+  "nativeAccountRestoreSkip": "不使用帳戶繼續",
+  "nativeAccountRestoreDeferred": "已儲存的帳戶尚未還原",
+  "nativeAccountRestoreDeferredBody": "已儲存的帳戶仍然保留，但目前未使用。還原後即可查看你的音樂庫，也可以重新登入。",
+  "nativeAccountRestoreRetry": "還原帳戶",
+  "nativePlaybackAwaitingAccount": "帳戶還原後將開始播放。",
+  "nativeKindPodcast": "Podcast",
+  "nativeKindEpisode": "單集"
 }

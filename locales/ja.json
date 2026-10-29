@@ -201,5 +201,15 @@
   "nativeLyricsFollow": "再生に合わせる",
   "nativeLyricsFollowing": "再生に追従中",
   "nativeLyricsUnsynced": "この曲には同期用の歌詞タイムスタンプがありません。",
-  "nativeLyricsError": "現在、歌詞を取得できません。"
+  "nativeLyricsError": "現在、歌詞を取得できません。",
+  "nativeAccountRestoring": "アカウントを復元しています…",
+  "nativeAccountRestoringBody": "保存済みのアカウントが復元されると、プレイリスト、アルバム、高く評価した曲がここに表示されます。",
+  "nativeAccountRestoreSlow": "アカウントの復元にいつもより時間がかかっています。システムが ytmgo による保存済みキーの使用許可を求めた場合は許可してください。その間はアカウントなしで再生を続けられます。",
+  "nativeAccountRestoreSkip": "アカウントなしで続ける",
+  "nativeAccountRestoreDeferred": "保存済みのアカウントは復元されていません",
+  "nativeAccountRestoreDeferredBody": "保存済みのアカウントは残っていますが、使用されていません。復元するとライブラリが表示されます。もう一度ログインすることもできます。",
+  "nativeAccountRestoreRetry": "アカウントを復元",
+  "nativePlaybackAwaitingAccount": "アカウントが復元されると再生が始まります。",
+  "nativeKindPodcast": "ポッドキャスト",
+  "nativeKindEpisode": "エピソード"
 }

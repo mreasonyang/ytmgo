@@ -2752,3 +2752,105 @@ func NativeLyricsError() string { return In(i18n.Locale()).NativeLyricsError() }
 func (msgs Messages) NativeLyricsError() string {
 	return Catalog.Format(msgs.locale, "nativeLyricsError", nil)
 }
+
+// NativeAccountRestoring says "Restoring your account…"
+// in the language the app shows.
+func NativeAccountRestoring() string { return In(i18n.Locale()).NativeAccountRestoring() }
+
+// NativeAccountRestoring says "Restoring your account…"
+// in the language of msgs.
+func (msgs Messages) NativeAccountRestoring() string {
+	return Catalog.Format(msgs.locale, "nativeAccountRestoring", nil)
+}
+
+// NativeAccountRestoringBody says "Your playlists, albums and liked music appear here once your saved account is restored."
+// in the language the app shows.
+func NativeAccountRestoringBody() string { return In(i18n.Locale()).NativeAccountRestoringBody() }
+
+// NativeAccountRestoringBody says "Your playlists, albums and liked music appear here once your saved account is restored."
+// in the language of msgs.
+func (msgs Messages) NativeAccountRestoringBody() string {
+	return Catalog.Format(msgs.locale, "nativeAccountRestoringBody", nil)
+}
+
+// NativeAccountRestoreSlow says "Restoring your account is taking longer than usual. If your system asks to let ytmgo use its saved key, allow it. You…"
+// in the language the app shows.
+func NativeAccountRestoreSlow() string { return In(i18n.Locale()).NativeAccountRestoreSlow() }
+
+// NativeAccountRestoreSlow says "Restoring your account is taking longer than usual. If your system asks to let ytmgo use its saved key, allow it. You…"
+// in the language of msgs.
+func (msgs Messages) NativeAccountRestoreSlow() string {
+	return Catalog.Format(msgs.locale, "nativeAccountRestoreSlow", nil)
+}
+
+// NativeAccountRestoreSkip says "Continue without account"
+// in the language the app shows.
+func NativeAccountRestoreSkip() string { return In(i18n.Locale()).NativeAccountRestoreSkip() }
+
+// NativeAccountRestoreSkip says "Continue without account"
+// in the language of msgs.
+func (msgs Messages) NativeAccountRestoreSkip() string {
+	return Catalog.Format(msgs.locale, "nativeAccountRestoreSkip", nil)
+}
+
+// NativeAccountRestoreDeferred says "Saved account not restored"
+// in the language the app shows.
+func NativeAccountRestoreDeferred() string { return In(i18n.Locale()).NativeAccountRestoreDeferred() }
+
+// NativeAccountRestoreDeferred says "Saved account not restored"
+// in the language of msgs.
+func (msgs Messages) NativeAccountRestoreDeferred() string {
+	return Catalog.Format(msgs.locale, "nativeAccountRestoreDeferred", nil)
+}
+
+// NativeAccountRestoreDeferredBody says "Your saved account is kept but not in use. Restore it to see your library, or sign in again."
+// in the language the app shows.
+func NativeAccountRestoreDeferredBody() string {
+	return In(i18n.Locale()).NativeAccountRestoreDeferredBody()
+}
+
+// NativeAccountRestoreDeferredBody says "Your saved account is kept but not in use. Restore it to see your library, or sign in again."
+// in the language of msgs.
+func (msgs Messages) NativeAccountRestoreDeferredBody() string {
+	return Catalog.Format(msgs.locale, "nativeAccountRestoreDeferredBody", nil)
+}
+
+// NativeAccountRestoreRetry says "Restore account"
+// in the language the app shows.
+func NativeAccountRestoreRetry() string { return In(i18n.Locale()).NativeAccountRestoreRetry() }
+
+// NativeAccountRestoreRetry says "Restore account"
+// in the language of msgs.
+func (msgs Messages) NativeAccountRestoreRetry() string {
+	return Catalog.Format(msgs.locale, "nativeAccountRestoreRetry", nil)
+}
+
+// NativePlaybackAwaitingAccount says "Playback starts once your account is restored."
+// in the language the app shows.
+func NativePlaybackAwaitingAccount() string { return In(i18n.Locale()).NativePlaybackAwaitingAccount() }
+
+// NativePlaybackAwaitingAccount says "Playback starts once your account is restored."
+// in the language of msgs.
+func (msgs Messages) NativePlaybackAwaitingAccount() string {
+	return Catalog.Format(msgs.locale, "nativePlaybackAwaitingAccount", nil)
+}
+
+// NativeKindPodcast says "Podcast"
+// in the language the app shows.
+func NativeKindPodcast() string { return In(i18n.Locale()).NativeKindPodcast() }
+
+// NativeKindPodcast says "Podcast"
+// in the language of msgs.
+func (msgs Messages) NativeKindPodcast() string {
+	return Catalog.Format(msgs.locale, "nativeKindPodcast", nil)
+}
+
+// NativeKindEpisode says "Episode"
+// in the language the app shows.
+func NativeKindEpisode() string { return In(i18n.Locale()).NativeKindEpisode() }
+
+// NativeKindEpisode says "Episode"
+// in the language of msgs.
+func (msgs Messages) NativeKindEpisode() string {
+	return Catalog.Format(msgs.locale, "nativeKindEpisode", nil)
+}

@@ -9,8 +9,11 @@ type nativePalette struct {
 	base, surface, raised, input, highlight ui.Color
 	text, secondary, muted                  ui.Color
 	accent, onAccent, line                  ui.Color
-	hover, press                            ui.Color
-	dark                                    bool
+	// accentText is accent for normal-size text. Light appearance darkens it
+	// to keep 4.5:1 on its surfaces; fills and icons keep accent.
+	accentText   ui.Color
+	hover, press ui.Color
+	dark         bool
 }
 
 func palette(dark bool) nativePalette {
@@ -18,14 +21,14 @@ func palette(dark bool) nativePalette {
 		return nativePalette{
 			base: ui.Hex("#000000"), surface: ui.Hex("#121212"), raised: ui.Hex("#1f1f1f"), input: ui.Hex("#242424"), highlight: ui.Hex("#2a2a2a"),
 			text: ui.Hex("#ffffff"), secondary: ui.Hex("#b3b3b3"), muted: ui.Hex("#8f8f8f"),
-			accent: ui.Hex("#ff5a4f"), onAccent: ui.Hex("#000000"), line: ui.RGBA(255, 255, 255, 0.10),
+			accent: ui.Hex("#ff5a4f"), accentText: ui.Hex("#ff5a4f"), onAccent: ui.Hex("#000000"), line: ui.RGBA(255, 255, 255, 0.10),
 			hover: ui.RGBA(255, 255, 255, 0.07), press: ui.RGBA(255, 255, 255, 0.12), dark: true,
 		}
 	}
 	return nativePalette{
 		base: ui.Hex("#e9e9eb"), surface: ui.Hex("#ffffff"), raised: ui.Hex("#f2f2f3"), input: ui.Hex("#ececee"), highlight: ui.Hex("#e1e1e4"),
 		text: ui.Hex("#121212"), secondary: ui.Hex("#5a5a5f"), muted: ui.Hex("#6b6b70"),
-		accent: ui.Hex("#e8382d"), onAccent: ui.Hex("#ffffff"), line: ui.RGBA(0, 0, 0, 0.10),
+		accent: ui.Hex("#e8382d"), accentText: ui.Hex("#b8261c"), onAccent: ui.Hex("#ffffff"), line: ui.RGBA(0, 0, 0, 0.10),
 		hover: ui.RGBA(0, 0, 0, 0.05), press: ui.RGBA(0, 0, 0, 0.09),
 	}
 }

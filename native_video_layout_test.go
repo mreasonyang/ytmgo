@@ -138,3 +138,29 @@ func TestNativeImmersiveVideoContainsAllSourceEdges(t *testing.T) {
 		})
 	}
 }
+
+func TestNativeCompactShortVideoUsesWidth(t *testing.T) {
+	for _, size := range [][2]int{{380, 609}, {420, 609}, {420, 740}, {757, 641}, {760, 609}} {
+		for _, language := range []string{"en", "ja", "zh-Hans", "zh-Hant"} {
+			t.Run(fmt.Sprintf("%dx%d-%s", size[0], size[1], language), func(t *testing.T) {
+				width, height := size[0], size[1]
+				m, a := nativeViewFixture()
+				m.Immersive, m.Video, m.Language = true, true, language
+				m.Current.Title = "Daft Punk : Get Lucky // Grammys Rehearsal (HD) — Extended Live Archive Edition"
+				m.VideoFrame = ui.NewBitmap(videoLayoutFrame(160, 90))
+				tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, height)
+				video := nativeAssertVisible(t, tt, a.Tr("nativeVideo"), width, height)
+				// The square-cover budget is 180 high; video may use 16:9 of it.
+				want := min(float32(width-64), 320)
+				if video.W < want-1 || video.W > float32(width-64)+1 || math.Abs(float64(video.W/video.H-16.0/9.0)) > 0.01 {
+					t.Fatalf("compact video undersized: %+v want width %.0f", video, want)
+				}
+				nativeAssertVisible(t, tt, a.Tr("nativeArtwork"), width, height)
+				nativeAssertVisible(t, tt, a.Tr("shellPause"), width, height)
+				if size == [2]int{757, 641} && language == "en" {
+					nativeSnapshot(t, tt, "compact-short-video-757")
+				}
+			})
+		}
+	}
+}

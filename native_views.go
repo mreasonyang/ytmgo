@@ -35,6 +35,38 @@ type UIModel struct {
 	PlaybackError                                               string
 	VideoError                                                  string
 	ErrorScope                                                  errorScope
+	AccountRestore                                              string
+}
+
+// Saved-account restoration as the view presents it; account.go owns the
+// transitions. "" means the account state is settled.
+const (
+	accountRestoring       = "restoring" // reading and verifying the saved session
+	accountRestoreSlow     = "slow"      // still restoring after a long wait
+	accountRestoreDeferred = "deferred"  // saved session kept but not in use
+)
+
+func nativeRestoring(m *UIModel) bool {
+	return !m.SignedIn && (m.AccountRestore == accountRestoring || m.AccountRestore == accountRestoreSlow)
+}
+
+func nativeRestoreDeferred(m *UIModel) bool {
+	return !m.SignedIn && m.AccountRestore == accountRestoreDeferred
+}
+
+// nativeRestoreActions offers the next step for a slow or deferred restore.
+// It is the primary action unless it sits beside the sign-in pill.
+func nativeRestoreActions(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, primary bool) {
+	switch {
+	case m.AccountRestore == accountRestoreSlow && !m.SignedIn:
+		if nativePill(c, a.Tr("nativeAccountRestoreSkip"), p, primary).Disabled(a.SkipRestore == nil).Clicked() {
+			a.SkipRestore()
+		}
+	case nativeRestoreDeferred(m):
+		if nativePill(c, a.Tr("nativeAccountRestoreRetry"), p, primary).Disabled(a.RestoreAccount == nil).Clicked() {
+			a.RestoreAccount()
+		}
+	}
 }
 
 // ViewActions keeps native controls independent from the catalogue and player.
@@ -47,6 +79,7 @@ type ViewActions struct {
 	PlayQueue                                           func(int)
 	Toggle, Next, Previous, Like, Shuffle, Repeat, Mute func()
 	Back, Forward, Reload, Account, SignOut             func()
+	RestoreAccount, SkipRestore                         func()
 	Seek, Volume                                        func(float64)
 	Appearance, Language                                func(string)
 	Artwork                                             func(string, int) ui.ImageSource
@@ -312,6 +345,10 @@ func nativeSearchField(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 // nativeAccountStatus names the three account states the controller reports.
 func nativeAccountStatus(m *UIModel, a ViewActions) string {
 	switch {
+	case nativeRestoring(m):
+		return a.Tr("nativeAccountRestoring")
+	case nativeRestoreDeferred(m):
+		return a.Tr("nativeAccountRestoreDeferred")
 	case !m.SignedIn:
 		return a.Tr("shellAccountSignedOut")
 	case m.MusicPremium:
@@ -336,6 +373,17 @@ func nativeAvatar(c *ui.Context, m *UIModel, p nativePalette, size float32) ui.E
 // nativeAccount is the top-right control: a sign-in call to action when
 // signed out, otherwise an avatar whose menu states the account's plan.
 func nativeAccount(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, badge bool) {
+	if nativeRestoring(m) {
+		// Sign-in cannot start until restoration settles, so it is not offered.
+		status := nativeAccountStatus(m, a)
+		ui.Row(c).Height(36).MinWidth(0).Shrink(1).PaddingX(12).Gap(8).Radius(18).Background(p.raised).AlignItems(ui.Center).Label(status).Tooltip(status).Children(func() {
+			ui.Spinner(c).Size(16, 16)
+			if badge {
+				ui.Text(c, status).MinWidth(0).FontSize(13).FontWeight(600).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+			}
+		})
+		return
+	}
 	if !m.SignedIn {
 		if nativePill(c, a.Tr("shellSignIn"), p, true).Clicked() {
 			a.Account()
@@ -349,7 +397,7 @@ func nativeAccount(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, ba
 	}
 	b.Children(func() {
 		if m.MusicPremium && badge {
-			ui.Text(c, a.Tr("shellPremiumBadge")).PaddingStart(6).FontSize(12).FontWeight(700).TextColor(p.accent)
+			ui.Text(c, a.Tr("shellPremiumBadge")).PaddingStart(6).FontSize(12).FontWeight(700).TextColor(p.accentText)
 		}
 		nativeAvatar(c, m, p, 32)
 	})
@@ -390,6 +438,12 @@ func nativeKindLabel(item catalog.Item, a ViewActions) string {
 }
 
 func nativeKindKey(item catalog.Item) string {
+	switch item.Kind {
+	case "podcast":
+		return "nativeKindPodcast"
+	case "episode":
+		return "nativeKindEpisode"
+	}
 	switch nativeLibraryKind(item) {
 	case "playlist":
 		return "shellKindPlaylist"
@@ -424,6 +478,15 @@ func nativeLibrarySubtitle(item catalog.Item, a ViewActions) string {
 		return artist
 	}
 	return kind + " · " + artist
+}
+
+// nativeResultSubtitle leads search results with their type, since one list
+// can mix songs, artists, albums, playlists and podcasts.
+func nativeResultSubtitle(item catalog.Item, m *UIModel, a ViewActions) string {
+	if m.Route == "search" {
+		return nativeLibrarySubtitle(item, a)
+	}
+	return item.Artist
 }
 
 func nativeItemLabel(item catalog.Item) string {
@@ -545,21 +608,40 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 func nativeLibraryPrompt(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 	ui.Column(c).Padding(8, 8).Children(func() {
 		ui.Column(c).Padding(20).Gap(12).Radius(8).Background(p.raised).Children(func() {
-			ui.Text(c, a.Tr("shellLibraryEmptyTitle")).FontSize(16).FontWeight(700)
-			hint := "shellLibraryEmptyBody"
-			if m.SignedIn {
-				hint = "nativeLibraryHint"
-			}
+			title, hint := nativeLibraryPromptText(m)
+			ui.Text(c, a.Tr(title)).FontSize(16).FontWeight(700)
 			ui.Text(c, a.Tr(hint)).FontSize(14).LineHeight(1.5).TextColor(p.secondary)
-			if !m.SignedIn {
-				if nativePill(c, a.Tr("shellSignIn"), p, true).AlignSelf(ui.Start).MarginY(8).Clicked() {
-					a.Account()
+			switch {
+			case nativeRestoring(m):
+				// The Library page and Settings carry the slow-restore detail.
+				ui.Row(c).Gap(8).Wrap().Children(func() { nativeRestoreActions(c, m, a, p, true) })
+			case !m.SignedIn:
+				ui.Row(c).Gap(8).Wrap().MarginY(8).Children(func() {
+					if nativePill(c, a.Tr("shellSignIn"), p, true).Clicked() {
+						a.Account()
+					}
+					nativeRestoreActions(c, m, a, p, false)
+				})
+			default:
+				if nativePill(c, a.Tr("shellNavLibrary"), p, true).AlignSelf(ui.Start).MarginY(8).Clicked() {
+					a.Navigate("library")
 				}
-			} else if nativePill(c, a.Tr("shellNavLibrary"), p, true).AlignSelf(ui.Start).MarginY(8).Clicked() {
-				a.Navigate("library")
 			}
 		})
 	})
+}
+
+// nativeLibraryPromptText names the library explanation for the account state.
+func nativeLibraryPromptText(m *UIModel) (title, body string) {
+	switch {
+	case m.SignedIn:
+		return "shellLibraryEmptyTitle", "nativeLibraryHint"
+	case nativeRestoring(m):
+		return "nativeAccountRestoring", "nativeAccountRestoringBody"
+	case nativeRestoreDeferred(m):
+		return "nativeAccountRestoreDeferred", "nativeAccountRestoreDeferredBody"
+	}
+	return "shellLibraryEmptyTitle", "shellLibraryEmptyBody"
 }
 
 func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p nativePalette, full bool) {
@@ -586,7 +668,7 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 		ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
 			title := ui.Text(c, item.Title).FontSize(15).FontWeight(500).MaxLines(1).Ellipsis("…")
 			if playing || open {
-				title.TextColor(p.accent)
+				title.TextColor(p.accentText)
 			}
 			ui.Text(c, nativeLibrarySubtitle(item, a)).FontSize(13).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
 		})
@@ -650,15 +732,27 @@ func nativePageBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, c
 			if m.ErrorScope != errorAccount && m.ErrorScope != errorAccountConnect && nativePill(c, a.Tr("buttonRetry"), p, true).AlignSelf(ui.Start).Clicked() {
 				a.Reload()
 			}
+			// A failed restore names its retry here, except where the library
+			// card below already offers it.
+			if m.ErrorScope == errorAccount && m.Route != "library" {
+				ui.Row(c).Gap(8).Children(func() { nativeRestoreActions(c, m, a, p, true) })
+			}
 		})
 	}
 	if m.Route == "library" && !m.SignedIn {
 		ui.Column(c).Padding(24).Gap(14).Radius(8).Background(p.raised).Children(func() {
-			ui.Text(c, a.Tr("shellLibraryEmptyTitle")).FontSize(24).FontWeight(800)
-			ui.Text(c, a.Tr("shellLibraryEmptyBody")).TextColor(p.secondary)
-			if nativePill(c, a.Tr("shellSignIn"), p, true).AlignSelf(ui.Start).Clicked() {
-				a.Account()
+			title, body := nativeLibraryPromptText(m)
+			ui.Text(c, a.Tr(title)).FontSize(24).FontWeight(800)
+			ui.Text(c, a.Tr(body)).TextColor(p.secondary)
+			if m.AccountRestore == accountRestoreSlow {
+				ui.Text(c, a.Tr("nativeAccountRestoreSlow")).TextColor(p.secondary)
 			}
+			ui.Row(c).Gap(8).Wrap().Children(func() {
+				if !nativeRestoring(m) && nativePill(c, a.Tr("shellSignIn"), p, true).Clicked() {
+					a.Account()
+				}
+				nativeRestoreActions(c, m, a, p, nativeRestoring(m))
+			})
 		})
 	}
 	if m.Route == "home" && m.SignedIn && len(m.LibraryItems) > 0 {
@@ -811,7 +905,7 @@ func nativeShortcutTile(c *ui.Context, item catalog.Item, m *UIModel, a ViewActi
 		nativeArtwork(c, item.Artwork, 64, 0, a, p)
 		t := ui.Text(c, item.Title).Grow(1).MinWidth(0).FontSize(14).FontWeight(700).MaxLines(2).Ellipsis("…")
 		if playing {
-			t.TextColor(p.accent)
+			t.TextColor(p.accentText)
 			ui.Icon(c, nativeIcons["volume"]).Size(16, 16).TextColor(p.accent)
 		} else if hovered && item.ID != "" {
 			ui.Box(c).Size(32, 32).Shrink(0).Radius(16).Background(p.accent).TextColor(p.onAccent).Center().PassThrough().Children(func() { ui.Icon(c, nativeIcons["play"]).Size(16, 16) })
@@ -916,9 +1010,9 @@ func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p n
 		})
 		title := ui.Text(c, item.Title).FontSize(15).FontWeight(700).MaxLines(1).Ellipsis("…")
 		if item.ID != "" && item.ID == m.Current.ID {
-			title.TextColor(p.accent)
+			title.TextColor(p.accentText)
 		}
-		subtitle := item.Artist
+		subtitle := nativeResultSubtitle(item, m, a)
 		if subtitle == "" {
 			subtitle = nativeKindLabel(item, a)
 		}
@@ -993,13 +1087,21 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 			})
 		}
 		ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(12).AlignItems(ui.Center).Children(func() {
-			nativeArtwork(c, item.Artwork, 40, 4, a, p)
+			radius := float32(4)
+			if item.Kind == "artist" {
+				radius = 20
+			}
+			nativeArtwork(c, item.Artwork, 40, radius, a, p)
 			ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
 				t := ui.Text(c, item.Title).FontSize(15).FontWeight(500).MaxLines(1).Ellipsis("…")
 				if playing {
-					t.TextColor(p.accent)
+					t.TextColor(p.accentText)
 				}
-				artist := ui.Text(c, item.Artist).FontSize(13).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+				subtitle := item.Artist
+				if mode == nativeTrackRow {
+					subtitle = nativeResultSubtitle(item, m, a)
+				}
+				artist := ui.Text(c, subtitle).FontSize(13).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
 				if hovered {
 					artist.TextColor(p.text)
 				}
@@ -1117,10 +1219,12 @@ func nativeTrackCaption(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 		ui.Text(c, title).FontSize(14).FontWeight(600).MaxLines(1).Ellipsis("…")
 		if m.PlaybackError != "" {
 			artist = m.PlaybackError
+		} else if nativeAwaitingAccount(m) {
+			artist = a.Tr("nativePlaybackAwaitingAccount")
 		}
 		caption := ui.Text(c, artist).FontSize(12).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
 		if m.PlaybackError != "" {
-			caption.TextColor(p.accent)
+			caption.TextColor(p.accentText)
 		}
 	})
 }
@@ -1328,7 +1432,7 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 			return
 		}
 		body := func() {
-			nativePlaybackNotice(c, m, a, p, false)
+			nativePlaybackNotice(c, m, a, p)
 			artSize := min(width-32, max(float32(120), windowHeight-560))
 			if overlay {
 				artSize = min(artSize, max(float32(120), windowHeight-600))
@@ -1423,8 +1527,14 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 		scroll := ui.Scroll(c).Grow(1).Padding(20).Gap(24)
 		a = nativeArtworkViewport(c, a, scroll)
 		scroll.Children(func() {
-			nativePlaybackNotice(c, m, a, p, false)
-			artSize := min(width-64, max(float32(180), height-390))
+			nativePlaybackNotice(c, m, a, p)
+			mediaHeight := max(float32(180), height-390)
+			artSize := min(width-64, mediaHeight)
+			if m.Video {
+				// As on desktop, landscape video keeps the cover's height
+				// budget and uses the extra width instead of shrinking to it.
+				artSize = min(width-64, mediaHeight*16/9)
+			}
 			nativeMedia(c, m, a, p, artSize).AlignSelf(ui.Center)
 			nativeMediaSwitch(c, m, a, p)
 			nativeImmersiveTitle(c, m, a, p, true)
@@ -1437,8 +1547,11 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 	mediaWidth := max(float32(1), width-16-80-40-panelWidth)
 	ui.Row(c).Grow(1).MinHeight(0).Padding(24, 40).Gap(40).AlignItems(ui.Center).Children(func() {
 		scroll := ui.Scroll(c).Grow(1).MinWidth(0).MinHeight(0).HeightPercent(100).Label(a.Tr("shellContent"))
-		a = nativeArtworkViewport(c, a, scroll)
+		// The queue card is a sibling of the media column, so it keeps the
+		// outer viewport instead of the left column's clip.
+		media := nativeArtworkViewport(c, a, scroll)
 		scroll.Children(func() {
+			a := media
 			ui.Column(c).MinHeight(contentHeight).Shrink(0).Gap(24).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
 				// Reserve the switch, both gaps, two title lines and an artist
 				// line. Extra artist lines/notices remain reachable by scrolling.
@@ -1456,7 +1569,7 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 				nativeMedia(c, m, a, p, artSize).Shadow(0, 24, 64, 0, ui.RGBA(0, 0, 0, 0.5))
 				nativeMediaSwitch(c, m, a, p)
 				nativeImmersiveTitle(c, m, a, p, false)
-				nativePlaybackNotice(c, m, a, p, false)
+				nativePlaybackNotice(c, m, a, p)
 			})
 		})
 		nativePanelCard(c, m, a, p).Width(panelWidth).HeightPercent(90).Background(p.base.Alpha(0.35))
@@ -1497,23 +1610,29 @@ func nativeSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, w
 					ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
 						nativeAvatar(c, m, p, 40)
 						ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
-							ui.Text(c, nativeAccountStatus(m, a)).FontWeight(600).MaxLines(1).Ellipsis("…")
+							ui.Text(c, nativeAccountStatus(m, a)).FontWeight(600).MaxLines(2).Ellipsis("…")
 							if m.SignedIn && m.MusicPremium {
-								ui.Text(c, a.Tr("shellPremiumBadge")).FontSize(12).FontWeight(700).TextColor(p.accent)
+								ui.Text(c, a.Tr("shellPremiumBadge")).FontSize(12).FontWeight(700).TextColor(p.accentText)
 							}
 						})
 					})
+					if m.AccountRestore == accountRestoreSlow && !m.SignedIn {
+						ui.Text(c, a.Tr("nativeAccountRestoreSlow")).FontSize(13).LineHeight(1.5).TextColor(p.secondary)
+					} else if nativeRestoreDeferred(m) {
+						ui.Text(c, a.Tr("nativeAccountRestoreDeferredBody")).FontSize(13).LineHeight(1.5).TextColor(p.secondary)
+					}
 					ui.Row(c).Gap(8).Wrap().Children(func() {
 						key := "shellAccountSignIn"
 						if m.SignedIn {
 							key = "shellAccountManage"
 						}
-						if nativePill(c, a.Tr(key), p, !m.SignedIn).Clicked() {
+						if !nativeRestoring(m) && nativePill(c, a.Tr(key), p, !m.SignedIn).Clicked() {
 							m.Settings = false
 							a.Account()
 						}
+						nativeRestoreActions(c, m, a, p, nativeRestoring(m))
 						if m.SignedIn {
-							if nativePill(c, a.Tr("shellSignOut"), p, false).TextColor(p.accent).Clicked() {
+							if nativePill(c, a.Tr("shellSignOut"), p, false).TextColor(p.accentText).Clicked() {
 								m.Settings = false
 								a.SignOut()
 							}
@@ -1537,7 +1656,7 @@ func nativeSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, w
 						active := m.Language == option.id
 						b := ui.Button(c, option.title).Height(40).Justify(ui.Start).PaddingX(12).Radius(6).BorderWidth(0).Background(ui.Transparent).TextColor(p.secondary).Selected(active)
 						if active {
-							b.Background(p.hover).TextColor(p.accent).FontWeight(700)
+							b.Background(p.hover).TextColor(p.accentText).FontWeight(700)
 						} else if b.Hovered() {
 							b.Background(p.hover).TextColor(p.text)
 						}
@@ -1616,7 +1735,7 @@ func nativeSongShelf(items []catalog.Item) bool {
 // A presentation action can occur after its destination was built in this pass.
 // Request the next frame explicitly so it becomes visible without another input.
 type nativePresentationKey struct {
-	texts                              [13]string
+	texts                              [14]string
 	flags                              [18]bool
 	values                             [4]float64
 	repeat, queueLength, libraryLength int
@@ -1625,7 +1744,7 @@ type nativePresentationKey struct {
 
 func nativePresentation(m *UIModel) nativePresentationKey {
 	return nativePresentationKey{
-		texts:  [13]string{m.Route, m.Query, m.PanelTab, m.Appearance, m.Language, m.Current.ID, m.Current.Title, m.Page.Title, m.Error, m.Lyrics, m.Current.Artwork, m.VideoError, m.PlaybackError},
+		texts:  [14]string{m.Route, m.Query, m.PanelTab, m.Appearance, m.Language, m.Current.ID, m.Current.Title, m.Page.Title, m.Error, m.Lyrics, m.Current.Artwork, m.VideoError, m.PlaybackError, m.AccountRestore},
 		flags:  [18]bool{m.Loading, m.Playing, m.Muted, m.Liked, m.Shuffle, m.Panel, m.Immersive, m.Settings, m.Shortcuts, m.SidebarCollapsed, m.SignedIn, m.CanBack, m.CanForward, m.FocusSearch, m.Video, m.VideoLoading, m.PlaybackLoading, m.MusicPremium},
 		values: [4]float64{m.Volume, m.Position, m.Duration, 0}, repeat: m.Repeat, queueLength: len(m.Queue), libraryLength: len(m.LibraryItems),
 		errorScope: m.ErrorScope,
@@ -1794,11 +1913,9 @@ func nativeMedia(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, size
 
 func nativeExpandedTransport(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) ui.Element {
 	return ui.Column(c).Padding(6, 16).Gap(4).Background(p.base).Children(func() {
-		if m.PlaybackError != "" {
-			nativePlaybackNotice(c, m, a, p, true)
-		} else {
-			nativeSeek(c, m, a, p)
-		}
+		// Compact immersive content leads with the full playback notice, so
+		// the transport keeps its seek bar instead of a truncated copy.
+		nativeSeek(c, m, a, p)
 		ui.Row(c).Height(56).Gap(16).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
 			if nativeIconButton(c, "shuffle", a.Tr("shellShuffle"), p, m.Shuffle, 44).Disabled(len(m.Queue) < 2).Clicked() {
 				a.Shuffle()
@@ -1825,25 +1942,31 @@ func nativeExpandedTransport(c *ui.Context, m *UIModel, a ViewActions, p nativeP
 	})
 }
 
-func nativePlaybackNotice(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, footer bool) {
+// nativePlaybackNotice explains a failed track, or one waiting for the saved
+// account, beside the action that resolves it.
+func nativePlaybackNotice(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
+	if nativeAwaitingAccount(m) {
+		ui.Column(c).Shrink(0).Gap(8).Padding(10).Radius(8).Background(p.raised).Children(func() {
+			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+				ui.Spinner(c).Size(16, 16)
+				ui.Text(c, a.Tr("nativePlaybackAwaitingAccount")).Grow(1).MinWidth(0).FontSize(12).TextColor(p.secondary)
+			})
+			ui.Row(c).Gap(8).Wrap().Children(func() { nativeRestoreActions(c, m, a, p, true) })
+		})
+		return
+	}
 	if m.PlaybackError == "" {
 		return
 	}
-	row := ui.Row(c).Shrink(0).Gap(8).Padding(10).Radius(8).Background(p.raised).AlignItems(ui.Center)
-	if footer {
-		row.Height(24).Padding(0).Background(ui.Transparent)
-	}
-	row.Children(func() {
-		text := ui.Text(c, m.PlaybackError).Grow(1).MinWidth(0).FontSize(12).TextColor(p.accent)
-		if footer {
-			text.MaxLines(1).Ellipsis("…").FontSize(11)
-		}
-		button := nativePill(c, a.Tr("buttonRetry"), p, false).Width(72).PaddingX(6).Disabled(a.RetryPlayback == nil)
-		if footer {
-			button.Height(24).MinHeight(24).PaddingY(0)
-		}
-		if button.Clicked() {
+	ui.Row(c).Shrink(0).Gap(8).Padding(10).Radius(8).Background(p.raised).AlignItems(ui.Center).Children(func() {
+		ui.Text(c, m.PlaybackError).Grow(1).MinWidth(0).FontSize(12).TextColor(p.accentText)
+		if nativePill(c, a.Tr("buttonRetry"), p, false).Width(72).PaddingX(6).Disabled(a.RetryPlayback == nil).Clicked() {
 			a.RetryPlayback()
 		}
 	})
+}
+
+// nativeAwaitingAccount reports a track load held until restoration settles.
+func nativeAwaitingAccount(m *UIModel) bool {
+	return m.PlaybackLoading && m.PlaybackError == "" && nativeRestoring(m)
 }

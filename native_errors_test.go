@@ -54,3 +54,44 @@ func TestNativeAccountErrorCannotRetryCatalog(t *testing.T) {
 		})
 	}
 }
+
+func TestNativeSignedOutLibraryExplainsOnce(t *testing.T) {
+	m, actions := nativeViewFixture()
+	m.Route, m.Page = "library", signedOutLibraryPage(actions.Tr)
+	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, actions) }, 420, 740)
+	body := actions.Tr("shellLibraryEmptyBody")
+	count := 0
+	for _, text := range tt.Texts() {
+		if text == body {
+			count++
+		}
+	}
+	if count != 1 {
+		t.Fatalf("signed-out library repeats its explanation %d times", count)
+	}
+	nativeAssertVisible(t, tt, actions.Tr("shellSignIn"), 420, 740)
+}
+
+func TestNativeCompactPlaybackErrorAppearsOnce(t *testing.T) {
+	for _, locale := range []string{"en", "zh-Hans", "zh-Hant", "ja"} {
+		t.Run(locale, func(t *testing.T) {
+			m, a := nativeViewFixture()
+			m.Language, m.Immersive = locale, true
+			m.PlaybackError = a.Tr("nativeVerificationRequired")
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 420, 740)
+			messages, retries := 0, 0
+			for _, text := range tt.Texts() {
+				switch text {
+				case m.PlaybackError:
+					messages++
+				case a.Tr("buttonRetry"):
+					retries++
+				}
+			}
+			if messages != 1 || retries != 1 {
+				t.Fatalf("playback error repeated: messages=%d retries=%d", messages, retries)
+			}
+			nativeAssertVisible(t, tt, a.Tr("shellPause"), 420, 740)
+		})
+	}
+}

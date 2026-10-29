@@ -9,6 +9,7 @@ only on the packaging machine (Xcode command-line tools, make, Python 3).
 """
 import concurrent.futures
 import hashlib
+import http.client
 import json
 import os
 from pathlib import Path
@@ -17,6 +18,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import time
 import urllib.error
 import urllib.request
 
@@ -44,7 +46,7 @@ def failure_category(error):
     if isinstance(error, urllib.error.HTTPError):
         code = error.code
         return "public_download_http_" + str(code) if type(code) is int and 100 <= code <= 599 else "public_download_http_error"
-    if isinstance(error, urllib.error.URLError):
+    if isinstance(error, (urllib.error.URLError, ConnectionError, http.client.IncompleteRead)):
         return "public_download_network_error"
     if isinstance(error, TimeoutError):
         return "public_download_timeout"
@@ -75,12 +77,26 @@ def digest(path):
 
 
 def download(url, path):
-    if not path.exists():
-        part = path.with_name(path.name + ".part")
-        # Only public release URLs enter these requests; no auth or cookies.
-        with urllib.request.urlopen(url, timeout=60) as response, part.open("wb") as sink:
-            shutil.copyfileobj(response, sink, 1024 * 1024)
-        part.replace(path)
+    if path.exists():
+        return path
+    part = path.with_name(path.name + ".part")
+    for attempt in range(4):
+        try:
+            # Only public release URLs enter these requests; no auth or cookies.
+            with urllib.request.urlopen(url, timeout=60) as response, part.open("wb") as sink:
+                shutil.copyfileobj(response, sink, 1024 * 1024)
+            part.replace(path)
+            return path
+        except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.IncompleteRead) as error:
+            part.unlink(missing_ok=True)
+            # Retry transport failures, throttling and temporary server errors.
+            # Permanent HTTP errors still fail immediately; all callers retain
+            # the existing checksum/version verification after the download.
+            permanent_http = isinstance(error, urllib.error.HTTPError) and error.code not in {408, 425, 429, 500, 502, 503, 504}
+            if permanent_http or attempt == 3:
+                raise
+            print("Retrying public runtime download (" + str(attempt + 2) + "/4)", flush=True)
+            time.sleep(2 ** (attempt + 1))
     return path
 
 

@@ -6,7 +6,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import plistlib
 import re
 import secrets
 import shutil
@@ -18,7 +17,7 @@ import uuid
 ROOT = Path(__file__).resolve().parents[2]
 SECRET_NAMES = (
     "MACOS_CERTIFICATE_P12_BASE64", "MACOS_CERTIFICATE_PASSWORD",
-    "APPLE_API_KEY_P8_BASE64", "APPLE_API_KEY_ID", "APPLE_API_ISSUER_ID",
+    "APPLE_ID", "APPLE_APP_SPECIFIC_PASSWORD",
 )
 MACH_HEADERS = {bytes.fromhex(value) for value in (
     "feedface", "cefaedfe", "feedfacf", "cffaedfe", "cafebabe", "bebafeca",
@@ -30,7 +29,7 @@ class PackageError(Exception):
     pass
 
 
-def run(args, stage, capture=False):
+def run(args, stage, capture=False, input_bytes=None):
     # Credentials go only to the intended Apple tools. Child build/packaging
     # commands do not inherit the signing secrets, and no command or raw output
     # is logged. CalledProcessError must never escape with its argv attached.
@@ -38,7 +37,7 @@ def run(args, stage, capture=False):
     result = subprocess.run(
         [str(arg) for arg in args], cwd=ROOT, env=child_env,
         stdout=subprocess.PIPE if capture else subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL, check=False,
+        stderr=subprocess.DEVNULL, check=False, input=input_bytes,
     )
     if result.returncode:
         raise PackageError(stage + " failed")
@@ -180,11 +179,20 @@ def sign_app(app, identity, keychain):
 
 
 def notarize(path, directory):
-    key = directory / "notary.p8"
-    if not key.exists():
-        write_secret("APPLE_API_KEY_P8_BASE64", key)
-    output = run(["xcrun", "notarytool", "submit", path, "--key", key,
-                  "--key-id", required("APPLE_API_KEY_ID"), "--issuer", required("APPLE_API_ISSUER_ID"),
+    keychain = directory / "signing.keychain-db"
+    ready = directory / "notary-profile-ready"
+    profile = "ytmgo-notary"
+    if not ready.exists():
+        # notarytool's secure prompt accepts stdin. The password never enters
+        # argv or a plaintext file; subsequent submissions use this temporary
+        # keychain profile. Credential validation remains enabled.
+        run(["xcrun", "notarytool", "store-credentials", profile,
+             "--apple-id", required("APPLE_ID"), "--team-id", required("APPLE_TEAM_ID"),
+             "--keychain", keychain], "Notarization credential validation",
+            input_bytes=(required("APPLE_APP_SPECIFIC_PASSWORD") + "\n").encode())
+        ready.touch()
+    output = run(["xcrun", "notarytool", "submit", path,
+                  "--keychain-profile", profile, "--keychain", keychain,
                   "--wait", "--timeout", "25m", "--output-format", "json"], "Apple notarization", capture=True)
     result = json.loads(output)
     if result.get("status") != "Accepted":

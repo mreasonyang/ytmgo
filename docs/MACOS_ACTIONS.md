@@ -7,7 +7,7 @@
 | --- | --- | --- |
 | `unsigned` | 无证书 | ad-hoc App ZIP、未签名 DMG，供构建测试 |
 | `developer-id` | Developer ID `.p12`、导出密码、Team ID | Developer ID 签名 App / DMG，未公证 |
-| `notarized` | 上述配置及 App Store Connect team API key | 签名并公证 App / DMG，附带 stapled tickets |
+| `notarized` | 上述配置及 Apple ID、应用专用密码 | 签名并公证 App / DMG，附带 stapled tickets |
 
 所有模式先逐步执行与 `make check` 相同的检查，再执行 `make build`。各检查分开显示，失败时可直接定位命令，无需提取原始诊断日志。成功后在对应运行页面的 **Artifacts** 下载 DMG、保留 App bundle 的 ZIP、`SHA256SUMS` 与 `build.json`，保留 14 天。`build.json` 记录版本、提交、模式和最低系统要求。工作流不创建 GitHub Release；公开仓库的运行记录和构建 artifacts 对有相应 GitHub 访问权限的人可见。
 
@@ -29,9 +29,8 @@
 | --- | --- |
 | `MACOS_CERTIFICATE_P12_BASE64` | 完整 `.p12` 文件的 base64 |
 | `MACOS_CERTIFICATE_PASSWORD` | `.p12` 导出密码 |
-| `APPLE_API_KEY_P8_BASE64` | 公证用 team API key `.p8` 文件的 base64 |
-| `APPLE_API_KEY_ID` | 该 API key 的 Key ID |
-| `APPLE_API_ISSUER_ID` | 该 team API key 的 Issuer ID |
+| `APPLE_ID` | 属于该开发者团队的 Apple Account 登录邮箱 |
+| `APPLE_APP_SPECIFIC_PASSWORD` | 在 Apple Account 创建的应用专用密码，用于公证 |
 
 环境 **Variables** 的 `APPLE_TEAM_ID` 必须与证书括号中的 10 位 Team ID 相同。签名脚本会拒绝错误团队或多个匹配身份。
 
@@ -46,13 +45,15 @@ python3 scripts/release/configure_secrets.py signing
 
 ## 3. 配置 Apple 公证
 
-到 [App Store Connect → Users and Access → Integrations → App Store Connect API](https://appstoreconnect.apple.com/access/integrations/api)，在 **Team Keys** 创建有公证权限的 **Team API Key**，Access 选择 Developer 或更高的适用角色。创建 team key 的操作者需要 Account Holder 或 Admin 角色；若账号尚无 API access，先由 Account Holder 申请。下载 `.p8`，记下 Key ID 和 Issuer ID。私钥只可下载一次，应存入仓库外自己的私有目录。页面位置及创建权限见 [Apple 配置说明](https://developer.apple.com/help/app-store-connect/get-started/app-store-connect-api)。
+使用 **Apple ID + 应用专用密码 + Team ID** 认证 `notarytool`。到 [Apple Account](https://account.apple.com/) 登录，在 **登录和安全性 → 应用专用密码** 创建一个密码，名称可用 `ytmgo-actions`。Apple Account 需要启用双重认证。步骤见 [Apple 官方说明](https://support.apple.com/en-us/102654)。
 
-这里使用带 Issuer ID 的 **team key**，不使用 individual key；不需要把 Apple ID 登录密码或二次验证码交给 GitHub。
+在你自己的终端运行以下助手，输入 Apple ID 邮箱和刚生成的应用专用密码。密码会隐藏输入并直接经 stdin 上传到 GitHub encrypted secrets；不用准备 `.p8`、Key ID 或 Issuer ID。
 
 ```sh
 python3 scripts/release/configure_secrets.py notarization
 ```
+
+两种密码用途不同：`MACOS_CERTIFICATE_PASSWORD` 是 `.p12` 导出密码，用于导入签名证书；`APPLE_APP_SPECIFIC_PASSWORD` 是 Apple 生成的应用专用密码，用于登录公证服务。不要填 Apple Account 的常用登录密码或双重认证验证码。`APPLE_ID` 必须属于 `APPLE_TEAM_ID` 对应的开发者团队。
 
 ## 4. 运行与验证
 
@@ -64,10 +65,10 @@ gh workflow run macos-package.yml --repo mreasonyang/ytmgo --ref main -f mode=no
 
 签名脚本给每个 Mach-O、登录 helper app、主 App 依次签名，启用 Hardened Runtime 和安全时间戳。只有 Node 获得 JIT 相关 entitlements。签名改变二进制字节后，重算包内 runtime / login 清单，再密封主 App。签名后执行 Node 和 FFmpeg 冒烟验证。
 
-公证模式先提交 App ZIP，Apple 返回 `Accepted` 后给 App staple ticket；再制作、签名、公证 DMG 并 staple。最后检查签名、ticket 与 Gatekeeper。任一步失败都不会上传成功产物，**不会降级生成 unsigned 成功包**。Actions 成功不代表真实账号登录、播放或所有支持设备验收完成。
+公证模式先用应用专用密码创建并验证 runner 临时钥匙串中的 `notarytool` profile，再通过这个 profile 提交 App ZIP。Apple 返回 `Accepted` 后给 App staple ticket；再制作、签名、公证 DMG 并 staple。最后检查签名、ticket 与 Gatekeeper。任一步失败都不会上传成功产物，**不会降级生成 unsigned 成功包**。Actions 成功不代表真实账号登录、播放或所有支持设备验收完成。
 
-证书只在签名步骤可用，导入临时 keychain；`.p12`、`.p8`、临时 keychain 在结束时清理，另有 `always()` 清理步骤。外部签名工具的原始输出不会进入日志；只报告固定失败阶段和公证 submission ID。Apple 的 keychain 工具接口需要通过子进程参数接收密码，这些参数不打印、不写入证据；不要对 runner 执行 argv/environment 诊断，也不要开启 shell tracing 或 Actions step debug 来排错。
+证书和公证凭据只在签名步骤可用。证书导入临时 keychain；应用专用密码通过 stdin 进入 `notarytool` 的密码提示，不写入 argv 或明文文件。`.p12`、临时 keychain 及其中的公证 profile 在结束时清理，另有 `always()` 清理步骤。外部签名工具的原始输出不会进入日志；只报告固定失败阶段和公证 submission ID。Apple 的 keychain 管理工具接口仍需要通过子进程参数接收 keychain / `.p12` 密码，这些参数不打印、不写入证据；不要对 runner 执行 argv/environment 诊断，也不要开启 shell tracing 或 Actions step debug 来排错。
 
-缺少 setting 时按报错名称补齐。`Certificate import failed` 检查 `.p12` 是否含私钥、密码是否正确；`Expected exactly one valid Developer ID…` 检查证书有效期、类型和 Team ID。公证失败时先核对 team key 的权限、Key ID、Issuer ID；Apple 延迟时可重新运行，证书与 Apple 公证服务结果需分别验证。
+缺少 setting 时按报错名称补齐。`Certificate import failed` 检查 `.p12` 是否含私钥、密码是否正确；`Expected exactly one valid Developer ID…` 检查证书有效期、类型和 Team ID。`Notarization credential validation failed` 检查 Apple ID 是否属于该 Team、应用专用密码是否有效；修改或重置 Apple Account 常用登录密码会撤销应用专用密码，需要重新生成和上传。Apple 延迟时可重新运行，证书与 Apple 公证服务结果需分别验证。
 
-参考：[Apple notarization](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)、[notarytool API-key authentication](https://developer.apple.com/documentation/technotes/tn3147-migrating-to-the-latest-notarization-tool)、[GitHub Xcode 27 runner image](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md)。
+参考：[Apple notarization](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)、[notarytool 应用专用密码与钥匙串认证](https://developer.apple.com/documentation/technotes/tn3147-migrating-to-the-latest-notarization-tool)、[GitHub Xcode 27 runner image](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md)。

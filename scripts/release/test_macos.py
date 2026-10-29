@@ -3,6 +3,8 @@ import base64
 import json
 import os
 from pathlib import Path
+import shutil
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -114,11 +116,62 @@ class PackagingTests(unittest.TestCase):
             cleanup.assert_called_once()
 
     def test_rejected_notarization_cannot_proceed_to_stapling(self):
-        with patch.dict(os.environ, {"APPLE_API_KEY_ID": "fixture", "APPLE_API_ISSUER_ID": "fixture"}), \
-             patch.object(macos, "write_secret"), \
-             patch.object(macos, "run", return_value=b'{"status":"Invalid","id":"fixture"}'):
+        (self.root / "notary-profile-ready").touch()
+        with patch.object(macos, "run", return_value=b'{"status":"Invalid","id":"fixture"}'):
             with self.assertRaisesRegex(macos.PackageError, "not accepted"):
                 macos.notarize(self.root / "app.zip", self.root)
+
+    def test_notary_password_uses_stdin_and_profile_is_reused(self):
+        fixture = {"APPLE_ID": "fixture@example.invalid", "APPLE_TEAM_ID": "AAAAAAAAAA",
+                   "APPLE_APP_SPECIFIC_PASSWORD": "synthetic notary fixture"}
+        accepted = b'{"status":"Accepted","id":"00000000-0000-4000-8000-000000000001"}'
+        with patch.dict(os.environ, fixture), patch.object(macos, "run", return_value=accepted) as child, \
+             patch("builtins.print"):
+            macos.notarize(self.root / "app.zip", self.root)
+            macos.notarize(self.root / "app.dmg", self.root)
+        self.assertEqual(child.call_count, 3)
+        store = child.call_args_list[0]
+        self.assertIn("store-credentials", store.args[0])
+        self.assertNotIn("--password", store.args[0])
+        self.assertNotIn(fixture["APPLE_APP_SPECIFIC_PASSWORD"], store.args[0])
+        self.assertNotIn("--no-validate", store.args[0])
+        self.assertEqual(store.kwargs["input_bytes"], b"synthetic notary fixture\n")
+        for submit in child.call_args_list[1:]:
+            self.assertIn("--keychain-profile", submit.args[0])
+            self.assertNotIn("--password", submit.args[0])
+
+    def test_notary_missing_password_fails_before_creating_profile(self):
+        fixture = {"APPLE_ID": "fixture@example.invalid", "APPLE_TEAM_ID": "AAAAAAAAAA",
+                   "APPLE_APP_SPECIFIC_PASSWORD": ""}
+        with patch.dict(os.environ, fixture), patch.object(macos, "run") as child:
+            with self.assertRaisesRegex(macos.PackageError, "Missing setting: APPLE_APP_SPECIFIC_PASSWORD"):
+                macos.notarize(self.root / "app.zip", self.root)
+            child.assert_not_called()
+        self.assertFalse((self.root / "notary-profile-ready").exists())
+
+    def test_configuration_uploads_apple_id_and_app_password(self):
+        with patch.object(sys, "argv", ["configure_secrets.py", "notarization"]), \
+             patch("builtins.input", return_value="fixture@example.invalid"), \
+             patch.object(configure_secrets.getpass, "getpass", return_value="synthetic notary fixture"), \
+             patch.object(configure_secrets, "upload") as upload:
+            self.assertEqual(configure_secrets.main(), 0)
+        self.assertEqual([call.args[0] for call in upload.call_args_list],
+                         ["APPLE_ID", "APPLE_APP_SPECIFIC_PASSWORD"])
+
+    @unittest.skipUnless(sys.platform == "darwin" and shutil.which("xcrun"), "requires Apple's notarytool")
+    def test_native_notary_secure_prompt_accepts_stdin_offline(self):
+        # Synthetic credentials in an isolated file keychain. --no-validate
+        # makes this an offline I/O-contract test; no Apple login is attempted.
+        keychain = self.root / "fixture.keychain-db"
+        macos.run(["security", "create-keychain", "-p", "synthetic-keychain-fixture", keychain],
+                  "Fixture keychain creation")
+        try:
+            macos.run(["xcrun", "notarytool", "store-credentials", "ytmgo-fixture",
+                       "--apple-id", "fixture@example.invalid", "--team-id", "AAAAAAAAAA",
+                       "--keychain", keychain, "--no-validate"], "Offline secure prompt contract",
+                      input_bytes=b"synthetic-notary-fixture\n")
+        finally:
+            macos.run(["security", "delete-keychain", keychain], "Fixture keychain removal")
 
     def test_secret_upload_uses_stdin_not_argv(self):
         with patch.object(configure_secrets.subprocess, "run") as child:

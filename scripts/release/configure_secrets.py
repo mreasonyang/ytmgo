@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Interactively transfer selected signing files to GitHub encrypted secrets.
+"""Interactively transfer signing and notarization credentials to GitHub.
 
 Run in your own terminal. Paths and passwords are prompted locally; values are
 sent to the authenticated gh client over stdin, never printed or put in argv.
@@ -45,14 +45,12 @@ def main():
             upload("MACOS_CERTIFICATE_P12_BASE64", certificate)
             upload("MACOS_CERTIFICATE_PASSWORD", password)
         else:
-            key = file_value("App Store Connect team API key .p8 path: ", ".p8")
-            key_id = input("Key ID: ").strip()
-            issuer = input("Issuer ID: ").strip()
-            if not key_id or not issuer:
-                raise RuntimeError("Key ID and Issuer ID are required")
-            upload("APPLE_API_KEY_P8_BASE64", key)
-            upload("APPLE_API_KEY_ID", key_id)
-            upload("APPLE_API_ISSUER_ID", issuer)
+            apple_id = input("Apple ID email for your Developer team: ").strip()
+            password = getpass.getpass("Apple app-specific password (hidden): ").strip()
+            if not apple_id or not password:
+                raise RuntimeError("Apple ID and app-specific password are required")
+            upload("APPLE_ID", apple_id)
+            upload("APPLE_APP_SPECIFIC_PASSWORD", password)
     except (Exception, KeyboardInterrupt):
         print("Configuration incomplete. Check gh login, file selection and environment access; rerunning is safe.", file=sys.stderr)
         return 1

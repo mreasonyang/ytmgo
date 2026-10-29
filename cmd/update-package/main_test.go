@@ -26,6 +26,11 @@ func fixture(t *testing.T) (string, string, configuration, string) {
 		if err := os.WriteFile(path, []byte(data), 0o755); err != nil {
 			t.Fatal(err)
 		}
+		// Set the fixture mode explicitly after creation so a restrictive
+		// umask cannot remove its executable bits on Unix.
+		if err := os.Chmod(path, 0o755); err != nil {
+			t.Fatal(err)
+		}
 	}
 	if err := os.Symlink("MacOS/ytmgo", filepath.Join(app, "Contents/current")); err != nil {
 		t.Fatal(err)
@@ -80,8 +85,14 @@ func TestPackagePreservesBundleAndRejectsTampering(t *testing.T) {
 	if contents["ytmgo.app/Contents/CodeResources"] != "stapled ticket fixture" || contents["ytmgo.app/Contents/MacOS/ytmgo"] != "executable fixture" {
 		t.Fatal("bundle contents lost")
 	}
-	if entries["ytmgo.app/Contents/MacOS/ytmgo"].Mode&0o111 != 0o111 {
-		t.Fatal("executable permissions lost")
+	// Unix fixtures have mode 0755; Windows only exposes its supported mode
+	// bits. Packaging must preserve the source mode on either platform.
+	source, err := os.Stat(filepath.Join(app, "Contents/MacOS/ytmgo"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := entries["ytmgo.app/Contents/MacOS/ytmgo"].Mode&0o777, int64(source.Mode().Perm()); got != want {
+		t.Fatalf("bundle permissions changed: got %04o, want %04o", got, want)
 	}
 	if entries["ytmgo.app/Contents/current"].Linkname != "MacOS/ytmgo" {
 		t.Fatal("bundle symlink lost")

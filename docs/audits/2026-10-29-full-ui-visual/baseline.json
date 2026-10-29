@@ -1,0 +1,20 @@
+{
+  "system": "macOS-27.0.1-arm64-arm-64bit",
+  "head": "eb8e462a107468690ea99f7e577f060284747457",
+  "apps": [
+    {
+      "path": "/Applications/ytmgo.app",
+      "version": "0.4.0",
+      "build": "0.4.0",
+      "bundle_id": "si.kyun.ytmgo",
+      "executable_sha256": "cee7b5ecefdb844f0da17b69a82e605685b7222d673e10d4ad6a24314db578f7"
+    },
+    {
+      "path": "/Users/easonyang/Documents/projects/ytmgo/build/darwin-arm64/ytmgo.app",
+      "version": "0.4.0",
+      "build": "0.4.0",
+      "bundle_id": "si.kyun.ytmgo",
+      "executable_sha256": "65b6733260655b70fb5411ab93dcd97eb57cf2920145d95bef34299c9052e9b9"
+    }
+  ]
+}

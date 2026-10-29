@@ -1,0 +1,21 @@
+{
+  "account.go": "26b2196abdca9db4988b500054c3a7018c20853c100c979e1b749d4914da30a9",
+  "controller.go": "f30b068bc20f7576219fcc931b642da83e20368a6af0c7411999a1060c1381ab",
+  "internal/catalog/account_status.go": "a93fbdd90c4ad207da336e62b4d00e581dc20c7119f5363a536c01062624a8c5",
+  "internal/catalog/client.go": "682cef0d8016b1f509599322b245cb90bb16afa809783cff73fd648efa69f22c",
+  "internal/catalog/parse.go": "2dbd521deff24eab258b1355c71367690fe1e1c433b4f07ca5ed043761583ee7",
+  "internal/catalog/session.go": "f073d64aa3a01abb4459a2de89176a719da8cbe3618de01c07944de90e294469",
+  "internal/player/bridge.go": "aabc39d990b5078750b728e2ea139eab70a537e3597277c8b8ad4292c8623818",
+  "internal/player/bridge_test.go": "b92244179283c0b8e63a260b4714df433e86081966e0f8722f946d60385056e7",
+  "internal/player/decoder.go": "09a6fcae4905a6bb7900a25421559ac8da8230cc37355cd9a5aa0a73e5659f50",
+  "internal/player/video.go": "7a0d56ac1a1f902a09ab278193f962dcce8cd6cfa3dda5b8458aa57ae912bbfc",
+  "locales/catalog_gen.go": "d2b4e31278d0e145ecd37284d0531cf02e0c77fa1d29c7901c6a21fe576b9bf9",
+  "locales/en.json": "474856c01b622b36ebecaa3db05a1d823b04ca2e26140adcad0512eb891a80e9",
+  "locales/ja.json": "d54d7743740647290f069fd0f89d22272db3ffe923d6ac3f2d51d443172bcc8b",
+  "locales/zh-Hans.json": "dc9059c2d266341535b2059b8feb6cb21cccd766bafcb7a700a5357622f7793b",
+  "locales/zh-Hant.json": "6cdca0e52ffb006b5dc845fefddab2221d63c4070adb19341d82d79e022992c8",
+  "native_views.go": "a8d89259bd33af576089e2b52902f8831df9e93c69e3c9a30aaf2c886edb1158",
+  "native_views_test.go": "75c3f9eac94ef8c1d40311d9620196e822e2f1a48ce9e5a30c15a7b85fe6bfda",
+  "scripts/runtime/stream-bridge.mjs": "529b34a9e56aa1847257490012276834444a96ec35e93b53d67e04042d611e98",
+  "video_controller.go": "375d2715f3024b9a30e5fb3c0ede3ee997a25cbee266b76590a07e6eb99c0877"
+}

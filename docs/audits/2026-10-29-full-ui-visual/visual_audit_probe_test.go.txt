@@ -1,0 +1,65 @@
+package main
+
+import (
+ "encoding/json"
+ "fmt"
+ "os"
+ "path/filepath"
+ "testing"
+
+ "github.com/egoist/mygo/ui"
+)
+
+// Audit-only overlay. This file is never compiled into the application.
+func TestFullVisualMinimumClientMatrix(t *testing.T) {
+ for _, width := range []int{380, 420, 760, 761, 960, 1180, 1181, 1440} {
+  for _, locale := range []string{"en", "zh-Hans", "zh-Hant", "ja"} {
+   for _, appearance := range []string{"dark", "light"} {
+    for _, mode := range []string{"normal", "immersive", "settings"} {
+     t.Run(fmt.Sprintf("%d-%s-%s-%s", width, locale, appearance, mode), func(t *testing.T) {
+      m, a := nativeViewFixture()
+      m.Language, m.Appearance = locale, appearance
+      m.Immersive, m.Settings = mode == "immersive", mode == "settings"
+      tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, 608)
+      switch mode {
+      case "settings":
+       nativeAssertVisible(t, tt, a.Tr("shellClose"), width, 608)
+       nativeAssertVisible(t, tt, a.Tr("shellThemeDark"), width, 608)
+      case "immersive":
+       nativeAssertVisible(t, tt, a.Tr("shellExitImmersive"), width, 608)
+       nativeAssertVisible(t, tt, a.Tr("shellPause"), width, 608)
+      default:
+       nativeAssertVisible(t, tt, a.Tr("shellSettings"), width, 608)
+       nativeAssertVisible(t, tt, a.Tr("shellPause"), width, 608)
+       nativeAssertVisible(t, tt, a.Tr("shellNavHome"), width, 608)
+      }
+      if locale == "ja" && appearance == "light" && (width == 380 || width == 761) {
+       nativeSnapshot(t, tt, fmt.Sprintf("audit-client608-%d-%s", width, mode))
+      }
+     })
+    }
+   }
+  }
+ }
+}
+
+func TestFullVisualImmersiveQueueArtwork(t *testing.T) {
+ measured := map[string]int{}
+ for _, mode := range []string{"docked", "immersive"} {
+  m, a := nativeViewFixture()
+  m.Panel, m.Immersive, m.PanelTab = true, mode == "immersive", "queue"
+  m.Page.Items, m.Page.Shelves = nil, nil
+  original := a.Artwork
+  a.Artwork = func(src string, edge int) ui.ImageSource {
+   if edge <= 128 && src != m.Current.Artwork { measured[mode]++ }
+   return original(src, edge)
+  }
+  tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
+  nativeSnapshot(t, tt, "audit-queue-artwork-"+mode)
+ }
+ dir := os.Getenv("YTMGO_UI_SNAPSHOT_DIR")
+ data, _ := json.MarshalIndent(measured, "", "  ")
+ if dir != "" { _ = os.WriteFile(filepath.Join(dir, "queue-artwork-counts.json"), data, 0644) }
+ if measured["docked"] == 0 { t.Fatal("audit_baseline_queue_artwork_missing") }
+ if measured["immersive"] == 0 { t.Fatal("audit_immersive_queue_artwork_missing") }
+}

@@ -1,0 +1,29 @@
+{
+  "observation": "original identity was restoring while UI showed signed out and playback stayed pending",
+  "pending_observed_at_least_seconds": 210.5,
+  "files": [
+    "13-nowplaying-loading.png",
+    "17-loading-still-pending.png",
+    "18-candidate-restoring-shown-signedout.png"
+  ],
+  "diagnostics": [
+    {
+      "Time": "2026-10-29T08:06:50Z",
+      "Version": "0.4.0",
+      "Component": "audio",
+      "Category": "ready"
+    },
+    {
+      "Time": "2026-10-29T08:06:50Z",
+      "Version": "0.4.0",
+      "Component": "video",
+      "Category": "ready"
+    },
+    {
+      "Time": "2026-10-29T08:06:51Z",
+      "Version": "0.4.0",
+      "Component": "account",
+      "Category": "restoring"
+    }
+  ]
+}

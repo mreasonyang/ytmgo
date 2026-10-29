@@ -1,0 +1,80 @@
+{
+  "date": "2026-10-29",
+  "timezone": "Asia/Shanghai",
+  "conclusion": "NO-GO",
+  "findings": [
+    {
+      "id": "F01",
+      "severity": "P1",
+      "title": "Account restoring is presented as signed out while playback waits",
+      "evidence": "native-original-identity"
+    },
+    {
+      "id": "F02",
+      "severity": "P2",
+      "title": "Immersive queue artwork is not requested",
+      "evidence": "native-anonymous-and-offline-probe"
+    },
+    {
+      "id": "F03",
+      "severity": "P2",
+      "title": "Light accent small text contrast is low",
+      "evidence": "native-visual-source-palette-calculation"
+    },
+    {
+      "id": "F04",
+      "severity": "P2",
+      "title": "Search result entity types and sections are unclear",
+      "evidence": "native-original-and-anonymous-ux"
+    },
+    {
+      "id": "F05",
+      "severity": "P3",
+      "title": "Compact short-window video area is too small",
+      "evidence": "native-anonymous"
+    },
+    {
+      "id": "F06",
+      "severity": "P3",
+      "title": "Empty-state and playback-error messages are duplicated",
+      "evidence": "native-library-offline-error-state"
+    }
+  ],
+  "native_screenshot_count": 48,
+  "software_screenshot_count": 76,
+  "workspace_native_test_exit": 0,
+  "workspace_native_test_named_pass_events": 173,
+  "minimum_client_layout_cases_passed": 192,
+  "minimum_client_height_dip": 608,
+  "audit_probe_exit": 1,
+  "audit_probe_expected_failure": "TestFullVisualImmersiveQueueArtwork",
+  "native_widths_dip": [
+    757,
+    1440,
+    1512
+  ],
+  "native_minimum_380_420_verified": false,
+  "live_synchronized_lyrics_verified": false,
+  "live_lyrics_fallbacks_verified": true,
+  "premium_acceptance": "blocked by restoring state",
+  "account_data_accessed": false,
+  "credentials_copied": false,
+  "product_source_modified": false,
+  "application_rebuilt": false,
+  "cloud_writes_performed": false,
+  "committed": false,
+  "published": false,
+  "test_apps_after_cleanup": [
+    {
+      "name": "ytmgo",
+      "verified_empty": true,
+      "count": 0
+    },
+    {
+      "name": "ytmgo-account-login",
+      "verified_empty": true,
+      "count": 0
+    }
+  ],
+  "ended_at": "2026-10-29T16:35:22.621483+08:00"
+}

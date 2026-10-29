@@ -1,0 +1,17 @@
+{
+  "test_bundle": "/Users/easonyang/Documents/projects/ytmgo/build/diagnostics/full-ui-visual-20261029/ytmgo UI Visual Audit.app",
+  "bundle_id": "com.ytmgo.ui-visual-audit-20261029",
+  "original_sha256": "65b6733260655b70fb5411ab93dcd97eb57cf2920145d95bef34299c9052e9b9",
+  "copy_before_sign_sha256": "65b6733260655b70fb5411ab93dcd97eb57cf2920145d95bef34299c9052e9b9",
+  "binary_identical_before_sign": true,
+  "test_executable_sha256": "d4fd589a066779dddd8399eadf1e8b204bfc4d70056f6cf3e456e4149e6198b0",
+  "codesign_exit": 0,
+  "verify_exit": 0,
+  "changes": [
+    "CFBundleName",
+    "CFBundleDisplayName",
+    "CFBundleIdentifier",
+    "ad-hoc signature"
+  ],
+  "account_data_copied": false
+}

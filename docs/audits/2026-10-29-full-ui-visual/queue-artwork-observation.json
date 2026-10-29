@@ -1,0 +1,6 @@
+{
+  "docked_non_current_small_artwork_requests": 2,
+  "immersive_non_current_small_artwork_requests": 0,
+  "result": "FAIL: visible queue artwork is not requested in immersive mode",
+  "scope": "offline native renderer fixture with an empty browse page"
+}

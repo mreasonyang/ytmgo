@@ -1,0 +1,36 @@
+Window: "ytmgo", App: ytmgo.
+0 標準視窗 ytmgo, Secondary Actions: Raise
+	1 container 設定
+		2 文字 (settable) 設定
+		3 按鈕 關閉
+		4 捲動區
+			5 文字 (settable) 帳號
+			6 文字 (settable) 未登入
+			7 按鈕 登入 Google 帳號
+			8 文字 (settable) 外觀
+			9 按鈕 跟隨系統
+			10 按鈕 深色
+			11 按鈕 淺色
+			12 文字 (settable) 語言
+			13 按鈕 跟隨系統
+			14 按鈕 English
+			15 按鈕 简体中文
+			16 按鈕 繁體中文
+			17 按鈕 日本語
+			18 按鈕 鍵盤快速鍵
+			19 文字 (settable) 音樂與帳號由 YouTube Music 提供
+	20 關閉按鈕
+	21 全螢幕按鈕 Help: 此按鈕也有可縮放視窗的動作, Secondary Actions: 縮放視窗
+	22 縮到最小按鈕
+	23 文字 ytmgo
+24 menu bar
+	25 ytmgo
+	26 檔案
+	27 編輯
+	28 播放
+	29 顯示方式
+	30 視窗
+	31 帳號
+	32 說明
+
+The focused UI element is 3 按鈕 關閉

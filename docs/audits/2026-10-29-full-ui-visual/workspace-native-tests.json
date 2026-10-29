@@ -1,0 +1,1051 @@
+{
+  "command": "go test -json -count=1 -run TestNative .",
+  "exit_code": 0,
+  "elapsed_seconds": 7.39,
+  "events": [
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeServiceErrorsUseExistingRetries/en-playback-false",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeServiceErrorsUseExistingRetries/en-playback-true",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeServiceErrorsUseExistingRetries/zh-Hans-playback-false",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeServiceErrorsUseExistingRetries/zh-Hans-playback-true",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeServiceErrorsUseExistingRetries/zh-Hant-playback-false",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeServiceErrorsUseExistingRetries/zh-Hant-playback-true",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeServiceErrorsUseExistingRetries/ja-playback-false",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeServiceErrorsUseExistingRetries/ja-playback-true",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeServiceErrorsUseExistingRetries",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountErrorCannotRetryCatalog/account",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountErrorCannotRetryCatalog/account_connect",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountErrorCannotRetryCatalog",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLibraryMetadataDoesNotRepeatCategory/en",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLibraryMetadataDoesNotRepeatCategory/ja",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLibraryMetadataDoesNotRepeatCategory/zh-Hans",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLibraryMetadataDoesNotRepeatCategory/zh-Hant",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLibraryMetadataDoesNotRepeatCategory",
+      "Elapsed": 0.12
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-en-dark-video-false",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-en-dark-video-true",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-en-light-video-false",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-en-light-video-true",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-ja-dark-video-false",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-ja-dark-video-true",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-ja-light-video-false",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-ja-light-video-true",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-zh-Hans-dark-video-false",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-zh-Hans-dark-video-true",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-zh-Hans-light-video-false",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-zh-Hans-light-video-true",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-zh-Hant-dark-video-false",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-zh-Hant-dark-video-true",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-zh-Hant-light-video-false",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-zh-Hant-light-video-true",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-en-dark-video-false",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-en-dark-video-true",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-en-light-video-false",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-en-light-video-true",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-ja-dark-video-false",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-ja-dark-video-true",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-ja-light-video-false",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-ja-light-video-true",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-zh-Hans-dark-video-false",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-zh-Hans-dark-video-true",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-zh-Hans-light-video-false",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-zh-Hans-light-video-true",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-zh-Hant-dark-video-false",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-zh-Hant-dark-video-true",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-zh-Hant-light-video-false",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-zh-Hant-light-video-true",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-en-dark-video-false",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-en-dark-video-true",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-en-light-video-false",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-en-light-video-true",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-ja-dark-video-false",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-ja-dark-video-true",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-ja-light-video-false",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-ja-light-video-true",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-zh-Hans-dark-video-false",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-zh-Hans-dark-video-true",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-zh-Hans-light-video-false",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-zh-Hans-light-video-true",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-zh-Hant-dark-video-false",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-zh-Hant-dark-video-true",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-zh-Hant-light-video-false",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-zh-Hant-light-video-true",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer",
+      "Elapsed": 0.94
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeImmersiveOverflowCanScroll",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLyricCueBoundaries",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLyricsFollowSeekPauseAndManualScroll",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLyricsPlainFallbackAndClear",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLyricsKeyboardHoverStopsFollow",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/761x609-en-dark",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/761x609-en-light",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/761x609-zh-Hant-dark",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/761x609-zh-Hant-light",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/761x640-en-dark",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/761x640-en-light",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/761x640-zh-Hant-dark",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/761x640-zh-Hant-light",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/960x609-en-dark",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/960x609-en-light",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/960x609-zh-Hant-dark",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/960x609-zh-Hant-light",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/960x640-en-dark",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/960x640-en-light",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/960x640-zh-Hant-dark",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/960x640-zh-Hant-light",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/1440x609-en-dark",
+      "Elapsed": 0.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/1440x609-en-light",
+      "Elapsed": 0.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/1440x609-zh-Hant-dark",
+      "Elapsed": 0.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/1440x609-zh-Hant-light",
+      "Elapsed": 0.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/1440x640-en-dark",
+      "Elapsed": 0.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/1440x640-en-light",
+      "Elapsed": 0.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/1440x640-zh-Hant-dark",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/1440x640-zh-Hant-light",
+      "Elapsed": 0.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget",
+      "Elapsed": 1.39
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeImmersiveVideoContainsAllSourceEdges/160x90",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeImmersiveVideoContainsAllSourceEdges/160x120",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeImmersiveVideoContainsAllSourceEdges/160x160",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeImmersiveVideoContainsAllSourceEdges/90x160",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeImmersiveVideoContainsAllSourceEdges",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeViewResponsive/420-dark",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeViewResponsive/420-light",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeViewResponsive/760-dark",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeViewResponsive/760-light",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeViewResponsive/1100-dark",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeViewResponsive/1100-light",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeViewResponsive/1440-dark",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeViewResponsive/1440-light",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeViewResponsive",
+      "Elapsed": 0.17
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePlaybackAndSearchControls",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSeekCommitsPointerOnceAndKeepsKeyboardTarget",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSeekAbandonsPreviewWhenTrackChanges",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSeekAbandonsPreviewWhenPlaybackDisables",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePanelAndImmersive/420",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePanelAndImmersive/1100",
+      "Elapsed": 0.09
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePanelAndImmersive/1440",
+      "Elapsed": 0.1
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePanelAndImmersive",
+      "Elapsed": 0.25
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSettingsLocalizations/en",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSettingsLocalizations/zh-Hans",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSettingsLocalizations/zh-Hant",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSettingsLocalizations/ja",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSettingsLocalizations",
+      "Elapsed": 0.14
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeIconsAndPalette",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeKeyboardAndContextMenu",
+      "Elapsed": 0.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeMinimumWindow/380",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeMinimumWindow/420",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeMinimumWindow/760",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeMinimumWindow/1100",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeMinimumWindow/1440",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeMinimumWindow",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoAndContinuation",
+      "Elapsed": 0.12
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePendingPlayback",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLibrarySidebar/1100",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLibrarySidebar/1440",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLibrarySidebar",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeTrackListLayout/search",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeTrackListLayout/browse:album",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeTrackListLayout",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePlaybackFailureRetry/420-false",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePlaybackFailureRetry/420-true",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePlaybackFailureRetry/1440-false",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePlaybackFailureRetry/1440-true",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePlaybackFailureRetry",
+      "Elapsed": 0.1
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeArtworkOnlyRequestsVisibleCovers",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeArtworkClipsHorizontalShelves",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountStates/signed-out",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountStates/standard",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountStates/premium",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountStates",
+      "Elapsed": 0.1
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCollectionPage/420",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCollectionPage/1100",
+      "Elapsed": 0.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCollectionPage/1440",
+      "Elapsed": 0.08
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCollectionPage",
+      "Elapsed": 0.21
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeMutedVolumeSurvivesPlaybackRefresh",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/en-420",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/en-761",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/en-960",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/en-1440",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/zh-Hans-420",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/zh-Hans-761",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/zh-Hans-960",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/zh-Hans-1440",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/zh-Hant-420",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/zh-Hant-761",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/zh-Hant-960",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/zh-Hant-1440",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/ja-420",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/ja-761",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/ja-960",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/ja-1440",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo",
+      "Elapsed": 0.42
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoLoadingDoesNotPresentOldFrameAsCurrent",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Elapsed": 5.811
+    }
+  ],
+  "raw_output_saved": false
+}

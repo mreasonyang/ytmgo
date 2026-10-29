@@ -3,8 +3,25 @@ import shutil
 from pathlib import Path
 import tempfile
 import unittest
+import urllib.error
 
+from prepare import failure_category
 from runtime_manifest import NODE_MODULES_HASH_POLICY, node_modules_digest
+
+
+class PreparationDiagnosticsTests(unittest.TestCase):
+    def test_arbitrary_error_values_do_not_enter_diagnostics(self):
+        for error in (RuntimeError("synthetic private fixture"), ValueError("synthetic private fixture"),
+                      urllib.error.URLError("synthetic private fixture")):
+            self.assertNotIn("fixture", failure_category(error))
+
+    def test_public_http_errors_report_only_validated_status(self):
+        error = urllib.error.HTTPError("synthetic private fixture", 403, "fixture", {}, None)
+        self.assertEqual(failure_category(error), "public_download_http_403")
+
+    def test_compile_failure_has_fixed_actionable_category(self):
+        self.assertEqual(failure_category(RuntimeError("runtime preparation command failed: configure")),
+                         "ffmpeg_configure_failed")
 
 
 class RuntimeManifestTests(unittest.TestCase):

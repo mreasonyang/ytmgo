@@ -17,6 +17,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import urllib.error
 import urllib.request
 
 from runtime_manifest import NODE_MODULES_HASH_POLICY, node_modules_digest
@@ -36,6 +37,33 @@ NODE = "26.12.1"
 FFMPEG = "9.0.2"
 FFMPEG_SHA256 = "8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e"
 ARCH = {"arm64": "arm64", "x86_64": "x64"}.get(platform.machine())
+
+
+def failure_category(error):
+    """Return only fixed categories or a validated numeric public HTTP status."""
+    if isinstance(error, urllib.error.HTTPError):
+        code = error.code
+        return "public_download_http_" + str(code) if type(code) is int and 100 <= code <= 599 else "public_download_http_error"
+    if isinstance(error, urllib.error.URLError):
+        return "public_download_network_error"
+    if isinstance(error, TimeoutError):
+        return "public_download_timeout"
+    if type(error) is RuntimeError:
+        return {
+            "release checksum mismatch": "release_checksum_mismatch",
+            "release checksum missing": "release_checksum_missing",
+            "runtime preparation command failed: configure": "ffmpeg_configure_failed",
+            "runtime preparation command failed: make": "ffmpeg_build_failed",
+            "runtime preparation command failed: node": "node_dependency_install_failed",
+            "runtime preparation command failed: tar": "archive_extract_failed",
+            "runtime preparation command failed: codesign": "adhoc_sign_failed",
+            "runtime dependency lock version mismatch": "runtime_lock_version_mismatch",
+            "runtime must contain one YouTube.js dependency": "runtime_sdk_count_mismatch",
+            "locked runtime dependency missing": "runtime_dependency_missing",
+            "dependency license missing": "runtime_license_missing",
+            "at least 2 GiB free is required": "insufficient_disk_space",
+        }.get(str(error), "runtime_preparation_failed")
+    return "runtime_preparation_failed"
 
 
 def digest(path):
@@ -260,7 +288,9 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as error:
-        # Release errors can contain redirect URLs; print only our fixed errors.
-        message = str(error) if type(error) is RuntimeError else type(error).__name__
+        # Never forward an exception's URL, headers, command or arbitrary text.
+        message = failure_category(error)
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            print("::error title=Media runtime preparation::" + message)
         print("Runtime preparation failed: " + message, file=sys.stderr)
         sys.exit(1)

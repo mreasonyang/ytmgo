@@ -61,11 +61,16 @@ func TestNativeShortImmersiveVideoUsesHeightBudget(t *testing.T) {
 							}
 							return originalArtwork(source, edge)
 						}
+						// 609/640 windows leave 409/440 DIPs of immersive content: the
+						// cover takes what the switch, gaps and the title block, as the
+						// fonts lay it out, leave; a video keeps that height budget.
+						mediaWidth := float32(width) - 16 - 80 - 40 - min(380, float32(width)*0.32)
+						want := float32(height-200) - 32 - 48 - nativeImmersiveTitleHeight(m, a, mediaWidth)
 						tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, height)
 						video := nativeAssertVisible(t, tt, a.Tr("nativeVideo"), width, height)
 						viewport := nativeAssertVisible(t, tt, a.Tr("shellContent"), width, height)
-						if video.W < 350 || video.W > viewport.W+1 || video.X < viewport.X-1 || video.X+video.W > viewport.X+viewport.W+1 || math.Abs(float64(video.W/video.H-16.0/9.0)) > 0.01 {
-							t.Fatalf("short-window video wastes width or overflows its column: video=%+v viewport=%+v", video, viewport)
+						if math.Abs(float64(video.W-min(mediaWidth, want*16/9))) > 2 || video.W > viewport.W+1 || video.X < viewport.X-1 || video.X+video.W > viewport.X+viewport.W+1 || math.Abs(float64(video.W/video.H-16.0/9.0)) > 0.01 {
+							t.Fatalf("short-window video wastes width or overflows its column: video=%+v viewport=%+v budget=%v", video, viewport, want)
 						}
 						nativeAssertVisible(t, tt, m.Current.Title, width, height)
 						artist := nativeAssertVisible(t, tt, m.Current.Artist, width, height)
@@ -80,7 +85,7 @@ func TestNativeShortImmersiveVideoUsesHeightBudget(t *testing.T) {
 						if err := tt.Click(a.Tr("nativeArtwork")); err != nil || m.Video {
 							t.Fatal("cover switch is no longer reachable")
 						}
-						// Cover geometry must retain the existing 211/242 DIP budget.
+						// Cover geometry must fill the same height budget.
 						bounds := image.Rectangle{}
 						rendered := tt.Image()
 						for y := 0; y < height-nativePlayerHeight; y++ {
@@ -90,12 +95,8 @@ func TestNativeShortImmersiveVideoUsesHeightBudget(t *testing.T) {
 								}
 							}
 						}
-						want := 211
-						if height == 640 {
-							want = 242
-						}
-						if math.Abs(float64(bounds.Dx()-want)) > 2 || math.Abs(float64(bounds.Dy()-want)) > 2 {
-							t.Fatalf("cover dimensions changed: got=%v want=%d square", bounds.Size(), want)
+						if math.Abs(float64(bounds.Dx())-float64(want)) > 2 || math.Abs(float64(bounds.Dy())-float64(want)) > 2 {
+							t.Fatalf("cover dimensions changed: got=%v want=%v square", bounds.Size(), want)
 						}
 						if err := tt.Click(a.Tr("nativeVideo")); err != nil || !m.Video {
 							t.Fatal("video switch is no longer reachable")

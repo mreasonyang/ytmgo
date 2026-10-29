@@ -1553,9 +1553,10 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 		scroll.Children(func() {
 			a := media
 			ui.Column(c).MinHeight(contentHeight).Shrink(0).Gap(24).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
-				// Reserve the switch, both gaps, two title lines and an artist
-				// line. Extra artist lines/notices remain reachable by scrolling.
-				textHeight := float32(32 + 48 + 88 + 8 + 22)
+				// Reserve the switch, both gaps and the title block as the
+				// fonts actually lay it out. Extra artist lines/notices remain
+				// reachable by scrolling.
+				textHeight := 32 + 48 + nativeImmersiveTitleHeight(m, a, mediaWidth)
 				if m.PlaybackError != "" {
 					textHeight += 24 + 56
 				}
@@ -1578,10 +1579,7 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 
 func nativeImmersiveTitle(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool) {
 	ui.Column(c).Gap(8).AlignItems(ui.Center).Children(func() {
-		title, artist := m.Current.Title, m.Current.Artist
-		if title == "" {
-			title, artist = a.Tr("shellEmptyTitle"), a.Tr("shellIdleSubtitle")
-		}
+		title, artist := nativeImmersiveTitleText(m, a)
 		size := float32(40)
 		if compact {
 			size = 28
@@ -1589,6 +1587,28 @@ func nativeImmersiveTitle(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 		ui.Text(c, title).FontSize(size).FontWeight(800).LineHeight(1.1).TextAlign(ui.Center).MaxLines(2).Ellipsis("…")
 		ui.Text(c, artist).FontSize(17).FontWeight(500).TextColor(p.secondary).TextAlign(ui.Center)
 	})
+}
+
+func nativeImmersiveTitleText(m *UIModel, a ViewActions) (title, artist string) {
+	if m.Current.Title == "" {
+		return a.Tr("shellEmptyTitle"), a.Tr("shellIdleSubtitle")
+	}
+	return m.Current.Title, m.Current.Artist
+}
+
+// nativeImmersiveTitleHeight measures the desktop nativeImmersiveTitle at
+// width: up to two title lines, the gap and the first artist line. Fallback
+// fonts (CJK, or Linux without the system UI font) can need far more height
+// than the design font, so a fixed estimate would let the media squeeze the
+// artist out of a short window.
+func nativeImmersiveTitleHeight(m *UIModel, a ViewActions, width float32) float32 {
+	title, artist := nativeImmersiveTitleText(m, a)
+	titleFont := ui.Font{Size: 40, Weight: 800, LineHeight: 1.1}
+	_, titleHeight := ui.ShapeText(title, titleFont, width).Size()
+	// A single unwrapped line has the tallest font any wrapped line uses.
+	_, titleLine := ui.ShapeText(title, titleFont, 0).Size()
+	_, artistLine := ui.ShapeText(artist, ui.Font{Size: 17, Weight: 500}, 0).Size()
+	return min(titleHeight, 2*titleLine) + 8 + artistLine
 }
 
 func nativeSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {

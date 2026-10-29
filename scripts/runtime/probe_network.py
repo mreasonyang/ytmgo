@@ -32,6 +32,8 @@ def main():
     urls = (
         ("node", "https://nodejs.org/dist/v" + NODE + "/SHASUMS256.txt"),
         ("ffmpeg", "https://ffmpeg.org/releases/ffmpeg-" + FFMPEG + ".tar.xz"),
+        ("ffmpeg_macports", "https://distfiles.macports.org/ffmpeg/ffmpeg-" + FFMPEG + ".tar.xz"),
+        ("ffmpeg_blfs", "https://ftp.osuosl.org/pub/blfs/conglomeration/ffmpeg/ffmpeg-" + FFMPEG + ".tar.xz"),
     )
     for source, url in urls:
         result = {"source": source, "python_ca_count": ca_count}

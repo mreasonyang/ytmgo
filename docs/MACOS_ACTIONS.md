@@ -9,7 +9,7 @@
 | `developer-id` | Developer ID `.p12`、导出密码、Team ID | Developer ID 签名 App / DMG，未公证 |
 | `notarized` | 上述配置及 App Store Connect team API key | 签名并公证 App / DMG，附带 stapled tickets |
 
-所有模式先执行 `make check` 和 `make build`。成功后在对应运行页面的 **Artifacts** 下载 DMG、保留 App bundle 的 ZIP、`SHA256SUMS` 与 `build.json`，保留 14 天。`build.json` 记录版本、提交、模式和最低系统要求。工作流不创建 GitHub Release；公开仓库的运行记录和构建 artifacts 对有相应 GitHub 访问权限的人可见。
+所有模式先逐步执行与 `make check` 相同的检查，再执行 `make build`。各检查分开显示，失败时可直接定位命令，无需提取原始诊断日志。成功后在对应运行页面的 **Artifacts** 下载 DMG、保留 App bundle 的 ZIP、`SHA256SUMS` 与 `build.json`，保留 14 天。`build.json` 记录版本、提交、模式和最低系统要求。工作流不创建 GitHub Release；公开仓库的运行记录和构建 artifacts 对有相应 GitHub 访问权限的人可见。
 
 ## 1. 导出 Developer ID Application 证书
 

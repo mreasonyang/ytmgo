@@ -48,8 +48,23 @@ jobs:
       - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
       - name: Check packaging scripts
         run: python3 -m unittest discover -s scripts/release -p 'test_*.py'
-      - name: Test source and media runtime
-        run: make check
+      # Keep the make check stages separate so a failed run identifies the
+      # command without requiring raw diagnostic-log retrieval.
+      - name: Go tests
+        run: make test
+      - name: Prepare locked media runtime
+        run: make runtime
+      - name: Test media runtime
+        run: |
+          python3 scripts/runtime/test_runtime_manifest.py
+          python3 scripts/runtime/test_protocol_version.py
+          python3 scripts/runtime/run_tests.py
+      - name: Test login build staging
+        run: make test-login
+      - name: Go vet
+        run: go vet ./...
+      - name: Check translations
+        run: go tool mygo i18n check
       - name: Build app with bundled runtime and login helper
         run: make build
       - name: Package unsigned test build

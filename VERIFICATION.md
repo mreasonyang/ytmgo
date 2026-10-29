@@ -1,5 +1,59 @@
 # Native playback verification
 
+## Current macOS v4 Premium memory — 2026-10-29 (Asia/Shanghai)
+
+Fresh local measurement of the actual v4 app on macOS 27.0.1, arm64, 24 GiB RAM.
+Main executable SHA256:
+`fbbdf778fe697f97e52c5dd6bcd3b1fe34cf048b527eeafb57e875b4088c0262`.
+The same executable was restarted and restored Premium. No login window was
+opened during this run. Volume stayed at 0.7; the app was left paused.
+
+| Current Premium state | Median MiB | Observed peak MiB | Complete / recorded samples |
+| --- | ---: | ---: | ---: |
+| Restored account, Library, never played | 132.16 | 287.71 | 120 / 120 |
+| Playing, normal Likes list | 404.06 | 405.76 | 119 / 120 |
+| Playing, immersive cover and queue | 391.64 | 398.00 | 120 / 120 |
+| Paused and returned to normal Likes list | 219.75 | 362.87 | 120 / 120 |
+
+The metric sums `ri_phys_footprint` over the app and the transitive closure of
+its descendants and responsibility-owned processes. Each reported phase has
+about two minutes of nominal 1 Hz samples. Library loaded and settled before
+idle sampling. Later phases retained 150 records each and exclude their first
+30 seconds from the table. Scheduling can catch up; 120 records do not imply
+exactly 120 seconds between first and last. Both playback layouts used Mirrors,
+duration 8:04. Paused progress remained at 407.919666666 seconds.
+
+There are 570 records, 569 complete; 479 of 480 table-window records are complete.
+The sole excluded record is normal playback at elapsed 134.473 seconds: a
+SetStoreUpdateService disappeared between ownership and metadata reads. Missing
+memory was not counted as zero. No WebKit or login-helper executable appeared
+in any sample. Peaks are captured-window observations, not full-launch, login
+or continuous-time maxima. Including the retained warmup, immersive peak was
+399.08 MiB; the other phases' peaks were unchanged.
+
+Normal playback component medians: main process 284.49 MiB, two Nodes 93.67 MiB,
+two FFmpeg processes 6.33 MiB, system helpers 19.86 MiB. Immersive main/Node
+medians were 285.89/82.57 MiB. Component medians need not add to the total median.
+The lower immersive total does not show a cheaper renderer: its main process
+stayed near 286 MiB while Node/system components changed. Process attribution
+does not identify individual renderer, Go heap, image-cache or audio allocations.
+
+Idle/paused peaks are retained. They included respectively 245.86/260.67 MiB
+in the main process, then returned to lower values. No specific UI event or
+allocation cause was established. Approximate 1 Hz sampling cannot establish
+exact spike duration or exclude a longer-term leak.
+
+The collector now records missing metadata/metrics explicitly, excludes
+incomplete samples from statistics and follows chained responsibility links.
+Its 24 synthetic tests pass. Only diagnostic tools changed; the measured app
+was not rebuilt. No Windows or GitHub Actions tests ran for this measurement.
+Signed-out/non-Premium accounts were not remeasured. Historical diagnostic
+builds used different layouts, cache histories and preparation settings, so
+their figures are not a controlled before/after comparison with v4.
+
+Evidence: `build/diagnostics/premium-memory-v4-20261029/comparison.json`, with
+per-phase samples, provenance, scenario and final account-state metadata.
+
 ## Temporary cross-platform WebView login — 2026-10-29 (Asia/Shanghai)
 
 The extension login UI, extension files and loopback account bridge have been

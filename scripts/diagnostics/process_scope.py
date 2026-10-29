@@ -22,7 +22,10 @@ def discover_owned_pids(root_pid, list_pids, responsible_pid, child_pids):
     """
     if not _valid_pid(root_pid):
         raise ValueError("invalid_root_pid")
-    owned = {root_pid}
+    # Cache one responsibility snapshot, then traverse both edge types to a
+    # fixed point. An orphaned XPC may belong to a helper rather than directly
+    # to the root app; its PPID alone would not include it.
+    responsibility_children = {}
     for pid in set(pid for pid in list_pids() if _valid_pid(pid)):
         if pid == root_pid:
             continue
@@ -30,20 +33,22 @@ def discover_owned_pids(root_pid, list_pids, responsible_pid, child_pids):
             responsible = responsible_pid(pid)
         except OSError:
             continue
-        if _valid_pid(responsible) and responsible == root_pid:
-            owned.add(pid)
+        if _valid_pid(responsible):
+            responsibility_children.setdefault(responsible, set()).add(pid)
 
-    pending = list(owned)
+    owned = {root_pid}
+    pending = [root_pid]
     visited = set()
     while pending:
         pid = pending.pop()
         if pid in visited:
             continue
         visited.add(pid)
+        children = set(responsibility_children.get(pid, ()))
         try:
-            children = child_pids(pid)
+            children.update(child for child in child_pids(pid) if _valid_pid(child))
         except OSError:
-            continue
+            pass
         for child in children:
             if _valid_pid(child) and child not in owned:
                 owned.add(child)

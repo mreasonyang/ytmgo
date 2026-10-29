@@ -18,6 +18,40 @@ class MetadataCollectionError(RuntimeError):
     pass
 
 
+def assemble_measurement(selected, owned, metric_rows):
+    """Retain coverage evidence so missing helpers cannot appear as savings."""
+    expected = set(selected)
+    processes = {}
+    errors = []
+    for item in metric_rows:
+        pid = item.get("pid")
+        if type(pid) is not int or pid not in owned:
+            continue
+        if "error_errno" in item:
+            code = item["error_errno"]
+            if type(code) is int:
+                errors.append({"pid": pid, "error_errno": code})
+            continue
+        item = dict(item)
+        item["executable"] = owned[pid]["executable"]
+        processes[pid] = item
+    observed = set(processes)
+    missing_metadata = expected - set(owned)
+    missing_metrics = set(owned) - observed
+    return {
+        "expected_pids": sorted(expected),
+        "metadata_pids": sorted(owned),
+        "observed_pids": sorted(observed),
+        "metadata_missing_pids": sorted(missing_metadata),
+        "metadata_missing_count": len(missing_metadata),
+        "metrics_missing_pids": sorted(missing_metrics),
+        "metrics_errors": errors,
+        "coverage_complete": expected == observed and not errors,
+        "processes": list(processes.values()),
+        "footprint": sum(x.get("footprint", 0) for x in processes.values()),
+    }
+
+
 def read_safe_metadata(collector, pid, check_output=subprocess.check_output):
     """An exited PID returns []; collector failures must not hide missing helpers."""
     try:
@@ -73,22 +107,15 @@ def main():
                                               text=True, stderr=subprocess.DEVNULL)
         except (OSError, subprocess.SubprocessError):
             raise SystemExit("The numeric process metrics collector failed.") from None
-        processes = []
-        for line in payload.splitlines():
-            item = json.loads(line)
-            # Exiting PIDs produce numeric errno records, not measured processes.
-            if item.get("pid") not in owned or "error_errno" in item:
-                continue
-            item["executable"] = owned[item["pid"]]["executable"]
-            processes.append(item)
-        root = next((item for item in processes if item["pid"] == args.pid), None)
+        measurement = assemble_measurement(selected, owned,
+                                           [json.loads(line) for line in payload.splitlines()])
+        root = next((item for item in measurement["processes"] if item["pid"] == args.pid), None)
         if root is not None:
             if root_start_ticks is not None and root["start_ticks"] != root_start_ticks:
                 break  # The PID was reused; it is no longer the measured app.
             root_start_ticks = root["start_ticks"]
         row = {"time": datetime.datetime.now().astimezone().isoformat(timespec="seconds"),
-               "elapsed": round(time.monotonic()-started, 3), "processes": processes,
-               "footprint": sum(x.get("footprint", 0) for x in processes)}
+               "elapsed": round(time.monotonic()-started, 3), **measurement}
         phase = args.out / "phase.txt"
         if phase.is_file():
             row["phase"] = phase.read_text().strip()[:80]
@@ -97,7 +124,8 @@ def main():
         (args.out/"latest.json").write_text(json.dumps(row, indent=2)+"\n")
         if tick % 30 == 0:
             print(json.dumps({"elapsed": row["elapsed"], "total_MiB": round(row["footprint"]/1048576, 2),
-                              "processes": len(processes)}), flush=True)
+                              "processes": len(measurement["processes"]),
+                              "coverage_complete": measurement["coverage_complete"]}), flush=True)
         if (args.out/"stop").exists() or root is None:
             break
         time.sleep(max(0, started + tick + 1 - time.monotonic()))

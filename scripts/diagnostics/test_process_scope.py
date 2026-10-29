@@ -55,6 +55,25 @@ class ProcessGraph:
 
 
 class DiscoverOwnedPidsTests(unittest.TestCase):
+    def test_responsibility_and_descendant_edges_form_one_transitive_scope(self):
+        graph = ProcessGraph(
+            listed=(100, 200, 300, 400, 900),
+            responsible={200: 1, 300: 200, 400: 300, 900: 900},
+            children={100: (200,), 400: (401,)},
+        )
+        self.assertEqual(graph.discover(100), {100, 200, 300, 400, 401})
+        self.assertCountEqual(graph.responsible_calls, (200, 300, 400, 900))
+        self.assertTrue(all(count == 1 for count in graph.child_calls.values()))
+
+    def test_responsibility_cycles_are_bounded_and_unreachable_cycles_excluded(self):
+        graph = ProcessGraph(
+            listed=(100, 200, 300, 400, 900, 901),
+            responsible={200: 400, 300: 200, 400: 300, 900: 901, 901: 900},
+            children={100: (200,), 400: (300,)},
+        )
+        self.assertEqual(graph.discover(100), {100, 200, 300, 400})
+        self.assertTrue(all(count == 1 for count in graph.child_calls.values()))
+
     def test_responsible_helpers_and_descendants_ignore_names_and_responsibility(self):
         # 200 and 300 represent arbitrarily named system helpers. Discovery has
         # no executable/name input: their responsibility is the inclusion rule.

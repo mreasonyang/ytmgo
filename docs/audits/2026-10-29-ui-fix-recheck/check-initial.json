@@ -1,0 +1,14 @@
+{
+  "phase": "check",
+  "command": [
+    "make",
+    "check"
+  ],
+  "exit_code": 2,
+  "elapsed_seconds": 29.736,
+  "raw_output_saved": false,
+  "go_test_failures": [
+    "TestEmptySeekDoesNotMaskBridgeFailure"
+  ],
+  "followup": "Five isolated repetitions, the complete make check rerun, and the full race suite passed. The initial failure is retained as an intermittent test failure; its cause is unproven."
+}

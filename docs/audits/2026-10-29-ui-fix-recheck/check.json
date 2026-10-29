@@ -1,0 +1,27 @@
+{
+  "phase": "check",
+  "command": [
+    "make",
+    "check"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 41.73,
+  "raw_output_saved": false,
+  "go_packages_passed": [
+    "ytmgo",
+    "ytmgo/cmd/update-package",
+    "ytmgo/internal/accountlogin",
+    "ytmgo/internal/accountsession",
+    "ytmgo/internal/appearance",
+    "ytmgo/internal/catalog",
+    "ytmgo/internal/language",
+    "ytmgo/internal/player"
+  ],
+  "go_test_failures": [],
+  "node_totals": [],
+  "python_test_counts": [
+    "12",
+    "5",
+    "10"
+  ]
+}

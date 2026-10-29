@@ -1,0 +1,1188 @@
+{
+  "phase": "probe",
+  "command": [
+    "go",
+    "test",
+    "-json",
+    "-count=1",
+    "-overlay",
+    "/tmp/ytmgo-ui-recheck-overlay.json",
+    "-run",
+    "TestFullVisual",
+    "."
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 3.128,
+  "raw_output_saved": false,
+  "events": [
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-en-dark-normal",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-en-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-en-dark-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-en-light-normal",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-en-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-en-light-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-zh-Hans-dark-normal",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-zh-Hans-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-zh-Hans-dark-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-zh-Hans-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-zh-Hans-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-zh-Hans-light-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-zh-Hant-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-zh-Hant-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-zh-Hant-dark-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-zh-Hant-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-zh-Hant-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-zh-Hant-light-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-ja-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-ja-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-ja-dark-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-ja-light-normal",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-ja-light-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/380-ja-light-settings",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-en-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-en-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-en-dark-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-en-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-en-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-en-light-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-zh-Hans-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-zh-Hans-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-zh-Hans-dark-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-zh-Hans-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-zh-Hans-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-zh-Hans-light-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-zh-Hant-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-zh-Hant-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-zh-Hant-dark-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-zh-Hant-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-zh-Hant-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-zh-Hant-light-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-ja-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-ja-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-ja-dark-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-ja-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-ja-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/420-ja-light-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-en-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-en-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-en-dark-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-en-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-en-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-en-light-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-zh-Hans-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-zh-Hans-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-zh-Hans-dark-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-zh-Hans-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-zh-Hans-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-zh-Hans-light-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-zh-Hant-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-zh-Hant-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-zh-Hant-dark-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-zh-Hant-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-zh-Hant-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-zh-Hant-light-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-ja-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-ja-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-ja-dark-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-ja-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-ja-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/760-ja-light-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-en-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-en-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-en-dark-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-en-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-en-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-en-light-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-zh-Hans-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-zh-Hans-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-zh-Hans-dark-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-zh-Hans-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-zh-Hans-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-zh-Hans-light-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-zh-Hant-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-zh-Hant-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-zh-Hant-dark-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-zh-Hant-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-zh-Hant-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-zh-Hant-light-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-ja-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-ja-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-ja-dark-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-ja-light-normal",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-ja-light-immersive",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/761-ja-light-settings",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-en-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-en-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-en-dark-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-en-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-en-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-en-light-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-zh-Hans-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-zh-Hans-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-zh-Hans-dark-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-zh-Hans-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-zh-Hans-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-zh-Hans-light-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-zh-Hant-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-zh-Hant-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-zh-Hant-dark-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-zh-Hant-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-zh-Hant-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-zh-Hant-light-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-ja-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-ja-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-ja-dark-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-ja-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-ja-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/960-ja-light-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-en-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-en-dark-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-en-dark-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-en-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-en-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-en-light-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-zh-Hans-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-zh-Hans-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-zh-Hans-dark-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-zh-Hans-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-zh-Hans-light-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-zh-Hans-light-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-zh-Hant-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-zh-Hant-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-zh-Hant-dark-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-zh-Hant-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-zh-Hant-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-zh-Hant-light-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-ja-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-ja-dark-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-ja-dark-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-ja-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-ja-light-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1180-ja-light-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-en-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-en-dark-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-en-dark-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-en-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-en-light-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-en-light-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-zh-Hans-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-zh-Hans-dark-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-zh-Hans-dark-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-zh-Hans-light-normal",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-zh-Hans-light-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-zh-Hans-light-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-zh-Hant-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-zh-Hant-dark-immersive",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-zh-Hant-dark-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-zh-Hant-light-normal",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-zh-Hant-light-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-zh-Hant-light-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-ja-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-ja-dark-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-ja-dark-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-ja-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-ja-light-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1181-ja-light-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-en-dark-normal",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-en-dark-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-en-dark-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-en-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-en-light-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-en-light-settings",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-zh-Hans-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-zh-Hans-dark-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-zh-Hans-dark-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-zh-Hans-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-zh-Hans-light-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-zh-Hans-light-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-zh-Hant-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-zh-Hant-dark-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-zh-Hant-dark-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-zh-Hant-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-zh-Hant-light-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-zh-Hant-light-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-ja-dark-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-ja-dark-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-ja-dark-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-ja-light-normal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-ja-light-immersive",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix/1440-ja-light-settings",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualMinimumClientMatrix",
+      "Elapsed": 1.58
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFullVisualImmersiveQueueArtwork",
+      "Elapsed": 0.11
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Elapsed": 2.061
+    }
+  ]
+}

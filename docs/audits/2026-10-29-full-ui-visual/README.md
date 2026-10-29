@@ -1,5 +1,7 @@
 # ytmgo Comprehensive UI and Visual Acceptance Review
 
+Follow-up: [independent recheck of fixes at bb579ff](../2026-10-29-ui-fix-recheck/README.md). The findings and verdict below describe the original audit baseline.
+
 Date: 2026-10-29, Asia/Shanghai. Verdict: **NO-GO**. This review identified **6 findings: 1 P1, 3 P2, and 2 P3**, plus 2 visual improvement suggestions. Product source code was not modified.
 
 The main blocker is prolonged account restoration in the candidate app under its original bundle identity: the UI reports that the user is signed out while playback remains pending. The remaining playback and visual checks used an isolated anonymous copy of the same candidate build. Those results do not establish acceptance for a real account.

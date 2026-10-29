@@ -1,0 +1,38 @@
+{
+  "product_commit": "bb579ff9628051d79427235d689acb525a60fa93",
+  "native_screenshots": 12,
+  "verified_native_executable": "build/darwin-arm64/ytmgo.app/Contents/MacOS/ytmgo",
+  "native_account_states_observed": [
+    "restoring",
+    "slow",
+    "deferred",
+    "retry-restoring",
+    "slow",
+    "deferred",
+    "restart-restoring"
+  ],
+  "public_playback_after_skip": true,
+  "observed_position_seconds": 84.005,
+  "native_compact_window_dip": [
+    757,
+    641
+  ],
+  "native_video_area_dip": [
+    320,
+    180
+  ],
+  "first_video_startup_status": "video_network_timeout",
+  "video_frame_after_reopening_panel": true,
+  "real_account_restore_success": false,
+  "account_failure_or_cancel_native_scenario_completed": false,
+  "product_source_changed": false,
+  "raw_logs_saved": false,
+  "credentials_read_by_agent": false,
+  "installed_app_replaced": false,
+  "release_published": false,
+  "preferences_restored": {
+    "language": "zh-Hant",
+    "appearance": "dark",
+    "wide_window": true
+  }
+}

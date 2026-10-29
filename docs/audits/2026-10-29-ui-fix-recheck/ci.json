@@ -1,0 +1,35 @@
+{
+  "head": "bb579ff9628051d79427235d689acb525a60fa93",
+  "run_id": 40860720119,
+  "url": "https://github.com/mreasonyang/ytmgo/actions/runs/40860720119",
+  "status": "completed",
+  "conclusion": "failure",
+  "jobs": [
+    {
+      "name": "Login helper on macos-latest",
+      "conclusion": "success"
+    },
+    {
+      "name": "Login helper on ubuntu-24.04",
+      "conclusion": "success"
+    },
+    {
+      "name": "Login helper on windows-latest",
+      "conclusion": "failure",
+      "failed_tests": [
+        {
+          "name": "TestPackagePreservesBundleAndRejectsTampering",
+          "location": "cmd/update-package/main_test.go:84",
+          "assertion": "executable permissions lost"
+        },
+        {
+          "name": "TestVideoPersistentSlowFramesHaveFiniteCatchups",
+          "location": "internal/player/video_startup_test.go:197",
+          "assertion": "slow stream did not exhaust exactly two catchups"
+        }
+      ]
+    }
+  ],
+  "raw_logs_saved": false,
+  "note": "The failing test/source files were unchanged by bb579ff; this alone does not prove that the failures are unrelated."
+}

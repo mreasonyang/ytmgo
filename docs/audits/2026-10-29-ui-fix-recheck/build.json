@@ -1,0 +1,14 @@
+{
+  "phase": "build",
+  "command": [
+    "make",
+    "build-app"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 16.043,
+  "raw_output_saved": false,
+  "go_packages_passed": [],
+  "go_test_failures": [],
+  "node_totals": [],
+  "python_test_counts": []
+}

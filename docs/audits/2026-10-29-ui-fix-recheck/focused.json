@@ -1,0 +1,112 @@
+{
+  "phase": "focused",
+  "command": [
+    "go",
+    "test",
+    "-json",
+    "-count=5",
+    "-run",
+    "^TestEmptySeekDoesNotMaskBridgeFailure$",
+    "./internal/player"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 4.293,
+  "raw_output_saved": false,
+  "events": [
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekDoesNotMaskBridgeFailure/access_denied",
+      "Elapsed": 1.8
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekDoesNotMaskBridgeFailure/truncated",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekDoesNotMaskBridgeFailure",
+      "Elapsed": 1.86
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekDoesNotMaskBridgeFailure/access_denied",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekDoesNotMaskBridgeFailure/truncated",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekDoesNotMaskBridgeFailure",
+      "Elapsed": 0.28
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekDoesNotMaskBridgeFailure/access_denied",
+      "Elapsed": 0.24
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekDoesNotMaskBridgeFailure/truncated",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekDoesNotMaskBridgeFailure",
+      "Elapsed": 0.29
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekDoesNotMaskBridgeFailure/access_denied",
+      "Elapsed": 0.23
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekDoesNotMaskBridgeFailure/truncated",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekDoesNotMaskBridgeFailure",
+      "Elapsed": 0.28
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekDoesNotMaskBridgeFailure/access_denied",
+      "Elapsed": 0.23
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekDoesNotMaskBridgeFailure/truncated",
+      "Elapsed": 0.08
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekDoesNotMaskBridgeFailure",
+      "Elapsed": 0.32
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Elapsed": 3.294
+    }
+  ]
+}

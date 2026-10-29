@@ -167,8 +167,14 @@ func (b *streamBridge) serve(w http.ResponseWriter, incoming *http.Request) {
 			category = "audio_server_error"
 		}
 		response.Body.Close()
-		if reported := b.reportedStreamError(); reported != "" {
-			category = reported
+		// A final HTTP refusal already identifies the failure. Only a generic
+		// server failure needs the worker's more specific transport status;
+		// probing a 401/403/429 would issue an extra request after its retry
+		// policy has finished and could overwrite that definitive category.
+		if response.StatusCode >= 500 {
+			if reported := b.reportedStreamError(); reported != "" {
+				category = reported
+			}
 		}
 		b.setError(category)
 		w.WriteHeader(response.StatusCode)

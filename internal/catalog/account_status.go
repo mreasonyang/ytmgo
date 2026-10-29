@@ -14,9 +14,9 @@ func (c *Client) AccountStatus(ctx context.Context) (AccountStatus, error) {
 	if err != nil {
 		return AccountStatus{}, err
 	}
-	response, err := c.apiRequestWithPolicy(ctx, "browse", map[string]any{
+	response, err := c.apiRequestWithOptions(ctx, "browse", map[string]any{
 		"browseId": "MPREb_4pL8gzRtw1p",
-	}, "", true)
+	}, requestOptions{allowLoggedOut: true})
 	if err != nil {
 		return AccountStatus{}, err
 	}

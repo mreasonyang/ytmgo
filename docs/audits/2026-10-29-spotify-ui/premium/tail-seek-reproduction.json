@@ -1,0 +1,22 @@
+{
+  "scenario": "premium_tail_seek",
+  "track_case": "first item in Likes; 221.1 seconds native duration",
+  "first_target_seconds": 218.293646264,
+  "initial_result": "playback_timeout",
+  "initial_failure_evidence": "tail-seek-failure.json",
+  "retry_result": "recovered to playing at 10.722666666 seconds",
+  "second_attempt": "playback_timeout",
+  "no_cloud_mutations": true,
+  "cause_established": false,
+  "failure_timestamps_utc": [
+    "2026-10-29T04:42:54Z",
+    "2026-10-29T04:44:46Z"
+  ],
+  "same_target_reproductions": 2,
+  "cross_track_result": "playback_timeout",
+  "cross_track_target_seconds": 196.316185541,
+  "cross_track_failure_utc": "2026-10-29T04:46:29Z",
+  "tracks_affected": 2,
+  "total_failures": 3,
+  "next_after_failure": "recovered to advancing playback at 29.762666666 seconds"
+}

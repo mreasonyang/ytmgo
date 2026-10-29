@@ -18,6 +18,7 @@ import (
 const sampleRate = 48000
 const channels = 2
 const firstPCMTimeout = 30 * time.Second
+const pcmDurationTolerance = time.Second / 2
 
 type pcmDecoder struct {
 	reader      io.ReadCloser
@@ -90,11 +91,9 @@ func startDecoder(ctx context.Context, executable string, info media, at time.Du
 		cancel()
 		return nil, err
 	}
-	// FFmpeg only reads the loopback bridge. The signed remote URL and its
-	// headers never enter the helper; duration enables actual range seeking.
-	input := fmt.Sprintf("ffconcat version 1.0\nfile '%s'\nduration %.6f\noption rw_timeout 10000000\n", bridge.URL, info.Duration.Seconds())
+	input := audioDecoderManifest(bridge.URL, info.Duration, at)
 	cmd := childCommand(life, executable, "-hide_banner", "-loglevel", "error", "-nostdin",
-		"-ss", fmt.Sprintf("%.6f", at.Seconds()), "-f", "concat", "-safe", "0",
+		"-ss", "0", "-f", "concat", "-safe", "0",
 		"-protocol_whitelist", "pipe,file,http,tcp", "-i", "pipe:0",
 		"-vn", "-sn", "-dn", "-threads", "1", "-ac", "2", "-ar", "48000", "-f", "f32le", "pipe:1")
 	diagnostic := &decoderDiagnostics{}
@@ -118,13 +117,32 @@ func startDecoder(ctx context.Context, executable string, info media, at time.Du
 	go func() { done <- cmd.Wait(); close(done) }()
 	d := &pcmDecoder{reader: rd, input: rd, cancel: cancel, wait: done, bridge: bridge, length: int64((info.Duration - at).Seconds() * sampleRate), checkLength: true}
 	stop := context.AfterFunc(ready, func() { d.Close() })
-	// Do not announce successful loading before actual PCM arrives.
+	defer stop()
+	// Require actual PCM except when a successful decoder has already reached
+	// the advertised tail: codec padding can leave no samples at the last ms.
 	first := make([]byte, 4096)
 	n, err := io.ReadFull(rd, first)
-	stop()
 	if ready.Err() != nil {
 		d.Close()
 		return nil, ready.Err()
+	}
+	remaining := info.Duration - at
+	if n == 0 && err == io.EOF && at > 0 && remaining >= 0 && remaining <= pcmDurationTolerance {
+		// EOF on stdout is insufficient: the process could close it and hang,
+		// or exit with an error. Keep readiness cancellation active until Wait.
+		select {
+		case result := <-done:
+			if ready.Err() != nil {
+				d.Close()
+				return nil, ready.Err()
+			}
+			if result == nil && bridge.Err() == nil {
+				return d, nil
+			}
+		case <-ready.Done():
+			d.Close()
+			return nil, ready.Err()
+		}
 	}
 	if err != nil && err != io.ErrUnexpectedEOF || n < 8 {
 		d.Close()
@@ -135,6 +153,16 @@ func startDecoder(ctx context.Context, executable string, info media, at time.Du
 	}
 	d.input = io.MultiReader(bytes.NewReader(first[:n]), rd)
 	return d, nil
+}
+
+// Seek the media inside the concat demuxer before it probes packets. Applying
+// only -ss to the outer concat input can scan an entire AAC file before the
+// first PCM sample, making late seeks hit the startup deadline. The inpoint
+// resets the timeline; input -ss 0 still discards audio codec preroll.
+// Both the upstream URL and the local capability stay out of process argv:
+// FFmpeg receives only this single-file manifest over its private stdin.
+func audioDecoderManifest(url string, duration, at time.Duration) string {
+	return fmt.Sprintf("ffconcat version 1.0\nfile '%s'\ninpoint %.6f\nduration %.6f\noption rw_timeout 10000000\n", url, at.Seconds(), max(duration-at, 0).Seconds())
 }
 
 func (d *pcmDecoder) SampleRate() int { return sampleRate }
@@ -166,7 +194,7 @@ func (d *pcmDecoder) Read(dst []float32) (int, error) {
 		}
 		// FFmpeg can exit successfully when a CDN truncates the stream. Require
 		// the advertised PCM duration (allowing codec padding), not only exit 0.
-		if d.checkLength && d.readFrames+sampleRate/2 < d.length {
+		if d.checkLength && d.readFrames+int64(pcmDurationTolerance.Seconds()*sampleRate) < d.length {
 			d.failed.Store(true)
 		}
 		if d.bridge != nil && d.bridge.Err() != nil {

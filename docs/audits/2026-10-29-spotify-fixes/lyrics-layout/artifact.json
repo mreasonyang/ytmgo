@@ -1,0 +1,22 @@
+{
+  "built_at_utc": "2026-10-29T07:33:19.368718+00:00",
+  "version": "0.4.0",
+  "original_executable_sha256": "65b6733260655b70fb5411ab93dcd97eb57cf2920145d95bef34299c9052e9b9",
+  "anonymous_executable_sha256": "c605151d0b6597fa8c6b0f7472d63f0a0f92014f4ee8657fc9582492b391e2a3",
+  "anonymous_identity": "com.ytmgo.lyrics-verify-20261029",
+  "credentials_copied": false,
+  "signature": "ad-hoc",
+  "original_account_verification": "pending user keychain authorization",
+  "installed_to_applications": false,
+  "published": false,
+  "application": {
+    "path": "build/darwin-arm64/ytmgo.app/Contents/MacOS/ytmgo",
+    "sha256": "65b6733260655b70fb5411ab93dcd97eb57cf2920145d95bef34299c9052e9b9",
+    "bytes": 12618976
+  },
+  "dmg": {
+    "path": "build/darwin-arm64/ytmgo-0.4.0-arm64.dmg",
+    "sha256": "e24cbcdbb4c8ffe39fb94290bd984db6a043df37337b45dd1f40d83c5b74adbe",
+    "bytes": 43903079
+  }
+}

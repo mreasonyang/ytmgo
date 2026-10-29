@@ -1,0 +1,130 @@
+{
+  "time": "2026-10-29T04:41:39.546776+00:00",
+  "root_pid": 75054,
+  "selected_count": 16,
+  "collected_count": 16,
+  "missing_pids": [],
+  "processes": [
+    {
+      "pid": 75054,
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/darwin-arm64/ytmgo.app/Contents/MacOS/ytmgo",
+      "ppid": 1,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 75059,
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/darwin-arm64/ytmgo.app/Contents/Resources/runtime/node",
+      "ppid": 75054,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 75060,
+      "executable": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    },
+    {
+      "pid": 75108,
+      "executable": "/System/Library/Frameworks/AppKit.framework/Versions/C/XPCServices/ThemeWidgetControlViewService.xpc/Contents/MacOS/ThemeWidgetControlViewService",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    },
+    {
+      "pid": 75930,
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/darwin-arm64/ytmgo.app/Contents/Resources/runtime/node",
+      "ppid": 75059,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 76961,
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/darwin-arm64/ytmgo.app/Contents/Resources/runtime/ffmpeg",
+      "ppid": 75054,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 76981,
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/darwin-arm64/ytmgo.app/Contents/Resources/runtime/ffmpeg",
+      "ppid": 75054,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 77032,
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/darwin-arm64/ytmgo.app/Contents/Resources/login/ytmgo Account Login.app/Contents/MacOS/ytmgo-account-login",
+      "ppid": 75054,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 77035,
+      "executable": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    },
+    {
+      "pid": 77037,
+      "executable": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.GPU.xpc/Contents/MacOS/com.apple.WebKit.GPU",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    },
+    {
+      "pid": 77041,
+      "executable": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.WebContent.xpc/Contents/MacOS/com.apple.WebKit.WebContent",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    },
+    {
+      "pid": 77042,
+      "executable": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.Networking.xpc/Contents/MacOS/com.apple.WebKit.Networking",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    },
+    {
+      "pid": 77058,
+      "executable": "/System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    },
+    {
+      "pid": 77091,
+      "executable": "/System/Library/Frameworks/AppKit.framework/Versions/C/XPCServices/ThemeWidgetControlViewService.xpc/Contents/MacOS/ThemeWidgetControlViewService",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    },
+    {
+      "pid": 77093,
+      "executable": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    },
+    {
+      "pid": 77095,
+      "executable": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/PrivateFrameworks/SafariPlatformSupport.framework/Versions/A/XPCServices/com.apple.SafariPlatformSupport.Helper.xpc/Contents/MacOS/com.apple.SafariPlatformSupport.Helper",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    }
+  ],
+  "helper_pids": [
+    77032
+  ],
+  "webkit_pids": [
+    77037,
+    77041,
+    77042
+  ],
+  "argv_or_environment_read": false
+}

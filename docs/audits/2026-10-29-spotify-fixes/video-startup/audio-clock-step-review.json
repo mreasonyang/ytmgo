@@ -1,0 +1,27 @@
+{
+  "scope": "Synthetic zero PCM on current macOS AudioQueue; no real stream, private URL, process argv, environment, or credential read.",
+  "date": "2026-10-29",
+  "command": "go test -overlay /tmp/ytmgo-clock-review-overlay.json ./internal/player -run ^TestReviewNativeAudioClockStepSize$ -count=1 -v",
+  "test_source": "/tmp/ytmgo-clock-review-test.go",
+  "measurement_seconds": 5,
+  "samples": 4355,
+  "position_ms": 4792.0,
+  "max_delta_ms": 10.667,
+  "min_delta_ms": 0.0,
+  "max_positive_delta_minus_wall_gap_ms": 9.663,
+  "max_sample_gap_ms": 4.341,
+  "forward_seek_threshold_ms": 600,
+  "backward_seek_threshold_ms": 200,
+  "forward_threshold_hits": 0,
+  "backward_threshold_hits": 0,
+  "paused_samples": 0,
+  "result": "PASS",
+  "source_evidence": [
+    "video_controller.go: syncVideoSession callbacks directly read Player.Snapshot().Position and .Playing",
+    "internal/player/player.go:515 Snapshot = session.base + session.output.Position(), bounded by Duration",
+    "github.com/egoist/mygo@v0.7.1/audio/output_darwin.go:41 aqFrames=512, 48000 Hz = 10.667ms blocks",
+    "github.com/egoist/mygo@v0.7.1/audio/mixer.go:140 heardAt and :155 position read heard source-frame marks",
+    "github.com/egoist/mygo@v0.7.1/audio/audio.go:488 default LatencyInteractive; :513 approximately 40ms ahead"
+  ],
+  "interpretation": "Normal sampled playback clock steps are far below video explicit-seek thresholds. This does not exclude an actual seek, device transition, or different concurrent runtime behavior during the intermittent app failure."
+}

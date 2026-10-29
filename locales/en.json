@@ -744,5 +744,9 @@
   "nativeAccountLoginMissing": "The sign-in window could not start. Reinstall ytmgo and check that your system WebView runtime is available.",
   "nativeAccountLoginOutdated": "Update Microsoft Edge WebView2 Runtime, then try signing in again.",
   "nativeAccountLoginTimeout": "Sign-in timed out. Please try again.",
-  "nativeAccountLoginFailed": "Sign-in could not be completed. Please try again."
+  "nativeAccountLoginFailed": "Sign-in could not be completed. Please try again.",
+  "nativeLyricsFollow": "Follow playback",
+  "nativeLyricsFollowing": "Following playback",
+  "nativeLyricsUnsynced": "Synchronized timing is unavailable for this track.",
+  "nativeLyricsError": "Unable to load lyrics right now."
 }

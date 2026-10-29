@@ -115,6 +115,7 @@ type Options struct {
 type continuation struct {
 	endpoint, title string
 	cursor          pageCursor
+	visitorData     string
 	payload         map[string]any
 	expires         time.Time
 }
@@ -227,21 +228,21 @@ func (c *Client) Continue(ctx context.Context, handle string) (Page, error) {
 		return Page{}, ErrExpiredContinuation
 	}
 	if entry.cursor.query {
-		return c.loadPage(ctx, entry.endpoint, entry.payload, entry.title, entry.cursor.token)
+		return c.loadPage(ctx, entry.endpoint, entry.payload, entry.title, entry.cursor.token, entry.visitorData)
 	}
-	return c.page(ctx, entry.endpoint, map[string]any{"continuation": entry.cursor.token}, entry.title)
+	return c.loadPage(ctx, entry.endpoint, map[string]any{"continuation": entry.cursor.token}, entry.title, "", entry.visitorData)
 }
 
 func (c *Client) page(ctx context.Context, endpoint string, payload map[string]any, title string) (Page, error) {
-	return c.loadPage(ctx, endpoint, payload, title, "")
+	return c.loadPage(ctx, endpoint, payload, title, "", "")
 }
 
-func (c *Client) loadPage(ctx context.Context, endpoint string, payload map[string]any, title, queryContinuation string) (Page, error) {
+func (c *Client) loadPage(ctx context.Context, endpoint string, payload map[string]any, title, queryContinuation, visitorData string) (Page, error) {
 	ctx, scope, err := c.operation(ctx)
 	if err != nil {
 		return Page{}, err
 	}
-	response, err := c.apiRequest(ctx, endpoint, payload, queryContinuation)
+	response, err := c.apiRequestWithOptions(ctx, endpoint, payload, requestOptions{queryContinuation: queryContinuation, visitorData: visitorData})
 	if err != nil {
 		return Page{}, err
 	}
@@ -253,7 +254,13 @@ func (c *Client) loadPage(ctx context.Context, endpoint string, payload map[stri
 		page.Title = title
 	}
 	if token.token != "" {
-		page.Continuation, err = c.rememberContinuation(scope, endpoint, token, page.Title, payload)
+		// Continuations are bound to the visitor that produced the page. Keep
+		// this opaque value with its local handle, not in global client state:
+		// concurrent Home/Search requests can return different visitor IDs.
+		if visitor := textAt(response, "responseContext", "visitorData"); validVisitorData(visitor) {
+			visitorData = visitor
+		}
+		page.Continuation, err = c.rememberContinuation(scope, endpoint, token, page.Title, payload, visitorData)
 		if err != nil {
 			return Page{}, err
 		}
@@ -324,36 +331,8 @@ func (c *Client) Track(ctx context.Context, videoID string) (Item, error) {
 }
 
 func (c *Client) Lyrics(ctx context.Context, videoID string) (string, error) {
-	if !videoIDPattern.MatchString(videoID) {
-		return "", ErrInvalidID
-	}
-	ctx, scope, err := c.operation(ctx)
-	if err != nil {
-		return "", err
-	}
-	c.mu.RLock()
-	reference, ok := c.lyrics[videoID]
-	c.mu.RUnlock()
-	if !ok || time.Now().After(reference.expires) {
-		if _, err := c.Queue(ctx, videoID); err != nil {
-			return "", err
-		}
-		c.mu.RLock()
-		reference = c.lyrics[videoID]
-		c.mu.RUnlock()
-	}
-	if reference.browseID == "" {
-		return "", ErrNoLyrics
-	}
-	response, err := c.api(ctx, "browse", map[string]any{"browseId": reference.browseID})
-	if err != nil {
-		return "", err
-	}
-	text, err := parseLyrics(response)
-	if scopeErr := c.scopeError(scope); scopeErr != nil {
-		return "", scopeErr
-	}
-	return text, err
+	result, err := c.lyricsResult(ctx, videoID, false)
+	return result.Text, err
 }
 
 // Like changes only the explicitly selected track's account rating. The caller
@@ -388,10 +367,30 @@ func (c *Client) api(ctx context.Context, endpoint string, payload map[string]an
 }
 
 func (c *Client) apiRequest(ctx context.Context, endpoint string, payload map[string]any, queryContinuation string) (map[string]any, error) {
-	return c.apiRequestWithPolicy(ctx, endpoint, payload, queryContinuation, false)
+	return c.apiRequestWithOptions(ctx, endpoint, payload, requestOptions{queryContinuation: queryContinuation})
 }
 
-func (c *Client) apiRequestWithPolicy(ctx context.Context, endpoint string, payload map[string]any, queryContinuation string, allowLoggedOut bool) (map[string]any, error) {
+type requestOptions struct {
+	queryContinuation string
+	visitorData       string
+	allowLoggedOut    bool
+	lyricsMobile      bool
+}
+
+// Visitor data remains in memory and is never exposed in the public Page.
+func validVisitorData(value string) bool {
+	if len(value) == 0 || len(value) > 4096 {
+		return false
+	}
+	for _, ch := range value {
+		if ch < '!' || ch > '~' {
+			return false
+		}
+	}
+	return true
+}
+
+func (c *Client) apiRequestWithOptions(ctx context.Context, endpoint string, payload map[string]any, options requestOptions) (map[string]any, error) {
 	ctx, scope, err := c.operation(ctx)
 	if err != nil {
 		return nil, err
@@ -408,9 +407,17 @@ func (c *Client) apiRequestWithPolicy(ctx context.Context, endpoint string, payl
 	c.mu.RLock()
 	language, region := c.language, c.region
 	c.mu.RUnlock()
-	requestContext := map[string]any{"client": map[string]string{
-		"clientName": "WEB_REMIX", "clientVersion": musicClientVersion, "hl": language, "gl": region,
-	}}
+	clientName, clientVersion, clientNumber := "WEB_REMIX", musicClientVersion, "67"
+	if options.lyricsMobile {
+		clientName, clientVersion, clientNumber = "ANDROID_MUSIC", lyricsClientVersion, "21"
+	}
+	clientContext := map[string]string{
+		"clientName": clientName, "clientVersion": clientVersion, "hl": language, "gl": region,
+	}
+	if validVisitorData(options.visitorData) {
+		clientContext["visitorData"] = options.visitorData
+	}
+	requestContext := map[string]any{"client": clientContext}
 	if scope.session != nil && scope.session.onBehalfOfUser != "" {
 		requestContext["user"] = map[string]string{"onBehalfOfUser": scope.session.onBehalfOfUser}
 	}
@@ -420,9 +427,9 @@ func (c *Client) apiRequestWithPolicy(ctx context.Context, endpoint string, payl
 		return nil, ErrInvalidResponse
 	}
 	parameters := url.Values{"prettyPrint": {"false"}}
-	if queryContinuation != "" {
-		parameters.Set("ctoken", queryContinuation)
-		parameters.Set("continuation", queryContinuation)
+	if options.queryContinuation != "" {
+		parameters.Set("ctoken", options.queryContinuation)
+		parameters.Set("continuation", options.queryContinuation)
 		parameters.Set("type", "next")
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.origin+"/youtubei/v1/"+endpoint+"?"+parameters.Encode(), bytes.NewReader(body))
@@ -432,9 +439,12 @@ func (c *Client) apiRequestWithPolicy(ctx context.Context, endpoint string, payl
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Origin", serviceOrigin)
 	req.Header.Set("Referer", serviceOrigin+"/")
-	req.Header.Set("X-Youtube-Client-Name", "67")
-	req.Header.Set("X-Youtube-Client-Version", musicClientVersion)
+	req.Header.Set("X-Youtube-Client-Name", clientNumber)
+	req.Header.Set("X-Youtube-Client-Version", clientVersion)
 	req.Header.Set("Accept-Language", language)
+	if validVisitorData(options.visitorData) {
+		req.Header.Set("X-Goog-Visitor-Id", options.visitorData)
+	}
 	authorize(req, scope.session)
 	data, err := c.request(req, endpoint, maxResponseBytes)
 	if scopeErr := c.scopeError(scope); scopeErr != nil {
@@ -450,7 +460,7 @@ func (c *Client) apiRequestWithPolicy(ctx context.Context, endpoint string, payl
 	if _, ok := response["error"]; ok {
 		return nil, ErrUnavailable
 	}
-	if !allowLoggedOut && req.Header.Get("Authorization") != "" {
+	if !options.allowLoggedOut && req.Header.Get("Authorization") != "" {
 		if loggedOut, _ := at(response, "responseContext", "mainAppWebResponseContext", "loggedOut").(bool); loggedOut {
 			return nil, ErrAuthenticationRequired
 		}
@@ -499,7 +509,7 @@ func (c *Client) request(req *http.Request, stage string, limit int64) ([]byte, 
 	return data, nil
 }
 
-func (c *Client) rememberContinuation(scope sessionScope, endpoint string, cursor pageCursor, title string, payload map[string]any) (string, error) {
+func (c *Client) rememberContinuation(scope sessionScope, endpoint string, cursor pageCursor, title string, payload map[string]any, visitorData string) (string, error) {
 	var random [16]byte
 	if _, err := rand.Read(random[:]); err != nil {
 		return "", nil
@@ -525,6 +535,6 @@ func (c *Client) rememberContinuation(scope sessionScope, endpoint string, curso
 		}
 		delete(c.continuations, oldestKey)
 	}
-	c.continuations[handle] = continuation{endpoint: endpoint, cursor: cursor, title: title, payload: payload, expires: time.Now().Add(30 * time.Minute)}
+	c.continuations[handle] = continuation{endpoint: endpoint, cursor: cursor, visitorData: visitorData, title: title, payload: payload, expires: time.Now().Add(30 * time.Minute)}
 	return handle, nil
 }

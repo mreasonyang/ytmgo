@@ -1,0 +1,8 @@
+{
+  "executable_sha256": "00917f8b2f4ad2a0d2abb4a44edeedf279d4bfdd5bff7621101526b575b8f1c8",
+  "preferences": {
+    "language": "zh-Hant",
+    "appearance": "dark"
+  },
+  "rebuild_or_resign_after_authorization": false
+}

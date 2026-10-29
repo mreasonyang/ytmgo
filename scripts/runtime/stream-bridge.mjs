@@ -8,7 +8,8 @@ export const STREAM_HEADERS = Object.freeze({
   accept: '*/*', origin: 'https://www.youtube.com',
   referer: 'https://www.youtube.com', DNT: '?1',
 });
-const CHUNK_BYTES = 64 * 1024;
+const AUDIO_CHUNK_BYTES = 64 * 1024;
+const VIDEO_CHUNK_BYTES = 512 * 1024;
 const NETWORK_IDLE_MS = 20_000;
 const MAX_MEDIA_MS = 26 * 60 * 60_000;
 export const STREAM_ERROR_HEADER = 'X-Ytmgo-Stream-Error';
@@ -163,7 +164,11 @@ export class StreamBridge {
     try {
       for (let offset = range.start; offset <= range.end;) {
         if (signal.aborted) throw error('stream_cancelled');
-        const end = Math.min(range.end, offset + CHUNK_BYTES - 1);
+        // Larger video ranges amortize request latency. Forwarding remains
+        // bounded to 32 KiB writes with backpressure, and the next range is
+        // requested only after the current body has been consumed.
+        const chunkBytes = media.contentType === 'video/mp4' ? VIDEO_CHUNK_BYTES : AUDIO_CHUNK_BYTES;
+        const end = Math.min(range.end, offset + chunkBytes - 1);
         const remote = new URL(media.url);
         remote.searchParams.set('range', `${offset}-${end}`);
         const upstream = await timed(() => this.#fetch(remote, {

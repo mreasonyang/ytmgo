@@ -1,0 +1,10 @@
+{
+  "source_binary_sha256": "0434a97bb7aec55d95bef55dc3c80b4b94c3562a50b7259b13c0d57b77ed9f0e",
+  "diagnostic_binary_sha256": "cfb06136a64492f29c0fe8769d653a836cc1e0b7637a83cae4c2cedda25c93c5",
+  "identity_only_changes": true,
+  "app_path": ".mygo/spotify-fix-anon/ytmgo Fix Anonymous.app",
+  "account_data_copied": false,
+  "role": "intermediate_anonymous_pagination_validation_only",
+  "final_acceptance": false,
+  "note": "Predates anonymous cold-start fix. Final anonymous clone is identified in artifact.json and native-results.json."
+}

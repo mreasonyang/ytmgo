@@ -1,0 +1,112 @@
+[
+  {
+    "scenario": "restored_library",
+    "time": "2026-10-29T04:35:09.056Z",
+    "premium": true,
+    "initial_library_items": 24
+  },
+  {
+    "scenario": "library_pagination",
+    "time": "2026-10-29T04:35:55.590Z",
+    "initial_items": 24,
+    "after_items": 45
+  },
+  {
+    "scenario": "account_menu",
+    "time": "2026-10-29T04:36:22.994Z",
+    "plan": "premium",
+    "manage_available": true,
+    "sign_out_available": true,
+    "mutated_account": false
+  },
+  {
+    "scenario": "premium_playback",
+    "time": "2026-10-29T04:37:06.773Z",
+    "position_seconds": 13.24,
+    "playing": true,
+    "muted": true,
+    "liked_state_visible": true
+  },
+  {
+    "scenario": "premium_pause_seek_preferences",
+    "time": "2026-10-29T04:37:51.298Z",
+    "paused_initial_seconds": 21.44,
+    "seek_seconds": 110.55,
+    "held_after_preferences_seconds": 110.55,
+    "premium_retained": true,
+    "restored_language": "zh-Hant",
+    "restored_appearance": "dark"
+  },
+  {
+    "scenario": "premium_video_lyrics",
+    "time": "2026-10-29T04:38:58.557Z",
+    "video_frame_visually_confirmed": true,
+    "lyrics_unavailable": false,
+    "multiline_lyrics_present": true
+  },
+  {
+    "scenario": "premium_transport_video_lyrics",
+    "time": "2026-10-29T04:41:02.329Z",
+    "next_track_position_seconds": 40.162666666,
+    "previous_reset_to_zero": true,
+    "previous_selected_original_track": true,
+    "video_closed_audio_continued_seconds": 108.056,
+    "liked_state_preserved": true
+  },
+  {
+    "scenario": "signed_in_login_cancel",
+    "time": "2026-10-29T04:42:23.591Z",
+    "premium_retained": true,
+    "playback_position_seconds": 46.338666666,
+    "credentials_entered": false
+  },
+  {
+    "scenario": "premium_tail_seek",
+    "time": "2026-10-29T04:43:21.203Z",
+    "target_seconds": 218.293646264,
+    "result": "playback_timeout",
+    "automatic_next_completed": false
+  },
+  {
+    "scenario": "premium_timeout_retry",
+    "time": "2026-10-29T04:44:15.225Z",
+    "result": "recovered",
+    "position_seconds": 10.722666666
+  },
+  {
+    "scenario": "premium_tail_seek_repeat",
+    "time": "2026-10-29T04:45:16.236Z",
+    "target_seconds": 218.293646264,
+    "initial_retry_recovered": true,
+    "result": "playback_timeout",
+    "reproductions": 2
+  },
+  {
+    "scenario": "premium_switch_after_timeout",
+    "time": "2026-10-29T04:45:58.685Z",
+    "result": "recovered_on_next",
+    "position_seconds": 29.762666666
+  },
+  {
+    "scenario": "premium_cross_track_tail_seek",
+    "time": "2026-10-29T04:47:00.552Z",
+    "target_seconds": 196.316185541,
+    "result": "playback_timeout",
+    "tracks_affected": 2,
+    "total_failures": 3
+  },
+  {
+    "scenario": "restart_restoration",
+    "time": "2026-10-29T04:48:07.105Z",
+    "premium_badge_present": true,
+    "reentered_credentials": false
+  },
+  {
+    "scenario": "final_restored_state",
+    "time": "2026-10-29T04:48:47.276Z",
+    "premium": true,
+    "library_reloaded": true,
+    "no_auto_play": true,
+    "volume": 0.7
+  }
+]

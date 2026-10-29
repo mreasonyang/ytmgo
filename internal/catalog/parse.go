@@ -9,6 +9,19 @@ import (
 )
 
 var durationPattern = regexp.MustCompile(`^(?:[0-9]{1,3}:)?[0-9]{1,3}:[0-9]{2}$`)
+
+// Counts are metadata only when the entire segment has a numeric count and a
+// known unit. Suffix matching alone would discard creators such as "The Songs".
+const metadataNumber = `(?:[0-9]{1,3}(?:,[0-9]{3})+|[0-9]+)(?:\.[0-9]+)?`
+const metadataCount = metadataNumber + `[\s\x{00a0}]*(?:[kmb千萬万億亿])?[\s\x{00a0}]*`
+
+var metadataCountPatterns = []*regexp.Regexp{
+	regexp.MustCompile(`(?i)^` + metadataCount + `(?:views?|plays?|listeners?|songs?|tracks?|subscribers?|episodes?|videos?|首歌曲|首歌|首|集|集节目|集節目|个视频|個影片|部影片|段视频|段影片|位订阅者|位訂閱者|名订阅者|名訂閱者|订阅者|訂閱者|次观看|次觀看|次播放|位听众|位聽眾|名听众|名聽眾|听众|聽眾|曲|本の動画|エピソード|人のチャンネル登録者|回視聴|回再生)$`),
+	regexp.MustCompile(`(?i)^(?:观看次数|觀看次數|播放次数|播放次數)[\s：:]*` + metadataCount + `次?$`),
+	regexp.MustCompile(`(?i)^チャンネル登録者数[\s：:]*` + metadataCount + `人$`),
+	regexp.MustCompile(`(?i)^(?:視聴回数|再生回数)[\s：:]*` + metadataCount + `回$`),
+}
+
 var publicVideoArtworkPath = regexp.MustCompile(`^/(?:vi|vi_webp)/[a-zA-Z0-9_-]{11}/[a-zA-Z0-9_-]+\.(?:jpg|webp)$`)
 
 // The parser follows display containers only. Menus, logging payloads and
@@ -424,7 +437,9 @@ func parseMetadata(texts []any) (string, string, time.Duration) {
 
 func metadataLabel(label string) bool {
 	switch strings.ToLower(label) {
-	case "song", "video", "album", "single", "ep", "artist", "playlist", "podcast", "episode", "profile":
+	case "song", "video", "album", "single", "ep", "artist", "playlist", "podcast", "episode", "profile",
+		"歌曲", "视频", "影片", "音乐视频", "音樂影片", "专辑", "專輯", "单曲", "單曲", "艺人", "藝人", "歌手", "播放列表", "播放清单", "播放清單", "播客", "播客节目", "播客節目", "剧集", "集數", "个人资料", "個人資料",
+		"曲", "楽曲", "動画", "ミュージック ビデオ", "アルバム", "シングル", "アーティスト", "プレイリスト", "ポッドキャスト", "エピソード", "プロフィール":
 		return true
 	}
 	if len(label) == 4 {
@@ -432,8 +447,8 @@ func metadataLabel(label string) bool {
 			return true
 		}
 	}
-	for _, suffix := range []string{" views", " plays", " listeners", " songs", " subscribers", " episodes"} {
-		if strings.HasSuffix(strings.ToLower(label), suffix) {
+	for _, pattern := range metadataCountPatterns {
+		if pattern.MatchString(label) {
 			return true
 		}
 	}
@@ -567,21 +582,8 @@ func parseQueue(response map[string]any) ([]Item, string, error) {
 }
 
 func parseLyrics(response map[string]any) (string, error) {
-	for _, content := range arrayAt(response, "contents", "sectionListRenderer", "contents") {
-		if renderer := at(content, "musicDescriptionShelfRenderer"); renderer != nil {
-			var lyrics strings.Builder
-			for _, run := range arrayAt(renderer, "description", "runs") {
-				lyrics.WriteString(textAt(run, "text"))
-				if lyrics.Len() > 128<<10 {
-					return "", ErrResponseTooLarge
-				}
-			}
-			if text := strings.TrimSpace(lyrics.String()); text != "" {
-				return text, nil
-			}
-		}
-	}
-	return "", ErrNoLyrics
+	result, err := parsePlainLyrics(response)
+	return result.Text, err
 }
 
 func at(value any, path ...string) any {

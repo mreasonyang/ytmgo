@@ -1,0 +1,12 @@
+{
+  "source_main_sha256": "d33e9ed8677d17417d756c10973d6c6601b588368b6de19793934a5b3da34230",
+  "pre_resign_main_matches_delivery": true,
+  "isolation_changes": [
+    "bundle identifier",
+    "bundle name",
+    "display name",
+    "ad-hoc signature"
+  ],
+  "user_account_data_copied": false,
+  "purpose": "native anonymous final candidate smoke; does not replace Premium acceptance"
+}

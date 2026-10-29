@@ -1,0 +1,23 @@
+{
+  "base_commit": "9b8766e03cc76a82c5cd5342ee85ade5a7ad7665",
+  "date": "2026-10-29",
+  "timezone": "Asia/Shanghai",
+  "sources": {
+    "internal/catalog/account_status.go": "a93fbdd90c4ad207da336e62b4d00e581dc20c7119f5363a536c01062624a8c5",
+    "internal/catalog/anonymous_session_test.go": "791b29def77b83964548d63503720889dd6e56172327e136a5e2b117c4f448e0",
+    "internal/catalog/client.go": "cba9f6f3405c2a699565d8c9b9d8aa077dcf1f482a52d85e56b60406507bbd23",
+    "internal/catalog/continuation_context_test.go": "f4b3dbfb1fc3c02646da0fbab8d60114dd889d251b8340820ca7c8c1c9e9c250",
+    "internal/catalog/metadata_locale_test.go": "418af2d2c40f2b72642fa75f1d6b4643a359ffece75d7f6da937dcd440bbb0cf",
+    "internal/catalog/parse.go": "8e9138f24bcd7886b3b033a27000431494c1eaae67c199e799da06b308982cb7",
+    "internal/catalog/session.go": "f073d64aa3a01abb4459a2de89176a719da8cbe3618de01c07944de90e294469",
+    "internal/player/bridge.go": "aabc39d990b5078750b728e2ea139eab70a537e3597277c8b8ad4292c8623818",
+    "internal/player/bridge_test.go": "b92244179283c0b8e63a260b4714df433e86081966e0f8722f946d60385056e7",
+    "internal/player/decoder.go": "09a6fcae4905a6bb7900a25421559ac8da8230cc37355cd9a5aa0a73e5659f50",
+    "internal/player/decoder_seek_test.go": "67bddd443c8cd9d373ccb879166e78b9c5aaf3c91126aa8bab142b5ffc7f1245",
+    "internal/player/video.go": "78309ee3656f55b67f57496c813b7f41905fabd5219ce7274c1da981e63309c5",
+    "internal/player/video_seek_regression_test.go": "5a113bd14b73875e6ad025ccf0ca00e4b4cc99a143824fc02bb9e6d2346ab3ff",
+    "native_library_immersive_test.go": "4684aa8b8f816afc7286075ca0eacee6b6ffa14c25a4ef5b90026838d4048444",
+    "native_views.go": "21b4fc22928dda192a1f1fc8363493e82da497d5404e61e0bf02046e886a7bbc",
+    "native_views_test.go": "75c3f9eac94ef8c1d40311d9620196e822e2f1a48ce9e5a30c15a7b85fe6bfda"
+  }
+}

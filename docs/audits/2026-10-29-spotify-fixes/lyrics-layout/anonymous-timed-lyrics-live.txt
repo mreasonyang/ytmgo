@@ -1,0 +1,8 @@
+=== RUN   TestAnonymousTimedLyricsLive
+    lyrics_live_test.go:47: anonymous_lyrics_track=1 available=1 timed_lines=109 first_start_seconds=0.000 last_end_seconds=318.210 elapsed_seconds=6.549
+    lyrics_live_test.go:47: anonymous_lyrics_track=2 available=1 timed_lines=49 first_start_seconds=0.000 last_end_seconds=280.310 elapsed_seconds=3.965
+    lyrics_live_test.go:52: anonymous_timed_lyrics_tracks=2
+--- PASS: TestAnonymousTimedLyricsLive (10.51s)
+PASS
+ok  	ytmgo/internal/catalog	10.845s
+exit_code=0 suppressed_output_lines=0

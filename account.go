@@ -531,7 +531,7 @@ func (a *desktop) clearAccountPlayback() {
 	a.queueIndex = -1
 	a.queueGeneration++
 	a.model.PlaybackError = ""
-	a.model.Lyrics = ""
+	a.model.clearLyrics("")
 	a.model.Liked = false
 	a.model.Position = 0
 	a.model.Duration = 0
@@ -586,7 +586,7 @@ func (a *desktop) signOut() {
 			a.model.Current = catalog.Item{}
 			a.queueIndex = -1
 			a.model.PlaybackError = ""
-			a.model.Lyrics = ""
+			a.model.clearLyrics("")
 			a.model.Liked = false
 			a.model.Position = 0
 			a.model.Duration = 0

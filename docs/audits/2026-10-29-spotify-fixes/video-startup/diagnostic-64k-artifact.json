@@ -1,0 +1,6 @@
+{
+  "role": "temporary_numeric_trace_not_delivery",
+  "executable_sha256": "819cfe3d7041725fa873a00d3e63a2a055a1d947837f8ad54f0f1797b35d48fb",
+  "overlay_present": true,
+  "video_transport_chunk_bytes": 65536
+}

@@ -1,0 +1,140 @@
+package main
+
+import (
+	"fmt"
+	"image"
+	"image/color"
+	"math"
+	"testing"
+
+	"github.com/egoist/mygo/ui"
+)
+
+var videoLayoutEdges = [4]color.RGBA{{231, 17, 33, 255}, {17, 49, 231, 255}, {31, 231, 49, 255}, {231, 207, 17, 255}}
+
+func videoLayoutFrame(width, height int) *image.RGBA {
+	frame := image.NewRGBA(image.Rect(0, 0, width, height))
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			pixel := color.RGBA{90, 90, 90, 255}
+			switch {
+			case y < 8:
+				pixel = videoLayoutEdges[0]
+			case y >= height-8:
+				pixel = videoLayoutEdges[1]
+			case x < 8:
+				pixel = videoLayoutEdges[2]
+			case x >= width-8:
+				pixel = videoLayoutEdges[3]
+			}
+			frame.SetRGBA(x, y, pixel)
+		}
+	}
+	return frame
+}
+
+func TestNativeShortImmersiveVideoUsesHeightBudget(t *testing.T) {
+	coverColor := color.RGBA{237, 19, 173, 255}
+	coverImage := image.NewRGBA(image.Rect(0, 0, 16, 16))
+	for y := 0; y < 16; y++ {
+		for x := 0; x < 16; x++ {
+			coverImage.SetRGBA(x, y, coverColor)
+		}
+	}
+	cover := ui.NewBitmap(coverImage)
+	for _, width := range []int{761, 960, 1440} {
+		for _, height := range []int{609, 640} {
+			for _, language := range []string{"en", "zh-Hant"} {
+				for _, appearance := range []string{"dark", "light"} {
+					t.Run(fmt.Sprintf("%dx%d-%s-%s", width, height, language, appearance), func(t *testing.T) {
+						m, a := nativeViewFixture()
+						m.Immersive, m.Video = true, true
+						m.Language, m.Appearance = language, appearance
+						m.Current.Title = "Daft Punk : Get Lucky // Grammys Rehearsal (HD)"
+						m.Current.Artist = "Daft Punk – Archives"
+						m.Current.Artwork = "distinct-cover"
+						m.VideoFrame = ui.NewBitmap(videoLayoutFrame(160, 90))
+						originalArtwork := a.Artwork
+						a.Artwork = func(source string, edge int) ui.ImageSource {
+							if source == "distinct-cover" {
+								return cover
+							}
+							return originalArtwork(source, edge)
+						}
+						tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, height)
+						video := nativeAssertVisible(t, tt, a.Tr("nativeVideo"), width, height)
+						viewport := nativeAssertVisible(t, tt, a.Tr("shellContent"), width, height)
+						if video.W < 350 || video.W > viewport.W+1 || video.X < viewport.X-1 || video.X+video.W > viewport.X+viewport.W+1 || math.Abs(float64(video.W/video.H-16.0/9.0)) > 0.01 {
+							t.Fatalf("short-window video wastes width or overflows its column: video=%+v viewport=%+v", video, viewport)
+						}
+						nativeAssertVisible(t, tt, m.Current.Title, width, height)
+						artist := nativeAssertVisible(t, tt, m.Current.Artist, width, height)
+						if artist.Y+artist.H > float32(height-nativePlayerHeight-24) {
+							t.Fatal("larger video displaced the artist into the player bar")
+						}
+						nativeAssertVisible(t, tt, a.Tr("shellPause"), width, height)
+						nativeAssertVisible(t, tt, a.Tr("nativeArtwork"), width, height)
+						if width == 960 && height == 609 && language == "zh-Hant" && appearance == "dark" {
+							nativeSnapshot(t, tt, "short-immersive-video-expanded")
+						}
+						if err := tt.Click(a.Tr("nativeArtwork")); err != nil || m.Video {
+							t.Fatal("cover switch is no longer reachable")
+						}
+						// Cover geometry must retain the existing 211/242 DIP budget.
+						bounds := image.Rectangle{}
+						rendered := tt.Image()
+						for y := 0; y < height-nativePlayerHeight; y++ {
+							for x := 0; x < width; x++ {
+								if rendered.RGBAAt(x, y) == coverColor {
+									bounds = bounds.Union(image.Rect(x, y, x+1, y+1))
+								}
+							}
+						}
+						want := 211
+						if height == 640 {
+							want = 242
+						}
+						if math.Abs(float64(bounds.Dx()-want)) > 2 || math.Abs(float64(bounds.Dy()-want)) > 2 {
+							t.Fatalf("cover dimensions changed: got=%v want=%d square", bounds.Size(), want)
+						}
+						if err := tt.Click(a.Tr("nativeVideo")); err != nil || !m.Video {
+							t.Fatal("video switch is no longer reachable")
+						}
+						if current := nativeAssertVisible(t, tt, a.Tr("nativeVideo"), width, height); math.Abs(float64(current.W-video.W)) > 1 {
+							t.Fatal("cover/video switch changed the video layout budget")
+						}
+					})
+				}
+			}
+		}
+	}
+}
+
+func TestNativeImmersiveVideoContainsAllSourceEdges(t *testing.T) {
+	for _, dimensions := range [][2]int{{160, 90}, {160, 120}, {160, 160}, {90, 160}} {
+		t.Run(fmt.Sprintf("%dx%d", dimensions[0], dimensions[1]), func(t *testing.T) {
+			m, a := nativeViewFixture()
+			m.Immersive, m.Video = true, true
+			m.VideoFrame = ui.NewBitmap(videoLayoutFrame(dimensions[0], dimensions[1]))
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 960, 609)
+			video := nativeAssertVisible(t, tt, a.Tr("nativeVideo"), 960, 609)
+			counts := [4]int{}
+			rendered := tt.Image()
+			for y := int(math.Ceil(float64(video.Y))); y < int(video.Y+video.H); y++ {
+				for x := int(math.Ceil(float64(video.X))); x < int(video.X+video.W); x++ {
+					pixel := rendered.RGBAAt(x, y)
+					for edge, want := range videoLayoutEdges {
+						if pixel == want {
+							counts[edge]++
+						}
+					}
+				}
+			}
+			for edge, count := range counts {
+				if count < 50 {
+					t.Fatalf("source edge %d cropped after expansion: pixels=%d", edge, count)
+				}
+			}
+		})
+	}
+}

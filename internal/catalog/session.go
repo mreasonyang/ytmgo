@@ -155,10 +155,16 @@ func (c *Client) Credentials() (SessionCredentials, bool) {
 
 func (c *Client) ClearSession() {
 	c.mu.Lock()
+	defer c.mu.Unlock()
+	// Startup restores the anonymous state while the first Home request may
+	// already be in flight. Clearing an absent session does not change identity
+	// and must preserve that request and its page-bound continuation cache.
+	if c.session == nil {
+		return
+	}
 	c.session, c.sessionGeneration = nil, c.sessionGeneration+1
 	clear(c.continuations)
 	clear(c.lyrics)
-	c.mu.Unlock()
 }
 
 func (c *Client) operation(ctx context.Context) (context.Context, sessionScope, error) {

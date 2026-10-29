@@ -1,0 +1,67 @@
+{
+  "recorded_utc": "2026-10-29T07:37:04.306149+00:00",
+  "full_race": {
+    "command": "YTMGO_RUNTIME_DIR=\"$PWD/build/runtime\" YTMGO_FIXTURE_FFMPEG=/opt/homebrew/bin/ffmpeg go test -race ./...",
+    "result": "PASS",
+    "root_seconds": 76.715
+  },
+  "static_checks": {
+    "go_vet": "PASS",
+    "git_diff_check": "PASS",
+    "i18n_messages": 202,
+    "languages": [
+      "en",
+      "ja",
+      "zh-Hans",
+      "zh-Hant"
+    ]
+  },
+  "timed_lyrics_live": {
+    "account": "anonymous",
+    "tracks_with_real_timing": 2,
+    "line_counts": [
+      109,
+      49
+    ],
+    "evidence": "anonymous-timed-lyrics-live.txt"
+  },
+  "lyrics_ui_regressions": [
+    "actual cue boundaries and instrumental gaps",
+    "overlapping cue intervals",
+    "forward and backward seeking while paused",
+    "manual wheel suspends following",
+    "follow button restores current cue",
+    "keyboard scrolling through hovered viewport suspends following",
+    "resize reveals current cue",
+    "track reset and plain text fallback"
+  ],
+  "video_layout": {
+    "short_window_before_dip": [
+      211,
+      118.6875
+    ],
+    "short_window_after_dip": [
+      375.1111,
+      211
+    ],
+    "matrix_cases": 24,
+    "source_aspect_ratios": [
+      "16:9",
+      "4:3",
+      "1:1",
+      "9:16"
+    ],
+    "all_source_edges_retained": true,
+    "original_button_text_clipping": "not reproduced; requested screenshot showed full pills; clarification unanswered"
+  },
+  "artifact_checks": {
+    "codesign_deep_strict": "PASS",
+    "dmg_checksum": "VALID"
+  },
+  "limits": [
+    "No original Premium account retest; user was away and keychain approval pending",
+    "Video symptom was ambiguous; fixed reproduced short-window undersizing, not an unproven button clipping cause",
+    "Upstream tracks without valid timestamps remain plain lyrics; no estimated synchronization",
+    "No /Applications replacement or publication"
+  ]
+}

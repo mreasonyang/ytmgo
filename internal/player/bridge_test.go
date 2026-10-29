@@ -150,18 +150,21 @@ func TestStreamBridgeBoundedConcurrencyAndCancel(t *testing.T) {
 
 func TestStreamBridgeErrorsAndRetryBounds(t *testing.T) {
 	for _, test := range []struct {
-		status   int
-		attempts int64
-		category string
+		status          int
+		attempts, heads int64
+		category        string
 	}{
-		{http.StatusForbidden, 1, "audio_access_denied"},
-		{http.StatusTooManyRequests, 3, "audio_rate_limited"},
-		{http.StatusServiceUnavailable, 3, "audio_server_error"},
+		{http.StatusUnauthorized, 1, 0, "audio_access_denied"},
+		{http.StatusForbidden, 1, 0, "audio_access_denied"},
+		{http.StatusTooManyRequests, 3, 0, "audio_rate_limited"},
+		{http.StatusServiceUnavailable, 3, 1, "audio_server_error"},
 	} {
 		t.Run(test.category, func(t *testing.T) {
-			var calls atomic.Int64
+			var calls, heads atomic.Int64
 			upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.Method != http.MethodHead {
+				if r.Method == http.MethodHead {
+					heads.Add(1)
+				} else {
 					calls.Add(1)
 				}
 				w.WriteHeader(test.status)
@@ -179,7 +182,7 @@ func TestStreamBridgeErrorsAndRetryBounds(t *testing.T) {
 			}
 			body, _ := io.ReadAll(io.LimitReader(response.Body, 1024))
 			response.Body.Close()
-			if response.StatusCode != test.status || len(body) != 0 || calls.Load() != test.attempts || b.Err() == nil || b.Err().Error() != test.category {
+			if response.StatusCode != test.status || len(body) != 0 || calls.Load() != test.attempts || heads.Load() != test.heads || b.Err() == nil || b.Err().Error() != test.category {
 				t.Fatal("HTTP failure classification or retry bound incorrect")
 			}
 		})
@@ -191,6 +194,35 @@ func TestStreamBridgeErrorsAndRetryBounds(t *testing.T) {
 	}
 	if _, err := newStreamBridge(context.Background(), media{URL: "file:/tmp/media"}); err == nil {
 		t.Fatal("accepted alternate transport")
+	}
+}
+
+func TestStreamBridgeServerFailureRetainsFixedLocalStatus(t *testing.T) {
+	var gets, heads atomic.Int64
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodHead {
+			heads.Add(1)
+			w.Header().Set("X-Ytmgo-Stream-Error", "upstream_timeout")
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		gets.Add(1)
+		w.WriteHeader(http.StatusBadGateway)
+	}))
+	defer upstream.Close()
+	bridge, err := newStreamBridge(context.Background(), media{URL: upstream.URL})
+	if err != nil {
+		t.Fatal("bridge unavailable")
+	}
+	defer bridge.Close()
+	response, err := http.Get(bridge.URL)
+	if err != nil {
+		t.Fatal("local request failed")
+	}
+	response.Body.Close()
+	if response.StatusCode != http.StatusBadGateway || response.Header.Get("X-Ytmgo-Stream-Error") != "" ||
+		gets.Load() != 3 || heads.Load() != 1 || bridge.Err() == nil || bridge.Err().Error() != "audio_network_timeout" {
+		t.Fatal("generic server failure lost its fixed worker status")
 	}
 }
 

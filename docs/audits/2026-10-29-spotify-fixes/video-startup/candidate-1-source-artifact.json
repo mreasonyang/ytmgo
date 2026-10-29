@@ -1,0 +1,25 @@
+{
+  "base_commit": "b1fa9f285d8a9530b050eb7fe8453179982df89b",
+  "sources": {
+    "internal/catalog/account_status.go": "a93fbdd90c4ad207da336e62b4d00e581dc20c7119f5363a536c01062624a8c5",
+    "internal/catalog/anonymous_session_test.go": "791b29def77b83964548d63503720889dd6e56172327e136a5e2b117c4f448e0",
+    "internal/catalog/client.go": "cba9f6f3405c2a699565d8c9b9d8aa077dcf1f482a52d85e56b60406507bbd23",
+    "internal/catalog/continuation_context_test.go": "f4b3dbfb1fc3c02646da0fbab8d60114dd889d251b8340820ca7c8c1c9e9c250",
+    "internal/catalog/metadata_locale_test.go": "418af2d2c40f2b72642fa75f1d6b4643a359ffece75d7f6da937dcd440bbb0cf",
+    "internal/catalog/parse.go": "8e9138f24bcd7886b3b033a27000431494c1eaae67c199e799da06b308982cb7",
+    "internal/catalog/session.go": "f073d64aa3a01abb4459a2de89176a719da8cbe3618de01c07944de90e294469",
+    "internal/player/bridge.go": "aabc39d990b5078750b728e2ea139eab70a537e3597277c8b8ad4292c8623818",
+    "internal/player/bridge_test.go": "b92244179283c0b8e63a260b4714df433e86081966e0f8722f946d60385056e7",
+    "internal/player/decoder.go": "09a6fcae4905a6bb7900a25421559ac8da8230cc37355cd9a5aa0a73e5659f50",
+    "internal/player/decoder_seek_test.go": "67bddd443c8cd9d373ccb879166e78b9c5aaf3c91126aa8bab142b5ffc7f1245",
+    "internal/player/video.go": "071e5356d0009681a70f46194d912f9c126ac4f3c10845a0b09eacf4f74a6800",
+    "internal/player/video_moving_clock_live_test.go": "2b0d8cfe8e1b53e720ec6f8ecb74b927acd2e565ae845ff1fd9b13a1bd3432a8",
+    "internal/player/video_seek_regression_test.go": "2acfa11a81049b7a164aef581ca7dd59101a4fe058d324b59d1f2182230f61eb",
+    "internal/player/video_startup_test.go": "d55934c933d83651da906f1e46cda295818288bb58eb333c0ca311431bcf6e71",
+    "native_library_immersive_test.go": "4684aa8b8f816afc7286075ca0eacee6b6ffa14c25a4ef5b90026838d4048444",
+    "native_views.go": "549b0c73ca33f444cdff7afb4bf55e6d9891317ede56fbc574e8ad220dc66523",
+    "native_views_test.go": "75c3f9eac94ef8c1d40311d9620196e822e2f1a48ce9e5a30c15a7b85fe6bfda",
+    "video_controller.go": "375d2715f3024b9a30e5fb3c0ede3ee997a25cbee266b76590a07e6eb99c0877",
+    "video_controller_test.go": "2c4e964981f42969f0b1354629a65a3f35a38bdb1765fe95a64c7a32bac8d55f"
+  }
+}

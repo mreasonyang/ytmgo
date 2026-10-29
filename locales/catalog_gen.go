@@ -2712,3 +2712,43 @@ func NativeAccountLoginFailed() string { return In(i18n.Locale()).NativeAccountL
 func (msgs Messages) NativeAccountLoginFailed() string {
 	return Catalog.Format(msgs.locale, "nativeAccountLoginFailed", nil)
 }
+
+// NativeLyricsFollow says "Follow playback"
+// in the language the app shows.
+func NativeLyricsFollow() string { return In(i18n.Locale()).NativeLyricsFollow() }
+
+// NativeLyricsFollow says "Follow playback"
+// in the language of msgs.
+func (msgs Messages) NativeLyricsFollow() string {
+	return Catalog.Format(msgs.locale, "nativeLyricsFollow", nil)
+}
+
+// NativeLyricsFollowing says "Following playback"
+// in the language the app shows.
+func NativeLyricsFollowing() string { return In(i18n.Locale()).NativeLyricsFollowing() }
+
+// NativeLyricsFollowing says "Following playback"
+// in the language of msgs.
+func (msgs Messages) NativeLyricsFollowing() string {
+	return Catalog.Format(msgs.locale, "nativeLyricsFollowing", nil)
+}
+
+// NativeLyricsUnsynced says "Synchronized timing is unavailable for this track."
+// in the language the app shows.
+func NativeLyricsUnsynced() string { return In(i18n.Locale()).NativeLyricsUnsynced() }
+
+// NativeLyricsUnsynced says "Synchronized timing is unavailable for this track."
+// in the language of msgs.
+func (msgs Messages) NativeLyricsUnsynced() string {
+	return Catalog.Format(msgs.locale, "nativeLyricsUnsynced", nil)
+}
+
+// NativeLyricsError says "Unable to load lyrics right now."
+// in the language the app shows.
+func NativeLyricsError() string { return In(i18n.Locale()).NativeLyricsError() }
+
+// NativeLyricsError says "Unable to load lyrics right now."
+// in the language of msgs.
+func (msgs Messages) NativeLyricsError() string {
+	return Catalog.Format(msgs.locale, "nativeLyricsError", nil)
+}

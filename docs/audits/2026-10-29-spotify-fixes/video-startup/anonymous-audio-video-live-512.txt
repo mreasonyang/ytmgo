@@ -1,0 +1,19 @@
+=== RUN   TestNativeVideoDuringAnonymousAudioLive
+    video_moving_clock_live_test.go:83: anonymous_audio_load_seconds=24.024
+=== RUN   TestNativeVideoDuringAnonymousAudioLive/1m13.125s
+    video_moving_clock_live_test.go:123: anonymous_audio_seek_target_seconds=73.125 seek_seconds=1.701
+    video_moving_clock_live_test.go:147: video_during_audio_first_frame_seconds=2.368 audio_position_seconds=75.762 width=480 height=480
+    video_moving_clock_live_test.go:175: video_during_audio_observation_seconds=2.012 frames=47 audio_advance_seconds=2.016
+    video_moving_clock_live_test.go:193: video_during_audio_observation_seconds=2.017 frames=48 audio_advance_seconds=2.016
+    video_moving_clock_live_test.go:194: video_during_audio_pause_resume_passed
+=== RUN   TestNativeVideoDuringAnonymousAudioLive/1m57.625s
+    video_moving_clock_live_test.go:123: anonymous_audio_seek_target_seconds=117.625 seek_seconds=1.245
+    video_moving_clock_live_test.go:147: video_during_audio_first_frame_seconds=2.030 audio_position_seconds=119.921 width=480 height=480
+    video_moving_clock_live_test.go:175: video_during_audio_observation_seconds=2.014 frames=48 audio_advance_seconds=2.016
+    video_moving_clock_live_test.go:193: video_during_audio_observation_seconds=2.019 frames=48 audio_advance_seconds=2.016
+    video_moving_clock_live_test.go:194: video_during_audio_pause_resume_passed
+--- PASS: TestNativeVideoDuringAnonymousAudioLive (46.21s)
+    --- PASS: TestNativeVideoDuringAnonymousAudioLive/1m13.125s (9.12s)
+    --- PASS: TestNativeVideoDuringAnonymousAudioLive/1m57.625s (8.33s)
+PASS
+exit_code=0 suppressed_output_lines=1

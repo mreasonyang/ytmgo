@@ -1,0 +1,15 @@
+{
+  "finding": "F03",
+  "status": "reproduced",
+  "severity": "P3",
+  "source": "native_views.go:552-559",
+  "fixture_locales": [
+    "en",
+    "zh-Hans",
+    "zh-Hant",
+    "ja"
+  ],
+  "runtime_example": "library category repeated as category plus owner",
+  "screenshot": "06-premium-video.jpg",
+  "source_tests_changed": false
+}

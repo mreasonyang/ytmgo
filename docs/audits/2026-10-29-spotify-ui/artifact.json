@@ -1,0 +1,32 @@
+{
+  "source_commit": "9b8766e03cc76a82c5cd5342ee85ade5a7ad7665",
+  "production_executable_sha256": "00917f8b2f4ad2a0d2abb4a44edeedf279d4bfdd5bff7621101526b575b8f1c8",
+  "isolated_before_resign_sha256": "00917f8b2f4ad2a0d2abb4a44edeedf279d4bfdd5bff7621101526b575b8f1c8",
+  "changes": {
+    "CFBundleName": "ytmgo Spotify E2E 20261029",
+    "CFBundleDisplayName": "ytmgo Spotify E2E",
+    "CFBundleIdentifier": "si.kyun.ytmgo.spotify-e2e-20261029"
+  },
+  "purpose": "Fresh anonymous data directory; application source and runtime unchanged",
+  "isolated_data_dir": "/Users/easonyang/Library/Application Support/ytmgo Spotify E2E",
+  "isolated_executable_sha256": "8f79de27a7cc6456a247d8de2d2e7ba3d45d5634097d76821ea517ab4881d330",
+  "macos": "27.0.1",
+  "architecture": "arm64",
+  "dmg_sha256": "3b561257f46cf0fe4c65d003cbbe7f84b774e07f0f991729000d973258fd90f7",
+  "minimum_diagnostic": {
+    "source_changes": [
+      "Window width 1440 -> 380, height 940 -> 640",
+      "Window state key native-main -> spotify-e2e-min"
+    ],
+    "native_views_go_sha256": "57a31d8ae0b91f97d58b72df43156ec02ae5c1e350c1ace3341793b75a5f0d8d",
+    "main_overlay_sha256": "1110354fad8fa3e8270c68d7cff84ebf28d563835c0acea80ea556a0baa50ca8",
+    "executable_sha256": "38a421fdca44bac3fa838634ff94334bd48b162e7923a9c863b8f158624c41a9",
+    "data_dir": "/Users/easonyang/Library/Application Support/ytmgo Minimum E2E",
+    "frame_pixels": [
+      760,
+      1280
+    ],
+    "retina_scale": 2,
+    "production_package_acceptance": false
+  }
+}

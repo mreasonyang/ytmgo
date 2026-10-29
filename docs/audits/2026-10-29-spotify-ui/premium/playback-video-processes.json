@@ -1,0 +1,66 @@
+{
+  "time": "2026-10-29T04:38:28.500389+00:00",
+  "root_pid": 75054,
+  "selected_count": 8,
+  "collected_count": 8,
+  "missing_pids": [],
+  "processes": [
+    {
+      "pid": 75054,
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/darwin-arm64/ytmgo.app/Contents/MacOS/ytmgo",
+      "ppid": 1,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 75059,
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/darwin-arm64/ytmgo.app/Contents/Resources/runtime/node",
+      "ppid": 75054,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 75060,
+      "executable": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    },
+    {
+      "pid": 75108,
+      "executable": "/System/Library/Frameworks/AppKit.framework/Versions/C/XPCServices/ThemeWidgetControlViewService.xpc/Contents/MacOS/ThemeWidgetControlViewService",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    },
+    {
+      "pid": 75930,
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/darwin-arm64/ytmgo.app/Contents/Resources/runtime/node",
+      "ppid": 75059,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 76104,
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/darwin-arm64/ytmgo.app/Contents/Resources/runtime/ffmpeg",
+      "ppid": 75054,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 76236,
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/darwin-arm64/ytmgo.app/Contents/Resources/runtime/ffmpeg",
+      "ppid": 75054,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 76297,
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/darwin-arm64/ytmgo.app/Contents/Resources/runtime/ffmpeg",
+      "ppid": 75054,
+      "uid": 501,
+      "state": "S"
+    }
+  ],
+  "argv_or_environment_read": false
+}

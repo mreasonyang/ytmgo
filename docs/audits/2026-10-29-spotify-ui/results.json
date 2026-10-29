@@ -1,0 +1,317 @@
+{
+  "source_commit": "9b8766e03cc76a82c5cd5342ee85ade5a7ad7665",
+  "make_check": {
+    "status": "pass",
+    "node_offline": 66,
+    "manifest_tests": 5,
+    "protocol_tests": 5,
+    "login_python_tests": 10,
+    "i18n_messages": 198,
+    "locales": 4,
+    "go_test": "pass",
+    "vet": "pass"
+  },
+  "race": {
+    "initial": "fail",
+    "test": "TestMutedVolumeSurvivesNaturalEndAndPreparedNext",
+    "failure": "player lifecycle transition timed out (2.00s)",
+    "targeted_repeat_10": "pass",
+    "full_rerun": "pass"
+  },
+  "diagnostic_collector_tests": 24,
+  "native_software_snapshots": 43,
+  "breakpoint_reachability": {
+    "status": "pass",
+    "cases": 360,
+    "widths": [
+      380,
+      420,
+      760,
+      761,
+      900,
+      1000,
+      1001,
+      1180,
+      1181,
+      1440
+    ],
+    "content_height": 640,
+    "locales": [
+      "en",
+      "zh-Hans",
+      "zh-Hant",
+      "ja"
+    ],
+    "account_display": [
+      "signed-out",
+      "standard",
+      "premium"
+    ],
+    "surfaces": [
+      "page",
+      "panel",
+      "immersive"
+    ],
+    "theme": "fixture dark"
+  },
+  "catalog": {
+    "original_live_test": "fail_twice",
+    "search_items": 31,
+    "home_items": 30,
+    "home_shelves": 2,
+    "home_continuation_items": 0,
+    "home_continuation_shelves": 0,
+    "explore_items": 111,
+    "explore_shelves": 5,
+    "queue_tracks": 50,
+    "lyrics_nonempty": true,
+    "album_items": 24,
+    "artist_items": 68,
+    "request_variants": [
+      "current_query_plus_payload",
+      "body_only",
+      "query_only"
+    ],
+    "all_variants_empty": true,
+    "no_root_cause_established": true
+  },
+  "artwork_network": {
+    "status": "pass",
+    "requested_buckets": [
+      128,
+      384,
+      768
+    ],
+    "http_statuses": [
+      200,
+      200,
+      200
+    ],
+    "decoded_size": [
+      480,
+      360
+    ],
+    "note": "temporary placeholder resolved; no persistent artwork defect established"
+  },
+  "native_observations": [
+    {
+      "scenario": "language_and_theme",
+      "result": "pass",
+      "details": "en, zh-Hans, zh-Hant, ja; dark and light; native menus update; window remains open"
+    },
+    {
+      "scenario": "language_changes_during_playback",
+      "result": "pass",
+      "before_position_seconds": 187.106666666,
+      "after_position_seconds": 235.757333333,
+      "details": "same test process, continuous playback, no new track selected"
+    },
+    {
+      "scenario": "search",
+      "result": "pass",
+      "details": "Cmd+K, Enter, English and CJK paste; spaces in editor do not pause playback. Physical IME not tested."
+    },
+    {
+      "scenario": "playback_controls",
+      "result": "pass",
+      "pause_position_seconds": 118.943958333,
+      "mouse_seek_seconds": 206.000454678,
+      "keyboard_seek_seconds": 203.90202,
+      "paused_seek_held": true
+    },
+    {
+      "scenario": "natural_end",
+      "result": "pass",
+      "tail_seek_seconds": 246.355034992,
+      "next_duration_display": "5:39",
+      "next_position_observed_seconds": 6.594666666,
+      "mute_preserved": true
+    },
+    {
+      "scenario": "repeat_shuffle",
+      "result": "pass",
+      "details": "off -> all -> one -> off; queue order changes with shuffle"
+    },
+    {
+      "scenario": "queue",
+      "result": "pass",
+      "details": "right-click Add to queue, appended track appears, scroll and select starts new track"
+    },
+    {
+      "scenario": "volume",
+      "result": "pass",
+      "keyboard_mouse_value": 0.14,
+      "muted_value": 0,
+      "unmuted_restored_value": 0.14
+    },
+    {
+      "scenario": "video",
+      "result": "pass",
+      "details": "actual decoded video; square source contained in 16:9 surface without vertical crop; cover toggle and panel close continue audio"
+    },
+    {
+      "scenario": "lyrics",
+      "result": "pass",
+      "details": "real nonempty lyrics visible; no lyric text retained in evidence JSON"
+    },
+    {
+      "scenario": "navigation",
+      "result": "pass",
+      "details": "album browsing; Back/Forward restore query and page; Cmd+L exits immersive; Cmd+B folds library"
+    },
+    {
+      "scenario": "close_reactivate",
+      "result": "partial",
+      "details": "Cmd+W followed by CUA observation returns same track with advancing position; hidden duration not independently measured"
+    },
+    {
+      "scenario": "login_cancel",
+      "result": "pass",
+      "details": "official Google identifier form appears; no account identifier entered; close returns to playback; helper PID gone"
+    },
+    {
+      "scenario": "global_shortcut",
+      "result": "unverified",
+      "details": "synthesized shortcut from Finder did not change playback; automation event routing vs product registration not distinguished"
+    },
+    {
+      "scenario": "quit_cleanup",
+      "result": "pass",
+      "details": "metadata-only safe-processes --name ytmgo returned [] after main anonymous run"
+    },
+    {
+      "scenario": "minimum_native_window",
+      "result": "pass",
+      "frame_dip": [
+        380,
+        640
+      ],
+      "diagnostic_source_changes": "initial window dimensions and state key only",
+      "details": "real anonymous output position 11.042666666s; panel and immersive body scroll; previous/next/seek/volume visible; navigation exits immersive"
+    },
+    {
+      "scenario": "minimum_settings",
+      "result": "pass",
+      "details": "380x640, English light and Japanese dark; account action fits; lower settings scroll into view"
+    },
+    {
+      "scenario": "live_error_retry",
+      "result": "pass",
+      "details": "minimum diagnostic launch initially displayed generic network error; Retry restored populated Home. Error cause and offline transitions not established"
+    },
+    {
+      "scenario": "minimum_quit_cleanup",
+      "result": "pass",
+      "details": "safe-processes --name ytmgo returned [] after quit"
+    }
+  ],
+  "deferred": [
+    "sign out and account mutations",
+    "physical media keys and global shortcut",
+    "full VoiceOver navigation",
+    "physical CJK IME composition",
+    "sleep/wake and long background playback",
+    "live offline-to-online recovery",
+    "Windows, Linux, Intel, older macOS",
+    "installed Applications artifact, notarization, CI and public release",
+    "fresh login from signed-out with real credentials",
+    "account switching, sign out, real entitlement change and cloud mutations",
+    "full-track Premium PCM or acoustic output acceptance"
+  ],
+  "build": {
+    "status": "pass",
+    "codesign_deep_strict": "pass",
+    "dmg_verify": "pass",
+    "signature": "ad-hoc",
+    "installed": false
+  },
+  "findings": [
+    {
+      "id": "F01",
+      "severity": "P2",
+      "classification": "online_acceptance_failure",
+      "title": "Anonymous Home continuation returns no additional content",
+      "observations": "original live test failed twice; expanded network probe and actual UI reproduced zero additional items; Load more disappeared",
+      "root_cause": "Not established. Empty server content container also observed in diagnostic request forms; no evidence that Spotify UI change introduced it."
+    },
+    {
+      "id": "F02",
+      "severity": "P3",
+      "classification": "visual_defect",
+      "title": "Long-title desktop immersive layout crowds artist against clipped panel bottom at short height",
+      "observations": "actual 960x641 window, long two-line title; artist baseline crowded against bottom panel edge. Software fixture reproduces artist box ending exactly at panel boundary. Compact mode has scrolling and was separately accepted."
+    },
+    {
+      "id": "R01",
+      "severity": "P2",
+      "classification": "test_instability",
+      "title": "One race-suite playback lifecycle timeout",
+      "observations": "Initial full race run timed out at 2.00s; 10 targeted repeats and full rerun passed; no race detector report or confirmed playback defect."
+    },
+    {
+      "id": "F03",
+      "severity": "P3",
+      "classification": "visual_metadata_defect",
+      "title": "Library repeats kind as both type and owner",
+      "audit_assertions_failed": 4,
+      "runtime_evidence": "premium/06-premium-video.jpg"
+    },
+    {
+      "id": "F04",
+      "severity": "P2",
+      "classification": "actual_playback_failure",
+      "title": "Premium tail seek timed out three times across two songs",
+      "fixed_category": "playback_timeout",
+      "source": "premium/tail-seek-reproduction.json"
+    }
+  ],
+  "premium_supplement": {
+    "artifact": "same original-identity 0.4.0 bundle",
+    "executable_sha256": "00917f8b2f4ad2a0d2abb4a44edeedf279d4bfdd5bff7621101526b575b8f1c8",
+    "first_verified_status": "premium",
+    "first_restore_utc": "2026-10-29T04:34:17Z",
+    "later_verified_status": "premium",
+    "later_refresh_utc": "2026-10-29T04:39:09Z",
+    "library_before": 24,
+    "library_after_continuation": 45,
+    "library_artist_filter": "pass",
+    "native_playback_pause_middle_seek": "pass",
+    "next_previous": "pass",
+    "native_video_lyrics": "pass",
+    "theme_locale_preserve_account_and_pause": "pass",
+    "login_cancel_preserves_session": "pass",
+    "login_cancel_process_cleanup": {
+      "helper": 1,
+      "webkit": 3,
+      "all_exited": true
+    },
+    "tail_seek": {
+      "result": "fail",
+      "target_seconds": 218.293646264,
+      "same_track_failures": 2,
+      "category": "playback_timeout",
+      "retry_restores_playback": true,
+      "next_track_restores_playback": true,
+      "root_cause_established": false,
+      "tracks_affected": 2,
+      "total_failures": 3
+    },
+    "cross_track_tail_seek": {
+      "result": "playback_timeout",
+      "target_seconds": 196.316185541,
+      "failure_time_utc": "2026-10-29T04:46:29Z"
+    },
+    "restart_restore": {
+      "status": "pass",
+      "category": "premium",
+      "verified_time_utc": "2026-10-29T04:47:24Z",
+      "reentered_credentials": false
+    },
+    "cloud_writes_performed": false,
+    "quit_cleanup": {
+      "processes_checked": 3,
+      "remaining": 0
+    },
+    "final_state": "application restarted, Premium restored, no track selected, volume 0.7, dark, zh-Hant"
+  }
+}

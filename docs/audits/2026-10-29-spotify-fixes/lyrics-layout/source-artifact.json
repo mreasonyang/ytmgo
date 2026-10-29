@@ -1,0 +1,22 @@
+{
+  "recorded_utc": "2026-10-29T07:33:54.102068+00:00",
+  "observed_head": "edc59fd355c7e96586a4e20b129cf77b679704ba",
+  "files": {
+    "native_lyrics.go": "cde377a4adf0c0171bf5d27fcc219308a8cf1d7b2e32b943475b1d462581c833",
+    "native_lyrics_test.go": "9ccc54565ea91bbc7056ce96a116d529310763452a323c797b335a4b97601833",
+    "native_video_layout_test.go": "7ee544bba8486500175fe96147cc4c17ba71143a51c996f4a478be9addb7bd97",
+    "native_views.go": "a8d89259bd33af576089e2b52902f8831df9e93c69e3c9a30aaf2c886edb1158",
+    "controller.go": "f30b068bc20f7576219fcc931b642da83e20368a6af0c7411999a1060c1381ab",
+    "account.go": "26b2196abdca9db4988b500054c3a7018c20853c100c979e1b749d4914da30a9",
+    "internal/catalog/lyrics.go": "885d9310e3f0a73b377bcf44ff80683fc420940afcf385ef2243d5b977a98356",
+    "internal/catalog/lyrics_test.go": "0803234105260d00cfd1edc4e67c00edb6370c5330ce0b1037a998e792896db8",
+    "internal/catalog/lyrics_live_test.go": "951a8289ba74cd311e3283e881e61e3faf77ae7403afe9f9e2a91d71be2af90f",
+    "internal/catalog/client.go": "682cef0d8016b1f509599322b245cb90bb16afa809783cff73fd648efa69f22c",
+    "internal/catalog/parse.go": "2dbd521deff24eab258b1355c71367690fe1e1c433b4f07ca5ed043761583ee7",
+    "locales/en.json": "474856c01b622b36ebecaa3db05a1d823b04ca2e26140adcad0512eb891a80e9",
+    "locales/zh-Hans.json": "dc9059c2d266341535b2059b8feb6cb21cccd766bafcb7a700a5357622f7793b",
+    "locales/zh-Hant.json": "6cdca0e52ffb006b5dc845fefddab2221d63c4070adb19341d82d79e022992c8",
+    "locales/ja.json": "d54d7743740647290f069fd0f89d22272db3ffe923d6ac3f2d51d443172bcc8b",
+    "locales/catalog_gen.go": "d2b4e31278d0e145ecd37284d0531cf02e0c77fa1d29c7901c6a21fe576b9bf9"
+  }
+}

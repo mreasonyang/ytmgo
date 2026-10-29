@@ -1,0 +1,105 @@
+{
+  "date": "2026-10-29",
+  "checks": {
+    "make_check": "pass",
+    "full_race_with_bundled_ffmpeg": "pass_after_lead_fix",
+    "video_temporal_race_repeated_3": "pass",
+    "video_24_30fps_20_target_sequences": "pass",
+    "ui_4_languages_4_widths_retry": "pass",
+    "go_vet_after_lead_fix": "pass",
+    "lead_temporal_six_groups_race_repeated_3": "pass",
+    "runtime_tests_after_video_chunk_fix": {
+      "passed": 70,
+      "failed": 0
+    },
+    "runtime_manifest_tests": {
+      "passed": 8
+    },
+    "runtime_protocol_tests": {
+      "passed": 5
+    }
+  },
+  "counterexamples_before_fix": {
+    "sequential_prefix_stall_seek_seconds": [
+      36,
+      73.125,
+      117.625
+    ],
+    "all_seek_attempts_timeout_seconds": 5,
+    "moving_audio_delayed_video_no_frame_observed_seconds": 4,
+    "repeated_same_decoder_startup_delay": "candidate1 exhausts three decoders without a displayed frame; lead fix displays after one recovery"
+  },
+  "anonymous_live_moving_clock": {
+    "source_id": "52fNscjkST4",
+    "positions_seconds": [
+      73.125,
+      117.625
+    ],
+    "first_frame_seconds": [
+      15.847,
+      6.487
+    ],
+    "each_kept_advancing_at_least_12_frames": true
+  },
+  "real_account_final_build": "pending_user_unavailable_for_keychain_authorization",
+  "limits": [
+    "Non-zero start_time fragmented MP4 experiments retain a small frame-offset difference; source-timeline normalization is not covered by regular-MP4 acceptance.",
+    "Unindexed fragmented containers may still need scanning; time limits bound the wait instead of making missing indexes seekable."
+  ],
+  "anonymous_live_after_lead_fix": {
+    "first_run": {
+      "73.125": "startup timeout at 20s",
+      "117.625": {
+        "first_frame_seconds": 17.68,
+        "advancing": true
+      }
+    },
+    "numeric_only_trace_run": {
+      "73.125": {
+        "failed_phase": "resolve",
+        "elapsed_seconds": 20.004,
+        "decoder_opened": false
+      },
+      "117.625": {
+        "resolve_seconds": 9.034,
+        "decoder_first_frame_after_open_seconds": 5.116,
+        "first_display_seconds": 14.187,
+        "advancing": true
+      }
+    },
+    "assessment": "Anonymous cold source resolution is variable and can exceed the bounded startup deadline; this is preserved as a failure, not counted as video acceptance."
+  },
+  "anonymous_real_audio_clock_512k": {
+    "audio_load_seconds": 24.024,
+    "seek_targets_seconds": [
+      73.125,
+      117.625
+    ],
+    "video_first_frame_seconds": [
+      2.368,
+      2.03
+    ],
+    "two_second_frame_counts_before_pause": [
+      47,
+      48
+    ],
+    "two_second_frame_counts_after_resume": [
+      48,
+      48
+    ],
+    "pause_resume": "pass",
+    "audio_errors": false,
+    "video_errors": false,
+    "runs": 1
+  },
+  "anonymous_final_native_app": {
+    "first_open_at_seconds": 71.469333333,
+    "first_frame_seconds": 10.048,
+    "second_open_at_seconds": 117.925768968,
+    "second_first_frame_seconds": 4.335,
+    "actual_frames_verified": true,
+    "later_frame_at_seconds": 209.005333333,
+    "source_binary_matches_delivery_before_identity_resign": true
+  },
+  "status": "fix_implemented_and_anonymous_verified_Premium_pending"
+}

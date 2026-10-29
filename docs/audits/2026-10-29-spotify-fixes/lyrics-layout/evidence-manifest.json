@@ -1,0 +1,13 @@
+{
+  "files": {
+    "anonymous-timed-lyrics-live.txt": "aeb55a65c70cfddcc72ad334e4f62ca281e2c5bd5040fb79ce9ab2b7de7e7ad2",
+    "artifact.json": "36625674424a4652f1911715db9cc8cb955e40df76bdb5c0c449610485605c0a",
+    "lyrics-follow-synthetic.png": "0a891b9b21a2448e11be784770d023b34b3717549f3e03452c71e5c299ba030d",
+    "native-follow-early.png": "b94485e6a6f771f5bf0b07af77b6a44fdcb1c7a544e42f9b3064d0313e2545f0",
+    "native-follow-seek.png": "a26b5d7ac3afe1814cf966145b3b642b2b44813bc9c460bd8c18382fec456c84",
+    "native-results.json": "6a208ad345e369b060314c35e3eb0c747e9f3cdbfc55c27ba6fed9ad72647a9f",
+    "short-immersive-video-expanded.png": "3ec337fe1d95cbcae3323ec760ff841681563953cdf67f582b2516ee37fee94c",
+    "source-artifact.json": "b98821304cd0912b9dd1412bd7b940458a0612ee51b0120e4e097958c61322cb",
+    "validation.json": "61c9b60c342b113ef26f7ea0145e146505d98c4f58c76a2b1ecbee158f9165a1"
+  }
+}

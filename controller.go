@@ -238,7 +238,7 @@ func (a *desktop) startTrack(it catalog.Item) {
 	a.model.Playing = false
 	a.model.PlaybackLoading = true
 	a.loadPending = true
-	a.model.Lyrics = a.tr("shellLoading")
+	a.model.clearLyrics(a.tr("shellLoading"))
 	a.model.Liked = it.Liked
 	a.model.PlaybackError = ""
 	a.endedHandled = true
@@ -279,15 +279,20 @@ func (a *desktop) startTrack(it catalog.Item) {
 		})
 	}()
 	go func() {
-		lyrics, err := a.catalog.Lyrics(ctx, it.ID)
+		lyrics, err := a.catalog.LyricsWithTiming(ctx, it.ID)
 		a.post(func() {
-			if generation != a.playGeneration {
+			if generation != a.playGeneration || ctx.Err() != nil {
 				return
 			}
-			if err != nil || lyrics == "" {
-				a.model.Lyrics = a.tr("nativeNoLyrics")
+			if err != nil && !errors.Is(err, catalog.ErrNoLyrics) {
+				a.model.clearLyrics(a.tr("nativeLyricsError"))
+			} else if err != nil || lyrics.Text == "" {
+				a.model.clearLyrics(a.tr("nativeNoLyrics"))
 			} else {
-				a.model.Lyrics = lyrics
+				a.model.clearLyrics(lyrics.Text)
+				a.model.LyricLines = lyrics.Lines
+				a.model.LyricsSource = lyrics.Source
+				a.model.LyricsAvailable = true
 			}
 		})
 	}()

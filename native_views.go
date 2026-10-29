@@ -8,6 +8,7 @@ import (
 
 	"github.com/egoist/mygo/ui"
 	"ytmgo/internal/catalog"
+	"ytmgo/locales"
 )
 
 // UIModel is owned by the UI thread. Network and player completions are applied
@@ -18,6 +19,10 @@ type UIModel struct {
 	LibraryItems                                                []catalog.Item
 	Queue                                                       []catalog.Item
 	Route, Query, Error, Lyrics, PanelTab, Appearance, Language string
+	LyricLines                                                  []catalog.LyricLine
+	LyricsSource                                                string
+	LyricsAvailable                                             bool
+	LyricsRevision                                              uint64
 	Loading, Playing, Muted, Liked, Shuffle                     bool
 	Panel, Immersive, Settings, Shortcuts, SidebarCollapsed     bool
 	SignedIn, CanBack, CanForward                               bool
@@ -378,20 +383,54 @@ func nativeLibraryKind(item catalog.Item) string {
 }
 
 func nativeKindLabel(item catalog.Item, a ViewActions) string {
-	switch nativeLibraryKind(item) {
-	case "playlist":
-		return a.Tr("shellKindPlaylist")
-	case "album":
-		return a.Tr("shellKindAlbum")
-	case "artist":
-		return a.Tr("shellKindArtist")
-	case "song":
-		if item.Kind == "video" {
-			return a.Tr("nativeVideo")
-		}
-		return a.Tr("shellKindSong")
+	if key := nativeKindKey(item); key != "" {
+		return a.Tr(key)
 	}
 	return ""
+}
+
+func nativeKindKey(item catalog.Item) string {
+	switch nativeLibraryKind(item) {
+	case "playlist":
+		return "shellKindPlaylist"
+	case "album":
+		return "shellKindAlbum"
+	case "artist":
+		return "shellKindArtist"
+	case "song":
+		if item.Kind == "video" {
+			return "nativeVideo"
+		}
+		return "shellKindSong"
+	}
+	return ""
+}
+
+func nativeLibrarySubtitle(item catalog.Item, a ViewActions) string {
+	kind, artist := nativeKindLabel(item, a), strings.TrimSpace(item.Artist)
+	if artist == "" {
+		return kind
+	}
+	// Cached library entries can keep the service's previous language after
+	// changing the interface language. A category is not a second creator.
+	if key := nativeKindKey(item); key != "" {
+		for _, language := range locales.Catalog.Languages() {
+			if strings.EqualFold(artist, locales.Catalog.Format(language, key, nil)) {
+				return kind
+			}
+		}
+	}
+	if kind == "" {
+		return artist
+	}
+	return kind + " · " + artist
+}
+
+func nativeItemLabel(item catalog.Item) string {
+	if artist := strings.TrimSpace(item.Artist); artist != "" {
+		return item.Title + " · " + artist
+	}
+	return item.Title
 }
 
 func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) {
@@ -526,7 +565,7 @@ func nativeLibraryPrompt(c *ui.Context, m *UIModel, a ViewActions, p nativePalet
 func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p nativePalette, full bool) {
 	open := item.BrowseID != "" && m.Route == "browse:"+item.BrowseID
 	playing := item.ID != "" && item.ID == m.Current.ID
-	b := ui.ButtonBase(c).Height(64).Padding(8).Gap(12).Radius(6).Justify(ui.Start).Label(item.Title + " · " + item.Artist).Tooltip(item.Title)
+	b := ui.ButtonBase(c).Height(64).Padding(8).Gap(12).Radius(6).Justify(ui.Start).Label(nativeItemLabel(item)).Tooltip(item.Title)
 	if !full {
 		b.Padding(4).Justify(ui.Center)
 	}
@@ -549,14 +588,7 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 			if playing || open {
 				title.TextColor(p.accent)
 			}
-			subtitle := nativeKindLabel(item, a)
-			if item.Artist != "" {
-				if subtitle != "" {
-					subtitle += " · "
-				}
-				subtitle += item.Artist
-			}
-			ui.Text(c, subtitle).FontSize(13).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+			ui.Text(c, nativeLibrarySubtitle(item, a)).FontSize(13).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
 		})
 		if playing {
 			ui.Icon(c, nativeIcons["volume"]).Size(16, 16).TextColor(p.accent)
@@ -864,7 +896,7 @@ func nativeCardArt(compact bool) float32 {
 // with a play button rising over playable covers on hover.
 func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p nativePalette, compact bool) {
 	size := nativeCardArt(compact)
-	b := ui.ButtonBase(c).Column().Width(size + 24).Shrink(0).Padding(12).Gap(8).Radius(8).AlignItems(ui.Stretch).Justify(ui.Start).Label(item.Title + " · " + item.Artist)
+	b := ui.ButtonBase(c).Column().Width(size + 24).Shrink(0).Padding(12).Gap(8).Radius(8).AlignItems(ui.Stretch).Justify(ui.Start).Label(nativeItemLabel(item))
 	hovered := b.Hovered()
 	if hovered {
 		b.Background(p.raised)
@@ -939,7 +971,7 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 	if compact {
 		pad = 8
 	}
-	b := ui.ButtonBase(c).Height(56).PaddingX(pad).Gap(16).Radius(6).Justify(ui.Start).Label(item.Title + " · " + item.Artist)
+	b := ui.ButtonBase(c).Height(56).PaddingX(pad).Gap(16).Radius(6).Justify(ui.Start).Label(nativeItemLabel(item))
 	hovered := b.Hovered()
 	if playing {
 		b.Selected(true).Background(p.hover)
@@ -1362,20 +1394,14 @@ func nativePanelTabs(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 }
 
 func nativePanelBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) ui.Element {
+	if m.PanelTab == "lyrics" {
+		return nativeLyricsBody(c, m, a, p)
+	}
 	scroll := ui.Scroll(c.Key("panel-" + m.PanelTab)).Grow(1).MinHeight(68)
 	a = nativeArtworkViewport(c, a, scroll)
 	return scroll.Children(func() {
-		if m.PanelTab == "lyrics" {
-			lyrics := m.Lyrics
-			color := p.text
-			if lyrics == "" {
-				lyrics, color = a.Tr("nativeLyricsUnavailable"), p.secondary
-			}
-			ui.Text(c, lyrics).FontSize(20).FontWeight(700).LineHeight(1.6).TextColor(color)
-		} else {
-			for i, item := range m.Queue {
-				nativeTrack(c.Key(fmt.Sprintf("queue-%d", i)), item, i, m, a, p, nativeTrackQueue, true)
-			}
+		for i, item := range m.Queue {
+			nativeTrack(c.Key(fmt.Sprintf("queue-%d", i)), item, i, m, a, p, nativeTrackQueue, true)
 		}
 	})
 }
@@ -1406,15 +1432,34 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 		})
 		return
 	}
+	panelWidth := min(float32(380), width*0.32)
+	contentHeight := max(float32(0), height-64-48)
+	mediaWidth := max(float32(1), width-16-80-40-panelWidth)
 	ui.Row(c).Grow(1).MinHeight(0).Padding(24, 40).Gap(40).AlignItems(ui.Center).Children(func() {
-		ui.Column(c).Grow(1).MinWidth(0).Gap(24).AlignItems(ui.Center).Children(func() {
-			artSize := min(max(float32(220), width-540), max(float32(180), height-260))
-			nativeMedia(c, m, a, p, artSize).Shadow(0, 24, 64, 0, ui.RGBA(0, 0, 0, 0.5))
-			nativeMediaSwitch(c, m, a, p)
-			nativeImmersiveTitle(c, m, a, p, false)
-			nativePlaybackNotice(c, m, a, p, false)
+		scroll := ui.Scroll(c).Grow(1).MinWidth(0).MinHeight(0).HeightPercent(100).Label(a.Tr("shellContent"))
+		a = nativeArtworkViewport(c, a, scroll)
+		scroll.Children(func() {
+			ui.Column(c).MinHeight(contentHeight).Shrink(0).Gap(24).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
+				// Reserve the switch, both gaps, two title lines and an artist
+				// line. Extra artist lines/notices remain reachable by scrolling.
+				textHeight := float32(32 + 48 + 88 + 8 + 22)
+				if m.PlaybackError != "" {
+					textHeight += 24 + 56
+				}
+				mediaHeight := max(float32(180), contentHeight-textHeight)
+				artSize := min(mediaWidth, mediaHeight)
+				if m.Video {
+					// A landscape video can use the same vertical budget as the
+					// square cover while filling more of the available column.
+					artSize = min(mediaWidth, mediaHeight*16/9)
+				}
+				nativeMedia(c, m, a, p, artSize).Shadow(0, 24, 64, 0, ui.RGBA(0, 0, 0, 0.5))
+				nativeMediaSwitch(c, m, a, p)
+				nativeImmersiveTitle(c, m, a, p, false)
+				nativePlaybackNotice(c, m, a, p, false)
+			})
 		})
-		nativePanelCard(c, m, a, p).Width(min(380, width*0.32)).HeightPercent(90).Background(p.base.Alpha(0.35))
+		nativePanelCard(c, m, a, p).Width(panelWidth).HeightPercent(90).Background(p.base.Alpha(0.35))
 	})
 }
 
@@ -1730,16 +1775,19 @@ func nativeMedia(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, size
 		return nativeArtwork(c, m.Current.Artwork, size, 8, a, p)
 	}
 	return ui.Box(c).Size(size, size*9/16).Shrink(0).Radius(8).Background(ui.Hex("#000000")).Clip().Center().Label(a.Tr("nativeVideo")).Children(func() {
-		if m.VideoFrame != nil {
-			ui.Image(c, m.VideoFrame).Size(size, size*9/16).Fit(ui.Contain)
+		if m.VideoError != "" {
+			ui.Column(c).WidthPercent(100).Padding(8).Gap(8).AlignItems(ui.Center).Children(func() {
+				ui.Text(c, m.VideoError).TextAlign(ui.Center).TextColor(ui.Hex("#b3b3b3")).FontSize(13).MaxLines(2).Ellipsis("…")
+				if nativePill(c, a.Tr("buttonRetry"), p, false).Disabled(a.Video == nil || m.Current.ID == "").Clicked() {
+					a.Video(true)
+				}
+			})
 		} else if m.VideoLoading {
 			ui.Spinner(c).Size(28, 28).Label(a.Tr("shellLoading"))
+		} else if m.VideoFrame != nil {
+			ui.Image(c, m.VideoFrame).Size(size, size*9/16).Fit(ui.Contain)
 		} else {
-			message := m.VideoError
-			if message == "" {
-				message = a.Tr("nativeVideoUnavailable")
-			}
-			ui.Text(c, message).Padding(16).TextAlign(ui.Center).TextColor(ui.Hex("#b3b3b3")).FontSize(13)
+			ui.Text(c, a.Tr("nativeVideoUnavailable")).Padding(16).TextAlign(ui.Center).TextColor(ui.Hex("#b3b3b3")).FontSize(13)
 		}
 	})
 }

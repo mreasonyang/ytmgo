@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-29",
+  "account": "anonymous_isolated_identity",
+  "delivery_executable_sha256": "d33e9ed8677d17417d756c10973d6c6601b588368b6de19793934a5b3da34230",
+  "same_title_and_uploader_as_original_failure": true,
+  "track_title": "The Weeknd - Hong Kong Ft. Faye Wong (Live in Hong Kong)",
+  "uploader": "Weeknd Everyday",
+  "first_open": {
+    "at": 71.469333333,
+    "start": 1793257075421,
+    "account": "anonymous",
+    "elapsed": 10.048,
+    "loading": false,
+    "retry": false,
+    "position": 81.602666666
+  },
+  "second_open": {
+    "at": 117.925768968,
+    "start": 1793257285658,
+    "account": "anonymous",
+    "elapsed": 4.335,
+    "loading": false,
+    "retry": false,
+    "position": 122.469768968
+  },
+  "actual_video_frames_visually_verified": true,
+  "later_frame_observed_at_seconds": 209.005333333,
+  "end_state": {
+    "paused": true,
+    "volume": 0.7,
+    "video_off": true,
+    "anonymous_app_closed": true,
+    "original_account_app_closed_pending_authorization": true
+  },
+  "premium_final_acceptance": "pending_user_unavailable_for_keychain_authorization"
+}

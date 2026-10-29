@@ -1,0 +1,16 @@
+{
+  "base_commit": "9b8766e03cc76a82c5cd5342ee85ade5a7ad7665",
+  "version": "0.4.0",
+  "vcs_modified": true,
+  "architecture": "arm64",
+  "signing": "ad-hoc",
+  "checks": {
+    "signature": "pass",
+    "dmg": "pass"
+  },
+  "executable_sha256": "51f08febd623a50bad3661d2713c985daed28cf786ae5370a76ecb1a736c1f7a",
+  "dmg_sha256": "d93ed5c62e021d93d8f282b9a227d2f5545a5b079ceca405bc45aa6a2f4b5282",
+  "anonymous_binary_sha256": "0dbf003de43663642bf1992fa0797b17fb4fb47d490c0c9e2bdb0217c40f524a",
+  "anonymous_identity_only_changes": true,
+  "account_data_copied": false
+}

@@ -197,5 +197,9 @@
   "nativeAccountLoginMissing": "ログイン画面を開けませんでした。ytmgo を再インストールし、システムの WebView が利用可能か確認してください。",
   "nativeAccountLoginOutdated": "Microsoft Edge WebView2 Runtime を更新してから、もう一度ログインしてください。",
   "nativeAccountLoginTimeout": "ログインがタイムアウトしました。もう一度お試しください。",
-  "nativeAccountLoginFailed": "ログインを完了できませんでした。もう一度お試しください。"
+  "nativeAccountLoginFailed": "ログインを完了できませんでした。もう一度お試しください。",
+  "nativeLyricsFollow": "再生に合わせる",
+  "nativeLyricsFollowing": "再生に追従中",
+  "nativeLyricsUnsynced": "この曲には同期用の歌詞タイムスタンプがありません。",
+  "nativeLyricsError": "現在、歌詞を取得できません。"
 }

@@ -1,0 +1,19 @@
+{
+  "role": "intermediate_audio_fix_ui_validation_only",
+  "executable_sha256": "032fc5d72db042246fac9c663d1e51328dc0cfbda797ee734ab356cd04846882",
+  "final_acceptance": false,
+  "observations": {
+    "premium_first_tail_seconds": 218.293646264,
+    "premium_first_tail_natural_next": true,
+    "premium_second_paused_tail_seconds": 196.316185541,
+    "premium_second_pause_preserved": true,
+    "premium_second_resumed_natural_next": true,
+    "short_window_pixels": [
+      1922,
+      1282
+    ],
+    "short_window_artist_padding_visible": true,
+    "video_regression_found": true
+  },
+  "note": "This intermediate binary had the experimental shared video inpoint. Final source keeps the original video seek path and adds a B-frame regression test."
+}

@@ -571,8 +571,8 @@ func TestNativeArtworkOnlyRequestsVisibleCovers(t *testing.T) {
 	if !ok {
 		t.Fatal("content scroller missing")
 	}
-	first, ok := tt.Find("Track 0 · ")
-	second, ok2 := tt.Find("Track 1 · ")
+	first, ok := tt.Find("Track 0")
+	second, ok2 := tt.Find("Track 1")
 	if !ok || !ok2 {
 		t.Fatal("track rows missing")
 	}
@@ -607,7 +607,7 @@ func TestNativeArtworkClipsHorizontalShelves(t *testing.T) {
 		}
 	}
 	clear(requested)
-	album, ok := tt.Find("Album 0 · ")
+	album, ok := tt.Find("Album 0")
 	if !ok {
 		t.Fatal("album card missing")
 	}

@@ -1,0 +1,53 @@
+{
+  "synthetic_only": true,
+  "per_request_latency_ms": 40,
+  "delivery_budget_ms": 1000,
+  "required_bytes": 4194304,
+  "trials": [
+    {
+      "trial": 1,
+      "baseline_video_64_kib": {
+        "requests": 24,
+        "received_bytes": 1507328,
+        "completed": false,
+        "elapsed_ms": 1003
+      },
+      "candidate_video_512_kib": {
+        "requests": 8,
+        "received_bytes": 4194304,
+        "completed": true,
+        "elapsed_ms": 337
+      }
+    },
+    {
+      "trial": 2,
+      "baseline_video_64_kib": {
+        "requests": 25,
+        "received_bytes": 1507328,
+        "completed": false,
+        "elapsed_ms": 1001
+      },
+      "candidate_video_512_kib": {
+        "requests": 8,
+        "received_bytes": 4194304,
+        "completed": true,
+        "elapsed_ms": 332
+      }
+    },
+    {
+      "trial": 3,
+      "baseline_video_64_kib": {
+        "requests": 25,
+        "received_bytes": 1572864,
+        "completed": false,
+        "elapsed_ms": 1000
+      },
+      "candidate_video_512_kib": {
+        "requests": 8,
+        "received_bytes": 4194304,
+        "completed": true,
+        "elapsed_ms": 335
+      }
+    }
+  ]
+}

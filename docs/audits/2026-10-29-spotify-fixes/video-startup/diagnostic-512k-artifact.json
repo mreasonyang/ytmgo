@@ -1,0 +1,6 @@
+{
+  "role": "temporary_numeric_trace_not_delivery",
+  "executable_sha256": "d6b7e7257630092ec8425f6170254307aef1d4c989e148cef38002aaa7dd5e96",
+  "video_transport_sha256": "529b34a9e56aa1847257490012276834444a96ec35e93b53d67e04042d611e98",
+  "video_transport_chunk_bytes": 524288
+}

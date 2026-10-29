@@ -1,0 +1,18 @@
+package catalog
+import("context";"testing";"time";"regexp")
+func TestSpotifyAuditContinuationShape(t *testing.T){
+ ctx,cancel:=context.WithTimeout(context.Background(),time.Minute);defer cancel();c:=New()
+ p,e:=c.Home(ctx);if e!=nil{t.Fatalf("home error (%T)",e)}
+ entry,ok:=c.continuations[p.Continuation];if !ok{t.Fatal("no cursor")}
+ var response map[string]any
+ if entry.cursor.query{response,e=c.apiRequest(ctx,entry.endpoint,entry.payload,entry.cursor.token)}else{response,e=c.api(ctx,entry.endpoint,map[string]any{"continuation":entry.cursor.token})}
+ if e!=nil{t.Fatalf("continuation error (%T)",e)}
+ allowed:=map[string]bool{};for _,k:=range []string{"contents","continuationContents","onResponseReceivedActions","sectionListContinuation","musicCarouselShelfContinuation","musicShelfContinuation","musicPlaylistShelfContinuation","gridContinuation","musicCarouselShelfRenderer","musicShelfRenderer","musicResponsiveListItemRenderer","musicTwoRowItemRenderer","appendContinuationItemsAction","continuationItems"}{allowed[k]=true}
+ counts:=map[string]int{};var walk func(any);walk=func(v any){switch x:=v.(type){case map[string]any:for k,y:=range x{if allowed[k] || regexp.MustCompile(`^[A-Za-z]{1,65}(Renderer|Continuation|Action|Command)$`).MatchString(k){counts[k]++};walk(y)};case []any:for _,y:=range x{walk(y)}}};walk(response)
+ for _,form:=range []string{"body_only","query_only"}{
+ var alt map[string]any; var err error
+ if form=="body_only"{alt,err=c.api(ctx,entry.endpoint,map[string]any{"continuation":entry.cursor.token})}else{alt,err=c.apiRequest(ctx,entry.endpoint,map[string]any{},entry.cursor.token)}
+ if err!=nil{t.Logf("diagnostic_form=%s request_error=true",form);continue};pp,_,pe:=parsePage(alt);t.Logf("diagnostic_form=%s items=%d shelves=%d parse_error=%v",form,len(pp.Items),len(pp.Shelves),pe!=nil)
+ }
+ parsed,_,e:=parsePage(response);t.Logf("query_cursor=%v known_renderer_counts=%v parsed_items=%d parse_error=%v",entry.cursor.query,counts,len(parsed.Items),e!=nil)
+}

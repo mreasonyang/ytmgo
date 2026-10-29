@@ -197,5 +197,9 @@
   "nativeAccountLoginMissing": "無法啟動登入視窗。請重新安裝 ytmgo，並檢查系統網頁元件是否可用。",
   "nativeAccountLoginOutdated": "請更新 Microsoft Edge WebView2 Runtime 後重新登入。",
   "nativeAccountLoginTimeout": "登入已逾時，請重試。",
-  "nativeAccountLoginFailed": "未能完成登入，請重試。"
+  "nativeAccountLoginFailed": "未能完成登入，請重試。",
+  "nativeLyricsFollow": "跟隨播放",
+  "nativeLyricsFollowing": "正在跟隨播放",
+  "nativeLyricsUnsynced": "這首歌暫不提供同步歌詞時間軸。",
+  "nativeLyricsError": "暫時無法取得歌詞。"
 }

@@ -1,0 +1,42 @@
+{
+  "account": "anonymous",
+  "bundle": "com.ytmgo.lyrics-verify-20261029",
+  "checks": [
+    {
+      "phase": "playing",
+      "at": "2026-10-29T07:35:20.367Z",
+      "position": 56.952,
+      "following": true
+    },
+    {
+      "phase": "paused_seek",
+      "at": "2026-10-29T07:37:21.011Z",
+      "position": 160.524061132,
+      "following": true,
+      "paused": true
+    },
+    {
+      "phase": "manual_scroll",
+      "at": "2026-10-29T07:37:22.419Z",
+      "following": false,
+      "observed_follow_button": true
+    },
+    {
+      "phase": "resume_follow",
+      "at": "2026-10-29T07:37:43.528Z",
+      "position": 160.524061132,
+      "following": true
+    }
+  ],
+  "observed_highlight_and_scroll": true,
+  "screenshots": [
+    "native-follow-early.png",
+    "native-follow-seek.png"
+  ],
+  "limitations": [
+    "Original Premium account not verified",
+    "Upstream cue alignment is used as supplied"
+  ],
+  "ended_paused": true,
+  "temporary_app_closed": true
+}

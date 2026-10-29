@@ -1,0 +1,13 @@
+{
+  "version": "0.4.0",
+  "architecture": "arm64",
+  "signing": "ad-hoc",
+  "vcs_modified": true,
+  "executable_sha256": "b9447c1cf387a69dec97ab9cd69ae79b2cc3c6ea283c5fec771fcefcab740ddd",
+  "dmg_sha256": "c51bced89b61e025bff7996c84f8e1326f55ad9762000a58f9dd04f42cbfb390",
+  "checks": {
+    "signature": "pass",
+    "dmg": "pass",
+    "source_manifest_matches_built_source": true
+  }
+}

@@ -1,0 +1,11 @@
+--- main.go
++++ main.go (minimum-window diagnostic only)
+@@ -146,7 +146,7 @@
+ 		a.art = newArtworkCache(a.ctx, func() {
+ 			a.invalidate()
+ 		})
+-		a.window = mygo.NewWindow(mygo.WindowOptions{Title: locales.AppName(), Width: 1440, Height: 940, MinWidth: 380, MinHeight: 640, StateKey: "native-main", BackgroundColor: "light-dark(#e7e7ea, #050506)", Content: ui.View(func(c *ui.Context) { nativeView(c, &a.model, a.actions()); a.syncVideo() })})
++		a.window = mygo.NewWindow(mygo.WindowOptions{Title: locales.AppName(), Width: 380, Height: 640, MinWidth: 380, MinHeight: 640, StateKey: "spotify-e2e-min", BackgroundColor: "light-dark(#e7e7ea, #050506)", Content: ui.View(func(c *ui.Context) { nativeView(c, &a.model, a.actions()); a.syncVideo() })})
+ 		a.windowVisible = true
+ 		a.window.OnHide(func() { a.windowVisible = false; a.syncVideo() })
+ 		a.window.OnShow(func() { a.windowVisible = true; a.syncVideo() })

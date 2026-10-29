@@ -1,0 +1,107 @@
+package main
+import (
+ "fmt"
+ "context"
+ "time"
+ "net/http"
+ "image"
+ "strings"
+ "testing"
+ "github.com/egoist/mygo/ui"
+ "ytmgo/internal/catalog"
+)
+func TestSpotifyAuditBreakpointReachability(t *testing.T) {
+ for _, width := range []int{380,420,760,761,900,1000,1001,1180,1181,1440} {
+  for _, locale := range []string{"en","zh-Hans","zh-Hant","ja"} {
+   for _, state := range []string{"signed-out","standard","premium"} {
+    for _, surface := range []string{"page","panel","immersive"} {
+     t.Run(fmt.Sprintf("%d/%s/%s/%s",width,locale,state,surface),func(t *testing.T) {
+      m,a:=nativeViewFixture();m.Language=locale;m.SignedIn=state!="signed-out";m.MusicPremium=state=="premium"
+      m.LibraryItems=[]catalog.Item{m.Queue[0],{Title:"Long album title 長いアルバムタイトル 很长的专辑标题",Kind:"album",BrowseID:"audit-album"}}
+      m.Current.Title="A very long song title 很长的歌曲标题 とても長い曲名 testing ellipsis"
+      m.Panel=surface=="panel";m.Immersive=surface=="immersive"
+      tt:=ui.NewTester(func(c *ui.Context){nativeView(c,m,a)},width,640)
+      keys:=[]string{"shellPause"}
+      if surface=="page" {keys=append(keys,"shellSettings","shellNavHome","shellOpenNowPlaying")}
+      if surface=="panel" {keys=append(keys,"shellClosePanel")}
+      if surface=="immersive" {keys=append(keys,"shellExitImmersive")}
+      for _,key:=range keys {nativeAssertVisible(t,tt,a.Tr(key),width,640)}
+     })
+    }
+   }
+  }
+ }
+}
+
+func TestSpotifyAuditLiveCatalog(t *testing.T) {
+ ctx,cancel:=context.WithTimeout(context.Background(),2*time.Minute);defer cancel()
+ client:=catalog.New(); var track string
+ search,err:=client.Search(ctx,"Daft Punk Get Lucky")
+ if err!=nil {t.Fatalf("search failed (%T)",err)}
+ t.Logf("search shelves=%d items=%d",len(search.Shelves),len(search.Items))
+ for _,item:=range search.Items {if item.ID!="" {track=item.ID;break}}
+ for _,r:=range []string{"home","explore"} {
+  var page catalog.Page
+  if r=="home" {page,err=client.Home(ctx)} else {page,err=client.Explore(ctx)}
+  if err!=nil {t.Errorf("%s failed (%T)",r,err);continue}
+  t.Logf("%s shelves=%d items=%d continuation=%v",r,len(page.Shelves),len(page.Items),page.Continuation!="")
+  if page.Continuation!="" {
+   next,e:=client.Continue(ctx,page.Continuation)
+   if e!=nil {t.Errorf("%s continuation failed (%T)",r,e)} else {
+    t.Logf("%s continuation shelves=%d items=%d has_next=%v",r,len(next.Shelves),len(next.Items),next.Continuation!="")
+    if len(next.Items)==0 {t.Errorf("%s continuation is empty",r)}
+   }
+  }
+ }
+ if track!="" {
+  q,e:=client.Queue(ctx,track);if e!=nil {t.Errorf("queue failed (%T)",e)} else {t.Logf("queue tracks=%d",len(q))}
+  lyrics,e:=client.Lyrics(ctx,track);if e!=nil {t.Errorf("lyrics failed (%T)",e)} else {t.Logf("lyrics_nonempty=%v",len(lyrics)>0)}
+ }
+ for _,q:=range []string{"Daft Punk Random Access Memories","坂本龍一"} {
+  page,e:=client.Search(ctx,q);if e!=nil {t.Errorf("additional search failed (%T)",e);continue};t.Logf("additional search items=%d",len(page.Items))
+  for _,item:=range page.Items {
+   if item.BrowseID!="" && (item.Kind=="album" || item.Kind=="artist") {
+    detail,e:=client.Browse(ctx,item.BrowseID);if e!=nil {t.Errorf("browse failed (%T)",e)} else {t.Logf("browse kind=%s items=%d shelves=%d",item.Kind,len(detail.Items),len(detail.Shelves))};break
+   }
+  }
+ }
+}
+
+func TestSpotifyAuditShortImmersiveTitle(t *testing.T) {
+ for _,size:=range [][2]int{{960,609},{960,640},{1100,609},{1440,609}} {
+  t.Run(fmt.Sprintf("%dx%d",size[0],size[1]),func(t *testing.T){
+   m,a:=nativeViewFixture();m.Immersive=true;m.Current.Title="Daft Punk : Get Lucky // Grammys Rehearsal (HD)";m.Current.Artist="Daft Punk – Archives"
+   tt:=ui.NewTester(func(c *ui.Context){nativeView(c,m,a)},size[0],size[1])
+   r,ok:=tt.Find(m.Current.Artist);t.Logf("artist_found=%v artist=%+v content_bottom=%d",ok,r,size[1]-nativePlayerHeight)
+   nativeSnapshot(t,tt,fmt.Sprintf("audit-%dx%d-long-immersive",size[0],size[1]))
+   if ok && r.Y+r.H>float32(size[1]-nativePlayerHeight) {t.Errorf("immersive artist overlaps player bar: %+v",r)}
+  })
+ }
+}
+
+func TestSpotifyAuditArtworkSizes(t *testing.T) {
+ ctx,cancel:=context.WithTimeout(context.Background(),time.Minute);defer cancel()
+ page,e:=catalog.New().Search(ctx,"Daft Punk Get Lucky");if e!=nil{t.Fatalf("search failed (%T)",e)}
+ raw:="";for _,item:=range page.Items{if strings.Contains(item.Title,"Grammys Rehearsal"){raw=item.Artwork;break}}
+ if raw==""{t.Fatal("target artwork missing")}
+ client:=&http.Client{Timeout:15*time.Second}
+ for _,edge:=range []int{128,384,768}{
+  req,_:=http.NewRequestWithContext(ctx,"GET",artworkRequestAt(raw,edge),nil);res,e:=client.Do(req)
+  if e!=nil{t.Errorf("edge=%d request failed (%T)",edge,e);continue}
+  cfg,_,decodeErr:=image.DecodeConfig(res.Body);res.Body.Close()
+  t.Logf("edge=%d status=%d image=%dx%d decodable=%v",edge,res.StatusCode,cfg.Width,cfg.Height,decodeErr==nil)
+  if res.StatusCode!=200 || decodeErr!=nil{t.Errorf("edge=%d artwork unavailable",edge)}
+ }
+}
+
+func TestSpotifyAuditLibraryMetadata(t *testing.T) {
+ for _,locale:=range []string{"en","zh-Hans","zh-Hant","ja"} {
+  t.Run(locale,func(t *testing.T){
+   m,a:=nativeViewFixture();m.Language=locale;m.SignedIn=true;m.MusicPremium=true
+   m.LibraryItems=[]catalog.Item{{Title:"Example playlist",Kind:"playlist",BrowseID:"audit-playlist",Artist:a.Tr("shellKindPlaylist")},{Title:"Example artist",Kind:"artist",BrowseID:"audit-artist",Artist:a.Tr("shellKindArtist")}}
+   tt:=ui.NewTester(func(c *ui.Context){nativeView(c,m,a)},1440,900)
+   nativeSnapshot(t,tt,"audit-library-metadata-"+locale)
+   for _,key:=range []string{"shellKindPlaylist","shellKindArtist"} {kind:=a.Tr(key);if tt.HasText(kind+" · "+kind){t.Errorf("library repeats category in metadata: %s",kind)}}
+  })
+ }
+}

@@ -1,0 +1,34 @@
+{
+  "final_source_manifest": "source-artifact.json",
+  "base_commit": "9b8766e03cc76a82c5cd5342ee85ade5a7ad7665",
+  "checks": [
+    {
+      "command": "make check",
+      "status": "pass",
+      "scope": "Before final cold-start and AX-label additions; later full Go tests, vet and exact-final-source race cover those changes."
+    },
+    {
+      "command": "YTMGO_RUNTIME_DIR=\"$PWD/build/runtime\" YTMGO_FIXTURE_FFMPEG=/opt/homebrew/bin/ffmpeg go test -race ./...",
+      "status": "pass",
+      "scope": "Final source, packaged decoder enabled including AAC tail and H.264 B-frame tests."
+    },
+    {
+      "command": "make build",
+      "status": "pass",
+      "scope": "Final app and DMG."
+    },
+    {
+      "command": "codesign --verify --deep --strict build/darwin-arm64/ytmgo.app",
+      "status": "pass"
+    },
+    {
+      "command": "hdiutil verify build/darwin-arm64/ytmgo-0.4.0-arm64.dmg",
+      "status": "pass"
+    },
+    {
+      "command": "git diff --check",
+      "status": "pass"
+    }
+  ],
+  "live_catalog": "Original TestLiveCatalog plus visitor/no-visitor comparison and multipage anonymous check passed during repair; live network tests are opt-in, not silently included in default go test."
+}

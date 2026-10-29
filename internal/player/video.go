@@ -16,6 +16,51 @@ import (
 
 const videoFrameInterval = time.Second / 24
 
+var errVideoReadiness = errors.New("audio_network_timeout")
+
+type videoCatchUpError struct{ lag time.Duration }
+
+func (*videoCatchUpError) Error() string { return "video_catch_up" }
+
+// A video session must either present a frame or leave loading within a
+// bounded time. Slow but progressing decoding may need a fresh audio position;
+// retries are limited until several seconds of healthy presentation recover.
+type videoPlaybackPolicy struct {
+	startupTimeout time.Duration
+	stallTimeout   time.Duration
+	catchupLag     time.Duration
+	catchupGrace   time.Duration
+	maximumLead    time.Duration
+	healthyPeriod  time.Duration
+	maxCatchups    int
+}
+
+func (p videoPlaybackPolicy) defaults() videoPlaybackPolicy {
+	if p.startupTimeout <= 0 {
+		p.startupTimeout = 20 * time.Second
+	}
+	if p.stallTimeout <= 0 {
+		p.stallTimeout = 10 * time.Second
+	}
+	if p.catchupLag <= 0 {
+		p.catchupLag = 750 * time.Millisecond
+	}
+	if p.catchupGrace <= 0 {
+		p.catchupGrace = 1500 * time.Millisecond
+	}
+	if p.maximumLead <= 0 {
+		p.maximumLead = 8 * time.Second
+	}
+	p.maximumLead = min(p.maximumLead, p.stallTimeout)
+	if p.healthyPeriod <= 0 {
+		p.healthyPeriod = 5 * time.Second
+	}
+	if p.maxCatchups <= 0 {
+		p.maxCatchups = 2
+	}
+	return p
+}
+
 type videoMedia struct {
 	media
 	width, height int
@@ -36,6 +81,7 @@ type Video struct {
 	generation, sequence uint64
 	frame                image.Image
 	error                string
+	policy               videoPlaybackPolicy
 }
 
 func NewVideo(p *Player) (*Video, error) {
@@ -126,31 +172,88 @@ func (v *Video) run(ctx context.Context, generation uint64, id string, position 
 		}
 		v.mu.Unlock()
 	}()
-	resolveCtx, cancel := context.WithTimeout(ctx, 90*time.Second)
-	info, err := v.resolve(resolveCtx, id)
-	cancel()
+	policy := v.policy.defaults()
+	life, cancel := context.WithCancelCause(ctx)
+	defer cancel(nil)
+	// This timer includes resolution and every catch-up attempt until the very
+	// first displayed frame. Stopping the timer preserves the session context:
+	// a successful video must not be canceled when its startup budget expires.
+	startup := time.AfterFunc(policy.startupTimeout, func() { cancel(errVideoReadiness) })
+	defer startup.Stop()
+	info, err := v.resolve(life, id)
 	if err != nil {
 		if ctx.Err() == nil {
-			v.fail(generation, "video_resolution_failed")
+			if errors.Is(context.Cause(life), errVideoReadiness) {
+				v.fail(generation, videoErrorCategory(errVideoReadiness))
+			} else {
+				v.fail(generation, "video_resolution_failed")
+			}
 		}
 		return
 	}
 	if info.release != nil {
 		defer info.release()
 	}
-	for ctx.Err() == nil {
-		at := clampVideoPosition(position(), info.Duration)
-		decoder, err := v.open(ctx, info, at)
-		if err != nil {
-			if ctx.Err() == nil {
-				v.fail(generation, videoErrorCategory(err))
-			}
-			return
+	catchups := 0
+	var lead time.Duration
+	displayed := false
+	var healthySince, lastFrame time.Time
+	for life.Err() == nil {
+		clock, isPlaying := position(), playing()
+		if !isPlaying {
+			lead = 0
 		}
-		restart, err := v.present(ctx, generation, decoder, info, at, position, playing)
-		decoder.Close()
+		at := clampVideoPosition(clock+lead, info.Duration)
+		lead = max(0, at-clock)
+		target := videoSyncTarget{at: at, clock: clock, lead: lead, began: time.Now(), playing: isPlaying}
+		attempt, stopAttempt := context.WithCancelCause(life)
+		firstFrameBudget := policy.startupTimeout
+		if displayed {
+			firstFrameBudget = policy.stallTimeout
+		}
+		ready := time.AfterFunc(firstFrameBudget, func() { stopAttempt(errVideoReadiness) })
+		decoder, err := v.open(attempt, info, at)
+		restart := false
+		if err == nil {
+			restart, err = v.present(attempt, generation, decoder, info, target, position, playing, func() {
+				startup.Stop()
+				ready.Stop()
+				displayed = true
+				now := time.Now()
+				if !playing() || (!lastFrame.IsZero() && now.Sub(lastFrame) > 500*time.Millisecond) {
+					healthySince = time.Time{}
+				} else if healthySince.IsZero() {
+					healthySince = now
+				} else if now.Sub(healthySince) >= policy.healthyPeriod {
+					catchups, lead = 0, 0
+				}
+				lastFrame = now
+			})
+			decoder.Close()
+		}
+		ready.Stop()
+		cause := context.Cause(attempt)
+		stopAttempt(nil)
 		if ctx.Err() != nil {
 			return
+		}
+		if errors.Is(cause, errVideoReadiness) {
+			v.fail(generation, videoErrorCategory(errVideoReadiness))
+			return
+		}
+		var catchup *videoCatchUpError
+		if errors.As(err, &catchup) {
+			catchups++
+			if catchups > policy.maxCatchups {
+				v.fail(generation, videoErrorCategory(errVideoReadiness))
+				return
+			}
+			// Reopening at "now" repeats the startup delay against a moving
+			// audio clock. Reserve the observed deficit plus two frames. A
+			// second attempt adds its residual lag to the lead already used.
+			lead = min(policy.maximumLead, lead+catchup.lag+2*videoFrameInterval)
+			healthySince, lastFrame = time.Time{}, time.Time{}
+			continue
 		}
 		if err != nil {
 			v.fail(generation, videoErrorCategory(err))
@@ -159,11 +262,26 @@ func (v *Video) run(ctx context.Context, generation uint64, id string, position 
 		if !restart {
 			return
 		}
+		// An explicit user seek starts a new recovery episode. Ordinary clock
+		// advancement cannot reset the budget for a persistently slow stream.
+		catchups, lead = 0, 0
+		healthySince, lastFrame = time.Time{}, time.Time{}
+	}
+	if ctx.Err() == nil && errors.Is(context.Cause(life), errVideoReadiness) {
+		v.fail(generation, videoErrorCategory(errVideoReadiness))
 	}
 }
 
 func clampVideoPosition(position, duration time.Duration) time.Duration {
 	return min(max(position, 0), max(duration-videoFrameInterval, 0))
+}
+
+// Preserve the pre-open clock so a pause or explicit seek during decoder
+// startup can invalidate a future recovery target before its first frame.
+type videoSyncTarget struct {
+	at, clock, lead time.Duration
+	began           time.Time
+	playing         bool
 }
 
 type decodedFrame struct {
@@ -172,7 +290,8 @@ type decodedFrame struct {
 	err   error
 }
 
-func (v *Video) present(ctx context.Context, generation uint64, decoder *videoDecoder, info videoMedia, at time.Duration, position func() time.Duration, playing func() bool) (bool, error) {
+func (v *Video) present(ctx context.Context, generation uint64, decoder *videoDecoder, info videoMedia, target videoSyncTarget, position func() time.Duration, playing func() bool, presented func()) (bool, error) {
+	policy := v.policy.defaults()
 	life, cancel := context.WithCancel(ctx)
 	defer cancel()
 	frames := make(chan decodedFrame, 1)
@@ -183,7 +302,7 @@ func (v *Video) present(ctx context.Context, generation uint64, decoder *videoDe
 		for index := int64(0); ; index++ {
 			frame := image.NewRGBA(image.Rect(0, 0, info.width, info.height))
 			_, err := io.ReadFull(decoder.reader, frame.Pix)
-			result := decodedFrame{image: frame, at: at + time.Duration(index)*videoFrameInterval, err: err}
+			result := decodedFrame{image: frame, at: target.at + time.Duration(index)*videoFrameInterval, err: err}
 			select {
 			case frames <- result:
 			case <-life.Done():
@@ -197,12 +316,30 @@ func (v *Video) present(ctx context.Context, generation uint64, decoder *videoDe
 	defer func() { cancel(); decoder.Close(); <-readerDone }()
 	ticker := time.NewTicker(10 * time.Millisecond)
 	defer ticker.Stop()
-	lastPosition, lastCheck := position(), time.Now()
+	lastPosition, lastCheck := target.clock, target.began
 	var pending *decodedFrame
 	hasFrame := false
+	lastPresented := time.Now()
+	var lagSince time.Time
+	wasPlaying := target.playing
 	for {
+		if err := ctx.Err(); err != nil {
+			return false, err
+		}
 		now := time.Now()
+		isPlaying := playing()
+		if !isPlaying || !wasPlaying {
+			lastPresented = now
+			lagSince = time.Time{}
+		}
+		wasPlaying = isPlaying
+		if hasFrame && isPlaying && now.Sub(lastPresented) >= policy.stallTimeout {
+			return false, errVideoReadiness
+		}
 		clock := position()
+		if !isPlaying && target.lead > 0 && target.at > clock+videoFrameInterval/2 {
+			return true, nil
+		}
 		advance := clock - lastPosition
 		if advance < -200*time.Millisecond || advance > now.Sub(lastCheck)+600*time.Millisecond {
 			return true, nil
@@ -211,20 +348,44 @@ func (v *Video) present(ctx context.Context, generation uint64, decoder *videoDe
 		if pending != nil {
 			if pending.err != nil {
 				if pending.err == io.EOF && hasFrame {
-					if err := <-decoder.wait; err != nil {
-						return false, decoder.streamError()
+					exit := time.NewTimer(policy.stallTimeout)
+					defer exit.Stop()
+					select {
+					case err := <-decoder.wait:
+						if err != nil {
+							return false, decoder.streamError()
+						}
+						return false, nil
+					case <-ctx.Done():
+						return false, ctx.Err()
+					case <-exit.C:
+						return false, errVideoReadiness
 					}
-					return false, nil
 				}
 				return false, decoder.streamError()
 			}
 			if pending.at < clock-2*videoFrameInterval {
+				lagThreshold := policy.catchupLag
+				if target.lead > 0 && !hasFrame {
+					// A recovery startup can be slightly slower than the previous
+					// one; adapt its residual lag instead of waiting for 750 ms.
+					lagThreshold = min(lagThreshold, 2*videoFrameInterval)
+				}
+				if isPlaying && clock-pending.at >= lagThreshold {
+					if lagSince.IsZero() {
+						lagSince = now
+					} else if now.Sub(lagSince) >= policy.catchupGrace {
+						return true, &videoCatchUpError{lag: clock - pending.at}
+					}
+				} else {
+					lagSince = time.Time{}
+				}
 				pending = nil
 				continue
 			}
 			// A paused seek can still show its first accurate frame. Later frames
 			// wait for the audio clock; pipe backpressure bounds decode-ahead.
-			if pending.at <= clock+videoFrameInterval/2 && (playing() || !hasFrame) {
+			if pending.at <= clock+videoFrameInterval/2 && (isPlaying || !hasFrame) {
 				v.mu.Lock()
 				if generation == v.generation && !v.closed {
 					v.frame, v.loading, v.error = pending.image, false, ""
@@ -232,6 +393,8 @@ func (v *Video) present(ctx context.Context, generation uint64, decoder *videoDe
 				}
 				v.mu.Unlock()
 				hasFrame, pending = true, nil
+				lastPresented, lagSince = now, time.Time{}
+				presented()
 				continue
 			}
 		}
@@ -315,12 +478,18 @@ func startVideoDecoder(ctx context.Context, executable string, info videoMedia, 
 	}
 	// The worker owns remote transport. FFmpeg receives only the local relay
 	// capability through stdin, never remote URLs or headers.
-	manifest := fmt.Sprintf("ffconcat version 1.0\nfile '%s'\nduration %.6f\noption rw_timeout 10000000\n", bridge.URL, info.Duration.Seconds())
-	filter := fmt.Sprintf("scale=%d:%d:flags=fast_bilinear,fps=24,format=rgba", info.width, info.height)
+	// Seek the underlying media before probing rather than scanning the
+	// concat input from its beginning. Preserve negative keyframe preroll
+	// timestamps through decoding, then trim at output time: input-side
+	// -ss 0 discards reordered H.264 frames and can lose the tail entirely.
+	manifest := fmt.Sprintf("ffconcat version 1.0\nfile '%s'\ninpoint %.6f\nduration %.6f\noption rw_timeout 10000000\n", bridge.URL, at.Seconds(), max(info.Duration-at, 0).Seconds())
+	// Trim before fps quantization: otherwise a slightly negative preroll
+	// timestamp can round to zero and leak the preceding frame into output.
+	filter := fmt.Sprintf("trim=start=0,scale=%d:%d:flags=fast_bilinear,fps=24,format=rgba", info.width, info.height)
 	cmd := childCommand(life, executable, "-hide_banner", "-loglevel", "quiet", "-nostdin",
-		"-threads", "1", "-ss", fmt.Sprintf("%.6f", at.Seconds()), "-f", "concat", "-safe", "0",
+		"-threads", "1", "-copyts", "-f", "concat", "-safe", "0",
 		"-protocol_whitelist", "pipe,file,http,tcp", "-i", "pipe:0",
-		"-an", "-sn", "-dn", "-threads", "1", "-filter_threads", "1", "-vf", filter,
+		"-ss", "0", "-an", "-sn", "-dn", "-threads", "1", "-filter_threads", "1", "-vf", filter,
 		"-c:v", "rawvideo", "-pix_fmt", "rgba", "-f", "rawvideo", "pipe:1")
 	cmd.Stdin, cmd.Stderr = strings.NewReader(manifest), io.Discard
 	reader, writer, err := os.Pipe()

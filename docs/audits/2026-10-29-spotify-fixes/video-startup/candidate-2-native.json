@@ -1,0 +1,23 @@
+{
+  "role": "intermediate_candidate_partial_recovery_not_accepted",
+  "executable_sha256": "9a3f5aa8195d2de738891ce44128e579c71108e9bca4310546b0422b836f8913",
+  "first_probe": {
+    "at": 71.170264129,
+    "start": 1793255487770,
+    "elapsed": 18.502,
+    "loading": false,
+    "retry": false,
+    "position": 89.719597462
+  },
+  "second_probe": {
+    "at": 118.230706659,
+    "start": 1793255611840,
+    "elapsed": 20.325,
+    "loading": false,
+    "retry": true,
+    "position": 138.892039993
+  },
+  "continued_frame_observed_at_seconds": 161.474264129,
+  "memory_phase": "final_video_playing",
+  "memory_phase_note": "Name chosen before later failure; this sample belongs to candidate 2 and does not establish final acceptance."
+}

@@ -1,0 +1,25 @@
+{
+  "processes": [
+    {
+      "pid": 75054,
+      "ppid": 1,
+      "uid": 501,
+      "state": "S",
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/darwin-arm64/ytmgo.app/Contents/MacOS/ytmgo"
+    },
+    {
+      "pid": 75059,
+      "ppid": 75054,
+      "uid": 501,
+      "state": "S",
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/darwin-arm64/ytmgo.app/Contents/Resources/runtime/node"
+    },
+    {
+      "pid": 75930,
+      "ppid": 75059,
+      "uid": 501,
+      "state": "S",
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/darwin-arm64/ytmgo.app/Contents/Resources/runtime/node"
+    }
+  ]
+}

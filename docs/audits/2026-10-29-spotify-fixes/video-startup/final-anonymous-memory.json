@@ -1,0 +1,417 @@
+{
+  "scope": "final candidate anonymous native video; 2880x1808 screenshot pixels; not directly comparable to earlier 3840x2000 Premium sample",
+  "measurement": "kernel physical footprint, includes verified app and bundled child executables",
+  "sample_period_seconds": 5,
+  "sample_duration_seconds": 30,
+  "samples": [
+    {
+      "time_utc": "2026-10-29T06:58:40.395267+00:00",
+      "phase": "final_anonymous_video_playing",
+      "index": 0,
+      "processes": [
+        {
+          "pid": 94035,
+          "ppid": 1,
+          "executable": "MacOS/ytmgo",
+          "resident_bytes": 94699520,
+          "physical_footprint_bytes": 290375072,
+          "lifetime_peak_footprint_bytes": 292177312
+        },
+        {
+          "pid": 94052,
+          "ppid": 94035,
+          "executable": "Resources/runtime/node",
+          "resident_bytes": 47480832,
+          "physical_footprint_bytes": 35295504,
+          "lifetime_peak_footprint_bytes": 49025368
+        },
+        {
+          "pid": 94372,
+          "ppid": 94052,
+          "executable": "Resources/runtime/node",
+          "resident_bytes": 25296896,
+          "physical_footprint_bytes": 101415648,
+          "lifetime_peak_footprint_bytes": 133954656
+        },
+        {
+          "pid": 94401,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 7487488,
+          "physical_footprint_bytes": 4800992,
+          "lifetime_peak_footprint_bytes": 4800992
+        },
+        {
+          "pid": 94406,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 5783552,
+          "physical_footprint_bytes": 3179000,
+          "lifetime_peak_footprint_bytes": 3195384
+        },
+        {
+          "pid": 94719,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 43827200,
+          "physical_footprint_bytes": 35635728,
+          "lifetime_peak_footprint_bytes": 53936656
+        }
+      ],
+      "total_footprint_bytes": 470701944,
+      "total_resident_bytes": 224575488
+    },
+    {
+      "time_utc": "2026-10-29T06:58:45.475531+00:00",
+      "phase": "final_anonymous_video_playing",
+      "index": 1,
+      "processes": [
+        {
+          "pid": 94035,
+          "ppid": 1,
+          "executable": "MacOS/ytmgo",
+          "resident_bytes": 94191616,
+          "physical_footprint_bytes": 290325920,
+          "lifetime_peak_footprint_bytes": 292177312
+        },
+        {
+          "pid": 94052,
+          "ppid": 94035,
+          "executable": "Resources/runtime/node",
+          "resident_bytes": 48807936,
+          "physical_footprint_bytes": 35377424,
+          "lifetime_peak_footprint_bytes": 49025368
+        },
+        {
+          "pid": 94372,
+          "ppid": 94052,
+          "executable": "Resources/runtime/node",
+          "resident_bytes": 25296896,
+          "physical_footprint_bytes": 101415648,
+          "lifetime_peak_footprint_bytes": 133954656
+        },
+        {
+          "pid": 94401,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 7520256,
+          "physical_footprint_bytes": 4817376,
+          "lifetime_peak_footprint_bytes": 4817376
+        },
+        {
+          "pid": 94406,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 5783552,
+          "physical_footprint_bytes": 3179000,
+          "lifetime_peak_footprint_bytes": 3195384
+        },
+        {
+          "pid": 94719,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 44318720,
+          "physical_footprint_bytes": 35832336,
+          "lifetime_peak_footprint_bytes": 53936656
+        }
+      ],
+      "total_footprint_bytes": 470947704,
+      "total_resident_bytes": 225918976
+    },
+    {
+      "time_utc": "2026-10-29T06:58:50.580031+00:00",
+      "phase": "final_anonymous_video_playing",
+      "index": 2,
+      "processes": [
+        {
+          "pid": 94035,
+          "ppid": 1,
+          "executable": "MacOS/ytmgo",
+          "resident_bytes": 94240768,
+          "physical_footprint_bytes": 290293152,
+          "lifetime_peak_footprint_bytes": 292177312
+        },
+        {
+          "pid": 94052,
+          "ppid": 94035,
+          "executable": "Resources/runtime/node",
+          "resident_bytes": 48840704,
+          "physical_footprint_bytes": 35393808,
+          "lifetime_peak_footprint_bytes": 49025368
+        },
+        {
+          "pid": 94372,
+          "ppid": 94052,
+          "executable": "Resources/runtime/node",
+          "resident_bytes": 25296896,
+          "physical_footprint_bytes": 101415648,
+          "lifetime_peak_footprint_bytes": 133954656
+        },
+        {
+          "pid": 94401,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 7520256,
+          "physical_footprint_bytes": 4817376,
+          "lifetime_peak_footprint_bytes": 4817376
+        },
+        {
+          "pid": 94406,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 5783552,
+          "physical_footprint_bytes": 3179000,
+          "lifetime_peak_footprint_bytes": 3195384
+        },
+        {
+          "pid": 94719,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 44515328,
+          "physical_footprint_bytes": 36061712,
+          "lifetime_peak_footprint_bytes": 53936656
+        }
+      ],
+      "total_footprint_bytes": 471160696,
+      "total_resident_bytes": 226197504
+    },
+    {
+      "time_utc": "2026-10-29T06:58:55.655544+00:00",
+      "phase": "final_anonymous_video_playing",
+      "index": 3,
+      "processes": [
+        {
+          "pid": 94035,
+          "ppid": 1,
+          "executable": "MacOS/ytmgo",
+          "resident_bytes": 94289920,
+          "physical_footprint_bytes": 290293152,
+          "lifetime_peak_footprint_bytes": 292177312
+        },
+        {
+          "pid": 94052,
+          "ppid": 94035,
+          "executable": "Resources/runtime/node",
+          "resident_bytes": 49741824,
+          "physical_footprint_bytes": 35950864,
+          "lifetime_peak_footprint_bytes": 49025368
+        },
+        {
+          "pid": 94372,
+          "ppid": 94052,
+          "executable": "Resources/runtime/node",
+          "resident_bytes": 25296896,
+          "physical_footprint_bytes": 101415648,
+          "lifetime_peak_footprint_bytes": 133954656
+        },
+        {
+          "pid": 94401,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 7536640,
+          "physical_footprint_bytes": 4817376,
+          "lifetime_peak_footprint_bytes": 4817376
+        },
+        {
+          "pid": 94406,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 5783552,
+          "physical_footprint_bytes": 3179000,
+          "lifetime_peak_footprint_bytes": 3195384
+        },
+        {
+          "pid": 94719,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 44515328,
+          "physical_footprint_bytes": 36061712,
+          "lifetime_peak_footprint_bytes": 53936656
+        }
+      ],
+      "total_footprint_bytes": 471717752,
+      "total_resident_bytes": 227164160
+    },
+    {
+      "time_utc": "2026-10-29T06:59:00.733789+00:00",
+      "phase": "final_anonymous_video_playing",
+      "index": 4,
+      "processes": [
+        {
+          "pid": 94035,
+          "ppid": 1,
+          "executable": "MacOS/ytmgo",
+          "resident_bytes": 94306304,
+          "physical_footprint_bytes": 290293152,
+          "lifetime_peak_footprint_bytes": 292177312
+        },
+        {
+          "pid": 94052,
+          "ppid": 94035,
+          "executable": "Resources/runtime/node",
+          "resident_bytes": 50462720,
+          "physical_footprint_bytes": 36098320,
+          "lifetime_peak_footprint_bytes": 49025368
+        },
+        {
+          "pid": 94372,
+          "ppid": 94052,
+          "executable": "Resources/runtime/node",
+          "resident_bytes": 27213824,
+          "physical_footprint_bytes": 101415648,
+          "lifetime_peak_footprint_bytes": 133954656
+        },
+        {
+          "pid": 94401,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 7536640,
+          "physical_footprint_bytes": 4817376,
+          "lifetime_peak_footprint_bytes": 4817376
+        },
+        {
+          "pid": 94406,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 5783552,
+          "physical_footprint_bytes": 3179000,
+          "lifetime_peak_footprint_bytes": 3195384
+        },
+        {
+          "pid": 94719,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 44531712,
+          "physical_footprint_bytes": 35766800,
+          "lifetime_peak_footprint_bytes": 53936656
+        }
+      ],
+      "total_footprint_bytes": 471570296,
+      "total_resident_bytes": 229834752
+    },
+    {
+      "time_utc": "2026-10-29T06:59:05.816486+00:00",
+      "phase": "final_anonymous_video_playing",
+      "index": 5,
+      "processes": [
+        {
+          "pid": 94035,
+          "ppid": 1,
+          "executable": "MacOS/ytmgo",
+          "resident_bytes": 94420992,
+          "physical_footprint_bytes": 290293152,
+          "lifetime_peak_footprint_bytes": 292177312
+        },
+        {
+          "pid": 94052,
+          "ppid": 94035,
+          "executable": "Resources/runtime/node",
+          "resident_bytes": 49414144,
+          "physical_footprint_bytes": 36163904,
+          "lifetime_peak_footprint_bytes": 49025368
+        },
+        {
+          "pid": 94372,
+          "ppid": 94052,
+          "executable": "Resources/runtime/node",
+          "resident_bytes": 25296896,
+          "physical_footprint_bytes": 101415648,
+          "lifetime_peak_footprint_bytes": 133954656
+        },
+        {
+          "pid": 94401,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 7553024,
+          "physical_footprint_bytes": 4850144,
+          "lifetime_peak_footprint_bytes": 4850144
+        },
+        {
+          "pid": 94406,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 5783552,
+          "physical_footprint_bytes": 3179000,
+          "lifetime_peak_footprint_bytes": 3195384
+        },
+        {
+          "pid": 94719,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 49315840,
+          "physical_footprint_bytes": 37569040,
+          "lifetime_peak_footprint_bytes": 53936656
+        }
+      ],
+      "total_footprint_bytes": 473470888,
+      "total_resident_bytes": 231784448
+    },
+    {
+      "time_utc": "2026-10-29T06:59:10.901096+00:00",
+      "phase": "final_anonymous_video_playing",
+      "index": 6,
+      "processes": [
+        {
+          "pid": 94035,
+          "ppid": 1,
+          "executable": "MacOS/ytmgo",
+          "resident_bytes": 94388224,
+          "physical_footprint_bytes": 290309536,
+          "lifetime_peak_footprint_bytes": 292177312
+        },
+        {
+          "pid": 94052,
+          "ppid": 94035,
+          "executable": "Resources/runtime/node",
+          "resident_bytes": 49577984,
+          "physical_footprint_bytes": 35967344,
+          "lifetime_peak_footprint_bytes": 49025368
+        },
+        {
+          "pid": 94372,
+          "ppid": 94052,
+          "executable": "Resources/runtime/node",
+          "resident_bytes": 25296896,
+          "physical_footprint_bytes": 101415648,
+          "lifetime_peak_footprint_bytes": 133954656
+        },
+        {
+          "pid": 94401,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 7536640,
+          "physical_footprint_bytes": 4850144,
+          "lifetime_peak_footprint_bytes": 4850144
+        },
+        {
+          "pid": 94406,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 5783552,
+          "physical_footprint_bytes": 3179000,
+          "lifetime_peak_footprint_bytes": 3195384
+        },
+        {
+          "pid": 94719,
+          "ppid": 94035,
+          "executable": "Resources/runtime/ffmpeg",
+          "resident_bytes": 49397760,
+          "physical_footprint_bytes": 32326160,
+          "lifetime_peak_footprint_bytes": 53936656
+        }
+      ],
+      "total_footprint_bytes": 468047832,
+      "total_resident_bytes": 231981056
+    }
+  ],
+  "main_footprint_mib_range": [
+    276.85,
+    276.92
+  ],
+  "total_footprint_mib_range": [
+    446.37,
+    451.54
+  ],
+  "video_decoder_pid_stable_in_sample": true,
+  "not_a_long_term_leak_test": true
+}

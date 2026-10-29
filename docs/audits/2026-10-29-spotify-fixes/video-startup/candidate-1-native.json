@@ -1,0 +1,24 @@
+{
+  "role": "intermediate_candidate_real_account_failure",
+  "executable_sha256": "b9447c1cf387a69dec97ab9cd69ae79b2cc3c6ea283c5fec771fcefcab740ddd",
+  "moving_audio_open_at_seconds": 84.770222462,
+  "first_frame_success": false,
+  "safe_failure_category": "video_network_timeout",
+  "error_retry_visible": true,
+  "audio_kept_playing": true,
+  "paused_retry_at_seconds": 165.450222462,
+  "paused_retry_first_frame_observed_within_seconds": 5.616,
+  "paused_retry_success": true,
+  "screenshots": [
+    "premium-first-attempt-timeout.jpg",
+    "premium-paused-retry-frame.jpg",
+    "premium-resumed-after-frame.jpg"
+  ],
+  "conclusion": "Finite startup and retry UI work, but moving-clock real-account acceptance failed; not the final acceptance.",
+  "resume_after_first_frame": {
+    "from_seconds": 165.847555796,
+    "to_seconds": 210.647555796,
+    "video_frames_visibly_advanced": true,
+    "error_or_loading_observed": false
+  }
+}

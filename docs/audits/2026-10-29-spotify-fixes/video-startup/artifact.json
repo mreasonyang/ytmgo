@@ -1,0 +1,17 @@
+{
+  "version": "0.4.0",
+  "architecture": "arm64",
+  "signing": "ad-hoc",
+  "vcs_modified": true,
+  "role": "delivery_candidate_Premium_acceptance_pending",
+  "executable_sha256": "d33e9ed8677d17417d756c10973d6c6601b588368b6de19793934a5b3da34230",
+  "dmg_sha256": "bc46b9d65fa126fe30b3c8dde2e835ab7904a30f5db26969f35ff3c40de378b3",
+  "bundled_video_transport_sha256": "529b34a9e56aa1847257490012276834444a96ec35e93b53d67e04042d611e98",
+  "checks": {
+    "signature": "pass",
+    "dmg": "pass",
+    "temporary_numeric_trace_absent": true,
+    "bundled_transport_matches_source": true,
+    "production_source_matches_build": true
+  }
+}

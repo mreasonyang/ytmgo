@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-29",
+  "platform": "macOS arm64",
+  "application_version": "0.4.0",
+  "final_executable_sha256": "51f08febd623a50bad3661d2713c985daed28cf786ae5370a76ecb1a736c1f7a",
+  "anonymous": {
+    "identity_only_diagnostic_clone": true,
+    "source_executable_sha256": "51f08febd623a50bad3661d2713c985daed28cf786ae5370a76ecb1a736c1f7a",
+    "diagnostic_executable_sha256": "0dbf003de43663642bf1992fa0797b17fb4fb47d490c0c9e2bdb0217c40f524a",
+    "account_data_copied": false,
+    "cold_start_without_retry": true,
+    "initial_shelves": 2,
+    "shelves_after_one_load_more": 5,
+    "screenshots": [
+      "native/final-anonymous-cold-start.jpg",
+      "native/final-anonymous-page-2.jpg"
+    ],
+    "intermediate_pagination_to_terminal_shelves": [
+      2,
+      5,
+      8,
+      10
+    ],
+    "intermediate_manifest": "anonymous-artifact.json"
+  },
+  "premium": {
+    "account_restored": true,
+    "sidebar_type_deduplicated": true,
+    "real_creator_retained": true,
+    "first_track": "The Weeknd - Hong Kong Ft. Faye Wong (Live in Hong Kong)",
+    "first_paused_seek_seconds": 217.510719591,
+    "pause_preserved": true,
+    "resumed_natural_next": "Stop The Wedding!",
+    "second_track": "Stop The Wedding!",
+    "second_paused_near_end_seconds": [
+      198.194421279,
+      198.678602356
+    ],
+    "second_end_key_resolved_seconds": 198.839,
+    "second_duration_seconds": 198.84,
+    "second_endpoint_pause_preserved": true,
+    "second_resumed_natural_next": "Just \"F\" It",
+    "mute_preserved_during_playback_tests": true,
+    "screenshots": [
+      "native/final-library.jpg",
+      "native/final-premium-paused-tail.jpg",
+      "native/final-premium-endpoint.jpg",
+      "native/final-premium-natural-next.jpg"
+    ]
+  },
+  "short_window": {
+    "pixels": [
+      1922,
+      1282
+    ],
+    "approximate_dip": [
+      961,
+      641
+    ],
+    "title_two_lines_with_ellipsis": true,
+    "artist_fully_visible_with_bottom_padding": true,
+    "actual_video_frame_visible_during_playback": true,
+    "video_pause_at_seconds": 25.045333333,
+    "screenshots": [
+      "native/final-short-immersive-cover.jpg",
+      "native/final-short-immersive-video.jpg"
+    ]
+  },
+  "final_application_state": {
+    "running_final_candidate": true,
+    "paused": true,
+    "volume": 0.7,
+    "muted": false,
+    "immersive": false,
+    "video_mode": false,
+    "window_restored": true,
+    "original_language_and_theme_retained": true
+  },
+  "limits": [
+    "Final anonymous clone repeated cold-start and one continuation; full multi-page terminal navigation was on the labeled intermediate clone.",
+    "Exact original Premium failure targets were checked on the intermediate candidate; final package repeated near-tail and last-millisecond checks with the same final audio path.",
+    "This is local scoped repair acceptance, not full cross-platform or long-duration product acceptance."
+  ]
+}

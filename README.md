@@ -22,6 +22,8 @@ open build/darwin-arm64/ytmgo.app
 
 本地默认产物为 `build/darwin-arm64/ytmgo.app` 和 `build/darwin-arm64/ytmgo-0.5.0-arm64.dmg`，采用 ad-hoc App 签名和未签名 DMG。GitHub Actions 已提供手动触发的测试打包、Developer ID 签名及 Apple 公证模式；配置证书、私钥和使用方法见 [macOS Actions 配置指南](docs/MACOS_ACTIONS.md)。选择 `notarized` 并勾选 `publish_release` 后，工作流会发布可下载的 GitHub Release 和签名更新 feed。重新构建导致 ad-hoc 身份变化时，macOS 可能要求重新授权访问本应用保存在钥匙串中的加密密钥。其他操作系统未作为本轮交付目标。
 
+正式安装包见 [GitHub Releases](https://github.com/mreasonyang/ytmgo/releases/latest)。0.5.0 已通过签名、公证和真实公开包升级检查，范围与产物身份见 [自动升级验收](docs/AUTO_UPDATE_VERIFICATION.md)。
+
 开发运行：
 
 ```sh

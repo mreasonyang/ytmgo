@@ -63,8 +63,9 @@ func TestNativeShortImmersiveKeepsArtistAbovePlayer(t *testing.T) {
 						}
 						tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, 609)
 						r := nativeAssertVisible(t, tt, m.Current.Artist, width, 609)
-						if r.Y+r.H > 609-nativePlayerHeight-24 {
-							t.Fatalf("artist lacks the 24 DIP bottom inset: %+v", r)
+						_, line := ui.ShapeText(m.Current.Artist, ui.Font{Size: 17, Weight: 500}, 0).Size()
+						if r.Y+r.H > 609-nativePlayerHeight-24 || r.H < line-0.5 {
+							t.Fatalf("artist lacks the 24 DIP bottom inset or is clipped (line %v): %+v", line, r)
 						}
 						nativeAssertVisible(t, tt, a.Tr("shellPause"), width, 609)
 						if width == 960 {
@@ -72,6 +73,38 @@ func TestNativeShortImmersiveKeepsArtistAbovePlayer(t *testing.T) {
 						}
 					})
 				}
+			}
+		}
+	}
+}
+
+func TestNativeShortImmersiveMediaYieldsToText(t *testing.T) {
+	// A CJK title, with or without a playback notice, can leave the media
+	// less than its usual 180 DIPs at the minimum window height; the media
+	// shrinks instead of pushing the artist under the player.
+	for _, width := range []int{761, 960, 1440} {
+		for _, video := range []bool{false, true} {
+			for _, notice := range []bool{false, true} {
+				t.Run(fmt.Sprintf("%d-video-%v-notice-%v", width, video, notice), func(t *testing.T) {
+					m, a := nativeViewFixture()
+					m.Immersive, m.Video, m.Language = true, video, "ja"
+					m.Current.Title = "坂本龍一：音楽の旅と長い曲名／ライブ・アーカイブ特別版"
+					m.Current.Artist = "坂本龍一 – アーカイブ"
+					if notice {
+						m.PlaybackError = "Playback needs a retry"
+					}
+					tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, 609)
+					r := nativeAssertVisible(t, tt, m.Current.Artist, width, 609)
+					// Find reports the clipped rectangle: a clipped artist is
+					// shorter than its line, not lower than the inset.
+					_, line := ui.ShapeText(m.Current.Artist, ui.Font{Size: 17, Weight: 500}, 0).Size()
+					if r.Y+r.H > 609-nativePlayerHeight-24 || r.H < line-0.5 {
+						t.Fatalf("media floor clipped the artist (line %v): %+v", line, r)
+					}
+					if notice {
+						nativeAssertVisible(t, tt, a.Tr("buttonRetry"), width, 609)
+					}
+				})
 			}
 		}
 	}

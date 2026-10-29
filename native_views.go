@@ -1560,7 +1560,10 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 				if m.PlaybackError != "" {
 					textHeight += 24 + 56
 				}
-				mediaHeight := max(float32(180), contentHeight-textHeight)
+				// The text has priority: the media takes whatever is left, even
+				// below its usual size, as a fixed floor would push the artist
+				// under the player. It keeps a pixel so its box keeps bounds.
+				mediaHeight := max(1, contentHeight-textHeight)
 				artSize := min(mediaWidth, mediaHeight)
 				if m.Video {
 					// A landscape video can use the same vertical budget as the

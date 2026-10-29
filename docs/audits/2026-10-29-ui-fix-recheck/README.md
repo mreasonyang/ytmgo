@@ -2,7 +2,9 @@
 
 Date: 2026-10-29, Asia/Shanghai. Reviewed product commit: [`bb579ff9628051d79427235d689acb525a60fa93`](https://github.com/mreasonyang/ytmgo/commit/bb579ff9628051d79427235d689acb525a60fa93).
 
-**Signing-scope correction:** The earlier native recheck used an ad-hoc build. Its account-restoration wait does not establish a code defect, because Keychain authorization and signing identity were not controlled. A [Developer ID signed and notarized Actions build has now been installed](actions-signed/README.md); the local authorization check is pending. F01 must not be described as a confirmed failed fix on the strength of the ad-hoc wait.
+**Signing-scope correction:** The earlier native recheck used an ad-hoc build. Its account-restoration wait does not establish a code defect, because Keychain authorization and signing identity were not controlled. A [Developer ID signed and notarized Actions build has now been installed](actions-signed/README.md); the subsequent fresh-login result is recorded below. F01 must not be described as a confirmed failed fix on the strength of the ad-hoc wait.
+
+**Subsequent signed-app result:** Fresh interactive sign-in did not complete account acceptance: the return page went blank, the helper later exited, and the main app reported a secure-session-storage error. Source inspection confirms that saving a new login still requires reading and decrypting the old login state. This recovery dependency keeps F01 open; see the [signed-app follow-up](actions-signed/README.md#fresh-sign-in-still-depends-on-the-old-keychain-key).
 
 **Verdict: PARTIAL. F02–F06 pass the checks below. F01's misleading status and blocked public-playback recovery are corrected, but successful real-account restoration remains unverified. The Windows CI job also fails.** This does not establish full product or release acceptance.
 

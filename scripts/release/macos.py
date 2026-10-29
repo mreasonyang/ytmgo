@@ -284,7 +284,10 @@ def main():
     except Exception as error:
         # Print only our fixed categories, never arbitrary exception messages,
         # commands, environment values, notary responses or tool diagnostics.
-        print("Packaging: " + (str(error) if isinstance(error, PackageError) else "operation failed"), file=sys.stderr)
+        message = str(error) if isinstance(error, PackageError) else "operation failed"
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            print("::error title=macOS packaging::" + message)
+        print("Packaging: " + message, file=sys.stderr)
         return 1
     return 0
 

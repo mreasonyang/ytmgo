@@ -66,7 +66,7 @@ jobs:
       - name: Check translations
         run: go tool mygo i18n check
       - name: Build app with bundled runtime and login helper
-        run: make build
+        run: make build-app
       - name: Package unsigned test build
         if: inputs.mode == 'unsigned'
         run: python3 scripts/release/macos.py package --mode unsigned

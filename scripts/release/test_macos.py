@@ -181,6 +181,53 @@ class PackagingTests(unittest.TestCase):
             self.assertEqual(child.call_args.kwargs["input"], b"synthetic fixture")
             self.assertEqual(child.call_args.kwargs["stderr"], configure_secrets.subprocess.DEVNULL)
 
+    def test_disk_image_errors_expose_only_fixed_categories(self):
+        with patch.object(macos.subprocess, "run") as child:
+            child.return_value.returncode = 1
+            child.return_value.stderr = b"hdiutil: Resource busy; synthetic private fixture path"
+            with self.assertRaises(macos.DiskImageError) as error:
+                macos.run(["hdiutil", "create", "fixture"], "Disk image creation")
+        self.assertEqual(str(error.exception), "Disk image creation failed (resource_busy, exit 1)")
+        self.assertNotIn("fixture", str(error.exception))
+
+    def test_disk_image_busy_retries_but_other_failures_do_not(self):
+        busy = macos.DiskImageError("Disk image creation", "resource_busy", 1)
+        with patch.object(macos, "run", side_effect=[busy, b""]) as child, \
+             patch.object(macos.time, "sleep") as sleep:
+            macos.disk_image_command(["create", "fixture"], "Disk image creation")
+        self.assertEqual(child.call_count, 2)
+        sleep.assert_called_once_with(2)
+        full = macos.DiskImageError("Disk image creation", "insufficient_space", 1)
+        with patch.object(macos, "run", side_effect=full) as child, \
+             patch.object(macos.time, "sleep") as sleep:
+            with self.assertRaises(macos.DiskImageError):
+                macos.disk_image_command(["create", "fixture"], "Disk image creation")
+        child.assert_called_once()
+        sleep.assert_not_called()
+
+    @unittest.skipUnless(sys.platform == "darwin" and shutil.which("hdiutil"), "requires macOS disk images")
+    def test_native_disk_image_preserves_sparse_and_small_fixture_files(self):
+        app, runtime, _ = self.app_fixture()
+        sparse = runtime / "sparse.fixture"
+        with sparse.open("wb") as stream:
+            stream.seek(8 * 1024 * 1024)
+            stream.write(b"fixture")
+        for index in range(256):
+            (runtime / ("small-" + str(index) + ".fixture")).write_bytes(b"fixture")
+        image = self.root / "fixture.dmg"
+        macos.create_disk_image(app, image)
+        macos.run(["hdiutil", "verify", image], "Fixture image integrity")
+        mount = self.root / "mounted"
+        mount.mkdir()
+        macos.run(["hdiutil", "attach", "-readonly", "-nobrowse", "-noautoopen", "-mountpoint", mount, image],
+                  "Fixture image mount")
+        try:
+            self.assertEqual(macos.digest(sparse), macos.digest(mount / app.name / "Contents/Resources/runtime/sparse.fixture"))
+            self.assertEqual(len(list((mount / app.name / "Contents/Resources/runtime").glob("small-*.fixture"))), 256)
+            self.assertEqual((mount / "Applications").readlink(), Path("/Applications"))
+        finally:
+            macos.disk_image_command(["detach", mount], "Fixture image unmount")
+
 
 if __name__ == "__main__":
     unittest.main()

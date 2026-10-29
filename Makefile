@@ -1,4 +1,4 @@
-.PHONY: dev runtime login build test test-runtime test-login check
+.PHONY: dev runtime login build build-app test test-runtime test-login check
 
 LOGIN_OS := $(shell go env GOOS)
 ifeq ($(LOGIN_OS),darwin)
@@ -19,6 +19,10 @@ login:
 build: runtime login
 	python3 scripts/login/prepare.py --verify
 	CGO_ENABLED=0 go tool mygo build
+
+build-app: runtime login
+	python3 scripts/login/prepare.py --verify
+	CGO_ENABLED=0 go tool mygo build -skip-dmg
 
 test:
 	go test ./...

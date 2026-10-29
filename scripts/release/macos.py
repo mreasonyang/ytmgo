@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import uuid
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -29,17 +30,44 @@ class PackageError(Exception):
     pass
 
 
+class DiskImageError(PackageError):
+    def __init__(self, stage, category, returncode):
+        self.category = category
+        super().__init__(stage + " failed (" + category + ", exit " + str(returncode) + ")")
+
+
+def disk_image_failure_category(output):
+    # Only fixed categories cross into annotations; no raw paths or diagnostics.
+    output = output.lower()
+    for phrase, category in (
+        (b"resource busy", "resource_busy"),
+        (b"no space left", "insufficient_space"),
+        (b"not enough space", "insufficient_space"),
+        (b"out of space", "insufficient_space"),
+        (b"permission denied", "permission_denied"),
+        (b"operation not permitted", "permission_denied"),
+        (b"device not configured", "device_unavailable"),
+        (b"invalid argument", "invalid_argument"),
+    ):
+        if phrase in output:
+            return category
+    return "disk_image_tool_error"
+
+
 def run(args, stage, capture=False, input_bytes=None):
     # Credentials go only to the intended Apple tools. Child build/packaging
     # commands do not inherit the signing secrets, and no command or raw output
     # is logged. CalledProcessError must never escape with its argv attached.
     child_env = {key: value for key, value in os.environ.items() if key not in SECRET_NAMES}
+    disk_image_tool = Path(args[0]).name == "hdiutil"
     result = subprocess.run(
         [str(arg) for arg in args], cwd=ROOT, env=child_env,
         stdout=subprocess.PIPE if capture else subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL, check=False, input=input_bytes,
+        stderr=subprocess.PIPE if disk_image_tool else subprocess.DEVNULL, check=False, input=input_bytes,
     )
     if result.returncode:
+        if disk_image_tool:
+            raise DiskImageError(stage, disk_image_failure_category(result.stderr), result.returncode)
         raise PackageError(stage + " failed")
     return result.stdout if capture else b""
 
@@ -206,6 +234,33 @@ def staple(path):
     run(["xcrun", "stapler", "validate", path], "Stapled ticket verification")
 
 
+def disk_image_command(args, stage):
+    for attempt in range(5):
+        try:
+            return run(["hdiutil", *args], stage)
+        except DiskImageError as error:
+            if error.category != "resource_busy" or attempt == 4:
+                raise
+            time.sleep(2 ** (attempt + 1))
+
+
+def create_disk_image(app, dmg):
+    # Follow MyGo's disk-image path: materialize APFS clones, let HFS+ size
+    # blocks/catalogs for many small files, then compress the writable image.
+    # The signed/stapled app must remain byte-identical through this process.
+    with tempfile.TemporaryDirectory(prefix="ytmgo-dmg-") as temporary:
+        work = Path(temporary)
+        contents = work / "src"
+        contents.mkdir()
+        run(["ditto", "--noclone", app, contents / app.name], "Disk image app copy")
+        (contents / "Applications").symlink_to("/Applications", target_is_directory=True)
+        writable = work / "rw.dmg"
+        disk_image_command(["create", "-ov", "-volname", "ytmgo", "-srcfolder", contents,
+                            "-fs", "HFS+", "-fsargs", "-c c=64,a=16,e=16", "-format", "UDRW", writable],
+                           "Disk image creation")
+        disk_image_command(["convert", writable, "-format", "UDZO", "-ov", "-o", dmg], "Disk image compression")
+
+
 def package(mode):
     config = json.loads((ROOT / "mygo.json").read_text())
     version = config["version"]
@@ -236,12 +291,7 @@ def package(mode):
         archive = output / (name + ".zip")
         run(["ditto", "-c", "-k", "--keepParent", app, archive], "App archive creation")
         dmg = output / (name + ".dmg")
-        with tempfile.TemporaryDirectory(prefix="ytmgo-dmg-") as temporary:
-            contents = Path(temporary)
-            run(["ditto", app, contents / app.name], "Disk image app copy")
-            (contents / "Applications").symlink_to("/Applications", target_is_directory=True)
-            run(["hdiutil", "create", "-volname", "ytmgo", "-srcfolder", contents,
-                 "-format", "UDZO", "-ov", dmg], "Disk image creation")
+        create_disk_image(app, dmg)
         if mode != "unsigned":
             sign(dmg, identity, keychain)
             run(["codesign", "--verify", "--strict", dmg], "Disk image signature verification")

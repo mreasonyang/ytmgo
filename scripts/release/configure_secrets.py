@@ -12,12 +12,11 @@ import subprocess
 import sys
 
 REPOSITORY = "mreasonyang/ytmgo"
-ENVIRONMENT = "macos-release"
 
 
 def upload(name, value):
     result = subprocess.run(
-        ["gh", "secret", "set", name, "--repo", REPOSITORY, "--env", ENVIRONMENT],
+        ["gh", "secret", "set", name, "--repo", REPOSITORY],
         input=value.encode(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False,
     )
     if result.returncode:
@@ -49,10 +48,10 @@ def main():
             password = getpass.getpass("Apple app-specific password (hidden): ").strip()
             if not apple_id or not password:
                 raise RuntimeError("Apple ID and app-specific password are required")
-            upload("APPLE_ID", apple_id)
-            upload("APPLE_APP_SPECIFIC_PASSWORD", password)
+            upload("AC_APPLE_ID", apple_id)
+            upload("AC_PASSWORD", password)
     except (Exception, KeyboardInterrupt):
-        print("Configuration incomplete. Check gh login, file selection and environment access; rerunning is safe.", file=sys.stderr)
+        print("Configuration incomplete. Check gh login, file selection and repository access; rerunning is safe.", file=sys.stderr)
         return 1
     return 0
 

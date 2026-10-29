@@ -17,7 +17,7 @@ import uuid
 ROOT = Path(__file__).resolve().parents[2]
 SECRET_NAMES = (
     "MACOS_CERTIFICATE_P12_BASE64", "MACOS_CERTIFICATE_PASSWORD",
-    "APPLE_ID", "APPLE_APP_SPECIFIC_PASSWORD",
+    "AC_APPLE_ID", "AC_PASSWORD", "AC_TEAM_ID",
 )
 MACH_HEADERS = {bytes.fromhex(value) for value in (
     "feedface", "cefaedfe", "feedfacf", "cffaedfe", "cafebabe", "bebafeca",
@@ -89,9 +89,9 @@ def import_identity(directory):
     certificate = directory / "certificate.p12"
     write_secret("MACOS_CERTIFICATE_P12_BASE64", certificate)
     password = required("MACOS_CERTIFICATE_PASSWORD")
-    team = required("APPLE_TEAM_ID")
+    team = required("AC_TEAM_ID")
     if not re.fullmatch(r"[A-Z0-9]{10}", team):
-        raise PackageError("Invalid APPLE_TEAM_ID")
+        raise PackageError("Invalid AC_TEAM_ID")
     keychain = directory / "signing.keychain-db"
     keychain_password = secrets.token_urlsafe(32)
     run(["security", "create-keychain", "-p", keychain_password, keychain], "Keychain creation")
@@ -106,7 +106,7 @@ def import_identity(directory):
                      "Signing identity lookup", capture=True).decode()
     matches = re.findall(r'\b([A-F0-9]{40}) "Developer ID Application: [^"\n]+ \(' + team + r'\)"', identities)
     if len(matches) != 1:
-        raise PackageError("Expected exactly one valid Developer ID Application identity for APPLE_TEAM_ID")
+        raise PackageError("Expected exactly one valid Developer ID Application identity for AC_TEAM_ID")
     return matches[0], keychain
 
 
@@ -187,9 +187,9 @@ def notarize(path, directory):
         # argv or a plaintext file; subsequent submissions use this temporary
         # keychain profile. Credential validation remains enabled.
         run(["xcrun", "notarytool", "store-credentials", profile,
-             "--apple-id", required("APPLE_ID"), "--team-id", required("APPLE_TEAM_ID"),
+             "--apple-id", required("AC_APPLE_ID"), "--team-id", required("AC_TEAM_ID"),
              "--keychain", keychain], "Notarization credential validation",
-            input_bytes=(required("APPLE_APP_SPECIFIC_PASSWORD") + "\n").encode())
+            input_bytes=(required("AC_PASSWORD") + "\n").encode())
         ready.touch()
     output = run(["xcrun", "notarytool", "submit", path,
                   "--keychain-profile", profile, "--keychain", keychain,

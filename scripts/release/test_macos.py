@@ -97,7 +97,7 @@ class PackagingTests(unittest.TestCase):
             self.assertEqual(child.call_args.kwargs["stderr"], macos.subprocess.DEVNULL)
 
     def test_wrong_team_identity_is_rejected(self):
-        with patch.dict(os.environ, {"APPLE_TEAM_ID": "AAAAAAAAAA", "MACOS_CERTIFICATE_PASSWORD": "fixture"}), \
+        with patch.dict(os.environ, {"AC_TEAM_ID": "AAAAAAAAAA", "MACOS_CERTIFICATE_PASSWORD": "fixture"}), \
              patch.object(macos, "write_secret", side_effect=lambda name, path: path.write_bytes(b"fixture")), \
              patch.object(macos, "run", return_value=b'1) ' + b'A' * 40 + b' "Developer ID Application: Fixture (BBBBBBBBBB)"\n'):
             with self.assertRaisesRegex(macos.PackageError, "Expected exactly one valid Developer ID"):
@@ -122,8 +122,8 @@ class PackagingTests(unittest.TestCase):
                 macos.notarize(self.root / "app.zip", self.root)
 
     def test_notary_password_uses_stdin_and_profile_is_reused(self):
-        fixture = {"APPLE_ID": "fixture@example.invalid", "APPLE_TEAM_ID": "AAAAAAAAAA",
-                   "APPLE_APP_SPECIFIC_PASSWORD": "synthetic notary fixture"}
+        fixture = {"AC_APPLE_ID": "fixture@example.invalid", "AC_TEAM_ID": "AAAAAAAAAA",
+                   "AC_PASSWORD": "synthetic notary fixture"}
         accepted = b'{"status":"Accepted","id":"00000000-0000-4000-8000-000000000001"}'
         with patch.dict(os.environ, fixture), patch.object(macos, "run", return_value=accepted) as child, \
              patch("builtins.print"):
@@ -133,7 +133,7 @@ class PackagingTests(unittest.TestCase):
         store = child.call_args_list[0]
         self.assertIn("store-credentials", store.args[0])
         self.assertNotIn("--password", store.args[0])
-        self.assertNotIn(fixture["APPLE_APP_SPECIFIC_PASSWORD"], store.args[0])
+        self.assertNotIn(fixture["AC_PASSWORD"], store.args[0])
         self.assertNotIn("--no-validate", store.args[0])
         self.assertEqual(store.kwargs["input_bytes"], b"synthetic notary fixture\n")
         for submit in child.call_args_list[1:]:
@@ -141,10 +141,10 @@ class PackagingTests(unittest.TestCase):
             self.assertNotIn("--password", submit.args[0])
 
     def test_notary_missing_password_fails_before_creating_profile(self):
-        fixture = {"APPLE_ID": "fixture@example.invalid", "APPLE_TEAM_ID": "AAAAAAAAAA",
-                   "APPLE_APP_SPECIFIC_PASSWORD": ""}
+        fixture = {"AC_APPLE_ID": "fixture@example.invalid", "AC_TEAM_ID": "AAAAAAAAAA",
+                   "AC_PASSWORD": ""}
         with patch.dict(os.environ, fixture), patch.object(macos, "run") as child:
-            with self.assertRaisesRegex(macos.PackageError, "Missing setting: APPLE_APP_SPECIFIC_PASSWORD"):
+            with self.assertRaisesRegex(macos.PackageError, "Missing setting: AC_PASSWORD"):
                 macos.notarize(self.root / "app.zip", self.root)
             child.assert_not_called()
         self.assertFalse((self.root / "notary-profile-ready").exists())
@@ -156,7 +156,7 @@ class PackagingTests(unittest.TestCase):
              patch.object(configure_secrets, "upload") as upload:
             self.assertEqual(configure_secrets.main(), 0)
         self.assertEqual([call.args[0] for call in upload.call_args_list],
-                         ["APPLE_ID", "APPLE_APP_SPECIFIC_PASSWORD"])
+                         ["AC_APPLE_ID", "AC_PASSWORD"])
 
     @unittest.skipUnless(sys.platform == "darwin" and shutil.which("xcrun"), "requires Apple's notarytool")
     def test_native_notary_secure_prompt_accepts_stdin_offline(self):
@@ -178,6 +178,7 @@ class PackagingTests(unittest.TestCase):
             child.return_value.returncode = 0
             configure_secrets.upload("FIXTURE_NAME", "synthetic fixture")
             self.assertNotIn("synthetic fixture", child.call_args.args[0])
+            self.assertNotIn("--env", child.call_args.args[0])
             self.assertEqual(child.call_args.kwargs["input"], b"synthetic fixture")
             self.assertEqual(child.call_args.kwargs["stderr"], configure_secrets.subprocess.DEVNULL)
 

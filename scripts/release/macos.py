@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import uuid
 
 ROOT = Path(__file__).resolve().parents[2]
 SECRET_NAMES = (
@@ -188,7 +189,8 @@ def notarize(path, directory):
     result = json.loads(output)
     if result.get("status") != "Accepted":
         raise PackageError("Apple notarization was not accepted")
-    print("Apple notarization accepted; submission " + str(result["id"]), flush=True)
+    submission_id = str(uuid.UUID(result["id"]))
+    print("Apple notarization accepted; submission " + submission_id, flush=True)
 
 
 def staple(path):

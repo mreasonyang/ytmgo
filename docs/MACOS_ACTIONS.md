@@ -46,7 +46,7 @@ python3 scripts/release/configure_secrets.py signing
 
 ## 3. 配置 Apple 公证
 
-到 [App Store Connect → Users and Access → Integrations → App Store Connect API](https://appstoreconnect.apple.com/access/integrations/api)，创建有公证权限的 **Team API Key**。使用 Developer 或更高的适用角色；若账号尚无 API access，先由 Account Holder 申请。下载 `.p8`，记下 Key ID 和 Issuer ID。私钥只可下载一次，应存入仓库外自己的私有目录。
+到 [App Store Connect → Users and Access → Integrations → App Store Connect API](https://appstoreconnect.apple.com/access/integrations/api)，在 **Team Keys** 创建有公证权限的 **Team API Key**，Access 选择 Developer 或更高的适用角色。创建 team key 的操作者需要 Account Holder 或 Admin 角色；若账号尚无 API access，先由 Account Holder 申请。下载 `.p8`，记下 Key ID 和 Issuer ID。私钥只可下载一次，应存入仓库外自己的私有目录。页面位置及创建权限见 [Apple 配置说明](https://developer.apple.com/help/app-store-connect/get-started/app-store-connect-api)。
 
 这里使用带 Issuer ID 的 **team key**，不使用 individual key；不需要把 Apple ID 登录密码或二次验证码交给 GitHub。
 

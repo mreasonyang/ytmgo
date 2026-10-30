@@ -1,5 +1,7 @@
 # Re-login Recovery Repair and Installed-App Acceptance
 
+> Historical implementation report for `b1e4d80`. The subsequent `ce0fcc9` single-key implementation supersedes the storage design below. See the [2026-10-30 recheck](../2026-10-30-relogin-playback-recheck/README.md) for current source and delivery status.
+
 Date: 2026-10-29, Asia/Shanghai. **Source validation PASS; Actions packaging and installed-account acceptance pending.** This report will be updated with the actual signed artifact and native results before acceptance is claimed.
 
 ## Problem and Change

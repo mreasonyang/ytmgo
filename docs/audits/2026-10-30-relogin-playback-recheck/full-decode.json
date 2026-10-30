@@ -1,0 +1,42 @@
+{
+  "commit": "e1ff1fcfdc943f09315e15dc9847f914a836bfcd",
+  "check": "independent_anonymous_full_decode",
+  "exit_code": 0,
+  "seconds": 86.5,
+  "events": [
+    {
+      "action": "pass",
+      "test": "TestNativeFullDecodeLive",
+      "package": "ytmgo/internal/player"
+    },
+    {
+      "action": "pass",
+      "test": null,
+      "package": "ytmgo/internal/player"
+    }
+  ],
+  "tracks": [
+    {
+      "track": 1,
+      "category": "pass",
+      "stage": null,
+      "metadata_seconds": 212.561,
+      "pcm_seconds": 212.52666666666667,
+      "eof": 1,
+      "decoder_failed": 0,
+      "bridge_failed": 0,
+      "total_seconds": 32.620790125
+    },
+    {
+      "track": 2,
+      "category": "pass",
+      "stage": null,
+      "metadata_seconds": 369.641,
+      "pcm_seconds": 369.6066666666667,
+      "eof": 1,
+      "decoder_failed": 0,
+      "bridge_failed": 0,
+      "total_seconds": 46.575602708
+    }
+  ]
+}

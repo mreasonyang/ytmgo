@@ -1,0 +1,19 @@
+{
+  "source_commit": "e1ff1fcfdc943f09315e15dc9847f914a836bfcd",
+  "checked_at": "2026-10-30T04:11:02.976137+00:00",
+  "installed_path": "/Applications/ytmgo.app",
+  "installed_main_binary_sha256": "d59e4b0c32646271b27d0767124351020b0175f83a6299742375f0c46ec4c62f",
+  "installed_matches_recorded_actions_run": 40863518962,
+  "latest_package_run": 40910763322,
+  "latest_package_source": "ce0fcc9f13e0c53752fd2bda5114bac10ff2afd4",
+  "latest_package_result": "success",
+  "account_login_playback_restart": "not_exercised",
+  "ci_run": 40999534114,
+  "ci_results": {
+    "macos": "success",
+    "ubuntu": "success",
+    "windows": "failure"
+  },
+  "windows_failed_step": "Native helper lifecycle",
+  "product_code_modified": false
+}

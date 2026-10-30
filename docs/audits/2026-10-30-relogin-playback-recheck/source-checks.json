@@ -1,0 +1,15 @@
+{
+  "source_commit": "e1ff1fcfdc943f09315e15dc9847f914a836bfcd",
+  "runtime_tests": {
+    "command": "build/runtime/node --test --test-reporter=tap scripts/runtime/tests/*.test.mjs",
+    "exit_code": 0,
+    "seconds": 4.28,
+    "tests": 83,
+    "pass": 83,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "prepared_runtime_source_mismatches": []
+}

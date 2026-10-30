@@ -1,8 +1,29 @@
-# 0.5.0 自动升级验收
+# 自动升级验收
+
+## 0.5.1 — 2026-10-30
+
+**PASS**：已公开发布 [0.5.1](https://github.com/mreasonyang/ytmgo/releases/tag/v0.5.1)，生产 feed 已指向 0.5.1，并从真实公开的 0.5.0 包完成升级。
+
+- [构建与发布](https://github.com/mreasonyang/ytmgo/actions/runs/41005003646)通过完整源码、runtime/login、翻译及构建检查，完成 App/DMG Developer ID 签名、Apple 公证、staple、Gatekeeper、更新包签名及远端资产摘要比对。
+- [公开包升级验收](https://github.com/mreasonyang/ytmgo/actions/runs/41005817902)通过。升级后的版本命令和 bundle 版本均为 0.5.1，Apple 签名、票据和 Gatekeeper 均通过，全部文件、权限及符号链接与独立下载的公开 0.5.1 ZIP 一致。回执是该运行的 `ytmgo-public-upgrade-receipt-2` artifact。
+- 本机匿名下载的 0.5.1 DMG 通过公开 SHA-256、签名、公证票据、Gatekeeper 和镜像完整性检查。生产 feed 版本及 `build.json` 源码提交与本次发布一致。
+
+该升级检查使用隔离的公开 bundle 与维护命令，没有初始化账号存储，也没有替换维护者 `/Applications` 中的应用。原生更新窗口点击、真实账号登录和播放验收属于其他检查，本次发布验证未重复这些场景。
+
+### 0.5.1 产物身份
+
+| 产物 | 来源或 SHA-256 |
+| --- | --- |
+| 源码 | `52790e0161c534f391eb620bf956bc60649b1df0` |
+| DMG | `9dcadfef7bc16bcce3360a4a1792a488b5822b3cb835ffaa01f4162906b34dac` |
+| ZIP | `f253c2c0fbd06fae114307532efe3098bfce7e5da3e4d21eb7f0b959a64ecf1f` |
+| 更新 archive | `74fc5eb06ce1902876affa5ffbf09707ba2951f58798b4998e1c977e7f8ec799` |
+
+## 0.5.0 — 历史验收
 
 日期：2026-10-29。目标：macOS 27、Apple Silicon。
 
-## 结果
+### 结果
 
 **PASS**：已公开发布 [0.5.0](https://github.com/mreasonyang/ytmgo/releases/tag/v0.5.0)，并从真实公开发布的 [0.5.0-rc.1](https://github.com/mreasonyang/ytmgo/releases/tag/v0.5.0-rc.1) 通过生产更新 feed 完成原地升级。
 
@@ -14,7 +35,7 @@
 
 升级验收使用应用内的维护命令，调用与原生更新窗口相同的 `mygo.Updater.Check` 和 `Update.Install`。该次检查未点击原生更新窗口或验证 GUI 重启，未启动账号、播放逻辑，也未替换维护者 `/Applications` 中的应用。
 
-## 产物身份
+### 产物身份
 
 | 产物 | 来源或 SHA-256 |
 | --- | --- |
@@ -28,7 +49,7 @@
 
 预发行版的首次运行在已完成签名、公证和资产上传后，因使用 REST tag endpoint 查询 draft 返回 404，停在发布门禁。修复改为查询 draft 的 release ID；已上传资产与 CI 校验清单、GitHub 摘要和 Ed25519 签名重新核验后才公开预发行版。正式版通过修复后的完整工作流，无需这个恢复步骤。
 
-## 使用与后续发布
+### 使用与后续发布
 
 0.4.0 没有更新器，需手动安装一次 0.5.0。此后启动自动检查，菜单 **ytmgo → 检查更新** 可手动检查；更新窗口可选择自动下载，下载后重启安装。
 

@@ -21,11 +21,15 @@ Local validation on macOS 27.0.1 / Apple Silicon:
   local app built with `go tool mygo build -skip-dmg`; its nested helper has
   `LSUIElement=true`, and deep/strict code-signature verification passed.
 
-The local app is ad-hoc signed. The Developer ID signed application currently
-installed in `/Applications/ytmgo.app` was not replaced, and no release or update
-feed was published. This change still needs signed packaging and installation
-before it affects that installed application. Real-account sign-in and playback
-were not repeated for this Dock-visibility change.
+The local app used for change validation is ad-hoc signed. The Developer ID
+signed application in `/Applications/ytmgo.app` was not replaced. This fix was
+then delivered in [0.5.1](https://github.com/mreasonyang/ytmgo/releases/tag/v0.5.1),
+source `52790e0161c534f391eb620bf956bc60649b1df0`, through the successful
+[signed/notarized release workflow](https://github.com/mreasonyang/ytmgo/actions/runs/41005003646).
+The production feed now offers 0.5.1, and the
+[public 0.5.0-to-0.5.1 upgrade check](https://github.com/mreasonyang/ytmgo/actions/runs/41005817902)
+passed. Real-account sign-in and playback were not repeated for this
+Dock-visibility change.
 
 ## Current macOS v4 Premium memory — 2026-10-29 (Asia/Shanghai)
 

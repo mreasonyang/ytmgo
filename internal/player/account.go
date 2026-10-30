@@ -97,6 +97,7 @@ func (p *Player) SetAccount(ctx context.Context, next AccountSession) error {
 	if identityChanged {
 		old, oldMedia = p.session, p.media
 		p.session, p.media, p.wantPlay = nil, nil, false
+		p.suspended, p.sleeping = nil, false
 		p.state.Position, p.state.Duration = 0, 0
 		p.state.Playing, p.state.Ended = false, false
 		p.state.Error, p.state.ErrorDetails = "", FailureDetails{}

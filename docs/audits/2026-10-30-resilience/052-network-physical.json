@@ -1,0 +1,34 @@
+{
+  "before_https": {
+    "reachable": true,
+    "http_status": 200,
+    "elapsed": 1.246,
+    "probe": "fresh_tls_http"
+  },
+  "offline_https": {
+    "reachable": false,
+    "elapsed": 2.1,
+    "probe": "fresh_tls_http",
+    "error_number": null
+  },
+  "offline_after_39s_https": {
+    "reachable": false,
+    "elapsed": 0.002,
+    "probe": "fresh_tls_http",
+    "error_number": 8
+  },
+  "restore_power": {
+    "exit": 0,
+    "confirmed_on": true,
+    "confirmed_off": false
+  },
+  "restored_https": {
+    "reachable": true,
+    "http_status": 200,
+    "elapsed": 1.615,
+    "probe": "fresh_tls_http"
+  },
+  "interface": "en0",
+  "wifi_off_at": "2026-10-30T13:15:07.818536+00:00",
+  "wifi_on_at": "2026-10-30T13:15:49.330546+00:00"
+}

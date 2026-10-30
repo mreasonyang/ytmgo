@@ -224,6 +224,7 @@ func (a *desktop) startTrack(it catalog.Item) {
 		return
 	}
 	a.cancelResume()
+	a.powerPlaybackSuspended = false
 	if a.playCancel != nil {
 		a.playCancel()
 	}
@@ -366,7 +367,7 @@ func (a *desktop) prepareNext() {
 		return
 	}
 	id := ""
-	if !a.loadPending && a.model.Current.ID != "" && a.model.PlaybackError == "" {
+	if !a.powerPlaybackSuspended && !a.loadPending && a.model.Current.ID != "" && a.model.PlaybackError == "" {
 		id = nextPreparedID(a.model.Queue, a.queueIndex, a.model.Repeat)
 	}
 	if id == a.preparedID {

@@ -1,0 +1,12 @@
+{
+  "recorded_at": "2026-10-30T13:23:22.047965+00:00",
+  "before": {
+    "kern.sleeptime": 0,
+    "kern.waketime": 0
+  },
+  "wake_date_local": "10/30/26 21:24:22",
+  "owner": "si.kyun.ytmgo.e2e.20261030",
+  "schedule_exit": 0,
+  "own_event_confirmed": true,
+  "sleep_requested": false
+}

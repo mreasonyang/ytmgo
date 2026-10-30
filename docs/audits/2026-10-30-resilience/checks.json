@@ -1,0 +1,16 @@
+{
+  "recorded_at": "2026-10-30T13:40:20.421546+00:00",
+  "go_vet": "pass",
+  "i18n_messages": 233,
+  "i18n_locales": 4,
+  "runtime_manifest_tests": 14,
+  "runtime_protocol_tests": 5,
+  "runtime_node_tests": 83,
+  "login_staging_tests": 10,
+  "release_script_tests": 22,
+  "whitespace": "pass",
+  "full_race_passes": 856,
+  "full_race_skips": 22,
+  "final_power_race_passes": 15,
+  "full_race_note": "Full run began before the final preexisting-error guard/test; final affected-package race tests and vet passed afterward. CI must test final immutable commit."
+}

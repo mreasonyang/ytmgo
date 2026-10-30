@@ -30,7 +30,7 @@ func (a *desktop) syncVideoState(retry bool) {
 // reports startup rejection for the UI to localize, without touching audio.
 func (a *desktop) syncVideoSession(retry bool) bool {
 	wanted := ""
-	if a.windowVisible && a.player != nil && a.model.Video && (a.model.Panel || a.model.Immersive) {
+	if !a.powerPlaybackSuspended && a.windowVisible && a.player != nil && a.model.Video && (a.model.Panel || a.model.Immersive) {
 		wanted = a.model.Current.ID
 	}
 	if wanted == a.videoID && !(retry && wanted != "") {

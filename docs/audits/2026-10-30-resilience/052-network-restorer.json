@@ -1,0 +1,15 @@
+{
+  "time": "2026-10-30T13:15:49.330546+00:00",
+  "pid": 19128,
+  "caller_pid": 18734,
+  "current_parent_pid": 18734,
+  "interface": "en0",
+  "attempts": [
+    {
+      "exit": 0,
+      "confirmed_on": true,
+      "confirmed_off": false
+    }
+  ],
+  "parent_changed": false
+}

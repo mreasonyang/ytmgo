@@ -43,6 +43,9 @@ type Player struct {
 	session            *session
 	prepared           *preparedTrack
 	videoID            string
+	suspended          *suspendedTrack
+	suspendDone        chan struct{}
+	sleeping           bool
 	accountMu          sync.Mutex
 	account            AccountSession
 	accountSet         bool
@@ -113,6 +116,7 @@ func (p *Player) Load(ctx context.Context, videoID string) error {
 		p.mu.Unlock()
 		return err
 	}
+	p.suspended, p.sleeping = nil, false
 	p.videoID = videoID
 	prepared := p.prepared
 	if prepared != nil && prepared.id == videoID && prepared.ctx.Err() == nil {
@@ -184,7 +188,7 @@ func (p *Player) Prepare(ctx context.Context, videoID string) error {
 	}
 	// A queued preparation worker may start after the user has already chosen
 	// that track. The foreground load owns its resolution in that case.
-	if p.state.Loading && p.videoID == videoID {
+	if p.sleeping || p.suspended != nil || p.state.Loading && p.videoID == videoID {
 		p.mu.Unlock()
 		return nil
 	}
@@ -346,6 +350,7 @@ func (p *Player) installDecoder(ctx context.Context, gen uint64, info media, d *
 	p.media, p.session = &info, &session{out, d, at}
 	p.state.Duration, p.state.Loading = info.Duration, false
 	p.state.Playing = p.wantPlay
+	p.suspended, p.sleeping = nil, false
 	if p.wantPlay {
 		out.Play()
 	}
@@ -390,6 +395,11 @@ func (p *Player) PlayContext(ctx context.Context) error {
 		p.mu.Unlock()
 		return err
 	}
+	if p.suspended != nil {
+		p.suspended.play, p.wantPlay = true, true
+		p.mu.Unlock()
+		return p.ResumeFromSuspend(ctx)
+	}
 	ended := p.state.Ended
 	if s := p.session; s != nil && p.wantPlay && !s.output.Playing() && s.decoder.eof.Load() {
 		ended = true
@@ -429,6 +439,9 @@ func (p *Player) Pause() error {
 		return ErrClosed
 	}
 	p.wantPlay = false
+	if p.suspended != nil {
+		p.suspended.play = false
+	}
 	if p.session != nil {
 		p.session.output.Pause()
 	}
@@ -450,6 +463,7 @@ func (p *Player) Stop() error {
 	old := p.session
 	oldMedia := p.media
 	p.session, p.media, p.wantPlay = nil, nil, false
+	p.suspended, p.sleeping = nil, false
 	p.clearPreparedLocked()
 	p.state.Position, p.state.Playing, p.state.Loading, p.state.Ended = 0, false, false, false
 	p.state.Error, p.state.ErrorDetails = "", FailureDetails{}
@@ -474,6 +488,15 @@ func (p *Player) SeekContext(ctx context.Context, at time.Duration) error {
 	if p.closed {
 		p.mu.Unlock()
 		return ErrClosed
+	}
+	if p.suspended != nil {
+		at = max(at, 0)
+		if p.suspended.duration > 0 {
+			at = min(at, max(p.suspended.duration-time.Millisecond, 0))
+		}
+		p.suspended.position, p.state.Position = at, at
+		p.mu.Unlock()
+		return p.ResumeFromSuspend(ctx)
 	}
 	if p.media == nil {
 		p.mu.Unlock()
@@ -559,6 +582,7 @@ func (p *Player) Close() {
 	old := p.session
 	oldMedia := p.media
 	p.session, p.media = nil, nil
+	p.suspended, p.sleeping = nil, false
 	p.clearPreparedLocked()
 	p.state.Playing, p.state.Loading = false, false
 	p.mu.Unlock()

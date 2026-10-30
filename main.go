@@ -19,7 +19,7 @@ import (
 	"ytmgo/locales"
 )
 
-const version = "0.5.2"
+const version = "0.5.3"
 
 //go:embed locales/en.json resources/icon.png resources/tray.png
 var assets embed.FS
@@ -48,6 +48,8 @@ type desktop struct {
 	videoFrameNumber                uint64
 	videoActive                     atomic.Bool
 	windowVisible                   bool
+	powerPlaybackSuspended          bool
+	powerGeneration                 uint64
 	art                             *artworkCache
 	ctx                             context.Context
 	cancel                          context.CancelFunc
@@ -149,6 +151,8 @@ func main() {
 			}
 			a.invalidate()
 		})
+		mygo.Power.OnSuspend(a.suspendForPower)
+		mygo.Power.OnResume(a.resumeAfterPower)
 		a.art = newArtworkCache(a.ctx, func() {
 			a.invalidate()
 		})

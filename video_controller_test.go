@@ -120,7 +120,7 @@ func TestVideoRetryReentersSameIDWithoutRestartingAudio(t *testing.T) {
 }
 
 func TestVideoRetryPreservesVisibilityAndCoverResourceRules(t *testing.T) {
-	for _, mode := range []string{"hidden", "cover", "panel_closed"} {
+	for _, mode := range []string{"hidden", "cover", "panel_closed", "power_suspended"} {
 		t.Run(mode, func(t *testing.T) {
 			v := &player.Video{}
 			defer v.Close()
@@ -131,6 +131,8 @@ func TestVideoRetryPreservesVisibilityAndCoverResourceRules(t *testing.T) {
 				a.windowVisible = false
 			} else if mode == "panel_closed" {
 				a.model.Panel = false
+			} else if mode == "power_suspended" {
+				a.powerPlaybackSuspended = true
 			}
 			a.setVideo(mode != "cover")
 			if a.videoID != "" || a.videoActive.Load() || a.model.VideoLoading || a.model.VideoError != "" {

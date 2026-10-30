@@ -1,0 +1,114 @@
+{
+  "command": [
+    "go",
+    "test",
+    "-race",
+    "-json",
+    "-count=1",
+    "./internal/player",
+    "-run",
+    "Test(Suspend|CanceledWake|LateWake|Wake)"
+  ],
+  "exit": 0,
+  "elapsed": 5.807,
+  "passed": 15,
+  "failed": 0,
+  "skipped": 0,
+  "events": [
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestSuspendRetiresMediaAndResolvesFreshAtBookmark",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestSuspendPreservesPausedIntentAndSeek",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestCanceledWakeRetainsBookmarkForExplicitPlay",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestLateWakeLosesToUserActions/pause",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestLateWakeLosesToUserActions/load",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestLateWakeLosesToUserActions/stop",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestLateWakeLosesToUserActions/close",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestLateWakeLosesToUserActions/suspend",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestLateWakeLosesToUserActions",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestWakeRetriesOnlyTransientTransportFailure/audio_connection_failed",
+      "Elapsed": 1
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestWakeRetriesOnlyTransientTransportFailure/login_required",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestWakeRetriesOnlyTransientTransportFailure/rate_limited",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestWakeRetriesOnlyTransientTransportFailure",
+      "Elapsed": 1
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestWakeBookmarkCannotCrossAccountIdentity",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestWakeDoesNotHideAPreexistingFailure",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Elapsed": 4.177
+    }
+  ]
+}

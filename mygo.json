@@ -1,7 +1,7 @@
 {
   "name": "ytmgo",
   "identifier": "si.kyun.ytmgo",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "updates": {
     "publicKey": "QdNGPq3cMZgxGD4axj0uOJFhUy6hHpmR710PRm3oovE=",
     "github": "mreasonyang/ytmgo",

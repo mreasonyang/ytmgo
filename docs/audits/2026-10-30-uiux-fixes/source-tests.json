@@ -1,0 +1,5250 @@
+{
+  "command": [
+    "go",
+    "test",
+    "-race",
+    "-json",
+    "-count=1",
+    "./..."
+  ],
+  "exit": 0,
+  "elapsed": 130.209,
+  "passed": 841,
+  "failed": 0,
+  "skipped": 22,
+  "events": [
+    {
+      "Action": "skip",
+      "Package": "ytmgo/cmd/icon",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/preference",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/locales",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/language",
+      "Test": "TestSupportedMatchesCatalogs",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/language",
+      "Test": "TestServiceLanguageAndScript",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/language",
+      "Test": "TestChoiceRoundTrip",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/appearance",
+      "Test": "TestPreferencesSurviveReloadWithoutTouchingLibrary",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/appearance",
+      "Test": "TestUnreadableOrInvalidPreferenceFallsBackAndWriteFailureIsReported",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestVerifiedLoginReusesKeyWithoutReadingPreviousCiphertext",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/cmd/update-package",
+      "Test": "TestPackagePreservesBundleAndRejectsTampering",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestVerifiedLoginFailurePreservesSavedAccount/denied-key",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/cmd/update-package",
+      "Test": "TestSigningRejectsWrongKeyAndUnsafeBundle/wrong_key",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestVerifiedLoginFailurePreservesSavedAccount/invalid-key",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/cmd/update-package",
+      "Test": "TestSigningRejectsWrongKeyAndUnsafeBundle/invalid_key",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestVerifiedLoginFailurePreservesSavedAccount/cancel-after-get",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAccountStatusRequiresExplicitConsistentServiceFields/premium",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAccountStatusRequiresExplicitConsistentServiceFields/free",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAccountStatusRequiresExplicitConsistentServiceFields/logged-out",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAccountStatusRequiresExplicitConsistentServiceFields/missing-context",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAccountStatusRequiresExplicitConsistentServiceFields/missing-login",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAccountStatusRequiresExplicitConsistentServiceFields/missing-premium",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAccountStatusRequiresExplicitConsistentServiceFields/invalid-login-type",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAccountStatusRequiresExplicitConsistentServiceFields/invalid-login-string",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAccountStatusRequiresExplicitConsistentServiceFields/invalid-premium-type",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAccountStatusRequiresExplicitConsistentServiceFields/invalid-premium-case",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAccountStatusRequiresExplicitConsistentServiceFields/premium-without-login",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAccountStatusRequiresExplicitConsistentServiceFields/conflicting-login",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAccountStatusRequiresExplicitConsistentServiceFields/conflicting-premium",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAccountStatusRequiresExplicitConsistentServiceFields/identical-duplicates",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAccountStatusRequiresExplicitConsistentServiceFields/wrong-service",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAccountStatusRequiresExplicitConsistentServiceFields",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestAccountFullDecodeLive",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestAccountMembershipSwitchKeepsPlayingAndReleasesPrefetch",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestAccountChangeStopsOldTrackAndRejectsStaleRevision",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestAccountChangeDuringLeaseOpen/seek/membership",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestAccountChangeDuringLeaseOpen/seek/identity",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAccountStatusUsesFixedAlbumAndDoesNotInferLoginFromCookies",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestAccountChangeDuringLeaseOpen/paused-seek/membership",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestAccountChangeDuringLeaseOpen/paused-seek/identity",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestAccountChangeDuringLeaseOpen/replay/membership",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestAccountChangeDuringLeaseOpen/replay/identity",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestAccountChangeDuringLeaseOpen/load/membership",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSelectedAccountHeadersAndPrivateCredentials/0",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestAccountChangeDuringLeaseOpen/load/identity",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestAccountChangeDuringLeaseOpen",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSelectedAccountHeadersAndPrivateCredentials/2",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSelectedAccountHeadersAndPrivateCredentials/99",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSelectedAccountHeadersAndPrivateCredentials",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestInvalidAccountSelectionPreservesExistingSession",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSessionCookiesMatchPlayerContract/alternate-auth",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSessionCookiesMatchPlayerContract/duplicate",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSessionCookiesMatchPlayerContract/space",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSessionCookiesMatchPlayerContract/comma",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSessionCookiesMatchPlayerContract/semicolon",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSessionCookiesMatchPlayerContract/quote",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSessionCookiesMatchPlayerContract/slash",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSessionCookiesMatchPlayerContract/unicode",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSessionCookiesMatchPlayerContract/empty",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSessionCookiesMatchPlayerContract/value-limit",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSessionCookiesMatchPlayerContract/header-limit",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSessionCookiesMatchPlayerContract/expired-primary",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSessionCookiesMatchPlayerContract/deleted-primary",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSessionCookiesMatchPlayerContract/narrow-path",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestSessionCookiesMatchPlayerContract",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLateCatalogResultsCannotRepopulateSessionCaches/page",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLateCatalogResultsCannotRepopulateSessionCaches/queue",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLateCatalogResultsCannotRepopulateSessionCaches",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAccountNetworkErrorsDoNotDestroyCredentials",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLateAccountResponseCannotCrossSessionChangeOrExpiry/clear",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLateAccountResponseCannotCrossSessionChangeOrExpiry/replace",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestVerifiedLoginFailurePreservesSavedAccount/file-commit",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestVerifiedLoginFailurePreservesSavedAccount",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLateAccountResponseCannotCrossSessionChangeOrExpiry/expire",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLateAccountResponseCannotCrossSessionChangeOrExpiry",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAuthorizationNeverTargetsAnotherOrigin",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAnonymousHomeSurvivesRedundantClearSession",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAnonymousContinuationSurvivesRedundantClearSession",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAnonymousClearSessionDoesNotHideRequestFailure",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestPagePreservesGroupingAndBrowseDestinations",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestCardShelfAndSelectedSearchTab",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestUnplayableAndMenuTargetsAreNotReturned",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestContinuationUsesLocalHandleAndCorrectEndpoint",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestQueueAndLyricsReuseReference",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/cmd/update-package",
+      "Test": "TestSigningRejectsWrongKeyAndUnsafeBundle/escaping_link",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestMissingKeyIsCreatedOnlyForVerifiedLogin",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestNoLyricsIsNotAProtocolFailure",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTransportFailuresAreSanitized",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestResponseSizeAndHTTPFailureBounds/oversized",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestResponseSizeAndHTTPFailureBounds/http-error",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestResponseSizeAndHTTPFailureBounds",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestCancellationAndInputValidation",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestArtworkURLBoundary",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTransferredSessionAndLike",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLanguageChangeKeepsSessionAndSnapshotsRequest",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/cmd/update-package",
+      "Test": "TestSigningRejectsWrongKeyAndUnsafeBundle/nested_output",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestBrowseParametersPreserveGenreNavigation",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTrackRatingControls/liked_button",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTrackRatingControls/unliked_button",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTrackRatingControls/disliked_button",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTrackRatingControls/unrelated_button",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTrackRatingControls/queue_unlike_action",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTrackRatingControls/queue_like_action",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTrackRatingControls/queue_toggled_action",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTrackRatingControls/dislike_control",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTrackRatingControls/omitted_status",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTrackRatingControls",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTrackFetchesRatingFromNext",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLiveCatalog",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestHeaderCreatorUsesLinkedMetadata/straplineTextOne",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestHeaderCreatorUsesLinkedMetadata/subtitle",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestHeaderCreatorUsesLinkedMetadata/secondSubtitle",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestHeaderCreatorUsesLinkedMetadata",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestFailedFirstFileCommitKeepsOneReusableKey",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestInitialAccountRestoreBlocksResolutionWithoutWarming",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestContinuationKeepsItsOriginatingVisitorAcrossPages/query",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/cmd/update-package",
+      "Test": "TestSigningRejectsWrongKeyAndUnsafeBundle/invalid_version",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/cmd/update-package",
+      "Test": "TestSigningRejectsWrongKeyAndUnsafeBundle",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestLogoutResetsKeyEvenForDamagedOrMissingFile/valid",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestContinuationKeepsItsOriginatingVisitorAcrossPages/command",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestContinuationKeepsItsOriginatingVisitorAcrossPages",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestLogoutResetsKeyEvenForDamagedOrMissingFile/damaged",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestContinuationRejectsMalformedVisitorData",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLiveHomeContinuationContext",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestDirectAccountStatusUsesOneCanonicalPOST/anonymous",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestDirectAccountStatusUsesOneCanonicalPOST/standard",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestDirectAccountStatusUsesOneCanonicalPOST/premium",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestDirectAccountStatusUsesOneCanonicalPOST",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLateDirectPOSTCannotCrossAccountScope/replace",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLateDirectPOSTCannotCrossAccountScope/clear",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLateDirectPOSTCannotCrossAccountScope/expire",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLateDirectPOSTCannotCrossAccountScope",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestDirectPOSTRedirectIsNotFollowedOrRetried/anonymous",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestDirectPOSTRedirectIsNotFollowedOrRetried/selected-account",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestDirectPOSTRedirectIsNotFollowedOrRetried",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAnonymousTimedLyricsLive",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTimedLyricsPreserveRealIntervalsAndAttribution",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTimedLyricsInvalidCuesRetainOnlyPlainText/missing",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTimedLyricsInvalidCuesRetainOnlyPlainText/missing_start",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTimedLyricsInvalidCuesRetainOnlyPlainText/missing_end",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTimedLyricsInvalidCuesRetainOnlyPlainText/negative",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTimedLyricsInvalidCuesRetainOnlyPlainText/fractional",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTimedLyricsInvalidCuesRetainOnlyPlainText/overflow",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTimedLyricsInvalidCuesRetainOnlyPlainText/reversed",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTimedLyricsInvalidCuesRetainOnlyPlainText/equal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTimedLyricsInvalidCuesRetainOnlyPlainText/out_of_order",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTimedLyricsInvalidCuesRetainOnlyPlainText/not_numeric",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTimedLyricsInvalidCuesRetainOnlyPlainText/not_finite",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestTimedLyricsInvalidCuesRetainOnlyPlainText",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestAccountSwitchWaitsForConfigurationAndCloseCancelsIt",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestAccountConfigurationFailureBlocksNewResolutionAndCanRetry",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsParsingBoundsAndMissingData/large_line",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsParsingBoundsAndMissingData/large_combined_text",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsParsingBoundsAndMissingData/many_rows",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsParsingBoundsAndMissingData/missing_text",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsParsingBoundsAndMissingData/empty",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsParsingBoundsAndMissingData/unrelated",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsParsingBoundsAndMissingData",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestLogoutResetsKeyEvenForDamagedOrMissingFile/missing",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestLogoutResetsKeyEvenForDamagedOrMissingFile",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/cmd/update-package",
+      "Test": "TestVerificationRejectsManifestMismatch",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsMobileProfileIsRequestLocalAndAccountScoped/anonymous",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsMobileProfileIsRequestLocalAndAccountScoped/synthetic_account",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsMobileProfileIsRequestLocalAndAccountScoped",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsMobileFailureFallsBackToPlain/http",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsMobileFailureFallsBackToPlain/missing",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreInteractionPolicy",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestResolverConfiguresAccountOnlyThroughPrivatePipe",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSessionValidation",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSessionExpiryDistinguishesOptionalCookiesAndRequiredAuthentication",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsMobileFailureFallsBackToPlain/malformed",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreLargeEncryptedRoundTripAndOwnKeyDelete",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountKeychainInteractionAppliesAndRestoresPolicy",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountKeychainFailsClosedWhenPolicyCannotBeSet",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreMissingFileNeverReadsNativeSecrets",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountKeychainReportsPolicyRestoreFailure",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountErrorsOnlyRequestReconnectionForInvalidSessions/http-401",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountErrorsOnlyRequestReconnectionForInvalidSessions/http-403",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountErrorsOnlyRequestReconnectionForInvalidSessions/http-429",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountErrorsOnlyRequestReconnectionForInvalidSessions/http-500",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountErrorsOnlyRequestReconnectionForInvalidSessions/http-503",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountErrorsOnlyRequestReconnectionForInvalidSessions",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountSessionInstallsOnlyAfterVerification",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestFailedAccountVerificationPreservesActiveSession",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestClosingOrLoggingOutCancelsStagedAccountRead",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestReplacedAccountFlowCannotInstallLateResult",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountDeadlineReportsFailureWithoutInstalling",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestIncompleteStagedCookiesNeverQueryLibrary",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountConfigurationChangesIncludeCredentialRefresh",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountOptionalExpiryStillQueriesMembership",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountRequiredExpiryReturnsExplicitSignedOutWithoutNetwork",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountRestoreDistinguishesExpiryStorageAndMalformedSession",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestStreamBridgeCapabilityHeadersAndRanges",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsMobileFailureFallsBackToPlain/oversized",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsMobileFailureFallsBackToPlain/plain_response",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreRejectsUnsupportedFormatsBeforeNativeSecrets/59544d5345535301",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsMobileFailureFallsBackToPlain/untimed_rows",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsMobileFailureFallsBackToPlain",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsCancellationAndSessionChangeCannotPublishOrFallback/cancel",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsCancellationAndSessionChangeCannotPublishOrFallback/replace",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsCancellationAndSessionChangeCannotPublishOrFallback/clear",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsCancellationAndSessionChangeCannotPublishOrFallback/expire",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLyricsCancellationAndSessionChangeCannotPublishOrFallback",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataTypesDoNotBecomeCreators/Playlist",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataTypesDoNotBecomeCreators/Artist",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataTypesDoNotBecomeCreators/Album",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataTypesDoNotBecomeCreators/Song",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataTypesDoNotBecomeCreators/\u64ad\u653e\u5217\u8868",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataTypesDoNotBecomeCreators/\u64ad\u653e\u6e05\u5355",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataTypesDoNotBecomeCreators/\u827a\u4eba",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataTypesDoNotBecomeCreators/\u4e13\u8f91",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataTypesDoNotBecomeCreators/\u6b4c\u66f2",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataTypesDoNotBecomeCreators/\u64ad\u653e\u6e05\u55ae",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataTypesDoNotBecomeCreators/\u85dd\u4eba",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataTypesDoNotBecomeCreators/\u5c08\u8f2f",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataTypesDoNotBecomeCreators/\u30d7\u30ec\u30a4\u30ea\u30b9\u30c8",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataTypesDoNotBecomeCreators/\u30a2\u30fc\u30c6\u30a3\u30b9\u30c8",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataTypesDoNotBecomeCreators/\u30a2\u30eb\u30d0\u30e0",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataTypesDoNotBecomeCreators/\u66f2",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataTypesDoNotBecomeCreators",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/25_\u96c6",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/5.68\u842c\u4f4d\u8a02\u95b1\u8005",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/127_\u96c6",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/2,723_\u96c6",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/25_songs",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/1_song",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/2,723_episodes",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/5.68M_subscribers",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/100K_views",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/42_plays",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/2.7k_listeners",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/1_video",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/25_\u9996\u6b4c\u66f2",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/5.68\u4e07\u4f4d\u8ba2\u9605\u8005",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/1.2\u4ebf\u6b21\u89c2\u770b",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/3,421_\u6b21\u64ad\u653e",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/\u89c2\u770b\u6b21\u6570\uff1a2.3\u4e07\u6b21",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/25_\u9996\u6b4c",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreRejectsUnsupportedFormatsBeforeNativeSecrets/59544d5345535302",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/5.68\u842c\u540d\u8a02\u95b1\u8005",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/1.2\u5104\u6b21\u89c0\u770b",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/\u89c0\u770b\u6b21\u6578\uff1a2.3\u842c\u6b21",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/25_\u66f2",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/2,723_\u30a8\u30d4\u30bd\u30fc\u30c9",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/5.68\u4e07\u4eba\u306e\u30c1\u30e3\u30f3\u30cd\u30eb\u767b\u9332\u8005",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/\u30c1\u30e3\u30f3\u30cd\u30eb\u767b\u9332\u8005\u6570_5.68\u4e07\u4eba",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/1.2\u4e07_\u56de\u8996\u8074",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/\u8996\u8074\u56de\u6570\uff1a2,723\u56de",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators/\u518d\u751f\u56de\u6570_2.7\u4e07\u56de",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestLocalizedMetadataCountsDoNotBecomeCreators",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestMetadataCountFilterPreservesNonCountCreatorNames/The_Songs",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestMetadataCountFilterPreservesNonCountCreatorNames/The_Subscribers",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestMetadataCountFilterPreservesNonCountCreatorNames/She_Plays",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestMetadataCountFilterPreservesNonCountCreatorNames/Ocean_Views",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestMetadataCountFilterPreservesNonCountCreatorNames/127_\u96c6\u6a02\u968a",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestMetadataCountFilterPreservesNonCountCreatorNames/5.68\u842c\u500b\u7406\u7531",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestMetadataCountFilterPreservesNonCountCreatorNames/25_Songs_of_Summer",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestMetadataCountFilterPreservesNonCountCreatorNames/100K_Views_Band",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestMetadataCountFilterPreservesNonCountCreatorNames/2,72_episodes",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestMetadataCountFilterPreservesNonCountCreatorNames/3.14",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestMetadataCountFilterPreservesNonCountCreatorNames/100\u56de\u306e\u590f",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestMetadataCountFilterPreservesNonCountCreatorNames/\u30c1\u30e3\u30f3\u30cd\u30eb\u767b\u9332\u8005\u6570\u306e\u6b4c",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestMetadataCountFilterPreservesNonCountCreatorNames",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestRedirectCategoriesRequireTrustedHTTPSDestinations",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestCatalogChallengePreservesOnlyClosedMetadataAndSession",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreRejectsUnsupportedFormatsBeforeNativeSecrets/59544d5345535304",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreRejectsUnsupportedFormatsBeforeNativeSecrets",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestArtworkWorkRemainsBoundedWhileScrolling",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreReusesKeyWithFreshNonceAcrossRestarts",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreCorruptionAndMissingKeysFailClosed/ciphertext",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreCorruptionAndMissingKeysFailClosed/header",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreCorruptionAndMissingKeysFailClosed/truncated",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreCorruptionAndMissingKeysFailClosed/empty",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreCorruptionAndMissingKeysFailClosed/oversized",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestStreamBridgeBoundedConcurrencyAndCancel",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestStreamBridgeErrorsAndRetryBounds/audio_access_denied",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestStreamBridgeErrorsAndRetryBounds/audio_access_denied#01",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreCorruptionAndMissingKeysFailClosed/missing-key",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreCorruptionAndMissingKeysFailClosed/wrong-key",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreCorruptionAndMissingKeysFailClosed/short-key",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreCorruptionAndMissingKeysFailClosed",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreCanceledInitialSaveAndFailedKeyCreation",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSessionFileCanceledCommitPreservesPrevious",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreRejectsUnsafePaths/empty",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreRejectsUnsafePaths/relative",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreRejectsUnsafePaths/file-symlink",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreRejectsUnsafePaths/directory-symlink",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreRejectsUnsafePaths/directory-target",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreRejectsUnsafePaths/public-directory",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreRejectsUnsafePaths",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreDeleteFailuresAreReported",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreRejectsPublicCiphertextPermissions",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Test": "TestSecretStoreLoadPreservesExpiryError",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestStreamBridgeErrorsAndRetryBounds/audio_rate_limited",
+      "Elapsed": 0.76
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/appearance",
+      "Elapsed": 1.334
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/language",
+      "Elapsed": 1.334
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/cmd/update-package",
+      "Elapsed": 1.44
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Elapsed": 1.479
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Elapsed": 1.58
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestStreamBridgeErrorsAndRetryBounds/audio_server_error",
+      "Elapsed": 0.76
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestStreamBridgeErrorsAndRetryBounds",
+      "Elapsed": 1.51
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestStreamBridgeServerFailureRetainsFixedLocalStatus",
+      "Elapsed": 0.76
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestStreamBridgePostHeaderFailureUsesOnlyFixedLocalStatus/upstream_access_denied",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestStreamBridgePostHeaderFailureUsesOnlyFixedLocalStatus/upstream_rate_limited",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestStreamBridgePostHeaderFailureUsesOnlyFixedLocalStatus/upstream_http_error",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestStreamBridgePostHeaderFailureUsesOnlyFixedLocalStatus/upstream_timeout",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestStreamBridgePostHeaderFailureUsesOnlyFixedLocalStatus/upstream_connection_failed",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestStreamBridgePostHeaderFailureUsesOnlyFixedLocalStatus/upstream_range_mismatch",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestStreamBridgePostHeaderFailureUsesOnlyFixedLocalStatus/upstream_truncated",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestStreamBridgePostHeaderFailureUsesOnlyFixedLocalStatus/synthetic-private-diagnostic",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestStreamBridgePostHeaderFailureUsesOnlyFixedLocalStatus/upstream_access_denied_synthetic-private-diagnostic",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestStreamBridgePostHeaderFailureUsesOnlyFixedLocalStatus",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestFFmpegTailSeekUsesRangesAndMatchesPCM",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekRequiresSuccessfulBoundedTail/codec_padding_at_tail",
+      "Elapsed": 0.27
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestArtworkResizePreservesAspectAndCapsRetainedPixels",
+      "Elapsed": 2.61
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekRequiresSuccessfulBoundedTail/short_initial_empty_stream",
+      "Elapsed": 0.19
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekRequiresSuccessfulBoundedTail/empty_middle",
+      "Elapsed": 0.2
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekRequiresSuccessfulBoundedTail/outside_padding_tolerance",
+      "Elapsed": 0.2
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekRequiresSuccessfulBoundedTail/failed_decoder_at_tail",
+      "Elapsed": 0.29
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekRequiresSuccessfulBoundedTail",
+      "Elapsed": 1.15
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekWaitHonorsReadinessCancellation/deadline",
+      "Elapsed": 0.1
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekWaitHonorsReadinessCancellation/cancel",
+      "Elapsed": 0.1
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekWaitHonorsReadinessCancellation",
+      "Elapsed": 0.2
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekDoesNotMaskBridgeFailure",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEmptySeekPreservesPauseAndReachesNaturalEnd",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataSurvivesErrorAndPlayerState",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/0",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/1",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/2",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/3",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/4",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/5",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/6",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/7",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/8",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/9",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/10",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/11",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/12",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/13",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/14",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/15",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/16",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/17",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/18",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/19",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/20",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC/21",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapReplyMetadataRejectsUntrustedIPC",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestBootstrapCategoriesAreNotReducedToGenericFailure",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestExplicitLoginRequirementSurvivesIntoPlayerState",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestNativeFullDecodeLive",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestNativePreparedPlaybackLive",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestMediaURLBoundary",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestResolverHeaderBoundary",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestErrorsNeverContainDependencyDetails",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestDecoderDiagnosticsExposeOnlyCategories",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestPreparedTrackTransfersDecoderAndLease",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestLoadJoinsPendingPreparation",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestPreparedReplacementReleasesBeforeOpeningNext",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestPreparedContextCancellationReleasesReadyDecoder",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestSupersededClaimedPreparationCannotReplaceCurrentTrack",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestPrepareFailureDoesNotChangePlaybackState",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestSeekStopAndCloseClearPreparedResources/seek",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestSeekStopAndCloseClearPreparedResources/stop",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestSeekStopAndCloseClearPreparedResources/close",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestSeekStopAndCloseClearPreparedResources",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestCloseCancelsInflightPreparation",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestLateLoadCannotReplaceCurrentTrack",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestAlreadyCanceledLoadCannotStopCurrentTrack",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestCanceledQueuedSeekCannotAffectNewTrack",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestCanceledQueuedResumeCannotChangeCurrentPlayback/load",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestCanceledQueuedResumeCannotChangeCurrentPlayback/seek",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestCanceledQueuedResumeCannotChangeCurrentPlayback/pause",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestCanceledQueuedResumeCannotChangeCurrentPlayback",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEndedRestartKeepsCapturedMediaAndLosesToNewLoad",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestEndedRestartReusesMediaAndRespectsPause",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestCanceledEndedRestartAfterOpenClearsLoading",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestLatePreparationDoesNotDuplicateForegroundLoad",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestRapidSeeksCancelOnlyTheOlderDecoder",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestConcurrentSeeksAllReachReplacement",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestPauseSeekStopCloseLifecycle",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestPausedStreamHasBoundedReadAhead",
+      "Elapsed": 0.2
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestCloseCancelsInflightResolution",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestCloseUnblocksStalledPCMRead",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestSuccessfulDecoderExitStillDetectsTruncatedPCM/complete",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestSuccessfulDecoderExitStillDetectsTruncatedPCM/codec_padding",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestSuccessfulDecoderExitStillDetectsTruncatedPCM/truncated",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestSuccessfulDecoderExitStillDetectsTruncatedPCM",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestFFmpegActualSeek",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestFFmpegEndedRestartLocal",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestFFmpegRetriesSameStreamAndHonorsDeadline",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestNativePlaybackAcceptanceLive",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestNativeEndedRestartLive",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestNativePlaybackLive",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestResolverDiagnosticCategoriesRemainBounded",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestResolverProcess",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestResolverReusesSessionAndReleasesLeaseOnce",
+      "Elapsed": 0.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestResolverCancellationReleasesLateResponse",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestResolverFailureDoesNotExposeWorkerText",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestResolverRejectsMalformedOrOversizedReplies/oversized",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestResolverRejectsMalformedOrOversizedReplies/malformed",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestResolverRejectsMalformedOrOversizedReplies",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestRuntimePlatformExecutableNames",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestChildEnvironmentDoesNotInheritHooks",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestNativeVideoMovingClockLive",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestNativeVideoDuringAnonymousAudioLive",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestFFmpegVideoBFrameSeekMatchesLocalReference",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestArtworkRejectsOversizedDownloadAndDecode/encoded",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestArtworkRejectsOversizedDownloadAndDecode/decoded",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestArtworkRejectsOversizedDownloadAndDecode",
+      "Elapsed": 1.61
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestPauseInvalidatesQueuedResume",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestPlayableQueueKeepsOrderAndExcludesBrowseDestinations",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestPreparedCandidateFollowsQueueAndRepeatMode",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestRatingUpdateKeepsCurrentAndQueueConsistent",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestArtworkResolutionIsSourceAware",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestPlaybackDiagnosticsExcludeUntrustedDetails",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountDiagnosticsContainOnlyFixedState",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestResolverDiagnosticCategoriesPersistWithoutDetails",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestResolverDiagnosticStageNeverIncludesUntrustedData",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestBootstrapDiagnosticsContainOnlyClosedMetadata",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestGlobalShortcutTransactions/#00",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestGlobalShortcutTransactions/register",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestGlobalShortcutTransactions/save",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestGlobalShortcutTransactions/restore",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestGlobalShortcutTransactions",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestGlobalShortcutCancelDisableAndPersistence",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestGlobalShortcutValidation",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortcutRecorderAndHelp/en",
+      "Elapsed": 0.39
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperOwnsDescendantLifetime/family",
+      "Elapsed": 5.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortcutRecorderAndHelp/zh-Hans",
+      "Elapsed": 0.34
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortcutRecorderAndHelp/zh-Hant",
+      "Elapsed": 0.33
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortcutRecorderAndHelp/ja",
+      "Elapsed": 0.36
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortcutRecorderAndHelp",
+      "Elapsed": 1.42
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortcutRecordingSuppressesLocalActions",
+      "Elapsed": 0.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestGlobalShortcutStartupAndMenuCaptureFailure",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSearchAccessibleTypes/en-rows-false",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSearchAccessibleTypes/en-rows-true",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSearchAccessibleTypes/ja-rows-false",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSearchAccessibleTypes/ja-rows-true",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperOwnsDescendantLifetime/family-normal",
+      "Elapsed": 1.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperOwnsDescendantLifetime",
+      "Elapsed": 6.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperEnvironmentIsAllowlisted",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestStartRejectsInvalidConfiguration",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSearchAccessibleTypes/zh-Hans-rows-false",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSearchAccessibleTypes/zh-Hans-rows-true",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSearchAccessibleTypes/zh-Hant-rows-false",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSearchAccessibleTypes/zh-Hant-rows-true",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSearchAccessibleTypes",
+      "Elapsed": 0.36
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/en-380-dark",
+      "Elapsed": 0.19
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/en-380-light",
+      "Elapsed": 0.19
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/en-420-dark",
+      "Elapsed": 0.23
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/en-420-light",
+      "Elapsed": 0.19
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/en-757-dark",
+      "Elapsed": 0.41
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoDelayedFirstFrameRejoinsMovingClock",
+      "Elapsed": 3.4
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoStartupDeadlineIncludesResolution",
+      "Elapsed": 0.09
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoNoFirstFrameTimesOutAndReapsDecoder",
+      "Elapsed": 0.09
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoStartupDeadlineIncludesDecoderOpen",
+      "Elapsed": 0.08
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoPersistentSlowFramesHaveFiniteCatchups",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/en-757-light",
+      "Elapsed": 0.42
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/en-960-dark",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoCatchupsDoNotExtendWholeStartupDeadline",
+      "Elapsed": 0.31
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/en-960-light",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoHealthyPlayingSurvivesStartupDeadline",
+      "Elapsed": 0.3
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/en-1440-dark",
+      "Elapsed": 0.29
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoPausedFrameDoesNotStallAndResumeIsBounded",
+      "Elapsed": 0.47
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoStartupCancelAndReplacementReleaseBlockedDecoder/cancel",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/en-1440-light",
+      "Elapsed": 0.32
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoStartupCancelAndReplacementReleaseBlockedDecoder/replace",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoStartupCancelAndReplacementReleaseBlockedDecoder/stop",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoStartupCancelAndReplacementReleaseBlockedDecoder",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoBriefBufferingCatchesUpWithoutReopen",
+      "Elapsed": 0.13
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/ja-380-dark",
+      "Elapsed": 0.18
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/ja-380-light",
+      "Elapsed": 0.18
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/ja-420-dark",
+      "Elapsed": 0.18
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/ja-420-light",
+      "Elapsed": 0.18
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/ja-757-dark",
+      "Elapsed": 0.41
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoHealthyPeriodRenewsCatchupBudget",
+      "Elapsed": 1.41
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/ja-757-light",
+      "Elapsed": 0.42
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoEOFDoesNotWaitForeverForDecoderExit",
+      "Elapsed": 0.16
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/ja-960-dark",
+      "Elapsed": 0.2
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/ja-960-light",
+      "Elapsed": 0.21
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoRepeatedStartupDelayUsesLeadWithoutEarlyPresentation",
+      "Elapsed": 0.4
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestCancellationReleasesBlockedControlWriter",
+      "Elapsed": 5.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/ja-1440-dark",
+      "Elapsed": 0.31
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoPauseDuringLeadRecoveryReopensAtPausedClock/during_open",
+      "Elapsed": 0.33
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/ja-1440-light",
+      "Elapsed": 0.31
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hans-380-dark",
+      "Elapsed": 0.17
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoPauseDuringLeadRecoveryReopensAtPausedClock/waiting_for_future_frame",
+      "Elapsed": 0.35
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoPauseDuringLeadRecoveryReopensAtPausedClock",
+      "Elapsed": 0.68
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hans-380-light",
+      "Elapsed": 0.18
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoSeekDuringLeadOpenDropsRecoveryLead",
+      "Elapsed": 0.21
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hans-420-dark",
+      "Elapsed": 0.19
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperSessionFocusAndConcurrentWait",
+      "Elapsed": 1.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperRejectsInvalidOutputAndExit/nonzero",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hans-420-light",
+      "Elapsed": 0.2
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoLeadRecoveryClampsToFinalFrame",
+      "Elapsed": 0.33
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hans-757-dark",
+      "Elapsed": 0.41
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hans-757-light",
+      "Elapsed": 0.43
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperRejectsInvalidOutputAndExit/duplicate",
+      "Elapsed": 1.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoRecoveryLeadIsBounded",
+      "Elapsed": 1.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoWaitingForFutureFrameKeepsWholeStartupDeadline",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoDimensionsBoundMemory",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoResolverHeaders/resolver_headers",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoResolverHeaders/optional_referer",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoResolverHeaders/local_capability_needs_no_remote_headers",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoResolverHeaders/newline_agent",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoResolverHeaders/quoted_referer",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoResolverHeaders/escaped_referer",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoResolverHeaders/oversized_agent",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoResolverHeaders",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoDecoderRejectsHeaderInjection",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoBridgeErrorCategories",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hans-960-dark",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoPauseSeekAndRelease",
+      "Elapsed": 0.09
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoCloseCancelsResolutionAndRejectsRestart",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoDependencyErrorRemainsPrivate",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoOpenErrorRetainsSafeCategory/access_denial",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoOpenErrorRetainsSafeCategory/unknown_upstream_error",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoOpenErrorRetainsSafeCategory",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVideoCanceledStartPreservesCurrentFrame",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestFFmpegVideoActualSeek",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestFFmpegVideoHeadersAndRetryBoundaries",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestFFmpegVideoCloseCancelsBridgeRequest",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestNativeVideoLive",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVolumeSurvivesTrackSeekAndAccountTransitions/muted",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVolumeSurvivesTrackSeekAndAccountTransitions/user-volume",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestVolumeSurvivesTrackSeekAndAccountTransitions",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hans-960-light",
+      "Elapsed": 0.24
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestMutedVolumeSurvivesNaturalEndAndPreparedNext",
+      "Elapsed": 0.23
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hans-1440-dark",
+      "Elapsed": 0.33
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperRejectsInvalidOutputAndExit/trailing",
+      "Elapsed": 1.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hans-1440-light",
+      "Elapsed": 0.34
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hant-380-dark",
+      "Elapsed": 0.18
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hant-380-light",
+      "Elapsed": 0.19
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Elapsed": 14.93
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hant-420-dark",
+      "Elapsed": 0.2
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hant-420-light",
+      "Elapsed": 0.19
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperRejectsInvalidOutputAndExit/partial",
+      "Elapsed": 1.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hant-757-dark",
+      "Elapsed": 0.42
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hant-757-light",
+      "Elapsed": 0.42
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hant-960-dark",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hant-960-light",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hant-1440-dark",
+      "Elapsed": 0.31
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack/zh-Hant-1440-light",
+      "Elapsed": 0.33
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortCollectionShowsCreatorAndTrack",
+      "Elapsed": 10.66
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLibraryStateText",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeWidePlaybackErrorAppearsOnce/en-420-panel-false",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeWidePlaybackErrorAppearsOnce/en-420-panel-true",
+      "Elapsed": 0.13
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeWidePlaybackErrorAppearsOnce/en-1440-panel-false",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeWidePlaybackErrorAppearsOnce/en-1440-panel-true",
+      "Elapsed": 0.73
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeWidePlaybackErrorAppearsOnce/ja-420-panel-false",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeWidePlaybackErrorAppearsOnce/ja-420-panel-true",
+      "Elapsed": 0.14
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeWidePlaybackErrorAppearsOnce/ja-1440-panel-false",
+      "Elapsed": 0.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeWidePlaybackErrorAppearsOnce/ja-1440-panel-true",
+      "Elapsed": 0.75
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeWidePlaybackErrorAppearsOnce/zh-Hans-420-panel-false",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeWidePlaybackErrorAppearsOnce/zh-Hans-420-panel-true",
+      "Elapsed": 0.14
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeWidePlaybackErrorAppearsOnce/zh-Hans-1440-panel-false",
+      "Elapsed": 0.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeWidePlaybackErrorAppearsOnce/zh-Hans-1440-panel-true",
+      "Elapsed": 0.76
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeWidePlaybackErrorAppearsOnce/zh-Hant-420-panel-false",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeWidePlaybackErrorAppearsOnce/zh-Hant-420-panel-true",
+      "Elapsed": 0.14
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeWidePlaybackErrorAppearsOnce/zh-Hant-1440-panel-false",
+      "Elapsed": 0.08
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperRejectsInvalidOutputAndExit/oversized",
+      "Elapsed": 5.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeWidePlaybackErrorAppearsOnce/zh-Hant-1440-panel-true",
+      "Elapsed": 0.75
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeWidePlaybackErrorAppearsOnce",
+      "Elapsed": 4.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCreatorAlreadyInSubtitle",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountContentResetClearsLibraryLoadState",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/en-restoring-1440",
+      "Elapsed": 0.58
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/en-restoring-420",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/en-slow-1440",
+      "Elapsed": 0.57
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/en-slow-420",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/en-deferred-1440",
+      "Elapsed": 0.62
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/en-deferred-420",
+      "Elapsed": 0.1
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/ja-restoring-1440",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/ja-restoring-420",
+      "Elapsed": 0.16
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/ja-slow-1440",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/ja-slow-420",
+      "Elapsed": 0.18
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/ja-deferred-1440",
+      "Elapsed": 0.11
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/ja-deferred-420",
+      "Elapsed": 0.23
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/zh-Hans-restoring-1440",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/zh-Hans-restoring-420",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/zh-Hans-slow-1440",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/zh-Hans-slow-420",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/zh-Hans-deferred-1440",
+      "Elapsed": 0.11
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/zh-Hans-deferred-420",
+      "Elapsed": 0.09
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/zh-Hant-restoring-1440",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/zh-Hant-restoring-420",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/zh-Hant-slow-1440",
+      "Elapsed": 0.04
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/zh-Hant-slow-420",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/zh-Hant-deferred-1440",
+      "Elapsed": 0.14
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained/zh-Hant-deferred-420",
+      "Elapsed": 0.09
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountRestoreStatesAreExplained",
+      "Elapsed": 3.51
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeTrackWaitingForAccountExplainsSpinner/1440",
+      "Elapsed": 0.15
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeTrackWaitingForAccountExplainsSpinner/1100",
+      "Elapsed": 0.18
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeTrackWaitingForAccountExplainsSpinner/420",
+      "Elapsed": 0.18
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeTrackWaitingForAccountExplainsSpinner",
+      "Elapsed": 0.5
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestDeferredRestoreIsNotRetriedByPolling",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeServiceErrorsUseExistingRetries/en-playback-false",
+      "Elapsed": 0.18
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperRejectsInvalidOutputAndExit/linger",
+      "Elapsed": 5.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeServiceErrorsUseExistingRetries/en-playback-true",
+      "Elapsed": 0.48
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeServiceErrorsUseExistingRetries/zh-Hans-playback-false",
+      "Elapsed": 0.18
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperRejectsInvalidOutputAndExit/error:synthetic-output-must-never-appear-in-errors",
+      "Elapsed": 1.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperRejectsInvalidOutputAndExit",
+      "Elapsed": 14.09
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeServiceErrorsUseExistingRetries/zh-Hans-playback-true",
+      "Elapsed": 0.46
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeServiceErrorsUseExistingRetries/zh-Hant-playback-false",
+      "Elapsed": 0.19
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeServiceErrorsUseExistingRetries/zh-Hant-playback-true",
+      "Elapsed": 0.47
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeServiceErrorsUseExistingRetries/ja-playback-false",
+      "Elapsed": 0.19
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperWaitsForExitAndDiscardsStderr/delayed",
+      "Elapsed": 1.17
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeServiceErrorsUseExistingRetries/ja-playback-true",
+      "Elapsed": 0.47
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeServiceErrorsUseExistingRetries",
+      "Elapsed": 2.61
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountErrorCannotRetryCatalog/account",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountErrorCannotRetryCatalog/account_connect",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountErrorCannotRetryCatalog",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSignedOutLibraryExplainsOnce",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactPlaybackErrorAppearsOnce/en",
+      "Elapsed": 0.16
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactPlaybackErrorAppearsOnce/zh-Hans",
+      "Elapsed": 0.15
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactPlaybackErrorAppearsOnce/zh-Hant",
+      "Elapsed": 0.17
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactPlaybackErrorAppearsOnce/ja",
+      "Elapsed": 0.15
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactPlaybackErrorAppearsOnce",
+      "Elapsed": 0.63
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperWaitsForExitAndDiscardsStderr/stderr",
+      "Elapsed": 1.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperWaitsForExitAndDiscardsStderr",
+      "Elapsed": 2.18
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLibraryMetadataDoesNotRepeatCategory/en",
+      "Elapsed": 0.62
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperCancellationAndDeadline/cancel",
+      "Elapsed": 1.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLibraryMetadataDoesNotRepeatCategory/ja",
+      "Elapsed": 0.61
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLibraryMetadataDoesNotRepeatCategory/zh-Hans",
+      "Elapsed": 0.62
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLibraryMetadataDoesNotRepeatCategory/zh-Hant",
+      "Elapsed": 0.62
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLibraryMetadataDoesNotRepeatCategory",
+      "Elapsed": 2.47
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-en-dark-video-false",
+      "Elapsed": 0.23
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-en-dark-video-true",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-en-light-video-false",
+      "Elapsed": 0.23
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-en-light-video-true",
+      "Elapsed": 0.21
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-ja-dark-video-false",
+      "Elapsed": 0.23
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-ja-dark-video-true",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-ja-light-video-false",
+      "Elapsed": 0.23
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-ja-light-video-true",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-zh-Hans-dark-video-false",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-zh-Hans-dark-video-true",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-zh-Hans-light-video-false",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-zh-Hans-light-video-true",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-zh-Hant-dark-video-false",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-zh-Hant-dark-video-true",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-zh-Hant-light-video-false",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/761-zh-Hant-light-video-true",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperCancellationAndDeadline/stubborn",
+      "Elapsed": 5.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-en-dark-video-false",
+      "Elapsed": 0.54
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-en-dark-video-true",
+      "Elapsed": 0.54
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperCancellationAndDeadline/deadline",
+      "Elapsed": 1.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperCancellationAndDeadline",
+      "Elapsed": 7.09
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-en-light-video-false",
+      "Elapsed": 0.53
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-en-light-video-true",
+      "Elapsed": 0.53
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperZeroTimeoutHasNoImplicitDeadline",
+      "Elapsed": 1.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-ja-dark-video-false",
+      "Elapsed": 0.53
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-ja-dark-video-true",
+      "Elapsed": 0.53
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperZeroTimeoutRespectsParentLifetime/cancel",
+      "Elapsed": 1.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-ja-light-video-false",
+      "Elapsed": 0.53
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-ja-light-video-true",
+      "Elapsed": 0.52
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperZeroTimeoutRespectsParentLifetime/deadline",
+      "Elapsed": 1.5
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperZeroTimeoutRespectsParentLifetime",
+      "Elapsed": 2.52
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-zh-Hans-dark-video-false",
+      "Elapsed": 0.53
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-zh-Hans-dark-video-true",
+      "Elapsed": 0.54
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperErrorCategories/runtime_missing",
+      "Elapsed": 1.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-zh-Hans-light-video-false",
+      "Elapsed": 0.54
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-zh-Hans-light-video-true",
+      "Elapsed": 0.55
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperErrorCategories/runtime_outdated",
+      "Elapsed": 1.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-zh-Hant-dark-video-false",
+      "Elapsed": 0.55
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-zh-Hant-dark-video-true",
+      "Elapsed": 0.52
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperErrorCategories/login_timeout",
+      "Elapsed": 1.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-zh-Hant-light-video-false",
+      "Elapsed": 0.54
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/960-zh-Hant-light-video-true",
+      "Elapsed": 0.56
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperErrorCategories/login_failed",
+      "Elapsed": 1.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestHelperErrorCategories",
+      "Elapsed": 4.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestResultValidation",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestRuntimePathAndManifest",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Test": "TestPackagedHelperAndManifestLocation",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-en-dark-video-false",
+      "Elapsed": 0.4
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-en-dark-video-true",
+      "Elapsed": 0.37
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-en-light-video-false",
+      "Elapsed": 0.35
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Elapsed": 44.443
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-en-light-video-true",
+      "Elapsed": 0.37
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-ja-dark-video-false",
+      "Elapsed": 0.38
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-ja-dark-video-true",
+      "Elapsed": 0.36
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-ja-light-video-false",
+      "Elapsed": 0.37
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-ja-light-video-true",
+      "Elapsed": 0.36
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-zh-Hans-dark-video-false",
+      "Elapsed": 0.36
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-zh-Hans-dark-video-true",
+      "Elapsed": 0.37
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-zh-Hans-light-video-false",
+      "Elapsed": 0.37
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-zh-Hans-light-video-true",
+      "Elapsed": 0.37
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-zh-Hant-dark-video-false",
+      "Elapsed": 0.36
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-zh-Hant-dark-video-true",
+      "Elapsed": 0.39
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-zh-Hant-light-video-false",
+      "Elapsed": 0.37
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer/1440-zh-Hant-light-video-true",
+      "Elapsed": 0.36
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveKeepsArtistAbovePlayer",
+      "Elapsed": 18
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveMediaYieldsToText/761-video-false-notice-false",
+      "Elapsed": 0.21
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveMediaYieldsToText/761-video-false-notice-true",
+      "Elapsed": 0.21
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveMediaYieldsToText/761-video-true-notice-false",
+      "Elapsed": 0.21
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveMediaYieldsToText/761-video-true-notice-true",
+      "Elapsed": 0.21
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveMediaYieldsToText/960-video-false-notice-false",
+      "Elapsed": 0.23
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveMediaYieldsToText/960-video-false-notice-true",
+      "Elapsed": 0.24
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveMediaYieldsToText/960-video-true-notice-false",
+      "Elapsed": 0.25
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveMediaYieldsToText/960-video-true-notice-true",
+      "Elapsed": 0.23
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveMediaYieldsToText/1440-video-false-notice-false",
+      "Elapsed": 0.35
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveMediaYieldsToText/1440-video-false-notice-true",
+      "Elapsed": 0.38
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveMediaYieldsToText/1440-video-true-notice-false",
+      "Elapsed": 0.36
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveMediaYieldsToText/1440-video-true-notice-true",
+      "Elapsed": 0.35
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveMediaYieldsToText",
+      "Elapsed": 3.23
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeImmersiveOverflowCanScroll",
+      "Elapsed": 1.14
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeQueueArtworkVisibleInEveryPresentation/docked",
+      "Elapsed": 0.61
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeQueueArtworkVisibleInEveryPresentation/floating",
+      "Elapsed": 0.51
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeQueueArtworkVisibleInEveryPresentation/immersive",
+      "Elapsed": 1.2
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeQueueArtworkVisibleInEveryPresentation/compact-immersive",
+      "Elapsed": 0.54
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeQueueArtworkVisibleInEveryPresentation",
+      "Elapsed": 2.86
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLyricCueBoundaries",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLyricsFollowSeekPauseAndManualScroll",
+      "Elapsed": 0.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLyricsPlainFallbackAndClear",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLyricsKeyboardHoverStopsFollow",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/761x609-en-dark",
+      "Elapsed": 0.89
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/761x609-en-light",
+      "Elapsed": 0.89
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/761x609-zh-Hant-dark",
+      "Elapsed": 0.89
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/761x609-zh-Hant-light",
+      "Elapsed": 0.88
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/761x640-en-dark",
+      "Elapsed": 0.95
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/761x640-en-light",
+      "Elapsed": 0.93
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/761x640-zh-Hant-dark",
+      "Elapsed": 0.93
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/761x640-zh-Hant-light",
+      "Elapsed": 0.9
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/960x609-en-dark",
+      "Elapsed": 1
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/960x609-en-light",
+      "Elapsed": 1.02
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/960x609-zh-Hant-dark",
+      "Elapsed": 1.29
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/960x609-zh-Hant-light",
+      "Elapsed": 1.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/960x640-en-dark",
+      "Elapsed": 1.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/960x640-en-light",
+      "Elapsed": 1.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/960x640-zh-Hant-dark",
+      "Elapsed": 1.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/960x640-zh-Hant-light",
+      "Elapsed": 1.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/1440x609-en-dark",
+      "Elapsed": 1.53
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/1440x609-en-light",
+      "Elapsed": 1.49
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/1440x609-zh-Hant-dark",
+      "Elapsed": 1.53
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/1440x609-zh-Hant-light",
+      "Elapsed": 1.51
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/1440x640-en-dark",
+      "Elapsed": 1.68
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/1440x640-en-light",
+      "Elapsed": 1.69
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/1440x640-zh-Hant-dark",
+      "Elapsed": 1.8
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget/1440x640-zh-Hant-light",
+      "Elapsed": 1.63
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeShortImmersiveVideoUsesHeightBudget",
+      "Elapsed": 28.68
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeImmersiveVideoContainsAllSourceEdges/160x90",
+      "Elapsed": 0.27
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeImmersiveVideoContainsAllSourceEdges/160x120",
+      "Elapsed": 0.27
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeImmersiveVideoContainsAllSourceEdges/160x160",
+      "Elapsed": 0.26
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeImmersiveVideoContainsAllSourceEdges/90x160",
+      "Elapsed": 0.26
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeImmersiveVideoContainsAllSourceEdges",
+      "Elapsed": 1.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/380x609-en",
+      "Elapsed": 0.16
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/380x609-ja",
+      "Elapsed": 0.17
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/380x609-zh-Hans",
+      "Elapsed": 0.17
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/380x609-zh-Hant",
+      "Elapsed": 0.16
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/420x609-en",
+      "Elapsed": 0.17
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/420x609-ja",
+      "Elapsed": 0.17
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/420x609-zh-Hans",
+      "Elapsed": 0.17
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/420x609-zh-Hant",
+      "Elapsed": 0.17
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/420x740-en",
+      "Elapsed": 0.17
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/420x740-ja",
+      "Elapsed": 0.16
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/420x740-zh-Hans",
+      "Elapsed": 0.15
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/420x740-zh-Hant",
+      "Elapsed": 0.16
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/757x641-en",
+      "Elapsed": 0.39
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/757x641-ja",
+      "Elapsed": 0.2
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/757x641-zh-Hans",
+      "Elapsed": 0.19
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/757x641-zh-Hant",
+      "Elapsed": 0.19
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/760x609-en",
+      "Elapsed": 0.17
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/760x609-ja",
+      "Elapsed": 0.17
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/760x609-zh-Hans",
+      "Elapsed": 0.18
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth/760x609-zh-Hant",
+      "Elapsed": 0.17
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCompactShortVideoUsesWidth",
+      "Elapsed": 3.63
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeViewResponsive/420-dark",
+      "Elapsed": 0.22
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeViewResponsive/420-light",
+      "Elapsed": 0.21
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeViewResponsive/760-dark",
+      "Elapsed": 0.34
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeViewResponsive/760-light",
+      "Elapsed": 0.34
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeViewResponsive/1100-dark",
+      "Elapsed": 0.48
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeViewResponsive/1100-light",
+      "Elapsed": 0.47
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeViewResponsive/1440-dark",
+      "Elapsed": 0.6
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeViewResponsive/1440-light",
+      "Elapsed": 0.59
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeViewResponsive",
+      "Elapsed": 3.25
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePlaybackAndSearchControls",
+      "Elapsed": 0.26
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSeekCommitsPointerOnceAndKeepsKeyboardTarget",
+      "Elapsed": 0.19
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSeekAbandonsPreviewWhenTrackChanges",
+      "Elapsed": 0.09
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSeekAbandonsPreviewWhenPlaybackDisables",
+      "Elapsed": 0.09
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePanelAndImmersive/420",
+      "Elapsed": 0.95
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePanelAndImmersive/1100",
+      "Elapsed": 1.78
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePanelAndImmersive/1440",
+      "Elapsed": 2.16
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePanelAndImmersive",
+      "Elapsed": 4.89
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSettingsLocalizations/en",
+      "Elapsed": 0.39
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSettingsLocalizations/zh-Hans",
+      "Elapsed": 0.37
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSettingsLocalizations/zh-Hant",
+      "Elapsed": 0.39
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSettingsLocalizations/ja",
+      "Elapsed": 0.35
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSettingsLocalizations",
+      "Elapsed": 1.5
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeIconsAndPalette",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeKeyboardAndContextMenu",
+      "Elapsed": 1.29
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeMinimumWindow/380",
+      "Elapsed": 0.52
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeMinimumWindow/420",
+      "Elapsed": 0.46
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeMinimumWindow/760",
+      "Elapsed": 0.72
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeMinimumWindow/1100",
+      "Elapsed": 1.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeMinimumWindow/1440",
+      "Elapsed": 1.3
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeMinimumWindow",
+      "Elapsed": 4.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoAndContinuation",
+      "Elapsed": 3
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePendingPlayback",
+      "Elapsed": 0.13
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLibrarySidebar/1100",
+      "Elapsed": 0.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLibrarySidebar/1440",
+      "Elapsed": 0.09
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeLibrarySidebar",
+      "Elapsed": 0.16
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeTrackListLayout/search",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeTrackListLayout/browse:album",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeTrackListLayout",
+      "Elapsed": 0.05
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePlaybackFailureRetry/420-false",
+      "Elapsed": 0.06
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePlaybackFailureRetry/420-true",
+      "Elapsed": 0.51
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePlaybackFailureRetry/1440-false",
+      "Elapsed": 0.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePlaybackFailureRetry/1440-true",
+      "Elapsed": 1.43
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativePlaybackFailureRetry",
+      "Elapsed": 2.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeArtworkOnlyRequestsVisibleCovers",
+      "Elapsed": 0.15
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeArtworkClipsHorizontalShelves",
+      "Elapsed": 0.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountStates/signed-out",
+      "Elapsed": 0.64
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountStates/standard",
+      "Elapsed": 0.71
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountStates/premium",
+      "Elapsed": 0.72
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccountStates",
+      "Elapsed": 2.07
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCollectionPage/420",
+      "Elapsed": 0.89
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCollectionPage/1100",
+      "Elapsed": 1.72
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCollectionPage/1440",
+      "Elapsed": 1.88
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeCollectionPage",
+      "Elapsed": 4.49
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeAccentTextMeetsNormalTextContrast",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSearchResultsNameTheirType/en",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSearchResultsNameTheirType/ja",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSearchResultsNameTheirType/zh-Hans",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSearchResultsNameTheirType/zh-Hant",
+      "Elapsed": 0.03
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeSearchResultsNameTheirType",
+      "Elapsed": 0.12
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeMutedVolumeSurvivesPlaybackRefresh",
+      "Elapsed": 0.26
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestServiceErrorClassificationRequiresMatchingEvidence/302-google_challenge",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestServiceErrorClassificationRequiresMatchingEvidence/307-signin",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestServiceErrorClassificationRequiresMatchingEvidence/303-consent",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestServiceErrorClassificationRequiresMatchingEvidence/302-other",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestServiceErrorClassificationRequiresMatchingEvidence/302-same_origin",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestServiceErrorClassificationRequiresMatchingEvidence/302-",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestServiceErrorClassificationRequiresMatchingEvidence/403-google_challenge",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestServiceErrorClassificationRequiresMatchingEvidence/429-",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestServiceErrorClassificationRequiresMatchingEvidence/500-",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestServiceErrorClassificationRequiresMatchingEvidence/200-google_challenge",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestServiceErrorClassificationRequiresMatchingEvidence/302-synthetic-private-value",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestServiceErrorClassificationRequiresMatchingEvidence",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountVerificationMessagesDoNotClaimSessionExpiry",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAccountRefreshCannotClearAnotherRequestsError",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestUpdateCommands/version",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestUpdateCommands/disabled",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestUpdateCommands/current",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestUpdateCommands/available",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestUpdateCommands/check_failure",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestUpdateCommands/install",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestUpdateCommands/install_failure",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestUpdateCommands/no_install_when_current",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestUpdateCommands",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestUpdateCommandsDoNotInterceptNormalLaunch",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/en-420",
+      "Elapsed": 0.24
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/en-761",
+      "Elapsed": 0.46
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/en-960",
+      "Elapsed": 0.51
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/en-1440",
+      "Elapsed": 0.79
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/zh-Hans-420",
+      "Elapsed": 0.25
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/zh-Hans-761",
+      "Elapsed": 0.42
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/zh-Hans-960",
+      "Elapsed": 0.5
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/zh-Hans-1440",
+      "Elapsed": 0.78
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/zh-Hant-420",
+      "Elapsed": 0.24
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/zh-Hant-761",
+      "Elapsed": 0.43
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/zh-Hant-960",
+      "Elapsed": 0.78
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/zh-Hant-1440",
+      "Elapsed": 0.78
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/ja-420",
+      "Elapsed": 0.25
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/ja-761",
+      "Elapsed": 0.67
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/ja-960",
+      "Elapsed": 0.5
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo/ja-1440",
+      "Elapsed": 0.76
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoErrorOverridesOldFrameAndRetriesOnlyVideo",
+      "Elapsed": 8.36
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestNativeVideoLoadingDoesNotPresentOldFrameAsCurrent",
+      "Elapsed": 0.25
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestVideoErrorClearsStaleFrameAndIgnoresSupersededGeneration",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestVideoRetryReentersSameIDWithoutRestartingAudio",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestVideoRetryPreservesVisibilityAndCoverResourceRules/hidden",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestVideoRetryPreservesVisibilityAndCoverResourceRules/cover",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestVideoRetryPreservesVisibilityAndCoverResourceRules/panel_closed",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestVideoRetryPreservesVisibilityAndCoverResourceRules",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Elapsed": 127.556
+    }
+  ]
+}

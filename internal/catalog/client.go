@@ -78,6 +78,7 @@ type Shelf struct {
 // valid only on the originating Client for 30 minutes; it is not an API token.
 type Page struct {
 	Title        string  `json:"title"`
+	Creator      string  `json:"creator,omitempty"`
 	Subtitle     string  `json:"subtitle,omitempty"`
 	Artwork      string  `json:"artwork,omitempty"`
 	Shelves      []Shelf `json:"shelves"`

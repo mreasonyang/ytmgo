@@ -17,6 +17,9 @@ type UIModel struct {
 	Page                                                        catalog.Page
 	Current                                                     catalog.Item
 	LibraryItems                                                []catalog.Item
+	LibraryLoaded                                               bool
+	GlobalShortcut, ShortcutError                               string
+	ShortcutRecording                                           bool
 	Queue                                                       []catalog.Item
 	Route, Query, Error, Lyrics, PanelTab, Appearance, Language string
 	LyricLines                                                  []catalog.LyricLine
@@ -86,6 +89,8 @@ type ViewActions struct {
 	Video                                               func(bool)
 	RetryPlayback                                       func()
 	LoadMore                                            func()
+	BeginShortcut, CancelShortcut                       func()
+	SetShortcut                                         func(string)
 	artViewport                                         ui.Rect
 	artClipped                                          bool
 }
@@ -138,6 +143,9 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 	}
 	nativeSettings(c, m, a, p, width, height)
 	nativeShortcuts(c, m, a, p, width, height)
+	if m.ShortcutRecording && !m.Settings && a.CancelShortcut != nil {
+		a.CancelShortcut()
+	}
 }
 
 // nativeDesktopFrame is Spotify's desktop arrangement: a global bar on the
@@ -496,6 +504,15 @@ func nativeItemLabel(item catalog.Item) string {
 	return item.Title
 }
 
+func nativeResultLabel(item catalog.Item, m *UIModel, a ViewActions) string {
+	if m.Route == "search" {
+		if subtitle := nativeLibrarySubtitle(item, a); subtitle != "" {
+			return item.Title + " · " + subtitle
+		}
+	}
+	return nativeItemLabel(item)
+}
+
 func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) {
 	full := width > 1180 && !m.SidebarCollapsed
 	panelWidth := float32(nativeRailWidth)
@@ -635,7 +652,16 @@ func nativeLibraryPrompt(c *ui.Context, m *UIModel, a ViewActions, p nativePalet
 func nativeLibraryPromptText(m *UIModel) (title, body string) {
 	switch {
 	case m.SignedIn:
-		return "shellLibraryEmptyTitle", "nativeLibraryHint"
+		switch {
+		case m.Route == "library" && m.Loading:
+			return "nativeLibraryLoadingTitle", "nativeLibraryLoadingBody"
+		case m.Route == "library" && m.Error != "":
+			return "nativeLibraryFailedTitle", "nativeLibraryOpenBody"
+		case !m.LibraryLoaded:
+			return "nativeLibraryOpenTitle", "nativeLibraryOpenBody"
+		default:
+			return "nativeLibraryEmptyTitle", "nativeLibraryEmptyBody"
+		}
 	case nativeRestoring(m):
 		return "nativeAccountRestoring", "nativeAccountRestoringBody"
 	case nativeRestoreDeferred(m):
@@ -825,6 +851,12 @@ func nativePageBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, c
 	}
 	if !m.Loading && m.Error == "" && len(m.Page.Items) == 0 && len(m.Page.Shelves) == 0 && !(m.Route == "library" && !m.SignedIn) {
 		ui.Column(c).Padding(48, 16).Gap(12).AlignItems(ui.Center).Children(func() {
+			if m.Route == "library" && m.SignedIn {
+				ui.Icon(c, nativeIcons["library"]).Size(48, 48).TextColor(p.muted)
+				ui.Text(c, a.Tr("nativeLibraryEmptyTitle")).FontSize(20).FontWeight(700)
+				ui.Text(c, a.Tr("nativeLibraryEmptyBody")).TextColor(p.secondary)
+				return
+			}
 			ui.Icon(c, nativeIcons["search"]).Size(48, 48).TextColor(p.muted)
 			ui.Text(c, a.Tr("nativeEmptyResults")).FontSize(20).FontWeight(700)
 			ui.Text(c, a.Tr("shellSearchPlaceholder")).TextColor(p.secondary)
@@ -838,13 +870,25 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 	if contentWidth == 0 {
 		contentWidth = 960
 	}
+	_, height := c.Size()
+	short := height < 760
 	title := func(size float32) {
 		ui.Text(c, m.Page.Title).FontSize(size).FontWeight(800).LineHeight(1.08).MaxLines(2).Ellipsis("…").Role(ui.RoleHeading)
+		if creator := strings.TrimSpace(m.Page.Creator); creator != "" && !nativeMetadataHasCreator(m.Page.Subtitle, creator) {
+			ui.Text(c, creator).FontSize(14).FontWeight(600).MaxLines(1).Ellipsis("…")
+		}
 		if m.Page.Subtitle != "" {
 			ui.Text(c, m.Page.Subtitle).FontSize(14).FontWeight(500).TextColor(p.secondary).MaxLines(2).Ellipsis("…")
 		}
 	}
-	if compact {
+	if compact && short {
+		ui.Row(c).Padding(8, inset, 0).Gap(16).AlignItems(ui.Center).Children(func() {
+			if m.Page.Artwork != "" {
+				nativeArtwork(c, m.Page.Artwork, min(96, contentWidth*0.25), 6, a, p).Shrink(0)
+			}
+			ui.Column(c).Grow(1).MinWidth(0).Gap(6).Children(func() { title(24) })
+		})
+	} else if compact {
 		ui.Column(c).Padding(8, inset, 0).Gap(12).Children(func() {
 			if m.Page.Artwork != "" {
 				nativeArtwork(c, m.Page.Artwork, min(contentWidth-2*inset-64, 224), 6, a, p).AlignSelf(ui.Center).Shadow(0, 8, 32, 0, ui.RGBA(0, 0, 0, 0.45))
@@ -856,12 +900,16 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 		if contentWidth < 900 {
 			art = 192
 		}
-		ui.Row(c).Padding(40, inset, 0).Gap(24).AlignItems(ui.End).Children(func() {
+		top, font := float32(40), max(float32(32), min(72, contentWidth*0.055))
+		if short {
+			art, top, font = 112, 16, 32
+		}
+		ui.Row(c).Padding(top, inset, 0).Gap(24).AlignItems(ui.End).Children(func() {
 			if m.Page.Artwork != "" {
 				nativeArtwork(c, m.Page.Artwork, art, 6, a, p).Shadow(0, 8, 32, 0, ui.RGBA(0, 0, 0, 0.45))
 			}
 			ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
-				title(max(32, min(72, contentWidth*0.055)))
+				title(font)
 			})
 		})
 	}
@@ -873,12 +921,16 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 	for _, item := range items {
 		inPage = inPage || item.ID == m.Current.ID
 	}
-	ui.Row(c).Padding(24, inset, 0).Gap(24).AlignItems(ui.Center).Children(func() {
+	buttonSize, buttonTop := float32(56), float32(24)
+	if short {
+		buttonSize, buttonTop = 44, 12
+	}
+	ui.Row(c).Padding(buttonTop, inset, 0).Gap(24).AlignItems(ui.Center).Children(func() {
 		icon, key := "play", "shellPlay"
 		if inPage && m.Playing {
 			icon, key = "pause", "shellPause"
 		}
-		b := ui.ButtonBase(c).Size(56, 56).Shrink(0).Radius(28).Background(p.accent).TextColor(p.onAccent).Shadow(0, 8, 16, 0, ui.RGBA(0, 0, 0, 0.3)).Label(a.Tr(key) + " · " + m.Page.Title).Tooltip(a.Tr(key)).Disabled(inPage && m.PlaybackLoading)
+		b := ui.ButtonBase(c).Size(buttonSize, buttonSize).Shrink(0).Radius(buttonSize/2).Background(p.accent).TextColor(p.onAccent).Shadow(0, 8, 16, 0, ui.RGBA(0, 0, 0, 0.3)).Label(a.Tr(key) + " · " + m.Page.Title).Tooltip(a.Tr(key)).Disabled(inPage && m.PlaybackLoading)
 		if b.Hovered() {
 			b.Background(p.accent.Mix(ui.Hex("#ffffff"), 0.12))
 		}
@@ -891,6 +943,23 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 			}
 		}
 	})
+}
+
+func nativeMetadataHasCreator(subtitle, creator string) bool {
+	split := func(value string) []string {
+		return strings.FieldsFunc(value, func(r rune) bool { return r == '·' || r == '•' })
+	}
+	present := map[string]bool{}
+	for _, part := range split(subtitle) {
+		present[strings.ToLower(strings.TrimSpace(part))] = true
+	}
+	creators := split(creator)
+	for _, part := range creators {
+		if !present[strings.ToLower(strings.TrimSpace(part))] {
+			return false
+		}
+	}
+	return len(creators) > 0
 }
 
 // nativeShortcutTile is one of Home's quick-access tiles for library items.
@@ -990,7 +1059,7 @@ func nativeCardArt(compact bool) float32 {
 // with a play button rising over playable covers on hover.
 func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p nativePalette, compact bool) {
 	size := nativeCardArt(compact)
-	b := ui.ButtonBase(c).Column().Width(size + 24).Shrink(0).Padding(12).Gap(8).Radius(8).AlignItems(ui.Stretch).Justify(ui.Start).Label(nativeItemLabel(item))
+	b := ui.ButtonBase(c).Column().Width(size + 24).Shrink(0).Padding(12).Gap(8).Radius(8).AlignItems(ui.Stretch).Justify(ui.Start).Label(nativeResultLabel(item, m, a))
 	hovered := b.Hovered()
 	if hovered {
 		b.Background(p.raised)
@@ -1065,7 +1134,7 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 	if compact {
 		pad = 8
 	}
-	b := ui.ButtonBase(c).Height(56).PaddingX(pad).Gap(16).Radius(6).Justify(ui.Start).Label(nativeItemLabel(item))
+	b := ui.ButtonBase(c).Height(56).PaddingX(pad).Gap(16).Radius(6).Justify(ui.Start).Label(nativeResultLabel(item, m, a))
 	hovered := b.Hovered()
 	if playing {
 		b.Selected(true).Background(p.hover)
@@ -1149,11 +1218,11 @@ func nativePlayerBar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 			if info.Clicked() {
 				m.Panel = true
 			}
-			if m.PlaybackError != "" {
+			if m.PlaybackError != "" && !m.Panel && !m.Immersive {
 				if nativePill(c, a.Tr("buttonRetry"), p, false).Width(72).PaddingX(6).Shrink(0).Disabled(a.RetryPlayback == nil).Clicked() {
 					a.RetryPlayback()
 				}
-			} else if nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 32).Disabled(m.Current.ID == "").Clicked() {
+			} else if m.PlaybackError == "" && nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 32).Disabled(m.Current.ID == "").Clicked() {
 				a.Like()
 			}
 		})
@@ -1218,7 +1287,7 @@ func nativeTrackCaption(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 		}
 		ui.Text(c, title).FontSize(14).FontWeight(600).MaxLines(1).Ellipsis("…")
 		if m.PlaybackError != "" {
-			artist = m.PlaybackError
+			artist = a.Tr("nativePlaybackFailedStatus")
 		} else if nativeAwaitingAccount(m) {
 			artist = a.Tr("nativePlaybackAwaitingAccount")
 		}
@@ -1251,11 +1320,11 @@ func nativeMiniPlayer(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 				if info.Clicked() {
 					m.Panel = true
 				}
-				if m.PlaybackError != "" {
+				if m.PlaybackError != "" && !m.Panel {
 					if nativePill(c, a.Tr("buttonRetry"), p, false).Width(64).PaddingX(6).Shrink(0).Disabled(a.RetryPlayback == nil).Clicked() {
 						a.RetryPlayback()
 					}
-				} else if nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 40).Disabled(m.Current.ID == "").Clicked() {
+				} else if m.PlaybackError == "" && nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 40).Disabled(m.Current.ID == "").Clicked() {
 					a.Like()
 				}
 				nativePlayButton(c, m, a, p, 40)
@@ -1662,6 +1731,7 @@ func nativeSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, w
 						}
 					})
 				})
+				nativeShortcutSettings(c, m, a, p)
 				ui.Column(c).Gap(12).Children(func() {
 					section("shellAppearance")
 					ui.Row(c).Gap(8).Children(func() {
@@ -1710,6 +1780,12 @@ func nativeShortcuts(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 				}
 			})
 			ui.Scroll(c).Gap(14).Children(func() {
+				ui.Text(c, a.Tr("nativeShortcutLocalHint")).FontSize(13).TextColor(p.secondary)
+				ui.Text(c, a.Tr("nativeShortcutGlobal")+" · "+nativeShortcutValue(m, a)).FontWeight(600)
+				if nativePill(c, a.Tr("nativeShortcutConfigure"), p, false).Clicked() {
+					m.Shortcuts = false
+					m.Settings = true
+				}
 				for _, shortcut := range []struct{ key, chord string }{{"shellShortcutPlayPause", "Space"}, {"shellShortcutNextPrevious", "⌘ → / ←"}, {"shellShortcutVolume", "⌘ ↑ / ↓"}, {"shellShortcutSearch", "⌘ K"}, {"shellShortcutPanel", "⌘ J"}, {"shellShortcutImmersive", "⌘ ⇧ F"}, {"shellShortcutHome", "⌘ ⇧ H"}, {"shellShortcutLibrary", "⌘ L"}, {"shellShortcutMute", "⌘ ⇧ M"}, {"shellShortcutSidebar", "⌘ B"}, {"shellShortcutDismiss", "Esc"}} {
 					ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
 						ui.Text(c, a.Tr(shortcut.key)).Grow(1)
@@ -1763,6 +1839,8 @@ type nativePresentationKey struct {
 	values                             [4]float64
 	repeat, queueLength, libraryLength int
 	errorScope                         errorScope
+	libraryLoaded, shortcutRecording   bool
+	shortcut, shortcutError            string
 }
 
 func nativePresentation(m *UIModel) nativePresentationKey {
@@ -1770,7 +1848,7 @@ func nativePresentation(m *UIModel) nativePresentationKey {
 		texts:  [14]string{m.Route, m.Query, m.PanelTab, m.Appearance, m.Language, m.Current.ID, m.Current.Title, m.Page.Title, m.Error, m.Lyrics, m.Current.Artwork, m.VideoError, m.PlaybackError, m.AccountRestore},
 		flags:  [18]bool{m.Loading, m.Playing, m.Muted, m.Liked, m.Shuffle, m.Panel, m.Immersive, m.Settings, m.Shortcuts, m.SidebarCollapsed, m.SignedIn, m.CanBack, m.CanForward, m.FocusSearch, m.Video, m.VideoLoading, m.PlaybackLoading, m.MusicPremium},
 		values: [4]float64{m.Volume, m.Position, m.Duration, 0}, repeat: m.Repeat, queueLength: len(m.Queue), libraryLength: len(m.LibraryItems),
-		errorScope: m.ErrorScope,
+		errorScope: m.ErrorScope, libraryLoaded: m.LibraryLoaded, shortcutRecording: m.ShortcutRecording, shortcut: m.GlobalShortcut, shortcutError: m.ShortcutError,
 	}
 }
 
@@ -1844,6 +1922,9 @@ func nativeTrackMenu(item catalog.Item, a ViewActions) func(*ui.Menu) {
 }
 
 func nativeKeyboard(c *ui.Context, m *UIModel, a ViewActions) {
+	if m.ShortcutRecording {
+		return
+	}
 	// MyGo gives focused text editors and controls first refusal, including Space.
 	if c.Shortcut(0, ui.KeySpace) && m.Current.ID != "" {
 		a.Toggle()

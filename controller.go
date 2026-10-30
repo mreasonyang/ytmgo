@@ -106,6 +106,7 @@ func (a *desktop) loadPage(route, q string, record bool) {
 			case "library":
 				a.model.Page.Title = a.tr("shellLibraryTitle")
 				a.model.LibraryItems = page.Items
+				a.model.LibraryLoaded = true
 			case "search":
 				a.model.Page.Title = q
 			}

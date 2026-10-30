@@ -1,0 +1,85 @@
+[
+  {
+    "command": [
+      "make",
+      "runtime"
+    ],
+    "exit": 0,
+    "elapsed": 5.741
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/runtime/test_runtime_manifest.py"
+    ],
+    "exit": 0,
+    "elapsed": 0.089
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/runtime/test_protocol_version.py"
+    ],
+    "exit": 0,
+    "elapsed": 0.04
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/runtime/run_tests.py"
+    ],
+    "exit": 0,
+    "elapsed": 4.621
+  },
+  {
+    "command": [
+      "make",
+      "test-login"
+    ],
+    "exit": 0,
+    "elapsed": 0.376
+  },
+  {
+    "command": [
+      "go",
+      "vet",
+      "./..."
+    ],
+    "exit": 0,
+    "elapsed": 1.403
+  },
+  {
+    "command": [
+      "go",
+      "tool",
+      "mygo",
+      "i18n",
+      "check"
+    ],
+    "exit": 0,
+    "elapsed": 0.198
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "scripts/release",
+      "-p",
+      "test_*.py"
+    ],
+    "exit": 0,
+    "elapsed": 12.333
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exit": 0,
+    "elapsed": 0.026
+  }
+]

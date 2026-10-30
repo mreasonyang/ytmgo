@@ -519,3 +519,22 @@ func TestLiveCatalog(t *testing.T) {
 	}
 	t.Log("lyrics: available (content not logged)")
 }
+
+func TestHeaderCreatorUsesLinkedMetadata(t *testing.T) {
+	for _, field := range []string{"straplineTextOne", "subtitle", "secondSubtitle"} {
+		t.Run(field, func(t *testing.T) {
+			header := object{"title": words("Opus"), "subtitle": words("Album • 2024")}
+			header[field] = object{"runs": []any{object{"text": "Ryuichi Sakamoto", "navigationEndpoint": browseEndpoint("UCartist", "MUSIC_PAGE_TYPE_ARTIST")}, object{"text": " • "}, object{"text": "Ryuichi Sakamoto", "navigationEndpoint": browseEndpoint("UCartist", "MUSIC_PAGE_TYPE_ARTIST")}, object{"text": "Guest", "navigationEndpoint": browseEndpoint("UCguest", "MUSIC_PAGE_TYPE_ARTIST")}}}
+			var page Page
+			applyHeader(&page, header)
+			if page.Creator != "Ryuichi Sakamoto · Guest" || page.Title != "Opus" {
+				t.Fatal("linked creators lost or duplicated")
+			}
+		})
+	}
+	var page Page
+	applyHeader(&page, object{"title": words("Compilation"), "subtitle": words("Album • 2024")})
+	if page.Creator != "" {
+		t.Fatal("creator guessed from unlinked metadata")
+	}
+}

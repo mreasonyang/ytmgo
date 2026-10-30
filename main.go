@@ -19,7 +19,7 @@ import (
 	"ytmgo/locales"
 )
 
-const version = "0.5.1"
+const version = "0.5.2"
 
 //go:embed locales/en.json resources/icon.png resources/tray.png
 var assets embed.FS
@@ -36,6 +36,7 @@ type desktop struct {
 	window                          *mygo.Window
 	tray                            *mygo.Tray
 	prefs                           *Preferences
+	shortcut                        *shortcutBinding
 	languagePath                    string
 	diagnosticPath                  string
 	model                           UIModel
@@ -153,11 +154,12 @@ func main() {
 		})
 		a.window = mygo.NewWindow(mygo.WindowOptions{Title: locales.AppName(), Width: 1440, Height: 940, MinWidth: 380, MinHeight: 640, StateKey: "native-main", BackgroundColor: "light-dark(#e7e7ea, #050506)", Content: ui.View(func(c *ui.Context) { nativeView(c, &a.model, a.actions()); a.syncVideo() })})
 		a.windowVisible = true
-		a.window.OnHide(func() { a.windowVisible = false; a.syncVideo() })
+		a.window.OnHide(func() { a.cancelShortcut(); a.windowVisible = false; a.syncVideo() })
 		a.window.OnShow(func() { a.windowVisible = true; a.syncVideo() })
-		a.window.OnMinimize(func() { a.windowVisible = false; a.syncVideo() })
+		a.window.OnMinimize(func() { a.cancelShortcut(); a.windowVisible = false; a.syncVideo() })
 		a.window.OnRestore(func() { a.windowVisible = true; a.syncVideo() })
 		a.window.OnFocus(func() { a.refreshAccount() })
+		a.window.OnBlur(a.cancelShortcut)
 		a.window.OnClose(func(e *mygo.CloseEvent) {
 			if !a.quitting && (runtime.GOOS == "darwin" || a.tray != nil) {
 				e.PreventDefault()
@@ -169,7 +171,7 @@ func main() {
 		if err != nil {
 			log.Print("ytmgo: tray unavailable")
 		}
-		_ = mygo.GlobalShortcut.Register("CmdOrCtrl+Shift+Space", a.toggle)
+		a.initGlobalShortcut(filepath.Join(dataDir, "global-shortcut"))
 		a.navigate("home")
 		a.startAccountPolling()
 		go a.pollPlayback()
@@ -204,7 +206,7 @@ func (a *desktop) show() {
 }
 
 func (a *desktop) actions() ViewActions {
-	return ViewActions{Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, RetryPlayback: func() { a.startTrack(a.model.Current) }, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: a.art.get}
+	return ViewActions{BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, RetryPlayback: func() { a.startTrack(a.model.Current) }, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: a.art.get}
 }
 
 func (a *desktop) pollPlayback() {
@@ -257,22 +259,30 @@ func (a *desktop) pollPlayback() {
 	}
 }
 
-func menuItem(label, shortcut string, fn func()) *mygo.MenuItem {
-	return &mygo.MenuItem{Label: label, Accelerator: shortcut, Click: func(*mygo.MenuItem, *mygo.Window) { fn() }}
+func (a *desktop) menuItem(label, shortcut string, fn func()) *mygo.MenuItem {
+	return &mygo.MenuItem{Label: label, Accelerator: shortcut, Click: func(*mygo.MenuItem, *mygo.Window) {
+		if a.model.ShortcutRecording && shortcut != "" {
+			a.cancelShortcut()
+			a.model.ShortcutError = "nativeShortcutReserved"
+			a.invalidate()
+			return
+		}
+		fn()
+	}}
 }
 
 func (a *desktop) menu() *mygo.Menu {
 	return mygo.NewMenu([]*mygo.MenuItem{
 		applicationMenuWithUpdates(),
-		{Label: locales.MenuFile(), Submenu: []*mygo.MenuItem{menuItem(locales.MenuShowApp(), "CmdOrCtrl+1", a.show), {Role: mygo.RoleClose}, mygo.Separator(), {Role: mygo.RoleQuit}}},
+		{Label: locales.MenuFile(), Submenu: []*mygo.MenuItem{a.menuItem(locales.MenuShowApp(), "CmdOrCtrl+1", a.show), {Role: mygo.RoleClose}, mygo.Separator(), {Role: mygo.RoleQuit}}},
 		{Role: mygo.RoleEditMenu},
 		{Label: locales.MenuPlayback(), Submenu: []*mygo.MenuItem{
-			menuItem(locales.MenuPlayPause(), "CmdOrCtrl+P", a.toggle), menuItem(locales.MenuNext(), "CmdOrCtrl+Right", a.next), menuItem(locales.MenuPrevious(), "CmdOrCtrl+Left", a.previous), mygo.Separator(), menuItem(locales.MenuLike(), "", a.like), menuItem(locales.MenuVolumeUp(), "CmdOrCtrl+Up", func() { a.volume(a.model.Volume + 0.05) }), menuItem(locales.MenuVolumeDown(), "CmdOrCtrl+Down", func() { a.volume(a.model.Volume - 0.05) }), menuItem(locales.MenuMute(), "CmdOrCtrl+Shift+M", a.mute)}},
+			a.menuItem(locales.MenuPlayPause(), "CmdOrCtrl+P", a.toggle), a.menuItem(locales.MenuNext(), "CmdOrCtrl+Right", a.next), a.menuItem(locales.MenuPrevious(), "CmdOrCtrl+Left", a.previous), mygo.Separator(), a.menuItem(locales.MenuLike(), "", a.like), a.menuItem(locales.MenuVolumeUp(), "CmdOrCtrl+Up", func() { a.volume(a.model.Volume + 0.05) }), a.menuItem(locales.MenuVolumeDown(), "CmdOrCtrl+Down", func() { a.volume(a.model.Volume - 0.05) }), a.menuItem(locales.MenuMute(), "CmdOrCtrl+Shift+M", a.mute)}},
 		{Label: locales.MenuView(), Submenu: []*mygo.MenuItem{
-			menuItem(locales.MenuHome(), "CmdOrCtrl+Shift+H", func() { a.navigate("home") }), menuItem(locales.MenuExplore(), "", func() { a.navigate("explore") }), menuItem(locales.MenuLibrary(), "CmdOrCtrl+L", func() { a.navigate("library") }), mygo.Separator(), menuItem(locales.MenuPanel(), "CmdOrCtrl+J", func() { a.model.Panel = !a.model.Panel; a.invalidate() }), menuItem(locales.MenuLyrics(), "", func() { a.model.Panel = true; a.model.PanelTab = "lyrics"; a.invalidate() }), menuItem(locales.MenuImmersive(), "CmdOrCtrl+Shift+F", func() { a.model.Immersive = !a.model.Immersive; a.invalidate() }), menuItem(locales.MenuSidebar(), "CmdOrCtrl+B", func() { a.model.SidebarCollapsed = !a.model.SidebarCollapsed; a.invalidate() }), {Label: locales.MenuLanguage(), Submenu: a.languageMenu()}, {Role: mygo.RoleToggleFullScreen}}},
+			a.menuItem(locales.MenuHome(), "CmdOrCtrl+Shift+H", func() { a.navigate("home") }), a.menuItem(locales.MenuExplore(), "", func() { a.navigate("explore") }), a.menuItem(locales.MenuLibrary(), "CmdOrCtrl+L", func() { a.navigate("library") }), mygo.Separator(), a.menuItem(locales.MenuPanel(), "CmdOrCtrl+J", func() { a.model.Panel = !a.model.Panel; a.invalidate() }), a.menuItem(locales.MenuLyrics(), "", func() { a.model.Panel = true; a.model.PanelTab = "lyrics"; a.invalidate() }), a.menuItem(locales.MenuImmersive(), "CmdOrCtrl+Shift+F", func() { a.model.Immersive = !a.model.Immersive; a.invalidate() }), a.menuItem(locales.MenuSidebar(), "CmdOrCtrl+B", func() { a.model.SidebarCollapsed = !a.model.SidebarCollapsed; a.invalidate() }), {Label: locales.MenuLanguage(), Submenu: a.languageMenu()}, {Role: mygo.RoleToggleFullScreen}}},
 		{Role: mygo.RoleWindowMenu},
 		{Label: locales.MenuAccount(), Submenu: a.accountMenuItems()},
-		{Label: locales.MenuHelp(), Submenu: []*mygo.MenuItem{menuItem(locales.MenuShortcuts(), "CmdOrCtrl+/", func() { a.model.Shortcuts = true; a.invalidate() }), menuItem(locales.MenuAbout(), "", func() {
+		{Label: locales.MenuHelp(), Submenu: []*mygo.MenuItem{a.menuItem(locales.MenuShortcuts(), "CmdOrCtrl+/", func() { a.model.Shortcuts = true; a.invalidate() }), a.menuItem(locales.MenuAbout(), "", func() {
 			go func() {
 				_, _ = mygo.Dialog.Message(mygo.MessageOptions{Parent: a.window, Title: locales.MenuAbout(), Message: locales.AboutMessage(applicationVersion()), Detail: a.tr("nativeAbout"), Buttons: []string{locales.ButtonOK()}})
 			}()
@@ -281,9 +291,9 @@ func (a *desktop) menu() *mygo.Menu {
 }
 
 func (a *desktop) accountMenuItems() []*mygo.MenuItem {
-	items := []*mygo.MenuItem{menuItem(locales.MenuSignIn(), "", a.signIn)}
+	items := []*mygo.MenuItem{a.menuItem(locales.MenuSignIn(), "", a.signIn)}
 	if a.model.SignedIn {
-		items = append(items, menuItem(locales.MenuSignOut(), "", a.signOut))
+		items = append(items, a.menuItem(locales.MenuSignOut(), "", a.signOut))
 	}
 	return items
 }
@@ -294,5 +304,5 @@ func (a *desktop) invalidate() {
 	}
 }
 func (a *desktop) trayMenu() *mygo.Menu {
-	return mygo.NewMenu([]*mygo.MenuItem{menuItem(locales.TrayOpen(), "", a.show), mygo.Separator(), menuItem(locales.MenuPlayPause(), "", a.toggle), menuItem(locales.MenuNext(), "", a.next), menuItem(locales.MenuPrevious(), "", a.previous), mygo.Separator(), menuItem(locales.TrayQuit(), "", func() { mygo.App.Quit() })})
+	return mygo.NewMenu([]*mygo.MenuItem{a.menuItem(locales.TrayOpen(), "", a.show), mygo.Separator(), a.menuItem(locales.MenuPlayPause(), "", a.toggle), a.menuItem(locales.MenuNext(), "", a.next), a.menuItem(locales.MenuPrevious(), "", a.previous), mygo.Separator(), a.menuItem(locales.TrayQuit(), "", func() { mygo.App.Quit() })})
 }

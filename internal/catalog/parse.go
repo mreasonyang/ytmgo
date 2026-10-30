@@ -155,6 +155,28 @@ func applyHeader(page *Page, header map[string]any) {
 	if subtitle := joinedText(header["subtitle"]); subtitle != "" {
 		page.Subtitle = subtitle
 	}
+	// Creator links belong to the header. Never guess an album's artist from
+	// its first track, which may be a compilation or a guest performance.
+	for _, key := range []string{"straplineTextOne", "subtitle", "secondSubtitle"} {
+		var creators []string
+		seen := map[string]bool{}
+		for _, run := range arrayAt(header[key], "runs") {
+			browse := at(run, "navigationEndpoint", "browseEndpoint")
+			id := textAt(browse, "browseId")
+			if !strings.HasPrefix(id, "UC") && browseKind(browse) != "artist" {
+				continue
+			}
+			name := strings.TrimSpace(textAt(run, "text"))
+			if name != "" && !seen[name] {
+				seen[name] = true
+				creators = append(creators, name)
+			}
+		}
+		if len(creators) > 0 {
+			page.Creator = strings.Join(creators, " · ")
+			break
+		}
+	}
 	if art := artwork(header); art != "" {
 		page.Artwork = art
 	}

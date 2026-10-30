@@ -635,6 +635,7 @@ func (a *desktop) clearAccountContent() {
 	}
 	a.pageGeneration++
 	a.model.LibraryItems = nil
+	a.model.LibraryLoaded = false
 	a.model.Page = catalog.Page{}
 	a.model.Loading = false
 	a.model.Error = ""

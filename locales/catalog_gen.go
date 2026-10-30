@@ -2563,16 +2563,6 @@ func (msgs Messages) NativeEmptyResults() string {
 	return Catalog.Format(msgs.locale, "nativeEmptyResults", nil)
 }
 
-// NativeLibraryHint says "Sign in to see your YouTube Music library."
-// in the language the app shows.
-func NativeLibraryHint() string { return In(i18n.Locale()).NativeLibraryHint() }
-
-// NativeLibraryHint says "Sign in to see your YouTube Music library."
-// in the language of msgs.
-func (msgs Messages) NativeLibraryHint() string {
-	return Catalog.Format(msgs.locale, "nativeLibraryHint", nil)
-}
-
 // NativeAddToQueue says "Add to queue"
 // in the language the app shows.
 func NativeAddToQueue() string { return In(i18n.Locale()).NativeAddToQueue() }
@@ -2863,4 +2853,214 @@ func NativeAccountRestoreFailed() string { return In(i18n.Locale()).NativeAccoun
 // in the language of msgs.
 func (msgs Messages) NativeAccountRestoreFailed() string {
 	return Catalog.Format(msgs.locale, "nativeAccountRestoreFailed", nil)
+}
+
+// NativeLibraryOpenTitle says "Your library is ready to load"
+// in the language the app shows.
+func NativeLibraryOpenTitle() string { return In(i18n.Locale()).NativeLibraryOpenTitle() }
+
+// NativeLibraryOpenTitle says "Your library is ready to load"
+// in the language of msgs.
+func (msgs Messages) NativeLibraryOpenTitle() string {
+	return Catalog.Format(msgs.locale, "nativeLibraryOpenTitle", nil)
+}
+
+// NativeLibraryOpenBody says "Open Library to load your saved music."
+// in the language the app shows.
+func NativeLibraryOpenBody() string { return In(i18n.Locale()).NativeLibraryOpenBody() }
+
+// NativeLibraryOpenBody says "Open Library to load your saved music."
+// in the language of msgs.
+func (msgs Messages) NativeLibraryOpenBody() string {
+	return Catalog.Format(msgs.locale, "nativeLibraryOpenBody", nil)
+}
+
+// NativeLibraryLoadingTitle says "Loading your library…"
+// in the language the app shows.
+func NativeLibraryLoadingTitle() string { return In(i18n.Locale()).NativeLibraryLoadingTitle() }
+
+// NativeLibraryLoadingTitle says "Loading your library…"
+// in the language of msgs.
+func (msgs Messages) NativeLibraryLoadingTitle() string {
+	return Catalog.Format(msgs.locale, "nativeLibraryLoadingTitle", nil)
+}
+
+// NativeLibraryLoadingBody says "Your saved music will appear here."
+// in the language the app shows.
+func NativeLibraryLoadingBody() string { return In(i18n.Locale()).NativeLibraryLoadingBody() }
+
+// NativeLibraryLoadingBody says "Your saved music will appear here."
+// in the language of msgs.
+func (msgs Messages) NativeLibraryLoadingBody() string {
+	return Catalog.Format(msgs.locale, "nativeLibraryLoadingBody", nil)
+}
+
+// NativeLibraryFailedTitle says "Library could not load"
+// in the language the app shows.
+func NativeLibraryFailedTitle() string { return In(i18n.Locale()).NativeLibraryFailedTitle() }
+
+// NativeLibraryFailedTitle says "Library could not load"
+// in the language of msgs.
+func (msgs Messages) NativeLibraryFailedTitle() string {
+	return Catalog.Format(msgs.locale, "nativeLibraryFailedTitle", nil)
+}
+
+// NativeLibraryEmptyTitle says "Your library is empty"
+// in the language the app shows.
+func NativeLibraryEmptyTitle() string { return In(i18n.Locale()).NativeLibraryEmptyTitle() }
+
+// NativeLibraryEmptyTitle says "Your library is empty"
+// in the language of msgs.
+func (msgs Messages) NativeLibraryEmptyTitle() string {
+	return Catalog.Format(msgs.locale, "nativeLibraryEmptyTitle", nil)
+}
+
+// NativeLibraryEmptyBody says "Save music in YouTube Music, then refresh your library."
+// in the language the app shows.
+func NativeLibraryEmptyBody() string { return In(i18n.Locale()).NativeLibraryEmptyBody() }
+
+// NativeLibraryEmptyBody says "Save music in YouTube Music, then refresh your library."
+// in the language of msgs.
+func (msgs Messages) NativeLibraryEmptyBody() string {
+	return Catalog.Format(msgs.locale, "nativeLibraryEmptyBody", nil)
+}
+
+// NativePlaybackFailedStatus says "Playback failed"
+// in the language the app shows.
+func NativePlaybackFailedStatus() string { return In(i18n.Locale()).NativePlaybackFailedStatus() }
+
+// NativePlaybackFailedStatus says "Playback failed"
+// in the language of msgs.
+func (msgs Messages) NativePlaybackFailedStatus() string {
+	return Catalog.Format(msgs.locale, "nativePlaybackFailedStatus", nil)
+}
+
+// NativeShortcutGlobal says "Global play / pause"
+// in the language the app shows.
+func NativeShortcutGlobal() string { return In(i18n.Locale()).NativeShortcutGlobal() }
+
+// NativeShortcutGlobal says "Global play / pause"
+// in the language of msgs.
+func (msgs Messages) NativeShortcutGlobal() string {
+	return Catalog.Format(msgs.locale, "nativeShortcutGlobal", nil)
+}
+
+// NativeShortcutGlobalHint says "Works while using other apps. Record a combination or a function key, or turn it off."
+// in the language the app shows.
+func NativeShortcutGlobalHint() string { return In(i18n.Locale()).NativeShortcutGlobalHint() }
+
+// NativeShortcutGlobalHint says "Works while using other apps. Record a combination or a function key, or turn it off."
+// in the language of msgs.
+func (msgs Messages) NativeShortcutGlobalHint() string {
+	return Catalog.Format(msgs.locale, "nativeShortcutGlobalHint", nil)
+}
+
+// NativeShortcutLocalHint says "In ytmgo, Space plays or pauses. The global shortcut also works in other apps."
+// in the language the app shows.
+func NativeShortcutLocalHint() string { return In(i18n.Locale()).NativeShortcutLocalHint() }
+
+// NativeShortcutLocalHint says "In ytmgo, Space plays or pauses. The global shortcut also works in other apps."
+// in the language of msgs.
+func (msgs Messages) NativeShortcutLocalHint() string {
+	return Catalog.Format(msgs.locale, "nativeShortcutLocalHint", nil)
+}
+
+// NativeShortcutDisabled says "Off"
+// in the language the app shows.
+func NativeShortcutDisabled() string { return In(i18n.Locale()).NativeShortcutDisabled() }
+
+// NativeShortcutDisabled says "Off"
+// in the language of msgs.
+func (msgs Messages) NativeShortcutDisabled() string {
+	return Catalog.Format(msgs.locale, "nativeShortcutDisabled", nil)
+}
+
+// NativeShortcutRecord says "Record shortcut"
+// in the language the app shows.
+func NativeShortcutRecord() string { return In(i18n.Locale()).NativeShortcutRecord() }
+
+// NativeShortcutRecord says "Record shortcut"
+// in the language of msgs.
+func (msgs Messages) NativeShortcutRecord() string {
+	return Catalog.Format(msgs.locale, "nativeShortcutRecord", nil)
+}
+
+// NativeShortcutRecording says "Press shortcut…"
+// in the language the app shows.
+func NativeShortcutRecording() string { return In(i18n.Locale()).NativeShortcutRecording() }
+
+// NativeShortcutRecording says "Press shortcut…"
+// in the language of msgs.
+func (msgs Messages) NativeShortcutRecording() string {
+	return Catalog.Format(msgs.locale, "nativeShortcutRecording", nil)
+}
+
+// NativeShortcutDisable says "Turn off"
+// in the language the app shows.
+func NativeShortcutDisable() string { return In(i18n.Locale()).NativeShortcutDisable() }
+
+// NativeShortcutDisable says "Turn off"
+// in the language of msgs.
+func (msgs Messages) NativeShortcutDisable() string {
+	return Catalog.Format(msgs.locale, "nativeShortcutDisable", nil)
+}
+
+// NativeShortcutConfigure says "Configure global shortcut"
+// in the language the app shows.
+func NativeShortcutConfigure() string { return In(i18n.Locale()).NativeShortcutConfigure() }
+
+// NativeShortcutConfigure says "Configure global shortcut"
+// in the language of msgs.
+func (msgs Messages) NativeShortcutConfigure() string {
+	return Catalog.Format(msgs.locale, "nativeShortcutConfigure", nil)
+}
+
+// NativeShortcutInvalid says "Use a modifier with a letter, number or navigation key, or use F1–F12."
+// in the language the app shows.
+func NativeShortcutInvalid() string { return In(i18n.Locale()).NativeShortcutInvalid() }
+
+// NativeShortcutInvalid says "Use a modifier with a letter, number or navigation key, or use F1–F12."
+// in the language of msgs.
+func (msgs Messages) NativeShortcutInvalid() string {
+	return Catalog.Format(msgs.locale, "nativeShortcutInvalid", nil)
+}
+
+// NativeShortcutReserved says "That combination is used in ytmgo. Choose another."
+// in the language the app shows.
+func NativeShortcutReserved() string { return In(i18n.Locale()).NativeShortcutReserved() }
+
+// NativeShortcutReserved says "That combination is used in ytmgo. Choose another."
+// in the language of msgs.
+func (msgs Messages) NativeShortcutReserved() string {
+	return Catalog.Format(msgs.locale, "nativeShortcutReserved", nil)
+}
+
+// NativeShortcutConflict says "That shortcut is unavailable. Your previous setting is unchanged."
+// in the language the app shows.
+func NativeShortcutConflict() string { return In(i18n.Locale()).NativeShortcutConflict() }
+
+// NativeShortcutConflict says "That shortcut is unavailable. Your previous setting is unchanged."
+// in the language of msgs.
+func (msgs Messages) NativeShortcutConflict() string {
+	return Catalog.Format(msgs.locale, "nativeShortcutConflict", nil)
+}
+
+// NativeShortcutSaveFailed says "Could not save the shortcut. Your previous setting is unchanged."
+// in the language the app shows.
+func NativeShortcutSaveFailed() string { return In(i18n.Locale()).NativeShortcutSaveFailed() }
+
+// NativeShortcutSaveFailed says "Could not save the shortcut. Your previous setting is unchanged."
+// in the language of msgs.
+func (msgs Messages) NativeShortcutSaveFailed() string {
+	return Catalog.Format(msgs.locale, "nativeShortcutSaveFailed", nil)
+}
+
+// NativeShortcutUnavailable says "Your shortcut could not be activated. Record another shortcut or turn it off."
+// in the language the app shows.
+func NativeShortcutUnavailable() string { return In(i18n.Locale()).NativeShortcutUnavailable() }
+
+// NativeShortcutUnavailable says "Your shortcut could not be activated. Record another shortcut or turn it off."
+// in the language of msgs.
+func (msgs Messages) NativeShortcutUnavailable() string {
+	return Catalog.Format(msgs.locale, "nativeShortcutUnavailable", nil)
 }

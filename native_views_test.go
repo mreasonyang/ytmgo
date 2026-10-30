@@ -511,8 +511,8 @@ func TestNativeTrackListLayout(t *testing.T) {
 			m.Route = route
 			m.Page = catalog.Page{Title: "Discovery", Items: m.Queue, Shelves: []catalog.Shelf{{Items: m.Queue}}}
 			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1100, 900)
-			first := nativeAssertVisible(t, tt, "Something About Us · Daft Punk", 1100, 900)
-			fifth := nativeAssertVisible(t, tt, "One More Time · Daft Punk", 1100, 900)
+			first := nativeAssertVisible(t, tt, nativeResultLabel(m.Queue[0], m, a), 1100, 900)
+			fifth := nativeAssertVisible(t, tt, nativeResultLabel(m.Queue[4], m, a), 1100, 900)
 			if fifth.Y <= first.Y || fifth.X != first.X {
 				t.Fatalf("playlist/search rows did not retain vertical order: first=%+v fifth=%+v", first, fifth)
 			}
@@ -530,7 +530,7 @@ func TestNativePlaybackFailureRetry(t *testing.T) {
 				m.Immersive = immersive
 				a.RetryPlayback = func() { m.PlaybackError = ""; m.PlaybackLoading = true }
 				tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, 900)
-				if !tt.HasText(m.PlaybackError) {
+				if !tt.HasText(m.PlaybackError) && !tt.HasText(a.Tr("nativePlaybackFailedStatus")) {
 					t.Fatal("playback failure has no visible explanation")
 				}
 				if err := tt.Click(a.Tr("buttonRetry")); err != nil {

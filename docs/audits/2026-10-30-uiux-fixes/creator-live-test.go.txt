@@ -1,0 +1,18 @@
+package catalog
+
+import("context";"testing";"time";"strings")
+
+func TestAcceptanceLiveAlbumCreator(t *testing.T){
+ for _,lang:=range []string{"en","zh-CN","zh-TW","ja"}{t.Run(lang,func(t *testing.T){
+  ctx,cancel:=context.WithTimeout(context.Background(),30*time.Second);defer cancel()
+  client:=NewWithOptions(Options{Language:lang})
+  search,err:=client.Search(ctx,"Ryuichi Sakamoto Opus");if err!=nil{t.Fatal("public_search_failed")}
+  for _,item:=range search.Items{if item.Kind=="album" && strings.Contains(strings.ToLower(item.Title),"opus"){
+   page,err:=client.BrowseWithParams(ctx,item.BrowseID,item.BrowseParams);if err!=nil{t.Fatal("public_album_failed")}
+   if page.Creator==""{t.Fatal("album_creator_missing")}
+   if len(page.Items)==0{t.Fatal("album_tracks_missing")}
+   t.Logf("creator_present=true tracks=%d",len(page.Items));return
+  }}
+  t.Fatal("target_album_not_returned")
+ })}
+}

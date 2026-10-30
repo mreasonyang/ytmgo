@@ -1,0 +1,130 @@
+{
+  "conclusion": "success",
+  "headSha": "77cbb37a70c579c2df5775a93421262dc6a3c211",
+  "jobs": [
+    {
+      "name": "package",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check packaging scripts",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Configure release version",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Go tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare locked media runtime",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Test media runtime",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Test login build staging",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Go vet",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check translations",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build app with bundled runtime and login helper",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Package unsigned test build",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Sign and optionally notarize",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Remove temporary signing materials",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish signed release and update feed",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Upload DMG, app ZIP, checksums and build metadata",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/mreasonyang/ytmgo/actions/runs/41008270371"
+}

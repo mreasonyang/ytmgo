@@ -1,0 +1,26 @@
+{
+  "anonymous": true,
+  "query": "Ryuichi Sakamoto Opus",
+  "languages": [
+    {
+      "language": "en",
+      "creator_present": true,
+      "tracks": 30
+    },
+    {
+      "language": "zh-CN",
+      "creator_present": true,
+      "tracks": 30
+    },
+    {
+      "language": "zh-TW",
+      "creator_present": true,
+      "tracks": 30
+    },
+    {
+      "language": "ja",
+      "creator_present": true,
+      "tracks": 30
+    }
+  ]
+}

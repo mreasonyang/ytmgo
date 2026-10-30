@@ -1,0 +1,11 @@
+{
+  "version": "0.5.1",
+  "executable_sha256": "2214521b90dc4b3b3f5b645df0636fe23e331e9ea0a6d2ad8c088689cd0d5c15",
+  "account": {
+    "Time": "2026-10-30T05:22:10Z",
+    "Version": "0.5.1",
+    "Component": "account",
+    "Category": "premium"
+  },
+  "shortcut_preference_exists": false
+}

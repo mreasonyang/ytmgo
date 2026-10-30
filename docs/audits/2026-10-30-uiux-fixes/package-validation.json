@@ -1,0 +1,63 @@
+{
+  "signature": {
+    "exit": 0,
+    "pass": true
+  },
+  "gatekeeper": {
+    "exit": 0,
+    "pass": true
+  },
+  "stapled_ticket": {
+    "exit": 0,
+    "pass": true
+  },
+  "identity": {
+    "Identifier": [
+      "si.kyun.ytmgo"
+    ],
+    "Authority": [
+      "Developer ID Application: YANHUA YU (2V4TX79LUZ)",
+      "Developer ID Certification Authority",
+      "Apple Root CA"
+    ],
+    "TeamIdentifier": [
+      "2V4TX79LUZ"
+    ]
+  },
+  "bundle": {
+    "CFBundleIdentifier": "si.kyun.ytmgo",
+    "CFBundleShortVersionString": "0.5.2",
+    "CFBundleVersion": "0.5.2"
+  },
+  "main_sha256": "b1a8f9f196ccb82529b3273aaed28cc12eac673e1bb7c1daed252ee3b68ffa56",
+  "runtime_source_matches": {
+    "worker.mjs": true,
+    "proof-policy.mjs": true,
+    "engine-ipc.mjs": true,
+    "premium-module-guard.mjs": true,
+    "proof-binding.mjs": true,
+    "stream-bridge.mjs": true,
+    "bootstrap-diagnostics.mjs": true,
+    "sdk-session.mjs": true,
+    "bootstrap-session.mjs": true,
+    "engine-proof.mjs": true,
+    "resolver.mjs": true,
+    "engine.mjs": true,
+    "account-session.mjs": true,
+    "engine-session.mjs": true,
+    "media-format.mjs": true,
+    "bootstrap-worker.mjs": true,
+    "engine-worker.mjs": true,
+    "control.mjs": true,
+    "proof-session.mjs": true,
+    "bootstrap-fetch.mjs": true
+  },
+  "cli_version": {
+    "exit": 0,
+    "matches": true
+  },
+  "signed_updater_archive": {
+    "exit": 0,
+    "pass": true
+  }
+}

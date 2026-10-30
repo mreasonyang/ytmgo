@@ -1,0 +1,55 @@
+{
+  "command": [
+    "go",
+    "test",
+    "-json",
+    "-overlay",
+    "build/diagnostics/acceptance-fixes-20261030/creator-overlay.json",
+    "-count=1",
+    "-run",
+    "TestAcceptanceLiveAlbumCreator",
+    "./internal/catalog"
+  ],
+  "exit": 0,
+  "elapsed": 7.752,
+  "passed": 5,
+  "failed": 0,
+  "skipped": 0,
+  "events": [
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAcceptanceLiveAlbumCreator/en",
+      "Elapsed": 1.82
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAcceptanceLiveAlbumCreator/zh-CN",
+      "Elapsed": 0.97
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAcceptanceLiveAlbumCreator/zh-TW",
+      "Elapsed": 1.19
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAcceptanceLiveAlbumCreator/ja",
+      "Elapsed": 1.17
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Test": "TestAcceptanceLiveAlbumCreator",
+      "Elapsed": 5.14
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Elapsed": 6.677
+    }
+  ]
+}

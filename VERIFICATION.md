@@ -1,5 +1,32 @@
 # Native playback verification
 
+## Login helper Dock visibility — 2026-10-30 (Asia/Shanghai)
+
+The macOS login helper is now an `LSUIElement` agent and explicitly uses Tao's
+`Accessory` activation policy. Both settings are needed: Tao's default
+`Regular` policy otherwise restores a separate Dock/application-switcher entry.
+The staging verifier now requires the agent setting.
+
+Local validation on macOS 27.0.1 / Apple Silicon:
+
+- Rust formatting and 8 unit tests passed; all 10 login Python tests passed.
+- `go test ./internal/accountlogin` passed.
+- The real offline WebView fixture passed session handoff, cancellation,
+  parent-pipe closure and timeout. No real Google account was used.
+- The signed fixture app reported activation policy `1` (`Accessory`) while
+  active and visible. Native accessibility exposed its login window and WebView;
+  the parent's `focus` command restored WebView focus, and Command-Q closed the
+  window with a valid cancellation reply.
+- The production helper rebuilt and passed staging verification. A complete
+  local app built with `go tool mygo build -skip-dmg`; its nested helper has
+  `LSUIElement=true`, and deep/strict code-signature verification passed.
+
+The local app is ad-hoc signed. The Developer ID signed application currently
+installed in `/Applications/ytmgo.app` was not replaced, and no release or update
+feed was published. This change still needs signed packaging and installation
+before it affects that installed application. Real-account sign-in and playback
+were not repeated for this Dock-visibility change.
+
 ## Current macOS v4 Premium memory — 2026-10-29 (Asia/Shanghai)
 
 Fresh local measurement of the actual v4 app on macOS 27.0.1, arm64, 24 GiB RAM.

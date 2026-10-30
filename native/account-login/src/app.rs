@@ -197,7 +197,13 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
     }
     let mut event_loop = EventLoopBuilder::<Signal>::with_user_event().build();
     #[cfg(target_os = "macos")]
-    crate::macos_menu::install();
+    {
+        use tao::platform::macos::{ActivationPolicy, EventLoopExtMacOS};
+        // Keep this temporary window off the Dock and application switcher.
+        // Tao defaults to Regular and would override the bundle's LSUIElement.
+        event_loop.set_activation_policy(ActivationPolicy::Accessory);
+        crate::macos_menu::install();
+    }
     let window = match WindowBuilder::new()
         .with_title(request.title)
         .with_inner_size(tao::dpi::LogicalSize::new(520.0, 740.0))

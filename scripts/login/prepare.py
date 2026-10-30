@@ -146,7 +146,7 @@ def verify(folder, target):
     if system == "darwin":
         bundle = folder / MAC_BUNDLE
         plist = plistlib.loads((bundle / "Contents/Info.plist").read_bytes())
-        if not isinstance(plist, dict) or plist.get("CFBundleIdentifier") != MAC_IDENTIFIER or plist.get("CFBundleExecutable") != BINARY or plist.get("CFBundlePackageType") != "APPL" or plist.get("LSUIElement") is not False:
+        if not isinstance(plist, dict) or plist.get("CFBundleIdentifier") != MAC_IDENTIFIER or plist.get("CFBundleExecutable") != BINARY or plist.get("CFBundlePackageType") != "APPL" or plist.get("LSUIElement") is not True:
             raise ValueError("login-helper app bundle identity mismatch")
         verify_macos_bundle(bundle)
     return manifest

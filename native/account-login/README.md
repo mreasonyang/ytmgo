@@ -25,6 +25,8 @@ before accepting the result. Raw process output must never be logged.
 - macOS: system WKWebView. The application package determines the minimum OS.
   A nested `ytmgo Account Login.app` supplies the helper's own application
   identity and accessibility target; it still runs only for the login lifetime.
+  It uses `LSUIElement` and Tao's accessory activation policy so the login
+  window can receive focus without adding a Dock or Command-Tab entry.
 - Windows: Microsoft Edge WebView2 Runtime 101.0.1210.39 or newer. An older
   runtime can ignore private mode, so the helper rejects it before opening a
   window. A separate temporary user-data directory supports installation in

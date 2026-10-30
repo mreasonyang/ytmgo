@@ -98,7 +98,7 @@ func main() {
 	a.accountState.store = accountsession.Store{Secrets: nativeAccountSecrets{}, Path: filepath.Join(dataDir, "account", "session.enc")}
 	recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 	recordPlaybackDiagnostic(a.diagnosticPath, "video", "ready")
-	a.model = UIModel{Route: "home", Appearance: a.prefs.Appearance(), Language: language.Load(a.languagePath), Volume: 0.7, PanelTab: "queue"}
+	a.model = UIModel{Route: "home", Appearance: a.prefs.Appearance(), Language: language.Load(a.languagePath), Volume: 0.7, PanelTab: "queue", Version: applicationVersion()}
 	mygo.Theme.SetSource(mygo.ThemeSource(a.model.Appearance))
 	mygo.App.SetLanguages(language.Supported...)
 	a.applyLanguage()

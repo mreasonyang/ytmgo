@@ -2945,14 +2945,14 @@ func (msgs Messages) NativeShortcutGlobal() string {
 	return Catalog.Format(msgs.locale, "nativeShortcutGlobal", nil)
 }
 
-// NativeShortcutGlobalHint says "Works while using other apps. Record a combination or a function key, or turn it off."
+// NativeShortcutGlobalShortHint says "Works even while you use other apps."
 // in the language the app shows.
-func NativeShortcutGlobalHint() string { return In(i18n.Locale()).NativeShortcutGlobalHint() }
+func NativeShortcutGlobalShortHint() string { return In(i18n.Locale()).NativeShortcutGlobalShortHint() }
 
-// NativeShortcutGlobalHint says "Works while using other apps. Record a combination or a function key, or turn it off."
+// NativeShortcutGlobalShortHint says "Works even while you use other apps."
 // in the language of msgs.
-func (msgs Messages) NativeShortcutGlobalHint() string {
-	return Catalog.Format(msgs.locale, "nativeShortcutGlobalHint", nil)
+func (msgs Messages) NativeShortcutGlobalShortHint() string {
+	return Catalog.Format(msgs.locale, "nativeShortcutGlobalShortHint", nil)
 }
 
 // NativeShortcutLocalHint says "In ytmgo, Space plays or pauses. The global shortcut also works in other apps."
@@ -3063,4 +3063,96 @@ func NativeShortcutUnavailable() string { return In(i18n.Locale()).NativeShortcu
 // in the language of msgs.
 func (msgs Messages) NativeShortcutUnavailable() string {
 	return Catalog.Format(msgs.locale, "nativeShortcutUnavailable", nil)
+}
+
+// NativeSettingsGeneral says "General"
+// in the language the app shows.
+func NativeSettingsGeneral() string { return In(i18n.Locale()).NativeSettingsGeneral() }
+
+// NativeSettingsGeneral says "General"
+// in the language of msgs.
+func (msgs Messages) NativeSettingsGeneral() string {
+	return Catalog.Format(msgs.locale, "nativeSettingsGeneral", nil)
+}
+
+// NativeSettingsKeyboard says "Keyboard"
+// in the language the app shows.
+func NativeSettingsKeyboard() string { return In(i18n.Locale()).NativeSettingsKeyboard() }
+
+// NativeSettingsKeyboard says "Keyboard"
+// in the language of msgs.
+func (msgs Messages) NativeSettingsKeyboard() string {
+	return Catalog.Format(msgs.locale, "nativeSettingsKeyboard", nil)
+}
+
+// NativeSettingsAbout says "About"
+// in the language the app shows.
+func NativeSettingsAbout() string { return In(i18n.Locale()).NativeSettingsAbout() }
+
+// NativeSettingsAbout says "About"
+// in the language of msgs.
+func (msgs Messages) NativeSettingsAbout() string {
+	return Catalog.Format(msgs.locale, "nativeSettingsAbout", nil)
+}
+
+// NativeSettingsAppearanceHint says "Follow your system or pick a theme."
+// in the language the app shows.
+func NativeSettingsAppearanceHint() string { return In(i18n.Locale()).NativeSettingsAppearanceHint() }
+
+// NativeSettingsAppearanceHint says "Follow your system or pick a theme."
+// in the language of msgs.
+func (msgs Messages) NativeSettingsAppearanceHint() string {
+	return Catalog.Format(msgs.locale, "nativeSettingsAppearanceHint", nil)
+}
+
+// NativeSettingsLanguageHint says "Used for menus, buttons and messages."
+// in the language the app shows.
+func NativeSettingsLanguageHint() string { return In(i18n.Locale()).NativeSettingsLanguageHint() }
+
+// NativeSettingsLanguageHint says "Used for menus, buttons and messages."
+// in the language of msgs.
+func (msgs Messages) NativeSettingsLanguageHint() string {
+	return Catalog.Format(msgs.locale, "nativeSettingsLanguageHint", nil)
+}
+
+// NativeSettingsShortcutsHint says "Every shortcut that works inside ytmgo."
+// in the language the app shows.
+func NativeSettingsShortcutsHint() string { return In(i18n.Locale()).NativeSettingsShortcutsHint() }
+
+// NativeSettingsShortcutsHint says "Every shortcut that works inside ytmgo."
+// in the language of msgs.
+func (msgs Messages) NativeSettingsShortcutsHint() string {
+	return Catalog.Format(msgs.locale, "nativeSettingsShortcutsHint", nil)
+}
+
+// NativeSettingsViewAll says "View all"
+// in the language the app shows.
+func NativeSettingsViewAll() string { return In(i18n.Locale()).NativeSettingsViewAll() }
+
+// NativeSettingsViewAll says "View all"
+// in the language of msgs.
+func (msgs Messages) NativeSettingsViewAll() string {
+	return Catalog.Format(msgs.locale, "nativeSettingsViewAll", nil)
+}
+
+// NativeSettingsVersion says "Version {version}"
+// in the language the app shows.
+func NativeSettingsVersion(version string) string {
+	return In(i18n.Locale()).NativeSettingsVersion(version)
+}
+
+// NativeSettingsVersion says "Version {version}"
+// in the language of msgs.
+func (msgs Messages) NativeSettingsVersion(version string) string {
+	return Catalog.Format(msgs.locale, "nativeSettingsVersion", map[string]any{"version": version})
+}
+
+// NativeAccountSignedOutHint says "Sign in to see your playlists, albums and liked music."
+// in the language the app shows.
+func NativeAccountSignedOutHint() string { return In(i18n.Locale()).NativeAccountSignedOutHint() }
+
+// NativeAccountSignedOutHint says "Sign in to see your playlists, albums and liked music."
+// in the language of msgs.
+func (msgs Messages) NativeAccountSignedOutHint() string {
+	return Catalog.Format(msgs.locale, "nativeAccountSignedOutHint", nil)
 }

@@ -116,7 +116,7 @@ func TestNativeShortcutRecorderAndHelp(t *testing.T) {
 			a.CancelShortcut = func() { m.ShortcutRecording = false }
 			var saved string
 			a.SetShortcut = func(value string) { saved = value; m.GlobalShortcut = value; m.ShortcutRecording = false }
-			tt := ui.NewTester(func(c *ui.Context) { nativeShortcutSettings(c, m, a, palette(true)) }, 420, 600)
+			tt := ui.NewTester(func(c *ui.Context) { nativeShortcutSettings(c, m, a, palette(true), true) }, 420, 600)
 			if err := tt.Click(a.Tr("nativeShortcutRecord")); err != nil {
 				t.Fatal(err)
 			}
@@ -154,7 +154,7 @@ func TestNativeShortcutRecorderAndHelp(t *testing.T) {
 			}
 			m.Shortcuts = true
 			tt = ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 757, 609)
-			if !tt.HasText(a.Tr("nativeShortcutGlobal")+" · "+a.Tr("nativeShortcutDisabled")) || !tt.HasText(a.Tr("nativeShortcutLocalHint")) {
+			if !tt.HasText(a.Tr("nativeShortcutGlobal")) || !tt.HasText(a.Tr("nativeShortcutDisabled")) || !tt.HasText(a.Tr("nativeShortcutLocalHint")) {
 				t.Fatal("help omitted current binding or local scope")
 			}
 			if err := tt.Click(a.Tr("nativeShortcutConfigure")); err != nil {

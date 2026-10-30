@@ -299,13 +299,31 @@ func TestNativeSettingsLocalizations(t *testing.T) {
 				t.Fatal("appearance action missing")
 			}
 			nativeSnapshot(t, tt, "420-settings-"+locale)
-			if err := tt.Click("日本語"); err != nil {
+			// The language drop-down shows the current language; choose another.
+			target, title := "ja", "日本語"
+			if locale == "ja" {
+				target, title = "en", "English"
+			}
+			if err := tt.Click(nativeLanguageTitle(a, locale)); err != nil {
 				t.Fatal(err)
 			}
-			if m.Language != "ja" {
-				t.Fatal("language action missing")
+			if !tt.HasText(title) {
+				t.Fatal("language drop-down did not open")
 			}
-			if !tt.HasText(locales.Catalog.Format("ja", "shellSettings", nil)) {
+			tt.Key(0, ui.KeyEscape)
+			if !m.Settings || tt.HasText(title) {
+				t.Fatal("Escape did not close only the language drop-down")
+			}
+			if err := tt.Click(nativeLanguageTitle(a, locale)); err != nil {
+				t.Fatal(err)
+			}
+			if err := tt.Click(title); err != nil {
+				t.Fatal(err)
+			}
+			if m.Language != target {
+				t.Fatalf("language action missing: %q", m.Language)
+			}
+			if !tt.HasText(locales.Catalog.Format(target, "shellSettings", nil)) {
 				t.Fatalf("locale changed without refreshing text: %v", tt.Texts())
 			}
 			tt.Key(0, ui.KeyEscape)

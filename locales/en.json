@@ -768,7 +768,7 @@
   "nativeLibraryEmptyBody": "Save music in YouTube Music, then refresh your library.",
   "nativePlaybackFailedStatus": "Playback failed",
   "nativeShortcutGlobal": "Global play / pause",
-  "nativeShortcutGlobalHint": "Works while using other apps. Record a combination or a function key, or turn it off.",
+  "nativeShortcutGlobalShortHint": "Works even while you use other apps.",
   "nativeShortcutLocalHint": "In ytmgo, Space plays or pauses. The global shortcut also works in other apps.",
   "nativeShortcutDisabled": "Off",
   "nativeShortcutRecord": "Record shortcut",
@@ -779,5 +779,14 @@
   "nativeShortcutReserved": "That combination is used in ytmgo. Choose another.",
   "nativeShortcutConflict": "That shortcut is unavailable. Your previous setting is unchanged.",
   "nativeShortcutSaveFailed": "Could not save the shortcut. Your previous setting is unchanged.",
-  "nativeShortcutUnavailable": "Your shortcut could not be activated. Record another shortcut or turn it off."
+  "nativeShortcutUnavailable": "Your shortcut could not be activated. Record another shortcut or turn it off.",
+  "nativeSettingsGeneral": "General",
+  "nativeSettingsKeyboard": "Keyboard",
+  "nativeSettingsAbout": "About",
+  "nativeSettingsAppearanceHint": "Follow your system or pick a theme.",
+  "nativeSettingsLanguageHint": "Used for menus, buttons and messages.",
+  "nativeSettingsShortcutsHint": "Every shortcut that works inside ytmgo.",
+  "nativeSettingsViewAll": "View all",
+  "nativeSettingsVersion": "Version {version}",
+  "nativeAccountSignedOutHint": "Sign in to see your playlists, albums and liked music."
 }

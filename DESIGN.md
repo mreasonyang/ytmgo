@@ -176,9 +176,23 @@ and tooltip text.
   there is no crop. Landscape video keeps the cover's height budget and uses
   the extra width, in compact and desktop immersive alike. Closing the panel or immersive surface stops video decoding.
   Audio continues independently. A failed video load shows an error.
-- Settings: account status and actions, system/dark/light appearance and
-  system/English/Japanese/Simplified Chinese/Traditional Chinese. Changes
-  redraw the current native window and preserve playback.
+- Settings: one sheet (640 wide; full-window at 760 and below, title 20) of
+  titled cards — Account, General, Keyboard, About. Each row has an icon
+  tile, a name and a one-line explanation, with its control on the right;
+  below 520 DIPs of content the control spans the row under the text. A
+  hairline under the title appears once content scrolls beneath it and a
+  fade marks more below; sheets open at the top. Account states the plan
+  (the status names Premium; no repeated badge) and offers sign-in/manage or
+  the restore actions, under the text when a restore notice shows; sign-out
+  is a separate destructive row, inset so its focus ring shows. Appearance
+  is a segmented radio group (one Tab stop, arrows choose, single-line
+  labels); language is a drop-down listing each language in itself. The
+  global shortcut field shows key caps in platform order (⌃ ⌥ ⇧ ⌘ on macOS)
+  and records in place when clicked; recording ends on a chord, Escape,
+  Cancel or when focus leaves it. Off, the row offers Record shortcut by
+  name. "View all" opens Keyboard shortcuts, which shares the sheet, spells
+  chords for the platform, and whose Configure returns with the Keyboard card
+  in view. Changes redraw the current native window and preserve playback.
 - Menus, tray, global shortcut and OS Now Playing send commands to the same Go
   controller. Closing the main window on macOS hides it; quitting releases
   the native player, decoder and resolver helpers.

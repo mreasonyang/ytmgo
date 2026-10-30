@@ -221,7 +221,7 @@
   "nativeLibraryEmptyBody": "在 YouTube Music 中收藏音乐，然后刷新音乐库。",
   "nativePlaybackFailedStatus": "播放失败",
   "nativeShortcutGlobal": "全局播放 / 暂停",
-  "nativeShortcutGlobalHint": "在其他应用中也能控制播放。可录入组合键或功能键，也可停用。",
+  "nativeShortcutGlobalShortHint": "在其他应用中也能使用。",
   "nativeShortcutLocalHint": "在 ytmgo 内按空格即可播放或暂停。全局快捷键也能在其他应用中使用。",
   "nativeShortcutDisabled": "已停用",
   "nativeShortcutRecord": "录入快捷键",
@@ -232,5 +232,14 @@
   "nativeShortcutReserved": "此组合键已用于 ytmgo，请选择其他按键。",
   "nativeShortcutConflict": "此快捷键不可用，原设置已保留。",
   "nativeShortcutSaveFailed": "快捷键保存失败，原设置已保留。",
-  "nativeShortcutUnavailable": "快捷键未能启用，请录入其他按键或停用。"
+  "nativeShortcutUnavailable": "快捷键未能启用，请录入其他按键或停用。",
+  "nativeSettingsGeneral": "通用",
+  "nativeSettingsKeyboard": "键盘",
+  "nativeSettingsAbout": "关于",
+  "nativeSettingsAppearanceHint": "跟随系统，或选择一个主题。",
+  "nativeSettingsLanguageHint": "用于菜单、按钮和提示信息。",
+  "nativeSettingsShortcutsHint": "ytmgo 内可用的全部快捷键。",
+  "nativeSettingsViewAll": "查看全部",
+  "nativeSettingsVersion": "版本 {version}",
+  "nativeAccountSignedOutHint": "登录后即可查看你的歌单、专辑与喜欢的音乐。"
 }

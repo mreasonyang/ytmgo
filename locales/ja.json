@@ -221,7 +221,7 @@
   "nativeLibraryEmptyBody": "YouTube Music で音楽を保存してから、ライブラリを更新してください。",
   "nativePlaybackFailedStatus": "再生できませんでした",
   "nativeShortcutGlobal": "グローバル再生 / 一時停止",
-  "nativeShortcutGlobalHint": "ほかのアプリの使用中も操作できます。キーの組み合わせやファンクションキーを登録するか、無効にできます。",
+  "nativeShortcutGlobalShortHint": "ほかのアプリの使用中も使えます。",
   "nativeShortcutLocalHint": "ytmgo 内ではスペースで再生・一時停止できます。グローバルショートカットはほかのアプリでも使えます。",
   "nativeShortcutDisabled": "オフ",
   "nativeShortcutRecord": "キーを登録",
@@ -232,5 +232,14 @@
   "nativeShortcutReserved": "そのキーは ytmgo で使用中です。別のキーを選んでください。",
   "nativeShortcutConflict": "そのキーは使用できません。以前の設定を保持しました。",
   "nativeShortcutSaveFailed": "キーを保存できませんでした。以前の設定を保持しました。",
-  "nativeShortcutUnavailable": "キーを有効にできませんでした。別のキーを登録するか、無効にしてください。"
+  "nativeShortcutUnavailable": "キーを有効にできませんでした。別のキーを登録するか、無効にしてください。",
+  "nativeSettingsGeneral": "一般",
+  "nativeSettingsKeyboard": "キーボード",
+  "nativeSettingsAbout": "このアプリについて",
+  "nativeSettingsAppearanceHint": "システムに合わせるか、テーマを選びます。",
+  "nativeSettingsLanguageHint": "メニュー、ボタン、メッセージの表示に使います。",
+  "nativeSettingsShortcutsHint": "ytmgo 内で使えるショートカットの一覧です。",
+  "nativeSettingsViewAll": "すべて表示",
+  "nativeSettingsVersion": "バージョン {version}",
+  "nativeAccountSignedOutHint": "ログインすると、プレイリスト、アルバム、高く評価した曲を表示できます。"
 }

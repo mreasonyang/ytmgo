@@ -39,6 +39,12 @@ type UIModel struct {
 	VideoError                                                  string
 	ErrorScope                                                  errorScope
 	AccountRestore                                              string
+	Version                                                     string
+
+	// Sheet presentation the view owns.
+	settingsScroll, shortcutsScroll ui.ScrollState
+	shortcutFieldFocused            bool // the recorder has had the focus
+	revealShortcut                  bool // bring the global shortcut row into view
 }
 
 // Saved-account restoration as the view presents it; account.go owns the
@@ -1681,120 +1687,6 @@ func nativeImmersiveTitleHeight(m *UIModel, a ViewActions, width float32) float3
 	_, titleLine := ui.ShapeText(title, titleFont, 0).Size()
 	_, artistLine := ui.ShapeText(artist, ui.Font{Size: 17, Weight: 500}, 0).Size()
 	return min(titleHeight, 2*titleLine) + 8 + artistLine
-}
-
-func nativeSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {
-	ui.DialogBase(c, &m.Settings, func(backdrop, panel ui.Element) {
-		backdrop.Background(ui.RGBA(0, 0, 0, 0.5))
-		panel.Width(min(420, width-24)).MaxHeight(height-32).Padding(24).Gap(20).Radius(12).Background(p.raised).Border(1, p.line).Shadow(0, 16, 48, 0, ui.RGBA(0, 0, 0, 0.5)).Children(func() {
-			ui.Row(c).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, a.Tr("shellSettings")).FontSize(24).FontWeight(800).Grow(1)
-				if nativeIconButton(c, "close", a.Tr("shellClose"), p, false, 32).Clicked() {
-					m.Settings = false
-				}
-			})
-			ui.Scroll(c).MinHeight(0).Gap(24).Children(func() {
-				section := func(key string) {
-					ui.Text(c, a.Tr(key)).FontSize(16).FontWeight(700)
-				}
-				ui.Column(c).Gap(12).Children(func() {
-					section("menuAccount")
-					ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
-						nativeAvatar(c, m, p, 40)
-						ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
-							ui.Text(c, nativeAccountStatus(m, a)).FontWeight(600).MaxLines(2).Ellipsis("…")
-							if m.SignedIn && m.MusicPremium {
-								ui.Text(c, a.Tr("shellPremiumBadge")).FontSize(12).FontWeight(700).TextColor(p.accentText)
-							}
-						})
-					})
-					if m.AccountRestore == accountRestoreSlow && !m.SignedIn {
-						ui.Text(c, a.Tr("nativeAccountRestoreSlow")).FontSize(13).LineHeight(1.5).TextColor(p.secondary)
-					} else if nativeRestoreDeferred(m) {
-						ui.Text(c, a.Tr("nativeAccountRestoreDeferredBody")).FontSize(13).LineHeight(1.5).TextColor(p.secondary)
-					}
-					ui.Row(c).Gap(8).Wrap().Children(func() {
-						key := "shellAccountSignIn"
-						if m.SignedIn {
-							key = "shellAccountManage"
-						}
-						if !nativeRestoring(m) && nativePill(c, a.Tr(key), p, !m.SignedIn).Clicked() {
-							m.Settings = false
-							a.Account()
-						}
-						nativeRestoreActions(c, m, a, p, nativeRestoring(m))
-						if m.SignedIn || nativeRestoreDeferred(m) {
-							if nativePill(c, a.Tr("shellSignOut"), p, false).TextColor(p.accentText).Clicked() {
-								m.Settings = false
-								a.SignOut()
-							}
-						}
-					})
-				})
-				nativeShortcutSettings(c, m, a, p)
-				ui.Column(c).Gap(12).Children(func() {
-					section("shellAppearance")
-					ui.Row(c).Gap(8).Children(func() {
-						for _, option := range []struct{ id, key string }{{"system", "shellThemeSystem"}, {"dark", "shellThemeDark"}, {"light", "shellThemeLight"}} {
-							if nativeChip(c, a.Tr(option.key), p, m.Appearance == option.id).Grow(1).PaddingX(8).Clicked() {
-								a.Appearance(option.id)
-							}
-						}
-					})
-				})
-				ui.Column(c).Gap(4).Children(func() {
-					ui.Box(c).Height(8)
-					section("shellLanguage")
-					for _, option := range []struct{ id, title string }{{"system", a.Tr("shellLanguageSystem")}, {"en", "English"}, {"zh-Hans", "简体中文"}, {"zh-Hant", "繁體中文"}, {"ja", "日本語"}} {
-						active := m.Language == option.id
-						b := ui.Button(c, option.title).Height(40).Justify(ui.Start).PaddingX(12).Radius(6).BorderWidth(0).Background(ui.Transparent).TextColor(p.secondary).Selected(active)
-						if active {
-							b.Background(p.hover).TextColor(p.accentText).FontWeight(700)
-						} else if b.Hovered() {
-							b.Background(p.hover).TextColor(p.text)
-						}
-						if b.Clicked() {
-							a.Language(option.id)
-						}
-					}
-				})
-				ui.Box(c).Height(1).Background(p.line)
-				if nativePill(c, a.Tr("shellShortcuts"), p, false).AlignSelf(ui.Start).Clicked() {
-					m.Settings = false
-					m.Shortcuts = true
-				}
-				ui.Text(c, a.Tr("shellFooter")).FontSize(11).LineHeight(1.5).TextColor(p.muted)
-			})
-		})
-	}).Label(a.Tr("shellSettings"))
-}
-
-func nativeShortcuts(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {
-	ui.DialogBase(c, &m.Shortcuts, func(backdrop, panel ui.Element) {
-		backdrop.Background(ui.RGBA(0, 0, 0, 0.5))
-		panel.Width(min(480, width-24)).MaxHeight(height-32).Padding(24).Gap(20).Radius(12).Background(p.raised).Border(1, p.line).Shadow(0, 16, 48, 0, ui.RGBA(0, 0, 0, 0.5)).Children(func() {
-			ui.Row(c).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, a.Tr("shellShortcuts")).FontSize(24).FontWeight(800).Grow(1)
-				if nativeIconButton(c, "close", a.Tr("shellClose"), p, false, 32).Clicked() {
-					m.Shortcuts = false
-				}
-			})
-			ui.Scroll(c).Gap(14).Children(func() {
-				ui.Text(c, a.Tr("nativeShortcutLocalHint")).FontSize(13).TextColor(p.secondary)
-				ui.Text(c, a.Tr("nativeShortcutGlobal")+" · "+nativeShortcutValue(m, a)).FontWeight(600)
-				if nativePill(c, a.Tr("nativeShortcutConfigure"), p, false).Clicked() {
-					m.Shortcuts = false
-					m.Settings = true
-				}
-				for _, shortcut := range []struct{ key, chord string }{{"shellShortcutPlayPause", "Space"}, {"shellShortcutNextPrevious", "⌘ → / ←"}, {"shellShortcutVolume", "⌘ ↑ / ↓"}, {"shellShortcutSearch", "⌘ K"}, {"shellShortcutPanel", "⌘ J"}, {"shellShortcutImmersive", "⌘ ⇧ F"}, {"shellShortcutHome", "⌘ ⇧ H"}, {"shellShortcutLibrary", "⌘ L"}, {"shellShortcutMute", "⌘ ⇧ M"}, {"shellShortcutSidebar", "⌘ B"}, {"shellShortcutDismiss", "Esc"}} {
-					ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
-						ui.Text(c, a.Tr(shortcut.key)).Grow(1)
-						ui.Text(c, shortcut.chord).FontSize(12).FontWeight(600).Padding(5, 8).Radius(4).Background(p.highlight).TextColor(p.secondary)
-					})
-				}
-			})
-		})
-	}).Label(a.Tr("shellShortcuts"))
 }
 
 func nativeTime(seconds float64) string {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -153,18 +154,38 @@ func validGlobalShortcut(value string) bool {
 	}
 	return false
 }
+
+// shortcutDisplay spells an accelerator for this platform, modifiers in the
+// platform's order (⌃ ⌥ ⇧ ⌘ on macOS, Ctrl Alt Shift elsewhere), keys space
+// separated so they can be drawn as key caps.
 func shortcutDisplay(value string) string {
 	if value == "" {
 		value = defaultGlobalShortcut
 	}
+	mac := runtime.GOOS == "darwin"
+	rank := map[string]int{"Ctrl": 0, "Alt": 1, "Shift": 2, "CmdOrCtrl": 3, "Super": 3}
+	if !mac {
+		rank["CmdOrCtrl"] = 0
+	}
 	parts := strings.Split(value, "+")
+	sort.SliceStable(parts, func(i, j int) bool {
+		ri, ok := rank[parts[i]]
+		if !ok {
+			ri = 4
+		}
+		rj, ok := rank[parts[j]]
+		if !ok {
+			rj = 4
+		}
+		return ri < rj
+	})
+	names := map[string]string{"CmdOrCtrl": "Ctrl", "Left": "←", "Right": "→", "Up": "↑", "Down": "↓", "Escape": "Esc"}
+	if mac {
+		names = map[string]string{"CmdOrCtrl": "⌘", "Super": "⌘", "Ctrl": "⌃", "Alt": "⌥", "Shift": "⇧", "Left": "←", "Right": "→", "Up": "↑", "Down": "↓", "Enter": "↩", "Escape": "Esc"}
+	}
 	for i, p := range parts {
-		if runtime.GOOS == "darwin" {
-			if s := map[string]string{"CmdOrCtrl": "⌘", "Super": "⌘", "Ctrl": "⌃", "Alt": "⌥", "Shift": "⇧", "Left": "←", "Right": "→", "Up": "↑", "Down": "↓", "Enter": "↩", "Space": "Space"}[p]; s != "" {
-				parts[i] = s
-			}
-		} else if p == "CmdOrCtrl" {
-			parts[i] = "Ctrl"
+		if s := names[p]; s != "" {
+			parts[i] = s
 		}
 	}
 	return strings.Join(parts, " ")
@@ -216,52 +237,84 @@ func nativeShortcutValue(m *UIModel, a ViewActions) string {
 	}
 	return shortcutDisplay(m.GlobalShortcut)
 }
-func nativeShortcutSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
-	ui.Column(c).Gap(10).Children(func() {
-		ui.Text(c, a.Tr("nativeShortcutGlobal")).FontSize(16).FontWeight(700)
-		ui.Text(c, a.Tr("nativeShortcutGlobalHint")).FontSize(13).LineHeight(1.4).TextColor(p.secondary)
-		if m.ShortcutRecording {
-			ui.Button(c, a.Tr("nativeShortcutRecording")).Height(44).WidthPercent(100).Border(2, p.accent).Radius(6).Background(p.input).TextColor(p.text).Focus().InputMethod(false).HandleInput(func(ev ui.InputEvent) bool {
-				if ev.Kind != ui.InputKeyDown || ev.Repeat {
-					return false
+
+// nativeShortcutSettings is the global shortcut's settings row. Its field
+// shows the chord as key caps; clicking it records a new one in place, until
+// a chord is pressed, Escape or Cancel, or the focus leaves the field.
+func nativeShortcutSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, narrow bool) {
+	ui.Column(c).Children(func() {
+		nativeSettingRow(c, p, narrow, "play", a.Tr("nativeShortcutGlobal"), a.Tr("nativeShortcutGlobalShortHint"), func() {
+			if m.ShortcutRecording {
+				field := ui.Button(c, a.Tr("nativeShortcutRecording")).Height(36).MinWidth(170).PaddingX(14).Radius(8).Border(2, p.accent).Background(p.input).TextColor(p.text).AutoFocus().InputMethod(false)
+				if narrow {
+					field.Grow(1)
 				}
-				if ev.Key == ui.KeyEscape {
-					if a.CancelShortcut != nil {
-						a.CancelShortcut()
+				if field.Focused() {
+					m.shortcutFieldFocused = true
+				} else if m.shortcutFieldFocused && a.CancelShortcut != nil {
+					a.CancelShortcut()
+				}
+				field.HandleInput(func(ev ui.InputEvent) bool {
+					if ev.Kind != ui.InputKeyDown || ev.Repeat {
+						return false
+					}
+					if ev.Key == ui.KeyEscape {
+						if a.CancelShortcut != nil {
+							a.CancelShortcut()
+						}
+						return true
+					}
+					key := ev.PhysicalKey
+					if key == ui.KeyUnknown {
+						key = ev.Key
+					}
+					if key == ui.KeyUnknown {
+						return true
+					}
+					chord, errKey := shortcutChord(ev.Mods, key)
+					if errKey != "" {
+						m.ShortcutError = errKey
+					} else if a.SetShortcut != nil {
+						a.SetShortcut(chord)
 					}
 					return true
+				})
+				if nativeLinkButton(c, a.Tr("buttonCancel"), p, "").Disabled(a.CancelShortcut == nil).Clicked() && m.ShortcutRecording {
+					a.CancelShortcut()
 				}
-				key := ev.PhysicalKey
-				if key == ui.KeyUnknown {
-					key = ev.Key
-				}
-				if key == ui.KeyUnknown {
-					return true
-				}
-				chord, errKey := shortcutChord(ev.Mods, key)
-				if errKey != "" {
-					m.ShortcutError = errKey
-				} else if a.SetShortcut != nil {
-					a.SetShortcut(chord)
-				}
-				return true
-			})
-			if nativePill(c, a.Tr("buttonCancel"), p, false).Disabled(a.CancelShortcut == nil).Clicked() {
-				a.CancelShortcut()
+				return
 			}
-		} else {
-			ui.Text(c, nativeShortcutValue(m, a)).FontSize(18).FontWeight(700)
-			ui.Row(c).Gap(8).Wrap().Children(func() {
-				if nativePill(c, a.Tr("nativeShortcutRecord"), p, false).Disabled(a.BeginShortcut == nil).Clicked() {
+			m.shortcutFieldFocused = false
+			off := m.GlobalShortcut == disabledGlobalShortcut
+			label := a.Tr("nativeShortcutRecord")
+			field := ui.ButtonBase(c).Height(36).MinWidth(170).PaddingX(5).Radius(8).AlignItems(ui.Center).Justify(ui.Center).Background(p.input).Border(1, p.line).Label(label).Tooltip(label).Disabled(a.BeginShortcut == nil)
+			if narrow {
+				field.Grow(1)
+			}
+			if field.Hovered() {
+				field.Background(p.highlight).Border(1, p.secondary)
+			}
+			field.Children(func() {
+				if off {
+					ui.Text(c, a.Tr("nativeShortcutDisabled")).FontWeight(600).TextColor(p.secondary)
+				} else {
+					nativeKeycaps(c, p, nativeShortcutValue(m, a))
+				}
+			})
+			if field.Clicked() {
+				a.BeginShortcut()
+			}
+			// Off, the field has no chord to show, so recording is offered by name.
+			if off {
+				if nativeLinkButton(c, label, p, "").Disabled(a.BeginShortcut == nil).Clicked() {
 					a.BeginShortcut()
 				}
-				if nativePill(c, a.Tr("nativeShortcutDisable"), p, false).Disabled(m.GlobalShortcut == disabledGlobalShortcut || a.SetShortcut == nil).Clicked() {
-					a.SetShortcut(disabledGlobalShortcut)
-				}
-			})
-		}
+			} else if nativeLinkButton(c, a.Tr("nativeShortcutDisable"), p, "").Disabled(a.SetShortcut == nil).Clicked() {
+				a.SetShortcut(disabledGlobalShortcut)
+			}
+		})
 		if m.ShortcutError != "" {
-			ui.Text(c, a.Tr(m.ShortcutError)).FontSize(13).LineHeight(1.4).TextColor(p.accentText)
+			ui.Text(c, a.Tr(m.ShortcutError)).Padding(0, 16, 14, 64).FontSize(13).LineHeight(1.4).TextColor(p.accentText)
 		}
 	})
 }

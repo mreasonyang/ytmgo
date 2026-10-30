@@ -1,0 +1,60 @@
+{
+  "command": [
+    "go",
+    "test",
+    "-race",
+    "-json",
+    "-count=1",
+    "./internal/player",
+    "-run",
+    "^TestFFmpeg(ActualSeek|EndedRestartLocal|RetriesSameStreamAndHonorsDeadline)$"
+  ],
+  "exit": 0,
+  "elapsed": 9.796,
+  "passed": 6,
+  "failed": 0,
+  "skipped": 0,
+  "events": [
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestFFmpegActualSeek",
+      "Elapsed": 0.37
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestFFmpegEndedRestartLocal",
+      "Elapsed": 4.71
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestFFmpegRetriesSameStreamAndHonorsDeadline/temporary_server_failure",
+      "Elapsed": 0.27
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestFFmpegRetriesSameStreamAndHonorsDeadline/access_denied_is_final",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestFFmpegRetriesSameStreamAndHonorsDeadline/stalled_read_cancels_and_reaps",
+      "Elapsed": 0.15
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Test": "TestFFmpegRetriesSameStreamAndHonorsDeadline",
+      "Elapsed": 0.44
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Elapsed": 8.678
+    }
+  ]
+}

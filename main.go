@@ -39,6 +39,7 @@ type desktop struct {
 	shortcut                        *shortcutBinding
 	languagePath                    string
 	diagnosticPath                  string
+	acceptanceProbe                 *acceptanceProbe
 	model                           UIModel
 	catalog                         *catalog.Client
 	player                          *player.Player
@@ -93,6 +94,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	a := &desktop{ctx: ctx, cancel: cancel, prefs: &Preferences{path: filepath.Join(dataDir, "appearance")}, languagePath: filepath.Join(dataDir, "language"), queueIndex: -1, historyIndex: -1, unmutedVolume: 0.7}
 	a.diagnosticPath = filepath.Join(dataDir, "native-diagnostics")
+	a.acceptanceProbe = loadAcceptanceProbe(a.diagnosticPath, time.Now())
 	a.accountState.store = accountsession.Store{Secrets: nativeAccountSecrets{}, Path: filepath.Join(dataDir, "account", "session.enc")}
 	recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 	recordPlaybackDiagnostic(a.diagnosticPath, "video", "ready")
@@ -226,6 +228,7 @@ func (a *desktop) pollPlayback() {
 				continue
 			}
 			current := a.player.Snapshot()
+			a.acceptanceProbe.observe(time.Now(), current)
 			if current == previous {
 				continue
 			}

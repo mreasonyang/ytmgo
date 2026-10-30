@@ -1,0 +1,96 @@
+{
+  "command": [
+    "go",
+    "test",
+    "-race",
+    "-json",
+    "-count=1",
+    ".",
+    "-run",
+    "^TestAcceptanceProbe"
+  ],
+  "exit": 0,
+  "elapsed": 2.916,
+  "passed": 12,
+  "failed": 0,
+  "skipped": 0,
+  "events": [
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAcceptanceProbeRequiresBoundedExplicitOptIn/absent",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAcceptanceProbeRequiresBoundedExplicitOptIn/malformed",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAcceptanceProbeRequiresBoundedExplicitOptIn/oversized",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAcceptanceProbeRequiresBoundedExplicitOptIn/wrong_version",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAcceptanceProbeRequiresBoundedExplicitOptIn/expired",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAcceptanceProbeRequiresBoundedExplicitOptIn/unbounded",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAcceptanceProbeRequiresBoundedExplicitOptIn/unknown_field",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAcceptanceProbeRequiresBoundedExplicitOptIn/trailing_data",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAcceptanceProbeRequiresBoundedExplicitOptIn/valid",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAcceptanceProbeRequiresBoundedExplicitOptIn",
+      "Elapsed": 0.01
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAcceptanceProbeDoesNotFollowRequestSymlinks",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Test": "TestAcceptanceProbeWritesOnlyClosedStateAndExpires",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Elapsed": 1.528
+    }
+  ]
+}

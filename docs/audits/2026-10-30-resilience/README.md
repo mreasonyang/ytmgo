@@ -49,3 +49,18 @@ not count toward the required 7,200 continuous seconds on the repaired package.
 The steady trial will use full responsibility/descendant process accounting,
 explicit sample coverage, playback checkpoints and a fixed installed hash.
 No claim of general leak freedom follows from a bounded run.
+
+## Expiring numeric acceptance probe
+
+A second automatic screen lock made UI-only multi-hour sampling incomplete.
+An explicit local `native-diagnostics/acceptance-request.json` now enables a
+five-second heartbeat for the requested version and expiry, bounded to four
+hours. It records only timestamp/sequence/elapsed time, position/duration and
+playing/loading/ended/failed booleans. It samples even when paused or unchanged.
+Normal launches have no probe writes; expired, malformed, oversized, unknown-field
+or symlink requests are rejected. Atomic private files avoid partial reads.
+The probe does not change screen-lock or power settings, and does not contain
+track identifiers, titles, account data, URLs, raw errors, argv or environments.
+Twelve race test/subtest passes cover opt-in, schema, cadence, stopped heartbeats,
+permissions, temporary-file cleanup, expiry and symlink refusal.
+The request will be removed and the app restarted after acceptance.

@@ -73,9 +73,14 @@ jsdom; a module guard rejects those imports in that child. For anonymous/free
 playback, `EngineProof` creates the independent `ProofSession`, which calls
 MIT-licensed `bgutils-js` directly. No GPL provider is shipped or imported.
 The session parses the anonymous YouTube page's `ytcfg` and `ytAtN` data without
-executing page scripts, fetches the allowed interpreter, and initializes one
-BotGuard client and WebPO minter. It uses a host-realm JSDOM environment to match
-the library's Function/Uint8Array contracts; globals are restored on close.
+executing page scripts. It skips helper calls with non-literal arguments, merges
+literal config updates in page order and selects the attestation containing
+`R.bgChallenge`; a signed-in config still rejects the anonymous bootstrap.
+It then fetches the allowed interpreter and initializes one
+BotGuard client and WebPO minter. Only the allowed interpreter executes in
+JSDOM's isolated Window realm, with a synchronous startup timeout. Callback and
+byte-array adapters preserve the MIT library's host-realm type checks. The
+session leaves Node globals unchanged and closes its DOM when disposed.
 Account cookies and the Music SDK context are not passed to this session.
 There is one YouTube.js dependency version and one restored playback SDK in the
 engine. The proof session does not initialize another SDK.
@@ -96,9 +101,10 @@ experiment flags determine whether GVS binds to the video ID, the signed-in
 account's dataSyncId, or the anonymous visitor data. Subsequent resolves reuse
 the generator with that binding. Proofs stay in Node memory
 and private pipes. `expiresAt` is calculated from the integrity response's TTL
-minus its refresh threshold. Missing, invalid, or near-expiry lifetimes fail
-without a fallback token. This is a local refresh deadline, not a server validity
-guarantee; media leases still use signed media URL expiry.
+minus its optional refresh threshold (zero when omitted/null). A missing
+integrity token is a proof failure, not an expiry. Invalid or near-expiry
+lifetimes fail without a fallback token. This is a local refresh deadline,
+not a server validity guarantee; media leases still use signed media URL expiry.
 
 Warm-up and ordinary track changes reuse this engine and its generator. The
 root retains one bounded bootstrap seed so an explicit request after engine
@@ -132,9 +138,13 @@ license. These changes do not establish public-distribution acceptance.
 
 The replacement has offline coverage using the real locked BgUtils and JSDOM
 packages with synthetic page, interpreter and integrity responses, including
-account/video binding, minter reuse, cancellation and Premium import isolation.
-Live playback with the replacement still requires macOS acceptance: the Linux
-implementation environment's proxy denied access to YouTube (HTTP 403). Prior
+account/video binding, Window/host type boundaries, minter reuse, cancellation
+and Premium import isolation. On 2026-10-30, macOS source-runtime verification
+passed anonymous proof initialization and `TestNativeFullDecodeLive` with the
+locked dependencies: both tracks reached EOF with nonzero PCM, matching their
+212.561-second and 369.641-second metadata durations within 0.5 seconds. This
+verifies anonymous transport and full decoding; installed-app audio output,
+signed-in account modes and distribution acceptance remain separate. Earlier
 live measurements in this repository describe the previous implementation.
 
 Successful responses are `{id, ok:true, media?, safe?}`. Resolve returns

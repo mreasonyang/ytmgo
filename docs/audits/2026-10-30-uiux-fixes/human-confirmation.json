@@ -1,0 +1,14 @@
+{
+  "recorded_at": "2026-10-30T12:22:22.536799+00:00",
+  "source": "direct user reply in this task",
+  "temporary_binding": "Ctrl+P",
+  "other_application_focused_requested": true,
+  "user_result": "能暂停，且能听到音乐",
+  "physical_global_pause_confirmed": true,
+  "audible_output_confirmed": true,
+  "native_ui_after_reply": {
+    "paused": true,
+    "position_seconds": 52.303
+  },
+  "original_shortcut_restored": true
+}

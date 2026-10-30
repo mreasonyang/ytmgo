@@ -1,0 +1,14 @@
+{
+  "time": "2026-10-30T12:07:28.243926+00:00",
+  "version": "0.5.2",
+  "sha256": "b1a8f9f196ccb82529b3273aaed28cc12eac673e1bb7c1daed252ee3b68ffa56",
+  "matches_candidate": true,
+  "installed_signature_pass": true,
+  "candidate_checks": {
+    "signature": true,
+    "gatekeeper": true,
+    "ticket": true
+  },
+  "backup_retained": true,
+  "account_data_deleted_or_copied": false
+}

@@ -1,0 +1,18 @@
+{
+  "timestamps_seconds": [
+    34.104,
+    65.954666666
+  ],
+  "image_size": [
+    3024,
+    1802
+  ],
+  "media_roi": [
+    300,
+    300,
+    1350,
+    850
+  ],
+  "roi_changed": true,
+  "mean_absolute_difference": 23.705
+}

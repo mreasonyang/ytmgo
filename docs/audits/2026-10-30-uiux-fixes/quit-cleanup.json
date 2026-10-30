@@ -1,0 +1,19 @@
+{
+  "recorded_at": "2026-10-30T12:27:25.983355+00:00",
+  "collector": "/Users/easonyang/.codex/bin/safe-processes --name ytmgo",
+  "before_quit_pids": [
+    93679,
+    93680,
+    94363,
+    97445,
+    97976
+  ],
+  "before_quit_executables": [
+    "/Applications/ytmgo.app/Contents/MacOS/ytmgo",
+    "/Applications/ytmgo.app/Contents/Resources/runtime/node",
+    "/Applications/ytmgo.app/Contents/Resources/runtime/ffmpeg"
+  ],
+  "after_quit_matching_rows": [],
+  "identified_processes_exited": true,
+  "scope": "Named main and bundled runtime executable metadata; no broader XPC responsibility claim."
+}

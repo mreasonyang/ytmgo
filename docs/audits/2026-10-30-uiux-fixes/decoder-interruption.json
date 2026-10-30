@@ -1,0 +1,29 @@
+{
+  "time": "2026-10-30T12:14:46.712670+00:00",
+  "signal": "SIGTERM",
+  "main": {
+    "pid": 93679,
+    "ppid": 1,
+    "uid": 501,
+    "state": "S",
+    "executable": "/Applications/ytmgo.app/Contents/MacOS/ytmgo"
+  },
+  "targets": [
+    {
+      "pid": 94369,
+      "executable": "/Applications/ytmgo.app/Contents/Resources/runtime/ffmpeg",
+      "ppid": 93679,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 94374,
+      "executable": "/Applications/ytmgo.app/Contents/Resources/runtime/ffmpeg",
+      "ppid": 93679,
+      "uid": 501,
+      "state": "S"
+    }
+  ],
+  "scope": "app responsibility and descendants; exact executable match",
+  "argv_or_environment_read": false
+}

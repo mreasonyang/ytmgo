@@ -1,0 +1,23 @@
+{
+  "interpretation": "Diagnostic files retain the last recorded category; current recovery is verified by native clock advance and error dismissal.",
+  "recorded_categories": {
+    "account": {
+      "Time": "2026-10-30T12:15:16Z",
+      "Version": "0.5.2",
+      "Component": "account",
+      "Category": "premium"
+    },
+    "audio": {
+      "Time": "2026-10-30T12:14:48Z",
+      "Version": "0.5.2",
+      "Component": "audio",
+      "Category": "audio_stream_failed"
+    },
+    "video": {
+      "Time": "2026-10-30T12:10:13Z",
+      "Version": "0.5.2",
+      "Component": "video",
+      "Category": "ready"
+    }
+  }
+}

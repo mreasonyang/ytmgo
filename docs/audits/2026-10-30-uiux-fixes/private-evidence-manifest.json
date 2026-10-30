@@ -1,0 +1,31 @@
+{
+  "retained_locally_only": true,
+  "directory": "build/diagnostics/acceptance-fixes-20261030/private-native",
+  "files": [
+    {
+      "name": "06-shortcut-disabled.png",
+      "sha256": "fe58cbfab8161248ef8743893b7736cf1207cbecf76641bcf3e1ad424444744e",
+      "bytes": 311488
+    },
+    {
+      "name": "18-video-frame-b.png",
+      "sha256": "c38e38611586fd6b6315a388b2be1890bf39194598f3790b6a5295be1d3d98a8",
+      "bytes": 338573
+    },
+    {
+      "name": "19-wide-decoder-error.png",
+      "sha256": "53c6bee657a78047db8595b0beffdf893d9fe9a6f88e60f296c0ca0e42408979",
+      "bytes": 323844
+    },
+    {
+      "name": "20-decoder-error-panel-closed.png",
+      "sha256": "f24832bedfd0e35f623d456433fe7b0b5af0935b62edafac129be90c9db4c635",
+      "bytes": 288690
+    },
+    {
+      "name": "21-paused-before-seek.png",
+      "sha256": "77e4c154e4da0bd862b82cdd983fc2153ba766f94cdc1c67f64fe039a86b8487",
+      "bytes": 284517
+    }
+  ]
+}

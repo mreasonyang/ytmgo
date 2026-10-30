@@ -1,12 +1,21 @@
 {
-  "recorded_at": "2026-10-30T05:39:30.555035+00:00",
-  "status": "BLOCKED",
-  "reason": "mac_locked",
-  "installed_version": "0.5.1",
-  "candidate_version": "0.5.2",
-  "candidate_installed": false,
-  "native_retests_executed": false,
-  "physical_global_key_verified": false,
+  "recorded_at": "2026-10-30T12:28:51.629830+00:00",
+  "status": "PASS",
+  "scope": "installation and the five audited UI/UX fixes on macOS 27.0.1 arm64",
+  "installed_version": "0.5.2",
+  "candidate_installed": true,
+  "native_retests_executed": true,
+  "findings": {
+    "F01": "PASS: seven entity types in each of four locales",
+    "F02": "PASS: artist and four complete rows in the short native window, both appearances",
+    "F03": "PASS: one full explanation/Retry, closed-panel retry and recovered playback",
+    "F04": "PASS: recorder, reserved input, cancel, combinations, F8/off persistence, help and user-confirmed Ctrl+P background pause",
+    "F05": "PASS: Premium restore, not-loaded/loading copy, real library load and restart"
+  },
+  "physical_global_key_verified": true,
+  "physical_binding_tested": "Ctrl+P",
+  "audible_output_confirmed_by_user": true,
   "account_data_deleted_or_copied": false,
-  "account_flow_actions_performed": false
+  "account_flow_actions_performed": false,
+  "broader_e2e_coverage": "PARTIAL; see report limits"
 }

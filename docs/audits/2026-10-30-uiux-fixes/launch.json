@@ -1,0 +1,17 @@
+{
+  "main_processes": [
+    {
+      "pid": 92686,
+      "ppid": 1,
+      "uid": 501,
+      "state": "S",
+      "executable": "/Applications/ytmgo.app/Contents/MacOS/ytmgo"
+    }
+  ],
+  "account_status": {
+    "Time": "2026-10-30T12:07:36Z",
+    "Version": "0.5.2",
+    "Component": "account",
+    "Category": "premium"
+  }
+}

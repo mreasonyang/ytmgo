@@ -1,0 +1,20 @@
+{
+  "account": {
+    "Time": "2026-10-30T12:10:15Z",
+    "Version": "0.5.2",
+    "Component": "account",
+    "Category": "premium"
+  },
+  "audio": {
+    "Time": "2026-10-30T12:10:13Z",
+    "Version": "0.5.2",
+    "Component": "audio",
+    "Category": "ready"
+  },
+  "video": {
+    "Time": "2026-10-30T12:10:13Z",
+    "Version": "0.5.2",
+    "Component": "video",
+    "Category": "ready"
+  }
+}

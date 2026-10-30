@@ -1,0 +1,16 @@
+{
+  "recorded_at": "2026-10-30T12:28:51.628335+00:00",
+  "installed_version": "0.5.2",
+  "executable_sha256": "b1a8f9f196ccb82529b3273aaed28cc12eac673e1bb7c1daed252ee3b68ffa56",
+  "matches_candidate": true,
+  "preferences": {
+    "appearance": "dark",
+    "language": "zh-Hant",
+    "global-shortcut": "Shift+Super+Space"
+  },
+  "account_category": "premium",
+  "volume": 0.7,
+  "autoplay": false,
+  "final_position": 0,
+  "source": "installed metadata, named preferences, fixed account diagnostic and native UI"
+}

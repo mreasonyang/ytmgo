@@ -1,0 +1,368 @@
+[
+  {
+    "time": "2026-10-30T12:07:59.300Z",
+    "name": "premium-restore-library-prompt",
+    "premium": true,
+    "correctNotLoadedCopy": true,
+    "signInPromptAbsent": true
+  },
+  {
+    "time": "2026-10-30T12:08:26.771Z",
+    "name": "search-types-zh-Hant",
+    "song": true,
+    "video": true,
+    "artist": true,
+    "album": true,
+    "playlist": true,
+    "podcast": true,
+    "episode": true
+  },
+  {
+    "time": "2026-10-30T12:08:33.983Z",
+    "name": "shortcut-reject-bare-space",
+    "invalidFeedback": true,
+    "recordingRetained": true
+  },
+  {
+    "time": "2026-10-30T12:08:39.008Z",
+    "name": "shortcut-reject-reserved",
+    "reservedFeedback": true,
+    "recordingEnded": true
+  },
+  {
+    "time": "2026-10-30T12:08:39.716Z",
+    "name": "shortcut-custom-combination",
+    "displayed": false,
+    "errorAbsent": true
+  },
+  {
+    "time": "2026-10-30T12:08:48.600Z",
+    "name": "shortcut-function-key",
+    "f8Displayed": true,
+    "recordingEnded": true,
+    "errorShown": false
+  },
+  {
+    "time": "2026-10-30T12:09:04.467Z",
+    "name": "shortcut-control-p",
+    "displayed": true,
+    "recording": false
+  },
+  {
+    "time": "2026-10-30T12:09:22.683Z",
+    "name": "shortcut-control-alt-p-focused",
+    "displayed": true,
+    "recording": false
+  },
+  {
+    "time": "2026-10-30T12:09:34.701Z",
+    "name": "shortcut-help-current",
+    "f8Listed": true,
+    "localSpaceExplained": true
+  },
+  {
+    "time": "2026-10-30T12:09:57.728Z",
+    "name": "shortcut-f8-restart",
+    "premium": true,
+    "f8Retained": true,
+    "activationErrorAbsent": true
+  },
+  {
+    "time": "2026-10-30T12:09:58.381Z",
+    "name": "shortcut-disabled",
+    "offDisplayed": true
+  },
+  {
+    "time": "2026-10-30T12:10:21.527Z",
+    "name": "shortcut-disabled-restart",
+    "offRetained": true,
+    "premium": true
+  },
+  {
+    "time": "2026-10-30T12:10:31.725Z",
+    "name": "shortcut-original-restored",
+    "originalDisplayed": true,
+    "activationErrorAbsent": true
+  },
+  {
+    "time": "2026-10-30T12:10:49.720Z",
+    "name": "search-types-en",
+    "song": true,
+    "video": true,
+    "artist": true,
+    "album": true,
+    "playlist": true,
+    "podcast": true,
+    "episode": true
+  },
+  {
+    "time": "2026-10-30T12:11:03.830Z",
+    "name": "shortcut-escape-cancels",
+    "originalRetained": true,
+    "recordingEnded": true,
+    "activationErrorAbsent": true
+  },
+  {
+    "time": "2026-10-30T12:11:04.620Z",
+    "name": "search-types-zh-Hans",
+    "song": true,
+    "video": true,
+    "artist": true,
+    "album": true,
+    "playlist": false,
+    "podcast": true,
+    "episode": true
+  },
+  {
+    "time": "2026-10-30T12:11:30.074Z",
+    "name": "search-accessible-types-ja",
+    "song": true,
+    "video": true,
+    "artist": true,
+    "album": true,
+    "playlist": true,
+    "podcast": true,
+    "episode": true
+  },
+  {
+    "time": "2026-10-30T12:11:32.215Z",
+    "name": "search-accessible-types-zh-Hans",
+    "song": true,
+    "video": true,
+    "artist": true,
+    "album": true,
+    "playlist": true,
+    "podcast": true,
+    "episode": true
+  },
+  {
+    "time": "2026-10-30T12:11:40.738Z",
+    "name": "search-accessible-types-zh-Hant",
+    "song": true,
+    "video": true,
+    "artist": true,
+    "album": true,
+    "playlist": true,
+    "podcast": true,
+    "episode": true
+  },
+  {
+    "time": "2026-10-30T12:12:16.071Z",
+    "name": "short-opus-layout",
+    "windowDips": {
+      "width": 757,
+      "height": 641
+    },
+    "creatorVisible": true,
+    "completeTrackRowsVisible": 4,
+    "firstTrack": "Lack of Love"
+  },
+  {
+    "time": "2026-10-30T12:13:10.467Z",
+    "name": "audio-playing-start",
+    "position": 38.434666666,
+    "pauseControl": true
+  },
+  {
+    "time": "2026-10-30T12:13:29.768Z",
+    "name": "library-load-start",
+    "premium": true,
+    "signedOutCopyAbsent": true,
+    "loadingCopyObserved": true
+  },
+  {
+    "time": "2026-10-30T12:13:44.760Z",
+    "name": "library-loaded",
+    "premium": true,
+    "libraryTitleVisible": true,
+    "notLoadedCopyGone": true,
+    "loadingCopyGone": true,
+    "libraryRowsPresent": true
+  },
+  {
+    "time": "2026-10-30T12:14:27.176Z",
+    "name": "sustained-audio",
+    "position": 115.074666666,
+    "pauseControl": true,
+    "videoSample": "album video displayed static cover; visual motion not established"
+  },
+  {
+    "time": "2026-10-30T12:14:55.675Z",
+    "name": "decoder-error-open-panel",
+    "retryButtons": 1,
+    "conciseStatusPresent": false,
+    "position": 136.7735
+  },
+  {
+    "time": "2026-10-30T12:15:10.199Z",
+    "name": "decoder-open-panel-visual",
+    "fullExplanationCount": 1,
+    "retryButtons": 1,
+    "visualTransportStatus": "播放失敗",
+    "visualFullExplanationOnlyInPanel": true
+  },
+  {
+    "time": "2026-10-30T12:15:10.981Z",
+    "name": "decoder-error-closed-panel",
+    "fullExplanationAbsent": true,
+    "retryButtons": 1
+  },
+  {
+    "time": "2026-10-30T12:15:50.106Z",
+    "name": "decoder-retry-recovery",
+    "position": 35.576,
+    "pauseControl": true,
+    "retryGone": true,
+    "premium": true
+  },
+  {
+    "time": "2026-10-30T12:15:50.814Z",
+    "name": "pause-after-recovery",
+    "position": 36.165,
+    "playControl": true
+  },
+  {
+    "time": "2026-10-30T12:17:02.565Z",
+    "name": "paused-middle-seek",
+    "position": 146.520517466,
+    "remainedPaused": true
+  },
+  {
+    "time": "2026-10-30T12:17:27.688Z",
+    "name": "paused-middle-seek-complete",
+    "position": 146.520517466,
+    "paused": true,
+    "loading": false
+  },
+  {
+    "time": "2026-10-30T12:17:44.429Z",
+    "name": "paused-tail-seek-complete",
+    "position": 286.611822272,
+    "paused": true,
+    "retryAbsent": true
+  },
+  {
+    "time": "2026-10-30T12:18:13.186Z",
+    "name": "tail-eof-next-track",
+    "position": 15.010666666,
+    "playing": true,
+    "retryAbsent": true
+  },
+  {
+    "time": "2026-10-30T12:18:56.112Z",
+    "name": "eof-next-track-confirmed",
+    "currentTitleVisible": true,
+    "position": 58.061333333
+  },
+  {
+    "time": "2026-10-30T12:19:02.476Z",
+    "name": "manual-global-test-prepared",
+    "binding": "Ctrl+P",
+    "playing": true,
+    "position": 64.365333333
+  },
+  {
+    "time": "2026-10-30T12:21:44.415Z",
+    "name": "physical-global-and-acoustic-confirmed",
+    "source": "direct user confirmation",
+    "binding": "Ctrl+P",
+    "otherAppFocused": true,
+    "physicalGlobalPausePassed": true,
+    "audibleOutputConfirmed": true,
+    "uiPaused": true,
+    "position": 52.303
+  },
+  {
+    "time": "2026-10-30T12:21:50.156Z",
+    "name": "original-shortcut-restored-after-physical-test",
+    "bindingDisplayed": true,
+    "activationErrorAbsent": true
+  },
+  {
+    "time": "2026-10-30T12:22:30.015Z",
+    "name": "live-video-sample-a",
+    "position": 35.96,
+    "loadingVisible": false,
+    "retryVisible": false
+  },
+  {
+    "time": "2026-10-30T12:22:51.957Z",
+    "name": "live-video-sample-b",
+    "position": 58.008,
+    "loadingVisible": false,
+    "retryVisible": false
+  },
+  {
+    "time": "2026-10-30T12:23:15.652Z",
+    "name": "spatial-video-static-source",
+    "positions": [
+      35.96,
+      58.008
+    ],
+    "mediaRegionUnchanged": true,
+    "note": "Static imagery in this sample does not establish visual motion."
+  },
+  {
+    "time": "2026-10-30T12:23:52.884Z",
+    "name": "concert-video-sample-a",
+    "position": 34.104,
+    "loadingVisible": false,
+    "retryVisible": false
+  },
+  {
+    "time": "2026-10-30T12:24:24.862Z",
+    "name": "concert-video-sample-b",
+    "position": 65.954666666,
+    "loadingVisible": false,
+    "retryVisible": false
+  },
+  {
+    "time": "2026-10-30T12:25:24.442Z",
+    "name": "concert-video-motion-confirmed",
+    "positions": [
+      34.104,
+      65.954666666
+    ],
+    "visualChange": "wide orchestra view to pianist close-up",
+    "mediaOnlyRoiChanged": true
+  },
+  {
+    "time": "2026-10-30T12:25:25.358Z",
+    "name": "video-presentation-closed-audio-retained",
+    "position": 126.509333333,
+    "playing": true
+  },
+  {
+    "time": "2026-10-30T12:26:50.210Z",
+    "name": "hide-show-command-roundtrip",
+    "beforePosition": 126.509333333,
+    "afterPosition": 211.202666666,
+    "delta": 84.693333333,
+    "playing": true,
+    "visibilityIndependentlyObserved": false
+  },
+  {
+    "time": "2026-10-30T12:27:12.696Z",
+    "name": "before-final-quit",
+    "paused": true,
+    "position": 211.802333333,
+    "originalShortcutRestored": true
+  },
+  {
+    "time": "2026-10-30T12:27:56.200Z",
+    "name": "final-settings-restored",
+    "premium": true,
+    "originalShortcut": true,
+    "shortcutErrorAbsent": true,
+    "traditionalChineseUi": true
+  },
+  {
+    "time": "2026-10-30T12:27:57.009Z",
+    "name": "final-restart-idle",
+    "premium": true,
+    "noAutoplay": true,
+    "position": 0,
+    "volume": 0.7,
+    "correctNotLoadedCopy": true
+  }
+]

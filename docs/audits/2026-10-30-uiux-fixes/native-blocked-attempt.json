@@ -1,0 +1,12 @@
+{
+  "recorded_at": "2026-10-30T05:39:30.555035+00:00",
+  "status": "BLOCKED",
+  "reason": "mac_locked",
+  "installed_version": "0.5.1",
+  "candidate_version": "0.5.2",
+  "candidate_installed": false,
+  "native_retests_executed": false,
+  "physical_global_key_verified": false,
+  "account_data_deleted_or_copied": false,
+  "account_flow_actions_performed": false
+}

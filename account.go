@@ -535,12 +535,12 @@ func accountConfigurationChanged(previous, next player.AccountSession, ready boo
 	return !ready || previous != next
 }
 func (a *desktop) signIn() {
-	if a.accountBusy {
-		return
-	}
 	s := &a.accountState
 	if s.login != nil {
 		_ = s.login.Focus()
+		return
+	}
+	if a.accountBusy {
 		return
 	}
 	a.clearAccountRequestFailure(true)

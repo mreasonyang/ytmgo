@@ -1,5 +1,26 @@
 # Native playback verification
 
+## Recover an in-progress login window — 2026-10-31 (Asia/Shanghai)
+
+The user confirmed that the second-factor window had moved behind other
+windows; raising the same running helper restored the unfinished Google
+verification page. It had not timed out or completed session handoff.
+
+Reopening ytmgo from the Dock, tray, Show App menu or second-instance event
+now focuses the existing login helper before considering the main window.
+If the helper can no longer accept focus, the main window remains the fallback.
+Sign in also focuses an existing helper before the account-busy guard, so an
+unrelated account request cannot prevent recovering the verification window.
+This reuses the cross-platform focus protocol and does not change login
+completion, expiration or authentication requirements.
+
+Existing account/login race tests, including helper focus and unlimited
+interactive lifetime, passed. Windows amd64 and Linux amd64 app builds passed;
+a local macOS arm64 app/DMG was built. The new package was not installed over
+the active second-factor session. Automatic window recovery in that new
+installed package and other desktop OSes still needs UI acceptance; the
+confirmed current-session recovery used native window raising.
+
 ## Local halfway-stop repair — 2026-10-31 (Asia/Shanghai)
 
 The user subsequently authorized real playback and reported mid-track stops.

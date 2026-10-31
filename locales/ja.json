@@ -186,7 +186,6 @@
   "nativeAddToQueue": "キューに追加",
   "nativeVideo": "動画",
   "nativeArtwork": "カバー",
-  "nativeLoadMore": "もっと見る",
   "nativeVideoUnavailable": "現在、動画を表示できません。",
   "nativeAccountStorageError": "暗号化されたセッションの保存先にアクセスできません。再試行し、システムが許可を求めた場合は ytmgo のアクセスを許可してください。",
   "nativeVerificationRequired": "Google が追加の確認を求めているため、ytmgo はこのリクエストを完了できません。",

@@ -2593,16 +2593,6 @@ func (msgs Messages) NativeArtwork() string {
 	return Catalog.Format(msgs.locale, "nativeArtwork", nil)
 }
 
-// NativeLoadMore says "Load more"
-// in the language the app shows.
-func NativeLoadMore() string { return In(i18n.Locale()).NativeLoadMore() }
-
-// NativeLoadMore says "Load more"
-// in the language of msgs.
-func (msgs Messages) NativeLoadMore() string {
-	return Catalog.Format(msgs.locale, "nativeLoadMore", nil)
-}
-
 // NativeVideoUnavailable says "Video is temporarily unavailable."
 // in the language the app shows.
 func NativeVideoUnavailable() string { return In(i18n.Locale()).NativeVideoUnavailable() }

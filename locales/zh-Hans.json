@@ -186,7 +186,6 @@
   "nativeAddToQueue": "添加到队列",
   "nativeVideo": "视频",
   "nativeArtwork": "封面",
-  "nativeLoadMore": "加载更多",
   "nativeVideoUnavailable": "暂时无法显示视频。",
   "nativeAccountStorageError": "无法访问加密会话存储。请重试；如果系统要求授权，请允许 ytmgo 访问。",
   "nativeVerificationRequired": "Google 要求额外验证，ytmgo 暂时无法完成此请求。",

@@ -186,7 +186,6 @@
   "nativeAddToQueue": "加入佇列",
   "nativeVideo": "影片",
   "nativeArtwork": "封面",
-  "nativeLoadMore": "載入更多",
   "nativeVideoUnavailable": "暫時無法顯示影片。",
   "nativeAccountStorageError": "無法存取加密工作階段儲存空間。請重試；如果系統要求授權，請允許 ytmgo 存取。",
   "nativeVerificationRequired": "Google 要求額外驗證，ytmgo 暫時無法完成此請求。",

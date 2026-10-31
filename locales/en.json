@@ -733,7 +733,6 @@
   "nativeAddToQueue": "Add to queue",
   "nativeVideo": "Video",
   "nativeArtwork": "Cover",
-  "nativeLoadMore": "Load more",
   "nativeVideoUnavailable": "Video is temporarily unavailable.",
   "nativeAccountStorageError": "Could not access encrypted session storage. Retry and allow ytmgo access if the system asks.",
   "nativeVerificationRequired": "Google requires additional verification. ytmgo cannot complete this request.",

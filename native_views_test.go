@@ -440,7 +440,7 @@ func TestNativeMinimumWindow(t *testing.T) {
 	}
 }
 
-func TestNativeVideoAndContinuation(t *testing.T) {
+func TestNativeVideoSwitch(t *testing.T) {
 	m, a := nativeViewFixture()
 	m.Immersive = true
 	frame := image.NewRGBA(image.Rect(0, 0, 160, 90))
@@ -463,15 +463,6 @@ func TestNativeVideoAndContinuation(t *testing.T) {
 	}
 	if m.Video {
 		t.Fatal("artwork switch did not reach action")
-	}
-	m.Immersive = false
-	m.Page = catalog.Page{Title: "Results", Items: m.Queue[:1], Continuation: "local-page-handle"}
-	tt.Frame()
-	if err := tt.Click(a.Tr("nativeLoadMore")); err != nil {
-		t.Fatal(err)
-	}
-	if m.Page.Continuation != "" {
-		t.Fatal("continuation button did not request next page")
 	}
 }
 

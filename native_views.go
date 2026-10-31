@@ -726,6 +726,7 @@ func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, co
 	scroll := ui.Scroll(c.Key("content-" + m.Route + "-" + m.Page.Title)).Grow(1).MinHeight(0).Label(a.Tr("shellContent"))
 	contentWidth := scroll.Bounds().W
 	a = nativeArtworkViewport(c, a, scroll)
+	nativeLoadNearEnd(c, scroll, m, a)
 	scroll.Children(func() {
 		if strings.HasPrefix(m.Route, "browse:") && m.Page.Title != "" {
 			nativeCollectionHeader(c, m, a, p, compact, inset, contentWidth)
@@ -751,26 +752,110 @@ func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, co
 	})
 }
 
+type nativeContinuation struct{ seen, requested string }
+
+// nativeLoadNearEnd asks for the next page once the reader is within a
+// screen of the end, as Spotify does, instead of offering a button; a page
+// shorter than its viewport is at its end. A token is acted on from the
+// frame after it arrives, when the layout includes the page it continues,
+// and is asked for once: a failed or repeated one waits until the reader
+// scrolls away from the end and back, or presses Retry.
+func nativeLoadNearEnd(c *ui.Context, scroller ui.Element, m *UIModel, a ViewActions) {
+	token := m.Page.Continuation
+	if token == "" || a.LoadMore == nil {
+		return
+	}
+	state := ui.Local(scroller, "continuation", func() nativeContinuation { return nativeContinuation{} })
+	scroll := ui.Local(scroller, "artwork-scroll", func() nativeArtworkScroll { return nativeArtworkScroll{} })
+	view := scroller.Bounds()
+	if state.seen != token || view.H == 0 {
+		state.seen = token
+		c.Invalidate()
+		return
+	}
+	if scroll.scroll.MaxY-scroll.scroll.Y > view.H {
+		state.requested = ""
+		return
+	}
+	if !m.Loading && state.requested != token {
+		state.requested = token
+		a.LoadMore()
+	}
+}
+
+// nativeContinuationFailed reports a failed next page: a page load clears
+// the page, so a catalog error beside a continuation came from loading more.
+func nativeContinuationFailed(m *UIModel) bool {
+	return m.Error != "" && m.ErrorScope == errorCatalog && m.Page.Continuation != ""
+}
+
 func nativePageBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool, contentWidth float32) {
-	if m.Loading {
+	if m.Loading && m.Page.Continuation == "" {
 		ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
 			ui.Spinner(c).Size(20, 20).Label(a.Tr("shellLoading"))
 			ui.Text(c, a.Tr("shellLoading")).TextColor(p.secondary)
 		})
 	}
-	if m.Error != "" {
-		ui.Column(c).Padding(20).Gap(12).Background(p.raised).Radius(8).Children(func() {
-			ui.Text(c, m.Error).TextColor(p.secondary)
-			if m.ErrorScope != errorAccount && m.ErrorScope != errorAccountConnect && nativePill(c, a.Tr("buttonRetry"), p, true).AlignSelf(ui.Start).Clicked() {
-				a.Reload()
+	if m.Error != "" && !nativeContinuationFailed(m) {
+		nativePageError(c, m, a, p)
+	}
+	nativePageContent(c, m, a, p, compact, contentWidth)
+	if m.Page.Continuation != "" {
+		// The next page loads out of sight; the footer keeps the room for its
+		// spinner, so nothing shifts when it shows, and says when it failed.
+		if nativeContinuationFailed(m) {
+			// The reader is at the end when it fails, so show the whole card.
+			card := nativePageError(c.Key("continuation-error"), m, a, p)
+			if revealed := ui.Local(card, "revealed", func() bool { return false }); !*revealed {
+				*revealed = true
+				card.ScrollIntoView()
 			}
-			// A failed restore names its retry here, except where the library
-			// card below already offers it.
-			if m.ErrorScope == errorAccount && m.Route != "library" {
-				ui.Row(c).Gap(8).Children(func() { nativeRestoreActions(c, m, a, p, true) })
+		} else {
+			ui.Row(c).Height(48).Justify(ui.Center).AlignItems(ui.Center).Children(func() {
+				if m.Loading {
+					ui.Spinner(c).Size(24, 24).Label(a.Tr("shellLoading"))
+				}
+			})
+		}
+	}
+	if !m.Loading && m.Error == "" && len(m.Page.Items) == 0 && len(m.Page.Shelves) == 0 && !(m.Route == "library" && !m.SignedIn) {
+		ui.Column(c).Padding(48, 16).Gap(12).AlignItems(ui.Center).Children(func() {
+			if m.Route == "library" && m.SignedIn {
+				ui.Icon(c, nativeIcons["library"]).Size(48, 48).TextColor(p.muted)
+				ui.Text(c, a.Tr("nativeLibraryEmptyTitle")).FontSize(20).FontWeight(700)
+				ui.Text(c, a.Tr("nativeLibraryEmptyBody")).TextColor(p.secondary)
+				return
 			}
+			ui.Icon(c, nativeIcons["search"]).Size(48, 48).TextColor(p.muted)
+			ui.Text(c, a.Tr("nativeEmptyResults")).FontSize(20).FontWeight(700)
+			ui.Text(c, a.Tr("shellSearchPlaceholder")).TextColor(p.secondary)
 		})
 	}
+}
+
+// nativePageError is the page's error card. Retry loads the next page again
+// when that failed, keeping what is shown, and reloads the page otherwise.
+func nativePageError(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) ui.Element {
+	retry := a.Reload
+	if nativeContinuationFailed(m) {
+		retry = a.LoadMore
+	}
+	return ui.Column(c).Padding(20).Gap(12).Background(p.raised).Radius(8).Children(func() {
+		ui.Text(c, m.Error).TextColor(p.secondary)
+		if m.ErrorScope != errorAccount && m.ErrorScope != errorAccountConnect && retry != nil && nativePill(c, a.Tr("buttonRetry"), p, true).AlignSelf(ui.Start).Clicked() {
+			retry()
+		}
+		// A failed restore names its retry here, except where the library
+		// card below already offers it.
+		if m.ErrorScope == errorAccount && m.Route != "library" {
+			ui.Row(c).Gap(8).Children(func() { nativeRestoreActions(c, m, a, p, true) })
+		}
+	})
+}
+
+// nativePageContent is what the page loaded: the library prompt, home
+// shortcuts, shelves and items.
+func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool, contentWidth float32) {
 	if m.Route == "library" && !m.SignedIn {
 		ui.Column(c).Padding(24).Gap(14).Radius(8).Background(p.raised).Children(func() {
 			title, body := nativeLibraryPromptText(m)
@@ -849,24 +934,6 @@ func nativePageBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, c
 				}
 			})
 		}
-	}
-	if m.Page.Continuation != "" {
-		if nativePill(c, a.Tr("nativeLoadMore"), p, false).AlignSelf(ui.Center).Disabled(m.Loading || a.LoadMore == nil).Clicked() {
-			a.LoadMore()
-		}
-	}
-	if !m.Loading && m.Error == "" && len(m.Page.Items) == 0 && len(m.Page.Shelves) == 0 && !(m.Route == "library" && !m.SignedIn) {
-		ui.Column(c).Padding(48, 16).Gap(12).AlignItems(ui.Center).Children(func() {
-			if m.Route == "library" && m.SignedIn {
-				ui.Icon(c, nativeIcons["library"]).Size(48, 48).TextColor(p.muted)
-				ui.Text(c, a.Tr("nativeLibraryEmptyTitle")).FontSize(20).FontWeight(700)
-				ui.Text(c, a.Tr("nativeLibraryEmptyBody")).TextColor(p.secondary)
-				return
-			}
-			ui.Icon(c, nativeIcons["search"]).Size(48, 48).TextColor(p.muted)
-			ui.Text(c, a.Tr("nativeEmptyResults")).FontSize(20).FontWeight(700)
-			ui.Text(c, a.Tr("shellSearchPlaceholder")).TextColor(p.secondary)
-		})
 	}
 }
 

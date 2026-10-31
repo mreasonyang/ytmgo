@@ -19,7 +19,15 @@ import (
 	"sync"
 	"time"
 	"unicode/utf8"
+
+	"ytmgo/internal/netproxy"
 )
+
+var defaultTransport = sync.OnceValue(func() *http.Transport {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.Proxy = netproxy.Proxy
+	return transport
+})
 
 const (
 	serviceOrigin = "https://music.youtube.com"
@@ -153,6 +161,8 @@ func NewWithOptions(options Options) *Client {
 	client := &http.Client{}
 	if options.HTTPClient != nil {
 		*client = *options.HTTPClient
+	} else {
+		client.Transport = defaultTransport()
 	}
 	if client.Timeout <= 0 || client.Timeout > requestTimeout {
 		client.Timeout = requestTimeout

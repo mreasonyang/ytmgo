@@ -14,6 +14,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"ytmgo/internal/netproxy"
 )
 
 func transportClient(input *http.Client) *http.Client {
@@ -22,7 +24,7 @@ func transportClient(input *http.Client) *http.Client {
 		c = *input
 	} else {
 		tr := http.DefaultTransport.(*http.Transport).Clone()
-		tr.Proxy = nil
+		tr.Proxy = netproxy.Proxy
 		tr.MaxIdleConns = 4
 		tr.MaxIdleConnsPerHost = 2
 		tr.MaxConnsPerHost = 4

@@ -199,16 +199,37 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
     #[cfg(target_os = "macos")]
     {
         use tao::platform::macos::{ActivationPolicy, EventLoopExtMacOS};
-        // Keep this temporary window off the Dock and application switcher.
-        // Tao defaults to Regular and would override the bundle's LSUIElement.
-        event_loop.set_activation_policy(ActivationPolicy::Accessory);
+        // Login must remain reachable from the Dock and Command-Tab after focus
+        // moves elsewhere. It exits, and its Dock entry disappears, on completion.
+        event_loop.set_activation_policy(ActivationPolicy::Regular);
         crate::macos_menu::install();
     }
-    let window = match WindowBuilder::new()
+    let builder = WindowBuilder::new()
         .with_title(request.title)
-        .with_inner_size(tao::dpi::LogicalSize::new(520.0, 740.0))
-        .build(&event_loop)
-    {
+        .with_inner_size(tao::dpi::LogicalSize::new(520.0, 740.0));
+    #[cfg(any(windows, target_os = "linux"))]
+    let builder = {
+        // Preconverted pixels keep the helper independent of image decoders.
+        let rgba: &[u8; 128 * 128 * 4] = include_bytes!("../assets/icon.rgba");
+        let icon = match tao::window::Icon::from_rgba(rgba.to_vec(), 128, 128) {
+            Ok(icon) => icon,
+            Err(_) => return Outcome::error(Failure::LoginFailed),
+        };
+        #[cfg(windows)]
+        let builder = {
+            use tao::platform::windows::WindowBuilderExtWindows;
+            builder
+                .with_skip_taskbar(false)
+                .with_taskbar_icon(Some(icon.clone()))
+        };
+        #[cfg(target_os = "linux")]
+        let builder = {
+            use tao::platform::unix::WindowBuilderExtUnix;
+            builder.with_skip_taskbar(false)
+        };
+        builder.with_window_icon(Some(icon))
+    };
+    let window = match builder.build(&event_loop) {
         Ok(window) => window,
         Err(_) => return Outcome::error(Failure::LoginFailed),
     };
@@ -363,7 +384,7 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
                 complete_fixture = true;
                 next_probe = now;
             }
-            Event::UserEvent(Signal::Focus) => {
+            Event::UserEvent(Signal::Focus) | Event::Reopen { .. } => {
                 window.set_visible(true);
                 window.set_minimized(false);
                 window.set_focus();

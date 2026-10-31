@@ -25,14 +25,19 @@ before accepting the result. Raw process output must never be logged.
 - macOS: system WKWebView. The application package determines the minimum OS.
   A nested `ytmgo Account Login.app` supplies the helper's own application
   identity and accessibility target; it still runs only for the login lifetime.
-  It uses `LSUIElement` and Tao's accessory activation policy so the login
-  window can receive focus without adding a Dock or Command-Tab entry.
+  It uses a regular activation policy and a distinct ytmgo account-badge icon
+  in the Dock and Command-Tab switcher. Clicking its Dock entry restores the
+  existing window, including after minimization. The entry exits with login.
 - Windows: Microsoft Edge WebView2 Runtime 101.0.1210.39 or newer. An older
   runtime can ignore private mode, so the helper rejects it before opening a
   window. A separate temporary user-data directory supports installation in
   read-only Program Files; it is removed after the private WebView closes.
+  The independent window keeps its taskbar entry and uses the companion icon
+  for both its title bar and taskbar.
 - Linux: GTK 3 and WebKitGTK 4.1 >=2.50.2, including development packages when compiling.
   The GTK container integration supports both X11 and Wayland.
+  The helper does not skip the taskbar and supplies the companion window icon;
+  icon and window-switcher presentation remain subject to the desktop shell.
 
 Passkey support is a separate platform capability. macOS WKWebView requires a
 relationship with the relying party through Associated Domains; this helper
@@ -55,6 +60,11 @@ Build on each destination OS with `python3 scripts/login/prepare.py` from the
 repository root. The staging manifest checks the target platform and CPU
 architecture. The media-runtime packager is separate and currently macOS-only;
 successful helper builds do not establish complete Windows/Linux app delivery.
+
+The login artwork retains ytmgo's red record/play logo with a teal account badge.
+`artwork/icon.png` is the source; `go run ./cmd/login-icon` converts it to
+the committed ICNS and 128px RGBA assets. Only the native-format assets ship in
+the helper, with no image decoder or new runtime dependency.
 
 ## Verification
 

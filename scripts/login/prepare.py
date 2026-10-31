@@ -26,6 +26,7 @@ BINARY = "ytmgo-account-login"
 MAC_BUNDLE = "ytmgo Account Login.app"
 MAC_IDENTIFIER = "si.kyun.ytmgo.account-login"
 MAC_PLIST = ROOT / "scripts/login/macos/Info.plist"
+MAC_ICON = ROOT / "scripts/login/macos/AppIcon.icns"
 TARGETS = {
     ("darwin", "arm64"): "aarch64-apple-darwin",
     ("darwin", "amd64"): "x86_64-apple-darwin",
@@ -134,7 +135,8 @@ def verify(folder, target):
         raise ValueError("login-helper executable checksum mismatch")
     expected = {name, "manifest.json"}
     if system == "darwin":
-        expected.update({MAC_BUNDLE + "/Contents/Info.plist", MAC_BUNDLE + "/Contents/_CodeSignature/CodeResources"})
+        expected.update({MAC_BUNDLE + "/Contents/Info.plist", MAC_BUNDLE + "/Contents/_CodeSignature/CodeResources",
+                         MAC_BUNDLE + "/Contents/Resources/AppIcon.icns"})
     files = set()
     for path in folder.rglob("*"):
         if path.is_symlink():
@@ -146,8 +148,10 @@ def verify(folder, target):
     if system == "darwin":
         bundle = folder / MAC_BUNDLE
         plist = plistlib.loads((bundle / "Contents/Info.plist").read_bytes())
-        if not isinstance(plist, dict) or plist.get("CFBundleIdentifier") != MAC_IDENTIFIER or plist.get("CFBundleExecutable") != BINARY or plist.get("CFBundlePackageType") != "APPL" or plist.get("LSUIElement") is not True:
+        if not isinstance(plist, dict) or plist.get("CFBundleIdentifier") != MAC_IDENTIFIER or plist.get("CFBundleExecutable") != BINARY or plist.get("CFBundlePackageType") != "APPL" or plist.get("LSUIElement") is not False or plist.get("LSBackgroundOnly", False) is not False or plist.get("CFBundleIconFile") != "AppIcon.icns":
             raise ValueError("login-helper app bundle identity mismatch")
+        if digest(bundle / "Contents/Resources/AppIcon.icns") != digest(MAC_ICON):
+            raise ValueError("login-helper app icon mismatch")
         verify_macos_bundle(bundle)
     return manifest
 
@@ -168,6 +172,9 @@ def stage(binary, target, lockfile, destination=OUT):
         if system == "darwin":
             bundle = temporary / MAC_BUNDLE
             shutil.copyfile(MAC_PLIST, bundle / "Contents/Info.plist")
+            resources = bundle / "Contents/Resources"
+            resources.mkdir()
+            shutil.copyfile(MAC_ICON, resources / "AppIcon.icns")
             sign_macos_bundle(bundle)
         manifest = {
             "schema": 1,

@@ -205,7 +205,7 @@ func (a *desktop) post(fn func()) {
 
 func (a *desktop) show() {
 	// Reopening ytmgo must recover an existing login window, including an
-	// unfinished second-factor step. The macOS helper has no separate Dock entry.
+	// unfinished second-factor step, in addition to the helper's own Dock entry.
 	if a.accountState.login != nil && a.accountState.login.Focus() == nil {
 		return
 	}

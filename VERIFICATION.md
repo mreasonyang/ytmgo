@@ -1,5 +1,33 @@
 # Native playback verification
 
+## Distinct, reachable login application — 2026-10-31 (Asia/Shanghai)
+
+This supersedes the October 30 decision to hide the helper from the macOS Dock.
+The login bundle now has `LSUIElement=false`, a companion app icon and Tao's
+Regular activation policy. A Dock reopen event restores and focuses the existing
+window, without restarting the WebView or its in-progress verification. The
+existing focus command from the main app remains available. Windows explicitly
+keeps a taskbar entry with the companion taskbar/title-bar icon; Linux keeps its
+taskbar hint and window icon, subject to the desktop shell's presentation.
+
+The companion artwork preserves the red ytmgo record and play mark, adding a
+teal account badge. Image generation produced the source PNG; the Go conversion
+tool produces a 243,140-byte ICNS and 65,536-byte raw RGBA asset. The full source
+PNG is outside the packaged resources. There are no new runtime dependencies.
+
+Eight Rust helper tests, ten Python staging/lifecycle-result tests, Go helper
+tests, icon-tool compilation/vet and native macOS release build/stage validation
+passed. Staging rejects hidden-agent metadata, missing/changed icon metadata or
+icon bytes. Windows/Linux native UI behavior and user-driven Dock/Command-Tab
+switching have not been exercised in this local run; no live account window was
+opened or manipulated for this change. Version remains 0.6.0.
+
+The local candidate App, nested login helper and DMG were signed using the
+existing Developer ID Application identity (team 2V4TX79LUZ). Deep/strict app,
+embedded-code and DMG signature checks, team/authority checks and the native
+script-host/FFmpeg smoke checks passed. The candidate was not notarized, installed
+or published as a GitHub release.
+
 ## Prepare secure storage before login — 2026-10-31 (Asia/Shanghai)
 
 The account controller prepares its single fixed encryption key before starting

@@ -110,6 +110,21 @@ class PrepareTests(unittest.TestCase):
             plist_path = out / prepare.MAC_BUNDLE / "Contents/Info.plist"
             plist = plistlib.loads(plist_path.read_bytes())
             self.assertEqual(plist["CFBundleIdentifier"], "si.kyun.ytmgo.account-login")
+            self.assertIs(plist["LSUIElement"], False)
+            self.assertEqual(plist["CFBundleIconFile"], "AppIcon.icns")
+            icon = out / prepare.MAC_BUNDLE / "Contents/Resources/AppIcon.icns"
+            self.assertEqual(icon.read_bytes(), prepare.MAC_ICON.read_bytes())
+            for field, value in (("LSUIElement", True), ("LSBackgroundOnly", True), ("CFBundleIconFile", "missing.icns")):
+                changed = dict(plist)
+                changed[field] = value
+                plist_path.write_bytes(plistlib.dumps(changed))
+                with self.assertRaisesRegex(ValueError, "identity mismatch"):
+                    prepare.verify(out, target)
+            plist_path.write_bytes(plistlib.dumps(plist))
+            icon.write_bytes(b"damaged-icon")
+            with self.assertRaisesRegex(ValueError, "icon mismatch"):
+                prepare.verify(out, target)
+            icon.write_bytes(prepare.MAC_ICON.read_bytes())
             plist["CFBundleIdentifier"] = "si.kyun.ytmgo"
             plist_path.write_bytes(plistlib.dumps(plist))
             with self.assertRaisesRegex(ValueError, "identity mismatch"):

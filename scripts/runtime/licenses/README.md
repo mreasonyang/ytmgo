@@ -1,3 +1,16 @@
+# Current native runtime notices
+
+The current packager copies licenses for the three integrity-pinned script
+sources (YouTube.js 18.3.0, Meriyah 7.4.1 and BgUtils 4.0.3), the locked native
+Rust closure including QuickJS, and the minimal LGPL FFmpeg build. It no longer
+packages Node, jsdom, Axios or their npm dependency closure. Remaining old
+notice files in this source directory are historical and are not copied into
+new bundles.
+
+The Go URL-transform adapter derives from the MIT YouTube.js
+`getNsigProcessorFn`; the proof adapter follows the MIT BgUtils example.
+Upstream attribution details retained below apply to those reused algorithms.
+
 # Vendored dependency notices
 
 `@bufbuild/protobuf` 2.16.0 declares `(Apache-2.0 AND BSD-3-Clause)` but omits

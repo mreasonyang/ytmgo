@@ -76,7 +76,7 @@ func (d *decoderDiagnostics) result() error {
 }
 
 func (r runtimePaths) open(ctx context.Context, info media, at time.Duration) (*pcmDecoder, error) {
-	if !validMediaURL(info.URL) {
+	if info.source == nil && !validMediaURL(info.URL) {
 		return nil, errors.New("invalid_media_response")
 	}
 	return startDecoder(ctx, r.ffmpeg, info, at)

@@ -2,21 +2,16 @@ package player
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 	"testing"
+	"ytmgo/internal/streaming"
 )
 
 func TestBootstrapReplyMetadataSurvivesErrorAndPlayerState(t *testing.T) {
-	data := []byte(`{"id":1,"ok":false,"category":"bootstrap_redirect","stage":"bootstrap","bootstrapStep":"session_data","httpStatus":302,"redirect":"google_challenge","mime":"html"}`)
-	reply, err := parseWorkerReply(data)
-	if err != nil {
-		t.Fatal("valid bootstrap metadata rejected")
-	}
 	want := FailureDetails{Stage: "bootstrap", BootstrapStep: "session_data", HTTPStatus: 302, Redirect: "google_challenge", MIME: "html"}
-	err = fmt.Errorf("wrapped fixture: %w", resolverFailureError(reply.Category, reply.details()))
+	err := fmt.Errorf("wrapped fixture: %w", nativeFailure(&streaming.Failure{Category: "bootstrap_redirect", Stage: "bootstrap", BootstrapStep: "session_data", HTTPStatus: 302, Redirect: "google_challenge", MIME: "html"}))
 	if DiagnosticDetails(err) != want || safeError(err) != "bootstrap_redirect" || strings.Contains(err.Error(), "google_challenge") {
 		t.Fatal("closed metadata was lost or added to the error string")
 	}
@@ -35,40 +30,16 @@ func TestBootstrapReplyMetadataSurvivesErrorAndPlayerState(t *testing.T) {
 	}
 }
 
-func TestBootstrapReplyMetadataRejectsUntrustedIPC(t *testing.T) {
-	base := map[string]any{"id": 1, "ok": false, "category": "init_failed", "stage": "bootstrap"}
-	cases := []map[string]any{
-		{"bootstrapStep": "private-value"}, {"bootstrapStep": ""}, {"bootstrapStep": nil}, {"bootstrapStep": 1},
-		{"httpStatus": 0}, {"httpStatus": 99}, {"httpStatus": 600}, {"httpStatus": 302.5}, {"httpStatus": "302"}, {"httpStatus": nil},
-		{"redirect": "https://example.invalid/private"}, {"redirect": ""}, {"redirect": nil}, {"redirect": true},
-		{"mime": "text/html; private"}, {"mime": ""}, {"mime": nil}, {"mime": []string{"html"}},
-		{"stage": "player_request", "httpStatus": 403}, {"stage": "private-stage", "bootstrapStep": "other"},
-		{"ok": true, "bootstrapStep": "session_data"}, {"unexpectedPrivateField": "private-value"},
-	}
-	for number, changes := range cases {
-		t.Run(fmt.Sprint(number), func(t *testing.T) {
-			input := make(map[string]any, len(base)+len(changes))
-			for key, value := range base {
-				input[key] = value
-			}
-			for key, value := range changes {
-				input[key] = value
-			}
-			data, _ := json.Marshal(input)
-			if _, err := parseWorkerReply(data); err == nil || err.Error() != "invalid_resolver_reply" {
-				t.Fatal("malformed metadata accepted or untrusted input escaped into error")
-			}
-		})
-	}
-	for _, input := range []string{
-		`{"id":1,"ok":false,"category":"init_failed","stage":"bootstrap","mime":"html"}`,
-		`{"id":1,"ok":false,"category":"init_failed","stage":"bootstrap","httpStatus":200}`,
-		`{"id":1,"ok":false,"category":"init_failed","stage":"bootstrap","redirect":"other"}`,
-		`{"id":1,"ok":false,"category":"init_failed","stage":"sdk_create"}`,
-		`{"id":1,"ok":true,"safe":{},"media":{}}`,
+func TestNativeFailureDoesNotExposeUnknownMetadata(t *testing.T) {
+	for _, failure := range []*streaming.Failure{
+		{Category: "private-value", Stage: "private-value"},
+		{Category: "init_failed", Stage: "bootstrap", Redirect: "https://example.invalid/private"},
+		{Category: "init_failed", Stage: "bootstrap", HTTPStatus: 600},
+		{Category: "init_failed", Stage: "bootstrap", BootstrapStep: "private-value"},
 	} {
-		if _, err := parseWorkerReply([]byte(input)); err != nil {
-			t.Fatal("current optional or non-bootstrap reply rejected")
+		err := nativeFailure(failure)
+		if strings.Contains(err.Error(), "private") || strings.Contains(fmt.Sprint(DiagnosticDetails(err)), "private") {
+			t.Fatal("private diagnostic escaped")
 		}
 	}
 }

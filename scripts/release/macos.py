@@ -170,10 +170,6 @@ def refresh_manifests(app):
         if not path.resolve().is_relative_to(runtime.resolve()) or not path.is_file():
             raise PackageError("Invalid runtime manifest entry")
         manifest["sha256"][name] = digest(path)
-    # Signing may also change native node_modules if any are added in future.
-    sys.path.insert(0, str(ROOT / "scripts/runtime"))
-    from runtime_manifest import node_modules_digest
-    manifest["node_modules_sha256"] = node_modules_digest(runtime)
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
     login = resources / "login"
     manifest_path = login / "manifest.json"
@@ -189,9 +185,8 @@ def sign_app(app, identity, keychain):
     binaries = macho_files(app)
     if not binaries:
         raise PackageError("No Mach-O code in app")
-    node = app / "Contents/Resources/runtime/node"
     for path in binaries:
-        sign(path, identity, keychain, ROOT / "scripts/release/node-entitlements.plist" if path == node else None)
+        sign(path, identity, keychain)
     bundles = [path for path in app.rglob("*") if path.is_dir() and not path.is_symlink()
                and path.suffix in {".app", ".framework", ".xpc", ".appex", ".bundle", ".plugin"}
                and any(path in binary.parents for binary in binaries)]
@@ -202,8 +197,8 @@ def sign_app(app, identity, keychain):
     run(["codesign", "--verify", "--deep", "--strict", app], "App signature verification")
     for path in binaries:
         run(["codesign", "--verify", "--strict", path], "Embedded code signature verification")
-    # A signature check alone would miss broken V8 JIT entitlements.
-    run([node, "-e", "for(let i=0;i<10000;i++)new Function('return 1')()"], "Signed Node execution")
+    # QuickJS interprets code without executable-memory/JIT entitlements.
+    run([app / "Contents/Resources/runtime/ytmgo-playback-host", "check"], "Signed script host execution")
     run([app / "Contents/Resources/runtime/ffmpeg", "-version"], "Signed FFmpeg execution")
 
 

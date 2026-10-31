@@ -24,15 +24,13 @@ class PackagingTests(unittest.TestCase):
         resources = app / "Contents/Resources"
         runtime = resources / "runtime"
         runtime.mkdir(parents=True)
-        (runtime / "node_modules/fixture").mkdir(parents=True)
-        (runtime / "node_modules/fixture/index.js").write_text("fixture")
         helper = resources / "login/Login.app/Contents/MacOS/helper"
         main = app / "Contents/MacOS/ytmgo"
-        for path in (runtime / "node", runtime / "ffmpeg", helper, main):
+        for path in (runtime / "ytmgo-playback-host", runtime / "ffmpeg", helper, main):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(bytes.fromhex("cffaedfe") + b"unsigned fixture")
         (runtime / "manifest.json").write_text(json.dumps({
-            "sha256": {"node": "before", "ffmpeg": "before"}, "versions": {"node": "fixture"},
+            "sha256": {"ytmgo-playback-host": "before", "ffmpeg": "before"}, "versions": {"ytmgo-playback-host": "fixture"},
         }))
         (resources / "login/manifest.json").write_text(json.dumps({
             "executable": "Login.app/Contents/MacOS/helper", "sha256": "before", "schema": 1,
@@ -41,15 +39,15 @@ class PackagingTests(unittest.TestCase):
 
     def test_signing_updates_both_manifests_after_nested_code_changes(self):
         app, runtime, helper = self.app_fixture()
-        original = macos.digest(runtime / "node")
-        (runtime / "node").write_bytes(b"synthetic signed bytes")
+        original = macos.digest(runtime / "ytmgo-playback-host")
+        (runtime / "ytmgo-playback-host").write_bytes(b"synthetic signed bytes")
         helper.write_bytes(b"synthetic signed helper")
         macos.refresh_manifests(app)
         manifest = json.loads((runtime / "manifest.json").read_text())
-        self.assertNotEqual(manifest["sha256"]["node"], original)
-        self.assertEqual(manifest["sha256"]["node"], macos.digest(runtime / "node"))
-        self.assertEqual(manifest["versions"], {"node": "fixture"})
-        self.assertEqual(len(manifest["node_modules_sha256"]), 64)
+        self.assertNotEqual(manifest["sha256"]["ytmgo-playback-host"], original)
+        self.assertEqual(manifest["sha256"]["ytmgo-playback-host"], macos.digest(runtime / "ytmgo-playback-host"))
+        self.assertEqual(manifest["versions"], {"ytmgo-playback-host": "fixture"})
+        self.assertNotIn("node_modules_sha256", manifest)
         login = json.loads((helper.parents[3] / "manifest.json").read_text())
         self.assertEqual(login["sha256"], macos.digest(helper))
 
@@ -75,7 +73,7 @@ class PackagingTests(unittest.TestCase):
         self.assertEqual(calls[-1], ("sign", app, None))
         for kind, path, entitlements in calls:
             if kind == "sign":
-                self.assertEqual(entitlements is not None, path == runtime / "node")
+                self.assertIsNone(entitlements)
 
     def test_secret_decode_is_private_and_invalid_value_is_never_echoed(self):
         with patch.dict(os.environ, {"FIXTURE_SETTING": base64.b64encode(b"synthetic fixture").decode()}):

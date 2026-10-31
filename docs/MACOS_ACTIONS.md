@@ -63,7 +63,7 @@ python3 scripts/release/configure_secrets.py notarization
 gh workflow run macos-package.yml --repo mreasonyang/ytmgo --ref main -f mode=notarized
 ```
 
-签名脚本给每个 Mach-O、登录 helper app、主 App 依次签名，启用 Hardened Runtime 和安全时间戳。只有 Node 获得 JIT 相关 entitlements。签名改变二进制字节后，重算包内 runtime / login 清单，再密封主 App。签名后执行 Node 和 FFmpeg 冒烟验证。
+签名脚本给每个 Mach-O、登录 helper app、主 App 依次签名，启用 Hardened Runtime 和安全时间戳。QuickJS 使用解释执行，不需要 Node/V8 的 JIT entitlements。签名改变二进制字节后，重算包内 runtime / login 清单，再密封主 App。签名后执行原生脚本宿主和 FFmpeg 冒烟验证。
 
 公证模式先用应用专用密码创建并验证 runner 临时钥匙串中的 `notarytool` profile，再通过这个 profile 提交 App ZIP。Apple 返回 `Accepted` 后给 App staple ticket；再制作、签名、公证 DMG 并 staple。最后检查签名、ticket 与 Gatekeeper。任一步失败都不会上传成功产物，**不会降级生成 unsigned 成功包**。Actions 成功不代表真实账号登录、播放或所有支持设备验收完成。
 

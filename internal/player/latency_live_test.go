@@ -69,7 +69,7 @@ func TestNativePreparedPlaybackLive(t *testing.T) {
 	initializeAnonymousLive(t, p)
 	p.SetVolume(.05)
 	var mu sync.Mutex
-	readers := map[string]*livePCM{}
+	readers := map[*pcmDecoder]*livePCM{}
 	var resolveCount, openCount atomic.Int64
 	resolve, open := p.resolve, p.open
 	p.resolve = func(ctx context.Context, id string) (media, error) { resolveCount.Add(1); return resolve(ctx, id) }
@@ -82,7 +82,7 @@ func TestNativePreparedPlaybackLive(t *testing.T) {
 		reader := &livePCM{source: d.input}
 		d.input = reader
 		mu.Lock()
-		readers[info.URL] = reader
+		readers[d] = reader
 		mu.Unlock()
 		return d, nil
 	}
@@ -92,11 +92,11 @@ func TestNativePreparedPlaybackLive(t *testing.T) {
 		deadline := time.Now().Add(10 * time.Second)
 		for time.Now().Before(deadline) && ctx.Err() == nil {
 			p.mu.Lock()
-			info := p.media
+			current := p.session
 			p.mu.Unlock()
-			if info != nil {
+			if current != nil {
 				mu.Lock()
-				reader := readers[info.URL]
+				reader := readers[current.decoder]
 				mu.Unlock()
 				state := p.Snapshot()
 				if state.Error != "" {

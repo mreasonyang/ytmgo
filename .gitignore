@@ -21,3 +21,4 @@ __pycache__/
 *.keychain-db
 
 /native/account-login/target/
+/native/playback-host/target/

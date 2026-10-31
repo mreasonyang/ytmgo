@@ -17,8 +17,8 @@ import (
 
 var byteRangePattern = regexp.MustCompile(`^bytes=[0-9]*-[0-9]*$`)
 
-// streamBridge relays the worker's local transport to FFmpeg. Remote media
-// requests and signed URLs belong exclusively to the Node worker.
+// streamBridge exposes a private Go media lease to FFmpeg over loopback.
+// Remote URLs never enter FFmpeg, its arguments or diagnostics.
 // Each response streams through 32 KiB with backpressure, with at most two
 // upstream requests. There is no media cache or complete-track buffer.
 type streamBridge struct {
@@ -44,8 +44,8 @@ func newStreamBridge(parent context.Context, info media) (*streamBridge, error) 
 		return nil, err
 	}
 	u, err := url.Parse(info.URL)
-	if err != nil || u.Scheme != "http" || u.Hostname() != "127.0.0.1" || u.Port() == "" || u.User != nil ||
-		!validHeaderValue(info.UserAgent) || !validHeaderValue(info.Referer) {
+	if info.source == nil && (err != nil || u.Scheme != "http" || u.Hostname() != "127.0.0.1" || u.Port() == "" || u.User != nil ||
+		!validHeaderValue(info.UserAgent) || !validHeaderValue(info.Referer)) {
 		return nil, errors.New("invalid_media_response")
 	}
 	var secret [32]byte
@@ -107,6 +107,10 @@ func (b *streamBridge) serve(w http.ResponseWriter, incoming *http.Request) {
 	case b.slots <- struct{}{}:
 		defer func() { <-b.slots }()
 	case <-ctx.Done():
+		return
+	}
+	if b.info.source != nil {
+		b.info.source.ServeHTTP(w, incoming.WithContext(ctx))
 		return
 	}
 	var response *http.Response
@@ -247,6 +251,9 @@ func (b *streamBridge) setError(category string) {
 }
 
 func (b *streamBridge) Err() error {
+	if b.info.source != nil {
+		return b.info.source.Err()
+	}
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if b.category == "" {

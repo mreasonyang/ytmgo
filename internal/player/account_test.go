@@ -264,10 +264,14 @@ func TestAccountConfigurationFailureBlocksNewResolutionAndCanRetry(t *testing.T)
 	}
 }
 
-func TestResolverConfiguresAccountOnlyThroughPrivatePipe(t *testing.T) {
-	r := fixtureResolver(t, "normal")
+func TestResolverKeepsAccountInGoUntilAnOperationNeedsScripts(t *testing.T) {
+	r, err := (runtimePaths{helper: "unused-fixture-helper"}).newResolver()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
 	if err := r.Configure(context.Background(), accountFixture(true, 2)); err != nil {
-		t.Fatal("private configure failed")
+		t.Fatal("Go configure failed")
 	}
 	for _, s := range []AccountSession{{MusicPremium: true, Revision: 2}, {Revision: 0}, {LoggedIn: true, Cookie: "bad\nvalue", Revision: 2}, {LoggedIn: true, Cookie: "fixture", AccountIndex: 100, Revision: 2}} {
 		if err := r.Configure(context.Background(), s); err == nil || err.Error() != "invalid_account_session" {

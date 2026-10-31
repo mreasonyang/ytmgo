@@ -240,21 +240,46 @@ func TestEmptySeekWaitHonorsReadinessCancellation(t *testing.T) {
 	}
 }
 
-func TestEmptySeekDoesNotMaskBridgeFailure(t *testing.T) {
-	runtimeDir := os.Getenv("YTMGO_RUNTIME_DIR")
-	if runtime.GOOS == "windows" || runtimeDir == "" {
-		t.Skip("set YTMGO_RUNTIME_DIR on a POSIX host for the transport fixture")
+func TestEmptySeekDecoderProcess(t *testing.T) {
+	found := false
+	for _, arg := range os.Args {
+		if arg == "--empty-seek-fixture" {
+			found = true
+		}
 	}
-	// Model a helper that exits successfully despite a transport error. Its
-	// private capability is read from stdin and never placed in another argv.
+	if !found {
+		return
+	}
+	input, _ := io.ReadAll(io.LimitReader(os.Stdin, 64<<10))
+	for _, line := range strings.Split(string(input), "\n") {
+		if strings.HasPrefix(line, "file '") && strings.HasSuffix(line, "'") {
+			target := strings.TrimSuffix(strings.TrimPrefix(line, "file '"), "'")
+			if !validMediaURL(target) {
+				os.Exit(2)
+			}
+			client := http.Client{Timeout: 2 * time.Second}
+			if response, err := client.Get(target); err == nil {
+				_, _ = io.Copy(io.Discard, response.Body)
+				response.Body.Close()
+			}
+			os.Exit(0)
+		}
+	}
+	os.Exit(2)
+}
+
+func TestEmptySeekDoesNotMaskBridgeFailure(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("POSIX decoder wrapper fixture")
+	}
 	executable := filepath.Join(t.TempDir(), "decoder-fixture")
-	stub := "#!" + filepath.Join(runtimeDir, "node") + `
-let manifest = '';
-for await (const chunk of process.stdin) manifest += chunk;
-const target = manifest.match(/^file '([^']+)'$/m)?.[1];
-try { const response = await fetch(target); await response.arrayBuffer(); } catch {}
-process.exit(0);
-`
+	binary, err := os.Executable()
+	if err != nil {
+		t.Fatal("fixture executable unavailable")
+	}
+	quoted := "'" + strings.ReplaceAll(binary, "'", "'\\''") + "'"
+	stub := "#!/bin/sh\nexec " + quoted + " -test.run=^TestEmptySeekDecoderProcess$ -- --empty-seek-fixture\n"
+
 	if err := os.WriteFile(executable, []byte(stub), 0700); err != nil {
 		t.Fatal("decoder_fixture_unavailable")
 	}

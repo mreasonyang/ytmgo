@@ -14,10 +14,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"ytmgo/internal/streaming"
 )
 
-type runtimePaths struct{ worker, node, ffmpeg string }
+type runtimePaths struct{ helper, ffmpeg string }
 type media struct {
+	source    *streaming.Lease
 	URL       string
 	Duration  time.Duration
 	UserAgent string
@@ -48,15 +50,12 @@ func findRuntime() (runtimePaths, error) {
 	if runtime.GOOS == "windows" {
 		suffix = ".exe"
 	}
-	r = runtimePaths{filepath.Join(abs, "worker.mjs"), filepath.Join(abs, "node"+suffix), filepath.Join(abs, "ffmpeg"+suffix)}
-	for _, name := range []string{r.node, r.ffmpeg} {
+	r = runtimePaths{filepath.Join(abs, "ytmgo-playback-host"+suffix), filepath.Join(abs, "ffmpeg"+suffix)}
+	for _, name := range []string{r.helper, r.ffmpeg} {
 		st, err := os.Stat(name)
 		if err != nil || !st.Mode().IsRegular() || runtime.GOOS != "windows" && st.Mode().Perm()&0111 == 0 {
 			return runtimePaths{}, errors.New("runtime_missing")
 		}
-	}
-	if st, err := os.Stat(r.worker); err != nil || !st.Mode().IsRegular() {
-		return runtimePaths{}, errors.New("runtime_missing")
 	}
 	return r, nil
 }

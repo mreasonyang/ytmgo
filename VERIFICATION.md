@@ -1,5 +1,125 @@
 # Native playback verification
 
+## Local halfway-stop repair — 2026-10-31 (Asia/Shanghai)
+
+The user subsequently authorized real playback and reported mid-track stops.
+The local candidate reproduced `audio_access_denied`: a 212.561-second track
+ended after 55.754 seconds of decoded PCM. A controlled comparison used the
+same signed media address and byte offset 2,097,152: the initial native proof
+returned HTTP 403, the previous proof provider returned 200, and the native
+provider using BgUtils's HTTP/WebView user-agent contract returned 200.
+Proof HTTP requests and the native WebView now share that contract; ordinary
+player requests retain their separate client identity. No Node fallback ships.
+Evidence contains status codes and numeric metadata only, never media URLs,
+tokens, cookies or raw dependency output.
+
+A second regression reproduced premature truncation when a paused/prepared
+decoder stopped reading: a 64 MiB TCP stream stopped after 870,700 bytes under
+the former 20-second downstream write deadline. Removing that deadline keeps
+backpressure bounded by existing buffers; upstream network reads retain their
+20-second timeout, and cancellation/lease expiry still interrupt blocked
+writes. The same test now transfers all 64 MiB after a 22-second consumer pause.
+
+After repair, two real anonymous tracks decoded completely: metadata/PCM
+durations 212.561/212.527 and 369.641/369.607 seconds, with EOF, nonzero PCM and
+zero bridge/decoder failures. A real native audio-output probe passed a
+35-second prepared-track hold, three prepared transitions without new resolves
+or decoders, concurrent video frame delivery, pause/resume and a seek to 45s.
+The full `go test -race ./...` run passed, as did 14 runtime Python tests,
+22 release Python tests, native offline DOM/interpreter tests and `go vet`.
+The fixed Go app cross-built for Windows amd64, Linux amd64 and macOS amd64.
+A fresh Linux arm64 container passed the native release/protocol and real
+WebKitGTK offline streaming-race checks. Windows native execution remains open.
+
+The repaired local app was installed at `/Applications/ytmgo.app`, with the
+previous candidate and original signed 0.5.3 preserved separately. Packaged
+runtime manifest, native interpreter, deep/strict signature and DMG verification
+passed. App logical size is 24,489,107 bytes; DMG size is 7,600,412 bytes.
+Installed main SHA-256:
+`602b3ee9a758b7004fa0f2df4af934b0fee1fd7a4a2a804a679528288847bc0a`.
+This is still an ad-hoc-signed local test build, not a GitHub/notarized artifact.
+
+The installed app then played 170.221-second and 215.121-second tracks to
+their natural ends, with two automatic next-track transitions. The second
+track survived a 36.7-second user pause at 45.178 seconds and completed after
+resume. All 97 numeric playback samples had `Failed=false`; test audio was
+left paused. Whole-app physical-footprint sampling included descendants and
+responsibility-owned system WebView/GPU processes: steady playback medians
+were 357–361 MiB, with a 492.52 MiB observed initialization peak. Two samples
+with a disappearing process were excluded from statistics. There was no
+matched old-version workload, so no memory-reduction claim is established.
+Ordinary/Premium account acceptance is not established:
+the saved account was unavailable in the installed app. A short successful
+run does not establish extended network/sleep endurance.
+
+## Node-free migration candidate — 2026-10-31 (Asia/Shanghai)
+
+Base source: `f722cd7`, branch `codex/node-free-playback`, with uncommitted
+migration changes. This is an ad-hoc-signed local candidate, not a published
+release. It was subsequently installed at the user's request on 2026-10-31;
+the previous app was backed up, and the new app was not launched. Existing
+user audit changes were retained. UI layout,
+translations, artwork policy and playback controls were not redesigned.
+
+Go now owns bootstrap, selected-account authentication, Innertube calls,
+format/URL handling, proof lifecycle and bounded direct media ranges. The
+native helper embeds only the extraction/parser/proof script subsets:
+QuickJS handles extraction/transforms, and a nonpersistent system WebView
+handles the proof's DOM requirement. No Node executable, npm tree, jsdom, Axios
+or complete YouTube.js SDK ships in the candidate. Dynamic JavaScript remains
+necessary; removing Node does not mean removing all JS.
+
+The public 2,658,706-byte player script was extracted into 180,264 bytes of
+transform code. A plain AST clone adapter supplies the missing host API;
+start/end offsets without redundant per-node range arrays let extraction
+complete within the 256 MiB interpreter allocation limit. Extraction and
+transform processes exit after use. That limit is not whole-app memory usage.
+
+Proof compatibility required a stable document origin: about:blank produced
+no proof signal. macOS/Linux load fixed local HTML with a YouTube base URL;
+Windows maps that host to a temporary folder containing only the fixed page.
+No live YouTube page or subresources are loaded. CSP blocks network/media,
+frames and forms; subsequent navigation is rejected. macOS offline origin,
+cookie isolation, network denial and absent audible APIs were tested. Public
+anonymous bootstrap, proof initialization and session-binding mint passed on
+macOS, without requesting /player, media bytes, FFmpeg decoding or audio.
+
+| Local artifact | Baseline 0.5.3 | Migration candidate |
+| --- | ---: | ---: |
+| App regular-file logical size | 215,523,716 bytes | 24,489,107 bytes |
+| DMG file size | 69,505,227 bytes | 7,604,660 bytes |
+| Runtime regular-file size | — | 6,940,927 bytes |
+| Native script helper | — | 2,371,552 bytes |
+| Minimal FFmpeg | — | 3,770,848 bytes |
+
+The baseline app was `/Applications/ytmgo.app`; its baseline DMG is the local
+notarized 0.5.3 download. The candidate is in
+`build/nodefree-candidate/darwin-arm64/`. App size sums regular files, excludes
+symlinks, and is not allocated disk blocks. Exact manifest/file-closure,
+deep/strict code signature, DMG integrity and packaged interpreter checks
+passed. The candidate has no update signature or notarization.
+
+Quiet validation passed: 14 runtime Python tests, 22 release Python tests,
+Rust protocol/interrupt tests, native offline DOM/extraction/cancellation tests,
+streaming race tests, selected safe player transport/account tests, catalog /
+appearance / language tests, all Go packages compiled without running tests,
+go vet and 242-message i18n validation. The Go app cross-compiled for Windows
+amd64, Linux amd64 and Intel macOS amd64. The new three-platform offline CI
+workflow was not dispatched. A Linux arm64 Debian bookworm container passed
+native release build, Rust protocol tests, and Go streaming race tests with a
+real WebKitGTK 4.1 WebView under Xvfb. That run was offline and had no audio
+device access. It caught and fixed a Linux-only trait import. Windows native
+build/WebView2 execution still needs a Windows host.
+
+**Deferred by the user's no-playback instruction:** real anonymous, ordinary
+and Premium playback; seeks/queue/video/lyrics UI acceptance; and controlled
+whole-app memory measurements. No main app was launched or playback triggered.
+Installation was performed only after the user's subsequent instruction;
+installed hashes, manifest and deep/strict signature verification passed.
+Historical Node memory samples are not
+candidate measurements and do not establish a memory reduction. Historical
+results below cannot establish this candidate's full acceptance.
+
 ## Login helper Dock visibility — 2026-10-30 (Asia/Shanghai)
 
 The macOS login helper is now an `LSUIElement` agent and explicitly uses Tao's

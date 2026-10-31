@@ -1,16 +1,16 @@
 # ytmgo
 
-YouTube Music 桌面客户端，当前开发版本 **0.5.1**。主界面用 **MyGo 0.7.1 原生 UI** 绘制，曲库由 Go 访问，媒体由按需 YouTube.js 引擎与有界流式传输处理，音频由 MyGo 输出到系统音频设备。保留侧栏、搜索、歌曲与专辑列表、底部播放条、正在播放面板、队列、歌词、沉浸模式、封面/视频切换，以及四语言和深浅色设计。
+YouTube Music 桌面客户端，当前版本基线 **0.5.3**。主界面用 **MyGo 0.7.1 原生 UI** 绘制，曲库由 Go 访问，媒体请求、格式选择和有界流式传输由 Go 处理，音频由 MyGo 输出到系统音频设备。保留侧栏、搜索、歌曲与专辑列表、底部播放条、正在播放面板、队列、歌词、沉浸模式、封面/视频切换，以及四语言和深浅色设计。
 
 音乐界面与播放控件使用 MyGo 原生 UI。登录时单独启动 Wry 系统 WebView：macOS 使用 WKWebView，Windows 使用 WebView2，Linux 使用 WebKitGTK。登录会话通过私有父子进程管道交接后，登录子进程退出；主界面与播放不依赖这个窗口。没有浏览器扩展、HTTP 登录桥或 OAuth 配置。外部链接仍使用系统默认浏览器。
 
-账号状态由服务端明确返回的 `logged_in` 和 `has_unlimited_entitlement` 决定，每五分钟及应用回到前台时刷新。Premium 模式不加载 jsdom 或播放证明模块；普通账号和未登录模式在需要播放时启动证明引擎。切换时退出并回收旧引擎，同账号的会员变化保留正在播放的音频，换账号或退出则撤销旧账号的媒体流。请求失败或字段缺失不会被当成会员过期。
+账号状态由服务端明确返回的 `logged_in` 和 `has_unlimited_entitlement` 决定，每五分钟及应用回到前台时刷新。Premium 模式不创建 DOM 或播放证明环境；普通账号和未登录模式在需要播放时启动证明引擎。切换时退出并回收旧引擎，同账号的会员变化保留正在播放的音频，换账号或退出则撤销旧账号的媒体流。请求失败或字段缺失不会被当成会员过期。
 
-账号、整曲播放、内存与安装包测试记录在 [VERIFICATION.md](VERIFICATION.md)。Premium 原生播放实测整应用中位数约 359 MiB，不能把约 74 MiB 的 Node 辅助进程当成整应用占用。匿名、普通账号和 Premium 的代码与实际验证范围分别记录；新会话存储的恢复与清理验证也单独记录。设计约定见 [DESIGN.md](DESIGN.md)。
+当前分支已迁移到无 Node/jsdom 的原生运行时，并完成 macOS 匿名整曲播放、自然切歌、暂停恢复及整应用内存实测；普通账号、Premium、Windows 原生执行和长时耐久验收仍待完成。稳定播放时整应用约 357–361 MiB，尚不能宣称内存优化完成。测试范围与证据见 [VERIFICATION.md](VERIFICATION.md)，旧版 Node 数据不作为新实现的内存结果。设计约定见 [DESIGN.md](DESIGN.md)。
 
 ## 运行和构建
 
-当前完整媒体包交付目标仍为 **macOS 27 / Apple Silicon**，需要 Go **1.27.3+**。构建登录组件还需要 Rust/Cargo；macOS 构建使用 Xcode Command Line Tools，Linux 使用 GTK 3 与 WebKitGTK 4.1 开发包。安装后的应用无需 Rust、Python、Homebrew 或终端 PATH。Windows 登录要求 WebView2 Runtime ≥101.0.1210.39；Linux 登录要求 WebKitGTK 4.1，账号保存需要系统 Secret Service。跨平台登录构建与整个媒体包的发行验收分别记录。
+运行时构建覆盖 macOS、Windows、Linux，需要 Go **1.27.3+**、Rust/Cargo、Python 3 和 C 编译工具链。macOS 使用 Xcode Command Line Tools；Windows 的 FFmpeg 使用 MSYS2 UCRT64；Linux 使用 GTK 3 与 WebKitGTK 4.1 开发包。安装后的应用无需 Node、npm、Rust 或 Python。Windows 需要 WebView2 Runtime，Linux 需要 WebKitGTK 4.1 与 Secret Service。三平台 CI 构建和完整发行验收分别记录，不能以交叉编译代替原生运行验证。
 
 ```sh
 make check
@@ -18,9 +18,9 @@ make build
 open build/darwin-arm64/ytmgo.app
 ```
 
-`make build` 会打包锁定的 YouTube.js 18.3.0、Node 26.12.1、基于 MIT BgUtils 的证明模块及精简 FFmpeg 9.0.2。播放源代码及新包中不包含 yt-dlp；没有客户端切换或旧播放器 fallback。版本、校验值、许可证、上游源码和构建信息随包保存。已移除 GPL 证明客户端，新的会话模块使用 Apache-2.0，并保留 MIT 上游示例及依赖声明；FFmpeg 仍使用 LGPL。替代实现已通过离线测试，尚待 macOS 真实播放验收及公开分发审查。详细说明见 [scripts/runtime/README.md](scripts/runtime/README.md)。
+`make build` 打包 Go 主程序、小型原生脚本宿主和精简 FFmpeg 9.0.2。动态签名使用 QuickJS；普通账号和未登录证明使用独立、隐藏、非持久化的系统 WebView。只嵌入 YouTube.js 的脚本提取器、Meriyah 与 MIT BgUtils 的必要代码，不分发整个 SDK、Node、jsdom 或 npm 依赖目录。构建使用锁定源码归档与 Go 版 esbuild。许可证和构建信息随包保存；FFmpeg 仍使用 LGPL。详细说明见 [scripts/runtime/README.md](scripts/runtime/README.md)。
 
-本地默认产物为 `build/darwin-arm64/ytmgo.app` 和 `build/darwin-arm64/ytmgo-0.5.1-arm64.dmg`，采用 ad-hoc App 签名和未签名 DMG。GitHub Actions 已提供手动触发的测试打包、Developer ID 签名及 Apple 公证模式；配置证书、私钥和使用方法见 [macOS Actions 配置指南](docs/MACOS_ACTIONS.md)。选择 `notarized` 并勾选 `publish_release` 后，工作流会发布可下载的 GitHub Release 和签名更新 feed。重新构建导致 ad-hoc 身份变化时，macOS 可能要求重新授权访问本应用保存在钥匙串中的加密密钥。其他操作系统未作为本轮交付目标。
+本地默认产物为 `build/darwin-arm64/ytmgo.app` 和 `build/darwin-arm64/ytmgo-0.5.3-arm64.dmg`，采用 ad-hoc App 签名和未签名 DMG。GitHub Actions 已提供手动触发的测试打包、Developer ID 签名及 Apple 公证模式；配置证书、私钥和使用方法见 [macOS Actions 配置指南](docs/MACOS_ACTIONS.md)。选择 `notarized` 并勾选 `publish_release` 后，工作流会发布可下载的 GitHub Release 和签名更新 feed。重新构建导致 ad-hoc 身份变化时，macOS 可能要求重新授权访问本应用保存在钥匙串中的加密密钥。跨平台运行时的实际验收状态以验证记录为准。
 
 正式安装包见 [GitHub Releases](https://github.com/mreasonyang/ytmgo/releases/latest)。0.5.1 已通过签名、公证和从公开 0.5.0 包升级的检查，范围与产物身份见 [自动升级验收](docs/AUTO_UPDATE_VERIFICATION.md)。
 
@@ -52,13 +52,13 @@ macOS 自动恢复不弹出钥匙串授权；用户主动点击“恢复账号�
 
 遇到 Google 验证、登录或同意页面跳转时，应用直接说明服务端要求及当前请求无法完成；未知跳转也会如实说明。曲库和播放保留普通重试，不提供未经证实的网页验证步骤。已连接账号会保留，不会把请求限制认定为会员过期。普通 403、429 或网络错误不会被称为验证码，服务端返回的跳转地址不会被保存或打开。
 
-播放器创建时只启动轻量控制/媒体桥接进程，不预热 SDK 或 jsdom。当前曲目播放时最多准备下一首的媒体和首批 PCM；随机点播与初次启动仍需网络解析。快速切歌、账号切换、队列变化及 seek 会取消过期准备。
+播放器创建时不启动脚本宿主，也不预热证明环境。当前曲目播放时最多准备下一首的媒体和首批 PCM；随机点播与初次启动仍需网络解析。快速切歌、账号切换、队列变化及 seek 会取消过期准备。
 
-播放器脚本分析在临时 bootstrap 子进程中完成，回收后由一个受限引擎恢复有界缓存。Premium 引擎仅加载 SDK 与签名处理；普通/未登录引擎按需加载 BgUtils 证明模块和 jsdom。会员变化会销毁旧引擎并在需要解析时创建新引擎，不让两种模式长期同时驻留。凭据与签名媒体地址只走私有内存管道，不进入 argv、环境、日志或证据文件。
+播放器脚本分析在临时 QuickJS 进程中完成，随后立即回收；Go 仅保留有界提取代码。签名执行每次使用新 JS 环境。Premium 只在需要动态签名时启动解释器，普通/未登录模式按需创建独立的隐藏证明环境。会员变化或到期会销毁旧证明环境。账号凭据只留在 Go 中，不发送到脚本宿主；签名媒体地址不进入 argv、环境、日志或证据文件。
 
 当前实现没有官方广告素材序列和真实广告进度上报；不能把公开歌曲播放成功描述成广告流程验收通过，也不使用推算等待时间模拟广告。
 
-远端媒体地址只留在 Node 内存中；Go 与 FFmpeg 仅连接有界回环流式通道，私有地址通过 stdin/stdout 管道传递，不进入命令行或日志。远端按 64 KiB 区间读取、本地按 32 KiB 背压转发，最多四个媒体能力和四条上游连接，覆盖音频、下一首、按需视频及切换期间的资源。停止对应媒体会取消该流并回收解码器；退出应用或终止会话会回收所属 runtime 子进程，不保留整首媒体缓存。
+远端媒体地址只留在 Go 媒体租约中；FFmpeg 只连接每个解码器的随机回环能力地址，通过 stdin 接收。Go 直接按音频 64 KiB、视频 512 KiB 区间请求远端，以 32 KiB 背压转发；最多四个租约与四条活动请求，不缓存整曲。账号身份变化撤销旧租约；同账号会员变化保留当前媒体，取消过期预加载。
 
 本地 `native-diagnostics/audio-status.json` 与 `video-status.json` 仅保存启动状态或最近一次失败的固定类别、时间和应用版本；播放初始化失败还可包含封闭的阶段、HTTP 状态码、跳转类别与内容类型。不会保存媒体地址、请求头、账号数据或原始日志。
 

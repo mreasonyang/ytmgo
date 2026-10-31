@@ -17,16 +17,16 @@ func TestRuntimePlatformExecutableNames(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		suffix = ".exe"
 	}
-	for _, name := range []string{"worker.mjs", "node" + suffix, "ffmpeg" + suffix} {
+	for _, name := range []string{"ytmgo-playback-host" + suffix, "ffmpeg" + suffix} {
 		if err := os.WriteFile(filepath.Join(dir, name), []byte("test fixture"), 0700); err != nil {
 			t.Fatal(err)
 		}
 	}
 	paths, err := findRuntime()
-	if err != nil || filepath.Base(paths.node) != "node"+suffix || filepath.Base(paths.ffmpeg) != "ffmpeg"+suffix {
+	if err != nil || filepath.Base(paths.helper) != "ytmgo-playback-host"+suffix || filepath.Base(paths.ffmpeg) != "ffmpeg"+suffix {
 		t.Fatalf("platform runtime not located: %v", err)
 	}
-	if err := os.Remove(paths.node); err != nil {
+	if err := os.Remove(paths.helper); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := findRuntime(); err == nil {

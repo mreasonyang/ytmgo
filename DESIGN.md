@@ -202,12 +202,15 @@ and tooltip text.
 `main.go` owns the native window and app lifecycle; `controller.go` owns
 navigation, queue and asynchronous request generations; `native_views.go`
 draws the UI. `internal/catalog` handles typed Innertube calls.
-`internal/player` owns a persistent YouTube.js worker, bounded PCM/video
-decoding and native audio output. The worker waits for an explicitly selected account mode; SDK and proof
-initialization happen only when playback needs them. One next-track decoder is prepared while the current track
+`internal/player` owns bounded PCM/video decoding and native audio output.
+`internal/streaming` owns protocol bootstrap, account headers, format selection,
+proof lifetimes and direct HTTPS ranges in Go. A small native host runs the
+extracted signature code in QuickJS; anonymous/free proof uses a hidden,
+nonpersistent system WebView. Neither script environment receives account
+cookies. Initialization is lazy and waits for an explicitly selected account mode. One next-track decoder is prepared while the current track
 plays; a matching selection transfers ownership without resolving again.
 Queue changes and canceled requests revoke obsolete media capabilities.
-FFmpeg only reads a local relay; remote URLs and headers stay inside Node.
+FFmpeg only reads one Go loopback relay; remote URLs and headers stay in Go.
 `artwork.go` bounds the decoded image cache and download
 concurrency. Settings remain small files in the application data directory.
 

@@ -6,7 +6,7 @@ import subprocess
 import urllib.error
 import urllib.request
 
-from prepare import FFMPEG, NODE
+from prepare import FFMPEG
 
 
 def category(error):
@@ -30,7 +30,7 @@ def main():
     except Exception:
         ca_count = -1
     urls = (
-        ("node", "https://nodejs.org/dist/v" + NODE + "/SHASUMS256.txt"),
+        ("script_sources", "https://registry.npmjs.org/meriyah/-/meriyah-7.4.1.tgz"),
         ("ffmpeg", "https://ffmpeg.org/releases/ffmpeg-" + FFMPEG + ".tar.xz"),
         ("ffmpeg_macports", "https://distfiles.macports.org/ffmpeg/ffmpeg-" + FFMPEG + ".tar.xz"),
         ("ffmpeg_blfs", "https://ftp.osuosl.org/pub/blfs/conglomeration/ffmpeg/ffmpeg-" + FFMPEG + ".tar.xz"),

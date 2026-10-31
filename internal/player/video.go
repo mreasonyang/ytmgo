@@ -460,7 +460,7 @@ type videoDecoder struct {
 }
 
 func (r runtimePaths) openVideo(ctx context.Context, info videoMedia, at time.Duration) (*videoDecoder, error) {
-	if !validMediaURL(info.URL) {
+	if info.source == nil && !validMediaURL(info.URL) {
 		return nil, errors.New("invalid_media_response")
 	}
 	return startVideoDecoder(ctx, r.ffmpeg, info, at)

@@ -14,6 +14,19 @@ import (
 	"testing"
 )
 
+func TestUpdatePackagePatchVersionRange(t *testing.T) {
+	for _, v := range []string{"0.6.0", "0.6.1", "0.6.9", "0.6.10", "0.6.99", "0.6.100", "0.6.999", "0.6.999-rc.1"} {
+		if !validVersion.MatchString(v) {
+			t.Fatalf("valid patch version rejected: %s", v)
+		}
+	}
+	for _, v := range []string{"0.6.00", "0.6.001", "0.6.010", "0.6.1000", "0.6.-1", "0.6.1-rc.01"} {
+		if validVersion.MatchString(v) {
+			t.Fatalf("invalid patch version accepted: %s", v)
+		}
+	}
+}
+
 func fixture(t *testing.T) (string, string, configuration, string) {
 	t.Helper()
 	root := t.TempDir()

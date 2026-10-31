@@ -38,7 +38,7 @@ type manifest struct {
 	Signature string `json:"signature"`
 }
 
-var validVersion = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9][A-Za-z0-9.-]*)?$`)
+var validVersion = regexp.MustCompile(`^(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]{0,2})(?:-rc\.[1-9][0-9]*)?$`)
 var validRepository = regexp.MustCompile(`^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`)
 
 func main() {

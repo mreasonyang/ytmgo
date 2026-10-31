@@ -1,5 +1,35 @@
 # Native playback verification
 
+## Prepare secure storage before login — 2026-10-31 (Asia/Shanghai)
+
+The account controller prepares its single fixed encryption key before starting
+the native login helper. A key from a successful restore is reused in memory;
+otherwise the native store is read, and only an explicitly missing item is
+created. Denied, invalid, canceled or superseded preparation cannot open the
+login window. After login and membership verification, Save only encrypts and
+replaces the session file, with no native secret-store calls. Logout clears the
+cached key. The existing v3 ciphertext format is unchanged. No second key slot
+or recovery journal was added.
+
+Synthetic regressions cover preparation before opening the window, no native
+operations when saving the completed login, exactly one key, corrupt previous
+ciphertext, restart restore, cancellation, denied access, failed file commits,
+logout and late saves. Full `go test -race ./...`, `go vet ./...`, 23 release
+script tests, Windows/Linux amd64 Go builds, macOS arm64 packaging and ad-hoc
+signature verification passed. These are source
+and build checks; real-account and Windows/Linux native credential-store
+acceptance remain separate. The running app and login window were not touched.
+
+The full suite exposed an assertion in the newly pulled continuation test:
+MyGo Tester.Find("Retry") returns text bounds, not padded button bounds. The
+test now checks visible text and retains actual click/retry assertions; the
+pagination UI is unchanged.
+
+Versioning continues from 0.6.0 with integer patch numbers 0–999, without leading
+zeros. Both publication and signed-update packaging validate this range. Normal
+commits/local builds do not increment versions. 0.6.0 remains newer than the
+previous 0.5.x series under the existing updater's numeric comparison.
+
 ## Recover an in-progress login window — 2026-10-31 (Asia/Shanghai)
 
 The user confirmed that the second-factor window had moved behind other

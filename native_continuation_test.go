@@ -166,7 +166,9 @@ func TestNativeContinuationFailureWaitsForRetry(t *testing.T) {
 	}
 	nativeSnapshot(t, tt, "1280-continuation-error")
 	content, _ := tt.Find("Content")
-	if retry, ok := tt.Find("Retry"); !ok || retry.H < 20 || retry.Y+retry.H+8 > content.Y+content.H+1 {
+	// Find returns the button's text, whose font height is smaller than the
+	// padded button. Check visibility here; the click below verifies the action.
+	if retry, ok := tt.Find("Retry"); !ok || retry.H <= 0 || retry.Y < content.Y || retry.Y+retry.H+8 > content.Y+content.H+1 {
 		t.Fatalf("Retry %+v not fully inside the content %+v", retry, content)
 	}
 	if err := tt.Click("Retry"); err != nil {

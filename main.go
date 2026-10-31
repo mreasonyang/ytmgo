@@ -19,7 +19,7 @@ import (
 	"ytmgo/locales"
 )
 
-const version = "0.5.3"
+const version = "0.6.0"
 
 //go:embed locales/en.json resources/icon.png resources/tray.png
 var assets embed.FS
@@ -95,7 +95,7 @@ func main() {
 	a := &desktop{ctx: ctx, cancel: cancel, prefs: &Preferences{path: filepath.Join(dataDir, "appearance")}, languagePath: filepath.Join(dataDir, "language"), queueIndex: -1, historyIndex: -1, unmutedVolume: 0.7}
 	a.diagnosticPath = filepath.Join(dataDir, "native-diagnostics")
 	a.acceptanceProbe = loadAcceptanceProbe(a.diagnosticPath, time.Now())
-	a.accountState.store = accountsession.Store{Secrets: nativeAccountSecrets{}, Path: filepath.Join(dataDir, "account", "session.enc")}
+	a.accountState.store = &accountsession.Store{Secrets: nativeAccountSecrets{}, Path: filepath.Join(dataDir, "account", "session.enc")}
 	recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 	recordPlaybackDiagnostic(a.diagnosticPath, "video", "ready")
 	a.model = UIModel{Route: "home", Appearance: a.prefs.Appearance(), Language: language.Load(a.languagePath), Volume: 0.7, PanelTab: "queue", Version: applicationVersion()}

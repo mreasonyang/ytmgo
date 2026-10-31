@@ -11,6 +11,21 @@ import publish
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_patch_versions_use_zero_to_999_without_padding(self):
+        for version in ("0.6.0", "0.6.1", "0.6.9", "0.6.10", "0.6.99", "0.6.100", "0.6.999", "0.6.999-rc.1"):
+            with self.subTest(version=version), patch.object(publish, "ROOT", self.root), \
+                    patch.dict(os.environ, {"PUBLISH_RELEASE": "false", "RELEASE_VERSION": version}), patch("builtins.print"):
+                (self.root / "mygo.json").write_text(json.dumps(self.config))
+                publish.configure()
+                self.assertEqual(json.loads((self.root / "mygo.json").read_text())["version"], version)
+        for version in ("0.6.00", "0.6.001", "0.6.010", "0.6.1000", "0.6.-1", "0.6.1-rc.01"):
+            with self.subTest(version=version), patch.object(publish, "ROOT", self.root), \
+                    patch.dict(os.environ, {"PUBLISH_RELEASE": "false", "RELEASE_VERSION": version}):
+                (self.root / "mygo.json").write_text(json.dumps(self.config))
+                with self.assertRaises(publish.ReleaseError):
+                    publish.configure()
+                self.assertEqual(json.loads((self.root / "mygo.json").read_text()), self.config)
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

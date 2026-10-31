@@ -48,10 +48,12 @@ const (
 
 // Store keeps one persistent native key and one encrypted session file. Path must
 // be an absolute path in a dedicated private directory. The app's single-instance
-// lock and serial account worker serialize access to this key and file.
+// lock and serial account worker serialize access to this key and file. Store
+// must not be copied after use: its prepared key belongs to that worker.
 type Store struct {
 	Secrets Secrets
 	Path    string
+	key     []byte // Prepared before opening login; never serialized or logged.
 }
 
 // POSIX mode bits protect the dedicated directory and ciphertext file. Windows
@@ -143,26 +145,18 @@ func openSessionFile(aead cipher.AEAD, data []byte) ([]byte, error) {
 	return plain, nil
 }
 
-// Save persists a newly verified interactive sign-in with the existing key and a
-// fresh GCM nonce. Only an explicitly missing key permits creation; denied or
-// locked storage must not cause rotation. The old ciphertext need not be read.
-func (s Store) Save(ctx context.Context, session Session) error {
+// PrepareLogin resolves native authorization before the interactive login starts.
+// A restored/prepared key is reused in memory. Only an explicitly missing item
+// permits creation; denied or locked storage must not rotate the existing key.
+func (s *Store) PrepareLogin(ctx context.Context) error {
 	if ctx.Err() != nil || !s.validPath() || s.Secrets == nil {
-		return ErrStorage
-	}
-	if _, err := session.HTTPCookies(time.Now()); err != nil {
-		if errors.Is(err, ErrExpired) {
-			return ErrExpired
-		}
-		return ErrStorage
-	}
-	plain, err := json.Marshal(session)
-	defer clear(plain)
-	if err != nil || len(plain) > MaxPayload {
 		return ErrStorage
 	}
 	if privateSessionDirectory(s.Path, true) != nil || !safeSessionTarget(s.Path) {
 		return ErrStorage
+	}
+	if len(s.key) == sessionKeySize {
+		return nil
 	}
 	key, err := s.Secrets.Get(sessionKeyName, AllowPrompt)
 	defer func() { clear(key) }()
@@ -181,7 +175,41 @@ func (s Store) Save(ctx context.Context, session Session) error {
 	} else if err != nil {
 		return ErrStorage
 	}
-	aead, err := sessionCipher(key)
+	if len(key) != sessionKeySize || ctx.Err() != nil {
+		return ErrStorage
+	}
+	s.clearKey()
+	s.key = append([]byte(nil), key...)
+	return nil
+}
+
+func (s *Store) clearKey() {
+	clear(s.key)
+	s.key = nil
+}
+
+// Save only encrypts and replaces the session file. Native secret operations
+// belong to PrepareLogin, before the user enters credentials or completes 2FA.
+// An unprepared save fails instead of opening a late authorization prompt.
+func (s *Store) Save(ctx context.Context, session Session) error {
+	if ctx.Err() != nil || !s.validPath() || len(s.key) != sessionKeySize {
+		return ErrStorage
+	}
+	if _, err := session.HTTPCookies(time.Now()); err != nil {
+		if errors.Is(err, ErrExpired) {
+			return ErrExpired
+		}
+		return ErrStorage
+	}
+	plain, err := json.Marshal(session)
+	defer clear(plain)
+	if err != nil || len(plain) > MaxPayload {
+		return ErrStorage
+	}
+	if privateSessionDirectory(s.Path, false) != nil || !safeSessionTarget(s.Path) {
+		return ErrStorage
+	}
+	aead, err := sessionCipher(s.key)
 	if err != nil {
 		return err
 	}
@@ -226,7 +254,8 @@ func writeSessionFile(ctx context.Context, path string, data []byte) error {
 	return nil
 }
 
-func (s Store) Load(interaction Interaction) (Session, error) {
+func (s *Store) Load(interaction Interaction) (Session, error) {
+	s.clearKey()
 	if !s.validPath() {
 		return Session{}, ErrStorage
 	}
@@ -258,10 +287,12 @@ func (s Store) Load(interaction Interaction) (Session, error) {
 	if err != nil {
 		return Session{}, ErrStorage
 	}
+	s.key = append([]byte(nil), key...)
 	return session, nil
 }
 
-func (s Store) Delete(interaction Interaction) error {
+func (s *Store) Delete(interaction Interaction) error {
+	s.clearKey()
 	if !s.validPath() || s.Secrets == nil {
 		return ErrStorage
 	}

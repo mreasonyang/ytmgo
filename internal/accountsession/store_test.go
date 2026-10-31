@@ -75,6 +75,15 @@ func testStore(t *testing.T) (Store, *memorySecrets) {
 	return Store{Secrets: m, Path: filepath.Join(t.TempDir(), "account", "session.enc")}, m
 }
 
+// Existing storage cases exercise both phases. Preflight-specific tests below
+// keep them separate to enforce the absence of native calls after login starts.
+func saveAfterPrepare(ctx context.Context, store *Store, session Session) error {
+	if err := store.PrepareLogin(ctx); err != nil {
+		return err
+	}
+	return store.Save(ctx, session)
+}
+
 func savedBytes(t *testing.T, path string) []byte {
 	t.Helper()
 	data, err := os.ReadFile(path)
@@ -102,7 +111,7 @@ func TestSecretStoreLargeEncryptedRoundTripAndOwnKeyDelete(t *testing.T) {
 	m.values["unrelated"] = []byte("synthetic-unrelated")
 	session := fixture()
 	session.Cookies[0].Value = strings.Repeat("s", 9000)
-	if store.Save(context.Background(), session) != nil {
+	if saveAfterPrepare(context.Background(), &store, session) != nil {
 		t.Fatal("save failed")
 	}
 	if len(m.values) != 2 || len(m.values[sessionKeyName]) != 32 || m.setCalls != 1 {
@@ -161,7 +170,7 @@ func TestSecretStoreRejectsUnsupportedFormatsBeforeNativeSecrets(t *testing.T) {
 			if _, err := store.Load(NoPrompt); err != ErrStorage || secrets.getCalls != 0 || secrets.setCalls != 0 || secrets.deleteCalls != 0 || !bytes.Equal(data, savedBytes(t, store.Path)) {
 				t.Fatal("unsupported session was accessed or migrated")
 			}
-			if store.Save(context.Background(), fixture()) != nil || secrets.setCalls != 0 || secrets.deleteCalls != 0 || secrets.unexpectedKeyWasTouched || !bytes.Equal(key, secrets.values[sessionKeyName]) {
+			if saveAfterPrepare(context.Background(), &store, fixture()) != nil || secrets.setCalls != 0 || secrets.deleteCalls != 0 || secrets.unexpectedKeyWasTouched || !bytes.Equal(key, secrets.values[sessionKeyName]) {
 				t.Fatal("fresh login depended on unsupported session storage")
 			}
 			if _, err := store.Load(NoPrompt); err != nil {
@@ -176,13 +185,13 @@ func TestSecretStoreRejectsUnsupportedFormatsBeforeNativeSecrets(t *testing.T) {
 
 func TestSecretStoreReusesKeyWithFreshNonceAcrossRestarts(t *testing.T) {
 	store, m := testStore(t)
-	if store.Save(context.Background(), fixture()) != nil {
+	if saveAfterPrepare(context.Background(), &store, fixture()) != nil {
 		t.Fatal("initial save failed")
 	}
 	first := savedBytes(t, store.Path)
 	key := append([]byte(nil), m.values[sessionKeyName]...)
 	restarted := Store{Secrets: m, Path: store.Path}
-	if restarted.Save(context.Background(), fixture()) != nil {
+	if saveAfterPrepare(context.Background(), &restarted, fixture()) != nil {
 		t.Fatal("second save failed")
 	}
 	second := savedBytes(t, store.Path)
@@ -200,7 +209,7 @@ func TestSecretStoreCorruptionAndMissingKeysFailClosed(t *testing.T) {
 	for _, test := range []string{"ciphertext", "header", "truncated", "empty", "oversized", "missing-key", "wrong-key", "short-key"} {
 		t.Run(test, func(t *testing.T) {
 			store, m := testStore(t)
-			if store.Save(context.Background(), fixture()) != nil {
+			if saveAfterPrepare(context.Background(), &store, fixture()) != nil {
 				t.Fatal("initial save failed")
 			}
 			data := savedBytes(t, store.Path)
@@ -243,17 +252,17 @@ func TestSecretStoreCanceledInitialSaveAndFailedKeyCreation(t *testing.T) {
 	store, m := testStore(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	if store.Save(ctx, fixture()) != ErrStorage || m.getCalls != 0 || m.setCalls != 0 {
+	if saveAfterPrepare(ctx, &store, fixture()) != ErrStorage || m.getCalls != 0 || m.setCalls != 0 {
 		t.Fatal("already canceled save accessed native secrets")
 	}
 	m.failSet = true
-	if store.Save(context.Background(), fixture()) != ErrStorage || len(m.values) != 0 {
+	if saveAfterPrepare(context.Background(), &store, fixture()) != ErrStorage || len(m.values) != 0 {
 		t.Fatal("failed native key creation was accepted")
 	}
 	m.failSet = false
 	ctx, cancel = context.WithCancel(context.Background())
 	m.afterSet = cancel
-	if store.Save(ctx, fixture()) != ErrStorage || len(m.values) != 1 {
+	if saveAfterPrepare(ctx, &store, fixture()) != ErrStorage || len(m.values) != 1 {
 		t.Fatal("save committed after cancellation during key creation")
 	}
 	if _, err := os.Stat(store.Path); !errors.Is(err, os.ErrNotExist) {
@@ -262,7 +271,7 @@ func TestSecretStoreCanceledInitialSaveAndFailedKeyCreation(t *testing.T) {
 	m.afterSet = nil
 	sets := m.setCalls
 	key := append([]byte(nil), m.values[sessionKeyName]...)
-	if store.Save(context.Background(), fixture()) != nil || m.setCalls != sets || len(m.values) != 1 || !bytes.Equal(key, m.values[sessionKeyName]) || m.deleteCalls != 0 {
+	if saveAfterPrepare(context.Background(), &store, fixture()) != nil || m.setCalls != sets || len(m.values) != 1 || !bytes.Equal(key, m.values[sessionKeyName]) || m.deleteCalls != 0 {
 		t.Fatal("retry failed to reuse the key from the canceled save")
 	}
 }
@@ -285,7 +294,7 @@ func (c *cancelBeforeCommit) Err() error {
 
 func TestSessionFileCanceledCommitPreservesPrevious(t *testing.T) {
 	store, _ := testStore(t)
-	if store.Save(context.Background(), fixture()) != nil {
+	if saveAfterPrepare(context.Background(), &store, fixture()) != nil {
 		t.Fatal("initial save failed")
 	}
 	original := savedBytes(t, store.Path)
@@ -343,7 +352,7 @@ func TestSecretStoreRejectsUnsafePaths(t *testing.T) {
 					t.Fatal("permission setup failed")
 				}
 			}
-			if store.Save(context.Background(), fixture()) != ErrStorage || m.getCalls != 0 || m.setCalls != 0 {
+			if saveAfterPrepare(context.Background(), &store, fixture()) != ErrStorage || m.getCalls != 0 || m.setCalls != 0 {
 				t.Fatal("unsafe path reached native secret access")
 			}
 		})
@@ -352,7 +361,7 @@ func TestSecretStoreRejectsUnsafePaths(t *testing.T) {
 
 func TestSecretStoreDeleteFailuresAreReported(t *testing.T) {
 	store, m := testStore(t)
-	if store.Save(context.Background(), fixture()) != nil {
+	if saveAfterPrepare(context.Background(), &store, fixture()) != nil {
 		t.Fatal("initial save failed")
 	}
 	restoreDirectory := blockSessionLocation(t, store.Path)
@@ -399,7 +408,7 @@ func TestSecretStoreRejectsPublicCiphertextPermissions(t *testing.T) {
 		t.Skip("POSIX mode bits do not describe Windows ACLs")
 	}
 	store, secrets := testStore(t)
-	if store.Save(context.Background(), fixture()) != nil {
+	if saveAfterPrepare(context.Background(), &store, fixture()) != nil {
 		t.Fatal("save failed")
 	}
 	reads := secrets.getCalls
@@ -416,7 +425,7 @@ func TestSecretStoreRejectsPublicCiphertextPermissions(t *testing.T) {
 
 func TestSecretStoreLoadPreservesExpiryError(t *testing.T) {
 	store, m := testStore(t)
-	if store.Save(context.Background(), fixture()) != nil {
+	if saveAfterPrepare(context.Background(), &store, fixture()) != nil {
 		t.Fatal("initial save failed")
 	}
 	session := fixture()

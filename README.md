@@ -1,6 +1,6 @@
 # ytmgo
 
-YouTube Music 桌面客户端，当前版本基线 **0.5.3**。主界面用 **MyGo 0.7.1 原生 UI** 绘制，曲库由 Go 访问，媒体请求、格式选择和有界流式传输由 Go 处理，音频由 MyGo 输出到系统音频设备。保留侧栏、搜索、歌曲与专辑列表、底部播放条、正在播放面板、队列、歌词、沉浸模式、封面/视频切换，以及四语言和深浅色设计。
+YouTube Music 桌面客户端，当前版本基线 **0.6.0**。主界面用 **MyGo 0.7.1 原生 UI** 绘制，曲库由 Go 访问，媒体请求、格式选择和有界流式传输由 Go 处理，音频由 MyGo 输出到系统音频设备。保留侧栏、搜索、歌曲与专辑列表、底部播放条、正在播放面板、队列、歌词、沉浸模式、封面/视频切换，以及四语言和深浅色设计。
 
 音乐界面与播放控件使用 MyGo 原生 UI。登录时单独启动 Wry 系统 WebView：macOS 使用 WKWebView，Windows 使用 WebView2，Linux 使用 WebKitGTK。登录会话通过私有父子进程管道交接后，登录子进程退出；主界面与播放不依赖这个窗口。没有浏览器扩展、HTTP 登录桥或 OAuth 配置。外部链接仍使用系统默认浏览器。
 
@@ -20,7 +20,9 @@ open build/darwin-arm64/ytmgo.app
 
 `make build` 打包 Go 主程序、小型原生脚本宿主和精简 FFmpeg 9.0.2。动态签名使用 QuickJS；普通账号和未登录证明使用独立、隐藏、非持久化的系统 WebView。只嵌入 YouTube.js 的脚本提取器、Meriyah 与 MIT BgUtils 的必要代码，不分发整个 SDK、Node、jsdom 或 npm 依赖目录。构建使用锁定源码归档与 Go 版 esbuild。许可证和构建信息随包保存；FFmpeg 仍使用 LGPL。详细说明见 [scripts/runtime/README.md](scripts/runtime/README.md)。
 
-本地默认产物为 `build/darwin-arm64/ytmgo.app` 和 `build/darwin-arm64/ytmgo-0.5.3-arm64.dmg`，采用 ad-hoc App 签名和未签名 DMG。GitHub Actions 已提供手动触发的测试打包、Developer ID 签名及 Apple 公证模式；配置证书、私钥和使用方法见 [macOS Actions 配置指南](docs/MACOS_ACTIONS.md)。选择 `notarized` 并勾选 `publish_release` 后，工作流会发布可下载的 GitHub Release 和签名更新 feed。重新构建导致 ad-hoc 身份变化时，macOS 可能要求重新授权访问本应用保存在钥匙串中的加密密钥。跨平台运行时的实际验收状态以验证记录为准。
+本地默认产物为 `build/darwin-arm64/ytmgo.app` 和 `build/darwin-arm64/ytmgo-0.6.0-arm64.dmg`，采用 ad-hoc App 签名和未签名 DMG。GitHub Actions 已提供手动触发的测试打包、Developer ID 签名及 Apple 公证模式；配置证书、私钥和使用方法见 [macOS Actions 配置指南](docs/MACOS_ACTIONS.md)。选择 `notarized` 并勾选 `publish_release` 后，工作流会发布可下载的 GitHub Release 和签名更新 feed。重新构建导致 ad-hoc 身份变化时，macOS 可能要求重新授权访问本应用保存在钥匙串中的加密密钥。跨平台运行时的实际验收状态以验证记录为准。
+
+当前版本沿 `0.6.X` 迭代，末位为 0–999 的整数，不补前导零：`0.6.0`、`0.6.1`、…、`0.6.999`。仅正式发版时递增末位；普通修复、提交与本地构建不自动升版本，末位未耗尽不因日常迭代提升次版本。发布配置和更新包校验均限制末位范围。
 
 正式安装包见 [GitHub Releases](https://github.com/mreasonyang/ytmgo/releases/latest)。0.5.1 已通过签名、公证和从公开 0.5.0 包升级的检查，范围与产物身份见 [自动升级验收](docs/AUTO_UPDATE_VERIFICATION.md)。
 
@@ -46,7 +48,7 @@ make dev
 
 macOS 登录窗口目前不支持 Google passkey。Apple 要求 WKWebView 的 passkey 服务与应用建立关联域关系，ytmgo 无法自行取得 Google 的关联授权；请使用 Google 页面提供的其他验证方式。没有其他验证方式的账号目前无法完成登录。Windows 的 WebView2 支持 FIDO2，但本应用与具体 Google passkey 提供者的组合尚未实测；Linux 使用 WebKitGTK 4.1 ≥2.50.2，避免旧版本在带 WebAuthn 第二因子的 Google 账号上卡住，这不代表 Linux 已支持 passkey。[Apple 说明](https://developer.apple.com/documentation/authenticationservices/supporting-passkeys)、[WebKitGTK 修复说明](https://webkitgtk.org/2025/11/19/webkitgtk2.50.2-released.html)。
 
-完整会话（Cookies 与账号选择信息）使用 AES-256-GCM 加密保存在应用数据目录的 `account/session.enc`。系统安全存储只保管一把 32 字节随机密钥，固定条目名为 `account-session-key`；macOS 使用 Keychain。首次保存创建密钥，重新登录复用密钥，每次加密使用新的随机 nonce，再原子替换会话文件。保存失败保留原文件和密钥；首次保存已创建的密钥也会保留供重试使用。只有安全存储明确返回密钥不存在时，已核验的新登录才会创建密钥；锁定、拒绝访问或密钥损坏均报错，不自动覆盖。只读写一种会话格式，没有旧格式读取、迁移、随机密钥编号或明文存储备用路径。
+完整会话（Cookies 与账号选择信息）使用 AES-256-GCM 加密保存在应用数据目录的 `account/session.enc`。系统安全存储只保管一把 32 字节随机密钥，固定条目名为 `account-session-key`；macOS 使用 Keychain。打开登录窗口前先准备密钥：复用当前进程已恢复的密钥，或读取固定条目；仅在明确不存在时创建。授权被拒绝、存储锁定或密钥损坏时，直接在登录前报错。登录与二次验证完成后，使用内存中已准备的密钥和新的随机 nonce 加密，原子覆盖会话文件，不再访问系统安全存储。准备密钥不会改动已保存的会话；登录取消或文件保存失败时保留原文件和密钥，首次准备创建的密钥也可供重试复用。退出登录同时清除内存中的密钥。只读写一种会话格式，没有旧格式读取、迁移、随机密钥编号或明文存储备用路径。
 
 macOS 自动恢复不弹出钥匙串授权；用户主动点击“恢复账号”或重新登录时允许系统请求授权。无法恢复的登录数据可以在设置中明确清除，再重新登录。macOS/Linux 目录权限为 0700、文件为 0600，Windows 使用当前用户的数据目录和 Credential Manager。重启后先重新核验服务端状态，再启用对应播放模式。确认退出会停止播放、清空本应用的个人数据，先删除加密会话文件，再删除唯一密钥；密钥删除失败可以重试，不会因文件已不存在而漏删。外部浏览器的 Google 登录状态不受影响。
 

@@ -55,7 +55,7 @@ type accountState struct {
 	work                     sync.Mutex
 	loginWait                sync.WaitGroup
 	flow                     accountFlow
-	store                    accountsession.Store
+	store                    *accountsession.Store
 	session                  *accountsession.Session
 	configured               player.AccountSession
 	revision                 uint64
@@ -545,6 +545,35 @@ func (a *desktop) signIn() {
 	}
 	a.clearAccountRequestFailure(true)
 	a.clearAccountRequestFailure(false)
+	a.accountBusy = true
+	generation := a.accountGeneration
+	ctx := s.flow.begin(a.ctx, generation)
+	a.invalidate()
+	go func() {
+		s.work.Lock()
+		err := s.store.PrepareLogin(ctx)
+		s.work.Unlock()
+		a.post(func() {
+			accepted, flowErr := s.flow.finish(ctx, generation, a.accountGeneration, err, func() error {
+				a.startAccountLogin()
+				return nil
+			})
+			if !accepted {
+				return
+			}
+			a.accountBusy = false
+			if flowErr != nil {
+				a.accountRequestFailure("nativeAccountStorageError", "session_failed", true)
+				return
+			}
+		})
+	}()
+}
+
+// Called only after secure storage is ready. Completing the login and saving
+// its verified session cannot trigger another native secret-store operation.
+func (a *desktop) startAccountLogin() {
+	s := &a.accountState
 	ctx, cancel := context.WithCancel(a.ctx)
 	login, err := accountlogin.Start(ctx, accountlogin.Options{Title: locales.LoginWindowTitle()})
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -12,6 +13,77 @@ import (
 	"ytmgo/internal/catalog"
 	"ytmgo/internal/player"
 )
+
+type loginPreflightSecrets struct {
+	key        []byte
+	getErr     error
+	setErr     error
+	calls      int
+	windowOpen bool
+}
+
+func (s *loginPreflightSecrets) Get(string, accountsession.Interaction) ([]byte, error) {
+	s.calls++
+	if s.windowOpen {
+		panic("native secret access after opening login")
+	}
+	return append([]byte(nil), s.key...), s.getErr
+}
+func (s *loginPreflightSecrets) Set(_ string, key []byte) error {
+	s.calls++
+	if s.windowOpen {
+		panic("native secret write after opening login")
+	}
+	if s.setErr == nil {
+		s.key = append([]byte(nil), key...)
+	}
+	return s.setErr
+}
+func (s *loginPreflightSecrets) Delete(string, accountsession.Interaction) error {
+	panic("login must not delete its encryption key")
+}
+
+func TestAccountLoginPreparationGatesWindowAndNeedsNoSecretsAfterward(t *testing.T) {
+	for _, failure := range []string{"none", "new-key", "denied", "create-denied", "invalid-key", "canceled", "superseded"} {
+		t.Run(failure, func(t *testing.T) {
+			secrets := &loginPreflightSecrets{key: make([]byte, 32)}
+			switch failure {
+			case "denied":
+				secrets.getErr = errors.New("synthetic-denied")
+			case "new-key", "create-denied":
+				secrets.key, secrets.getErr = nil, accountsession.ErrNotFound
+				if failure == "create-denied" {
+					secrets.setErr = errors.New("synthetic-denied")
+				}
+			case "invalid-key":
+				secrets.key = []byte("synthetic-invalid-key")
+			}
+			store := &accountsession.Store{Secrets: secrets, Path: filepath.Join(t.TempDir(), "account", "session.enc")}
+			flow := &accountFlow{}
+			ctx := flow.begin(context.Background(), 1)
+			defer flow.cancelPending()
+			err := store.PrepareLogin(ctx)
+			calls := secrets.calls
+			current := uint64(1)
+			if failure == "canceled" {
+				flow.cancel()
+			} else if failure == "superseded" {
+				current++
+			}
+			accepted, err := flow.finish(ctx, 1, current, err, func() error {
+				secrets.windowOpen = true
+				return store.Save(ctx, syntheticAccountSession())
+			})
+			wantOpen := failure == "none" || failure == "new-key"
+			if secrets.windowOpen != wantOpen || wantOpen && (!accepted || err != nil) || !wantOpen && accepted && err == nil {
+				t.Fatal("login opened before storage was ready or accepted a stale preparation")
+			}
+			if secrets.calls != calls {
+				t.Fatal("completed login performed another native secret operation")
+			}
+		})
+	}
+}
 
 type stagedSessionFixture struct {
 	setErr              error

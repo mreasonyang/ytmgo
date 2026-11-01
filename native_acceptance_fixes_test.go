@@ -92,9 +92,9 @@ func TestNativeLibraryStateText(t *testing.T) {
 			{false, false, false, "", "home", "", "shellLibraryEmptyBody"},
 			{false, false, false, accountRestoring, "home", "", "nativeAccountRestoringBody"},
 			{false, false, false, accountRestoreDeferred, "home", "", "nativeAccountRestoreDeferredBody"},
-			{true, false, false, "", "home", "", "nativeLibraryOpenBody"},
+			{true, false, false, "", "home", "", "nativeLibraryLoadingBody"},
 			{true, false, true, "", "library", "", "nativeLibraryLoadingBody"},
-			{true, false, false, "", "library", "failure", "nativeLibraryOpenBody"},
+			{true, false, false, "", "home", "nativeCatalogError", "nativeCatalogError"},
 			{true, true, false, "", "home", "", "nativeLibraryEmptyBody"},
 		}
 		for _, state := range states {
@@ -103,7 +103,7 @@ func TestNativeLibraryStateText(t *testing.T) {
 			m.Loading = state.loading
 			m.AccountRestore = state.restore
 			m.Route = state.route
-			m.Error = state.err
+			m.LibraryErrorKey = state.err
 			_, body := nativeLibraryPromptText(m)
 			if body != state.want {
 				t.Errorf("%s: incorrect library state", locale)
@@ -173,5 +173,25 @@ func TestAccountContentResetClearsLibraryLoadState(t *testing.T) {
 	a.clearAccountContent()
 	if a.model.LibraryLoaded || len(a.model.LibraryItems) != 0 {
 		t.Fatal("new account inherited loaded-library state")
+	}
+}
+
+func TestLibrarySidebarRetriesWithoutLeavingHome(t *testing.T) {
+	m, actions := nativeViewFixture()
+	m.SignedIn, m.Route, m.LibraryErrorKey = true, "home", "nativeCatalogError"
+	retries := 0
+	actions.RetryLibrary = func() {
+		retries++
+		m.LibraryErrorKey = ""
+	}
+	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, actions) }, 1440, 900)
+	if err := tt.Click(actions.Tr("buttonRetry")); err != nil {
+		t.Fatal(err)
+	}
+	if retries != 1 || m.Route != "home" || !tt.HasText(actions.Tr("nativeLibraryLoadingTitle")) {
+		t.Fatal("retry should start the sidebar load and keep Home visible")
+	}
+	if _, ok := tt.Find(actions.Tr("buttonRetry")); ok {
+		t.Fatal("retry still offered during load")
 	}
 }

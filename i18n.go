@@ -32,6 +32,12 @@ func (a *desktop) localeChanged() {
 	if a.catalog != nil {
 		a.catalog.SetLanguage(language.ServiceLanguage(mygo.App.Locale()))
 		if a.window != nil {
+			if a.model.SignedIn {
+				a.resetLibrary()
+				if a.model.Route != "library" {
+					a.loadLibrary()
+				}
+			}
 			a.reload()
 		}
 	}

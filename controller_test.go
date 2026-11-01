@@ -73,3 +73,40 @@ func TestArtworkResolutionIsSourceAware(t *testing.T) {
 		}
 	}
 }
+
+func TestPendingLibraryFollowsNavigationAndAccount(t *testing.T) {
+	page := catalog.Page{Items: []catalog.Item{{Title: "Saved playlist"}}}
+	for _, action := range []string{"stay on Home", "leave Library", "change account"} {
+		t.Run(action, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			pending := &libraryRequest{cancel: cancel}
+			a := &desktop{ctx: ctx, libraryRequest: pending, historyIndex: -1,
+				model: UIModel{SignedIn: true, Route: "home", Page: catalog.Page{Title: "Home"}}}
+			if action == "change account" {
+				a.clearAccountContent()
+				a.finishLibrary(pending, page, nil)
+				if ctx.Err() == nil || len(a.model.LibraryItems) != 0 || a.model.LibraryLoaded {
+					t.Fatal("old request survived the account change")
+				}
+				return
+			}
+			if action == "leave Library" {
+				a.navigate("library")
+				if a.libraryRequest != pending || !a.model.Loading {
+					t.Fatal("navigation did not join the background request")
+				}
+				a.history = []historyEntry{{route: "home", page: catalog.Page{Title: "Home"}}, {route: "explore"}}
+				a.historyIndex = 1
+				a.travel(-1)
+			}
+			a.finishLibrary(pending, page, nil)
+			if !a.model.LibraryLoaded || len(a.model.LibraryItems) != 1 {
+				t.Fatal("sidebar did not receive the saved playlist")
+			}
+			if a.model.Route != "home" || a.model.Page.Title != "Home" || len(a.model.Page.Items) != 0 {
+				t.Fatal("the sidebar response replaced Home")
+			}
+		})
+	}
+}

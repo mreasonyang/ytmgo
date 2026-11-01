@@ -347,6 +347,9 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 						a.accountGeneration++
 					}
 					a.clearAccountContent()
+					if status.LoggedIn {
+						a.loadLibrary()
+					}
 				}
 			}
 			if err != nil {
@@ -663,8 +666,7 @@ func (a *desktop) clearAccountContent() {
 		a.pageCancel()
 	}
 	a.pageGeneration++
-	a.model.LibraryItems = nil
-	a.model.LibraryLoaded = false
+	a.resetLibrary()
 	a.model.Page = catalog.Page{}
 	a.model.Loading = false
 	a.model.Error = ""

@@ -758,8 +758,6 @@
   "nativeKindPodcast": "Podcast",
   "nativeKindEpisode": "Episode",
   "nativeAccountRestoreFailed": "Your saved account could not be restored. Retry and allow access if the system asks, or sign in again.",
-  "nativeLibraryOpenTitle": "Your library is ready to load",
-  "nativeLibraryOpenBody": "Open Library to load your saved music.",
   "nativeLibraryLoadingTitle": "Loading your library…",
   "nativeLibraryLoadingBody": "Your saved music will appear here.",
   "nativeLibraryFailedTitle": "Library could not load",

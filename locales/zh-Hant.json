@@ -211,8 +211,6 @@
   "nativeKindPodcast": "Podcast",
   "nativeKindEpisode": "單集",
   "nativeAccountRestoreFailed": "無法還原已儲存的帳戶。請重試並允許系統要求的存取權限，或重新登入。",
-  "nativeLibraryOpenTitle": "音樂庫尚未載入",
-  "nativeLibraryOpenBody": "開啟音樂庫以載入已收藏的音樂。",
   "nativeLibraryLoadingTitle": "正在載入音樂庫…",
   "nativeLibraryLoadingBody": "已收藏的音樂將在此顯示。",
   "nativeLibraryFailedTitle": "音樂庫載入失敗",

@@ -59,13 +59,16 @@ func (a *desktop) playbackFailure(state player.State) {
 	a.model.PlaybackError = a.tr(key)
 }
 
+func catalogErrorKey(err error) string {
+	if key := catalogServiceErrorKey(err); key != "" {
+		return key
+	}
+	return "nativeCatalogError"
+}
+
 func (a *desktop) catalogFailure(err error) {
 	a.model.ErrorScope = errorCatalog
-	key := catalogServiceErrorKey(err)
-	if key == "" {
-		key = "nativeCatalogError"
-	}
-	a.model.Error = a.tr(key)
+	a.model.Error = a.tr(catalogErrorKey(err))
 }
 
 func accountErrorScope(newIdentity bool) errorScope {

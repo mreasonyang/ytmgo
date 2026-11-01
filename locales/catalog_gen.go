@@ -2845,26 +2845,6 @@ func (msgs Messages) NativeAccountRestoreFailed() string {
 	return Catalog.Format(msgs.locale, "nativeAccountRestoreFailed", nil)
 }
 
-// NativeLibraryOpenTitle says "Your library is ready to load"
-// in the language the app shows.
-func NativeLibraryOpenTitle() string { return In(i18n.Locale()).NativeLibraryOpenTitle() }
-
-// NativeLibraryOpenTitle says "Your library is ready to load"
-// in the language of msgs.
-func (msgs Messages) NativeLibraryOpenTitle() string {
-	return Catalog.Format(msgs.locale, "nativeLibraryOpenTitle", nil)
-}
-
-// NativeLibraryOpenBody says "Open Library to load your saved music."
-// in the language the app shows.
-func NativeLibraryOpenBody() string { return In(i18n.Locale()).NativeLibraryOpenBody() }
-
-// NativeLibraryOpenBody says "Open Library to load your saved music."
-// in the language of msgs.
-func (msgs Messages) NativeLibraryOpenBody() string {
-	return Catalog.Format(msgs.locale, "nativeLibraryOpenBody", nil)
-}
-
 // NativeLibraryLoadingTitle says "Loading your library…"
 // in the language the app shows.
 func NativeLibraryLoadingTitle() string { return In(i18n.Locale()).NativeLibraryLoadingTitle() }

@@ -51,23 +51,28 @@ func (a *desktop) loadPage(route, q string, record bool) {
 	}
 	a.pageGeneration++
 	generation := a.pageGeneration
-	ctx, cancel := context.WithTimeout(a.ctx, 30*time.Second)
-	params := a.browseParams
-	a.pageCancel = cancel
+	a.pageCancel = nil
 	a.model.Route = route
 	a.model.Query = q
 	a.model.Loading = true
 	a.model.Error = ""
 	a.model.ErrorScope = ""
 	a.model.Page = catalog.Page{}
-	if route == "library" && !a.model.SignedIn {
-		cancel()
-		a.model.Loading = false
-		a.model.Page = signedOutLibraryPage(a.tr)
-		a.pushHistory(record)
+	if route == "library" {
+		if a.model.SignedIn {
+			request := a.loadLibrary()
+			request.pageGeneration, request.record = generation, record
+		} else {
+			a.model.Loading = false
+			a.model.Page = signedOutLibraryPage(a.tr)
+			a.pushHistory(record)
+		}
 		a.invalidate()
 		return
 	}
+	ctx, cancel := context.WithTimeout(a.ctx, 30*time.Second)
+	params := a.browseParams
+	a.pageCancel = cancel
 	a.invalidate()
 	go func() {
 		defer cancel()
@@ -78,8 +83,6 @@ func (a *desktop) loadPage(route, q string, record bool) {
 			page, err = a.catalog.Home(ctx)
 		case route == "explore":
 			page, err = a.catalog.Explore(ctx)
-		case route == "library":
-			page, err = a.catalog.Library(ctx)
 		case route == "search":
 			page, err = a.catalog.Search(ctx, q)
 		case strings.HasPrefix(route, "browse:"):
@@ -103,16 +106,83 @@ func (a *desktop) loadPage(route, q string, record bool) {
 				a.model.Page.Title = a.greeting()
 			case "explore":
 				a.model.Page.Title = a.tr("shellNavExplore")
-			case "library":
-				a.model.Page.Title = a.tr("shellLibraryTitle")
-				a.model.LibraryItems = page.Items
-				a.model.LibraryLoaded = true
 			case "search":
 				a.model.Page.Title = q
 			}
 			a.pushHistory(record)
 		})
 	}()
+}
+
+// The sidebar keeps loading across navigation. Opening Library during that
+// request attaches the current page, so both views receive the same result.
+type libraryRequest struct {
+	cancel         context.CancelFunc
+	pageGeneration uint64
+	record         bool
+}
+
+func (a *desktop) loadLibrary() *libraryRequest {
+	if a.libraryRequest != nil {
+		return a.libraryRequest
+	}
+	ctx, cancel := context.WithTimeout(a.ctx, 30*time.Second)
+	request := &libraryRequest{cancel: cancel}
+	a.libraryRequest = request
+	a.model.LibraryLoaded = false
+	a.model.LibraryErrorKey = ""
+	go func() {
+		defer cancel()
+		page, err := a.catalog.Library(ctx)
+		a.post(func() { a.finishLibrary(request, page, err) })
+	}()
+	return request
+}
+
+func (a *desktop) finishLibrary(request *libraryRequest, page catalog.Page, err error) {
+	if a.libraryRequest != request {
+		return
+	}
+	a.libraryRequest = nil
+	if err == nil {
+		a.model.LibraryItems = page.Items
+		a.model.LibraryLoaded = true
+	} else {
+		a.model.LibraryErrorKey = catalogErrorKey(err)
+	}
+	if a.model.Route != "library" || request.pageGeneration != a.pageGeneration {
+		return
+	}
+	a.model.Loading = false
+	if err != nil {
+		a.catalogFailure(err)
+		return
+	}
+	page.Title = a.tr("shellLibraryTitle")
+	a.model.Page = page
+	a.pushHistory(request.record)
+}
+
+func (a *desktop) resetLibrary() {
+	if a.libraryRequest != nil {
+		a.libraryRequest.cancel()
+		a.libraryRequest = nil
+	}
+	a.model.LibraryItems = nil
+	a.model.LibraryLoaded = false
+	a.model.LibraryErrorKey = ""
+}
+
+func (a *desktop) retryLibrary() {
+	if !a.model.SignedIn {
+		return
+	}
+	if a.model.Route == "library" {
+		a.reload()
+		return
+	}
+	a.loadLibrary()
+	a.invalidate()
 }
 
 func (a *desktop) greeting() string {

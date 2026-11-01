@@ -18,6 +18,7 @@ type UIModel struct {
 	Current                                                     catalog.Item
 	LibraryItems                                                []catalog.Item
 	LibraryLoaded                                               bool
+	LibraryErrorKey                                             string
 	GlobalShortcut, ShortcutError                               string
 	ShortcutRecording                                           bool
 	Queue                                                       []catalog.Item
@@ -88,7 +89,7 @@ type ViewActions struct {
 	PlayQueue                                           func(int)
 	Toggle, Next, Previous, Like, Shuffle, Repeat, Mute func()
 	Back, Forward, Reload, Account, SignOut             func()
-	RestoreAccount, SkipRestore                         func()
+	RestoreAccount, SkipRestore, RetryLibrary           func()
 	Seek, Volume                                        func(float64)
 	Appearance, Language                                func(string)
 	Artwork                                             func(string, int) ui.ImageSource
@@ -645,9 +646,9 @@ func nativeLibraryPrompt(c *ui.Context, m *UIModel, a ViewActions, p nativePalet
 					}
 					nativeRestoreActions(c, m, a, p, false)
 				})
-			default:
-				if nativePill(c, a.Tr("shellNavLibrary"), p, true).AlignSelf(ui.Start).MarginY(8).Clicked() {
-					a.Navigate("library")
+			case m.LibraryErrorKey != "" && (m.Route != "library" || m.Error == ""):
+				if nativePill(c, a.Tr("buttonRetry"), p, true).AlignSelf(ui.Start).MarginY(8).Disabled(a.RetryLibrary == nil).Clicked() {
+					a.RetryLibrary()
 				}
 			}
 		})
@@ -659,12 +660,10 @@ func nativeLibraryPromptText(m *UIModel) (title, body string) {
 	switch {
 	case m.SignedIn:
 		switch {
-		case m.Route == "library" && m.Loading:
-			return "nativeLibraryLoadingTitle", "nativeLibraryLoadingBody"
-		case m.Route == "library" && m.Error != "":
-			return "nativeLibraryFailedTitle", "nativeLibraryOpenBody"
+		case m.LibraryErrorKey != "":
+			return "nativeLibraryFailedTitle", m.LibraryErrorKey
 		case !m.LibraryLoaded:
-			return "nativeLibraryOpenTitle", "nativeLibraryOpenBody"
+			return "nativeLibraryLoadingTitle", "nativeLibraryLoadingBody"
 		default:
 			return "nativeLibraryEmptyTitle", "nativeLibraryEmptyBody"
 		}
@@ -1793,7 +1792,7 @@ func nativeSongShelf(items []catalog.Item) bool {
 // A presentation action can occur after its destination was built in this pass.
 // Request the next frame explicitly so it becomes visible without another input.
 type nativePresentationKey struct {
-	texts                              [14]string
+	texts                              [15]string
 	flags                              [18]bool
 	values                             [4]float64
 	repeat, queueLength, libraryLength int
@@ -1804,7 +1803,7 @@ type nativePresentationKey struct {
 
 func nativePresentation(m *UIModel) nativePresentationKey {
 	return nativePresentationKey{
-		texts:  [14]string{m.Route, m.Query, m.PanelTab, m.Appearance, m.Language, m.Current.ID, m.Current.Title, m.Page.Title, m.Error, m.Lyrics, m.Current.Artwork, m.VideoError, m.PlaybackError, m.AccountRestore},
+		texts:  [15]string{m.Route, m.Query, m.PanelTab, m.Appearance, m.Language, m.Current.ID, m.Current.Title, m.Page.Title, m.Error, m.Lyrics, m.Current.Artwork, m.VideoError, m.PlaybackError, m.AccountRestore, m.LibraryErrorKey},
 		flags:  [18]bool{m.Loading, m.Playing, m.Muted, m.Liked, m.Shuffle, m.Panel, m.Immersive, m.Settings, m.Shortcuts, m.SidebarCollapsed, m.SignedIn, m.CanBack, m.CanForward, m.FocusSearch, m.Video, m.VideoLoading, m.PlaybackLoading, m.MusicPremium},
 		values: [4]float64{m.Volume, m.Position, m.Duration, 0}, repeat: m.Repeat, queueLength: len(m.Queue), libraryLength: len(m.LibraryItems),
 		errorScope: m.ErrorScope, libraryLoaded: m.LibraryLoaded, shortcutRecording: m.ShortcutRecording, shortcut: m.GlobalShortcut, shortcutError: m.ShortcutError,

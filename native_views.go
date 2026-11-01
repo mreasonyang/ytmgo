@@ -40,6 +40,7 @@ type UIModel struct {
 	VideoError                                                  string
 	ErrorScope                                                  errorScope
 	AccountRestore                                              string
+	AccountAvatar                                               string
 	Version                                                     string
 
 	// Sheet presentation the view owns.
@@ -317,6 +318,9 @@ func nativeCompactTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalet
 		if nativeIconButton(c, "settings", a.Tr("shellSettings"), p, m.Settings, 44).Clicked() {
 			m.Settings = !m.Settings
 		}
+		if m.SignedIn {
+			nativeAccount(c, m, a, p, false)
+		}
 	})
 }
 
@@ -372,7 +376,7 @@ func nativeAccountStatus(m *UIModel, a ViewActions) string {
 	return a.Tr("shellAccountStandard")
 }
 
-func nativeAvatar(c *ui.Context, m *UIModel, p nativePalette, size float32) ui.Element {
+func nativeAvatar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, size float32) ui.Element {
 	bg, fg := p.highlight, p.secondary
 	if m.SignedIn {
 		bg, fg = p.muted, p.surface
@@ -380,8 +384,16 @@ func nativeAvatar(c *ui.Context, m *UIModel, p nativePalette, size float32) ui.E
 	if m.SignedIn && m.MusicPremium {
 		bg, fg = p.accent, p.onAccent
 	}
-	return ui.Box(c).Size(size, size).Shrink(0).Radius(size / 2).Background(bg).TextColor(fg).Center().Children(func() {
-		ui.Icon(c, nativeIcons["user"]).Size(size*0.56, size*0.56)
+	var avatar ui.ImageSource
+	if m.SignedIn && m.AccountAvatar != "" && a.Artwork != nil {
+		avatar = a.Artwork(m.AccountAvatar, int(math.Ceil(float64(size)*2)))
+	}
+	return ui.Box(c).Size(size, size).Shrink(0).Radius(size / 2).Clip().Background(bg).TextColor(fg).Center().PassThrough().Children(func() {
+		if avatar != nil {
+			ui.Image(c, avatar).Fill().Fit(ui.Cover).PassThrough()
+		} else {
+			ui.Icon(c, nativeIcons["user"]).Size(size*0.56, size*0.56)
+		}
 	})
 }
 
@@ -414,7 +426,7 @@ func nativeAccount(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, ba
 		if m.MusicPremium && badge {
 			ui.Text(c, a.Tr("shellPremiumBadge")).PaddingStart(6).FontSize(12).FontWeight(700).TextColor(p.accentText)
 		}
-		nativeAvatar(c, m, p, 32)
+		nativeAvatar(c, m, a, p, 32)
 	})
 	b.Menu(func(menu *ui.Menu) {
 		menu.Item(status).Disabled(true)

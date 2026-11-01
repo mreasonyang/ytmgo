@@ -234,7 +234,7 @@ func nativeAccountSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePal
 	}
 	ui.Column(c).Padding(16).Gap(14).Children(func() {
 		ui.Row(c).Gap(14).AlignItems(ui.Center).Children(func() {
-			nativeAvatar(c, m, p, 48)
+			nativeAvatar(c, m, a, p, 48)
 			ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(4).Children(func() {
 				ui.Text(c, nativeAccountStatus(m, a)).FontSize(16).FontWeight(700).MaxLines(2).Ellipsis("…")
 				if detail != "" {

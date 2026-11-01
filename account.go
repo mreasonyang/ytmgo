@@ -63,6 +63,7 @@ type accountState struct {
 	pollCancel               context.CancelFunc
 	login                    *accountlogin.Login
 	loginCancel              context.CancelFunc
+	avatar                   *accountAvatarRequest
 	// fallback marks revision as configured (or being configured) for
 	// anonymous playback while a saved account is not active.
 	fallback       bool
@@ -351,6 +352,9 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 						a.loadLibrary()
 					}
 				}
+				if status.LoggedIn {
+					a.loadAccountAvatar()
+				}
 			}
 			if err != nil {
 				if errors.Is(err, accountsession.ErrStorage) && !a.model.SignedIn {
@@ -635,6 +639,7 @@ func (a *desktop) stopAccountLogin() {
 
 func (a *desktop) closeAccount() {
 	a.accountGeneration++
+	a.clearAccountAvatar()
 	s := &a.accountState
 	s.flow.cancelPending()
 	if s.pollCancel != nil {
@@ -659,6 +664,7 @@ func (a *desktop) accountRequestFailure(key, category string, newIdentity bool) 
 	a.model.ErrorScope = accountErrorScope(newIdentity)
 }
 func (a *desktop) clearAccountContent() {
+	a.clearAccountAvatar()
 	if a.likeCancel != nil {
 		a.likeCancel()
 	}

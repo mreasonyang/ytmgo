@@ -24,7 +24,7 @@ open build/darwin-arm64/ytmgo.app
 
 当前版本沿 `0.6.X` 迭代，末位为 0–999 的整数，不补前导零：`0.6.0`、`0.6.1`、…、`0.6.999`。仅正式发版时递增末位；普通修复、提交与本地构建不自动升版本，末位未耗尽不因日常迭代提升次版本。发布配置和更新包校验均限制末位范围。
 
-正式安装包见 [GitHub Releases](https://github.com/mreasonyang/ytmgo/releases/latest)。0.5.1 已通过签名、公证和从公开 0.5.0 包升级的检查，范围与产物身份见 [自动升级验收](docs/AUTO_UPDATE_VERIFICATION.md)。
+正式安装包见 [GitHub Releases](https://github.com/mreasonyang/ytmgo/releases/latest)。0.6.0 已通过签名、公证和从公开 0.5.1 包升级的检查，范围与产物身份见 [自动升级验收](docs/AUTO_UPDATE_VERIFICATION.md)。
 
 开发运行：
 

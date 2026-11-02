@@ -1,0 +1,51 @@
+{
+  "id": 431030919,
+  "tag_name": "v0.6.0",
+  "target_commitish": "c15f02a005f25f97d3dd09e355119dad2a3c58cc",
+  "draft": false,
+  "prerelease": false,
+  "published_at": "2026-11-02T03:07:15Z",
+  "html_url": "https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.0",
+  "assets": [
+    {
+      "name": "build.json",
+      "size": 314,
+      "digest": "sha256:3cf50a5b5d409ca574bbecbee29185aac9a637ef1a5f3a153a2c107ebc012e4b",
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.6.0/build.json"
+    },
+    {
+      "name": "SHA256SUMS",
+      "size": 462,
+      "digest": "sha256:42590830b71e5fe082dd99ee5214fe7ca6a8f6128a17cd8d27af2624aadff36c",
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.6.0/SHA256SUMS"
+    },
+    {
+      "name": "update-darwin-arm64.json",
+      "size": 374,
+      "digest": "sha256:e8f9e3b94591f8615c4a6eecb982331fe2a01f7f67d9a0314eac3f5aca799ff6",
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.6.0/update-darwin-arm64.json"
+    },
+    {
+      "name": "ytmgo-0.6.0-arm64-notarized.dmg",
+      "size": 11201162,
+      "digest": "sha256:2e43507475001690190be7bc34ff6348cc52eaa15db1c8fd181e1b27714ea5ab",
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.6.0/ytmgo-0.6.0-arm64-notarized.dmg"
+    },
+    {
+      "name": "ytmgo-0.6.0-arm64-notarized.zip",
+      "size": 10552192,
+      "digest": "sha256:58e29e2eed4819d5ca19faed48bdf37468624ea631fdb6adf0ea0ae87f13234f",
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.6.0/ytmgo-0.6.0-arm64-notarized.zip"
+    },
+    {
+      "name": "ytmgo-0.6.0-darwin-arm64.tar.gz",
+      "size": 10541502,
+      "digest": "sha256:f245f16dd8b2796c4fbd93b1f1043c3f0a40a5403036b1beae12a93ee57ad5b7",
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.6.0/ytmgo-0.6.0-darwin-arm64.tar.gz"
+    }
+  ],
+  "anonymous_public_metadata_downloads": true,
+  "latest_feed_matches_versioned_feed": true,
+  "remote_asset_digests_match_checksums": true,
+  "release_notes_match_reviewed_file": true
+}

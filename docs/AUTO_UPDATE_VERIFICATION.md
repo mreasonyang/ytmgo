@@ -1,5 +1,22 @@
 # 自动升级验收
 
+## 0.6.0 — 2026-11-02
+
+**PASS**：已公开发布 [0.6.0](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.0)，生产 feed 已指向 0.6.0，并从真实公开的 0.5.1 包完成升级。
+
+- [构建与发布](https://github.com/mreasonyang/ytmgo/actions/runs/41380657462)通过 Go、runtime/login、翻译与打包检查，完成 App/DMG Developer ID 签名、Apple 公证、staple、Gatekeeper、更新包签名及远端资产摘要比对，发布全部六项资产。tag 与 `build.json` 均指向 `c15f02a005f25f97d3dd09e355119dad2a3c58cc`。
+- [公开包升级验收](https://github.com/mreasonyang/ytmgo/actions/runs/41381505029)在 macOS 27.0.1 / arm64 通过。升级后的版本命令和 bundle 版本均为 0.6.0，Apple 签名、stapled ticket、Gatekeeper 均通过；全部文件、权限及符号链接与独立下载的公开 0.6.0 ZIP 一致。回执是该运行的 `ytmgo-public-upgrade-receipt-3` artifact。
+- 本机匿名下载的公开元数据通过核对，稳定 feed 与版本专属 feed 一致；GitHub 返回的全部资产摘要与公开校验清单一致。
+
+产物与结构化回执见 [0.6.0 发版记录](audits/2026-11-02-release-0.6.0/README.md)。升级验收使用隔离的公开 bundle 与维护命令，没有初始化账号存储或替换本机安装版；本次没有重复原生更新窗口、真实账号或播放验收。
+
+| 产物 | 来源或 SHA-256 |
+| --- | --- |
+| 源码 | `c15f02a005f25f97d3dd09e355119dad2a3c58cc` |
+| DMG | `2e43507475001690190be7bc34ff6348cc52eaa15db1c8fd181e1b27714ea5ab` |
+| ZIP | `58e29e2eed4819d5ca19faed48bdf37468624ea631fdb6adf0ea0ae87f13234f` |
+| 更新 archive | `f245f16dd8b2796c4fbd93b1f1043c3f0a40a5403036b1beae12a93ee57ad5b7` |
+
 ## 0.5.1 — 2026-10-30
 
 **PASS**：已公开发布 [0.5.1](https://github.com/mreasonyang/ytmgo/releases/tag/v0.5.1)，生产 feed 已指向 0.5.1，并从真实公开的 0.5.0 包完成升级。

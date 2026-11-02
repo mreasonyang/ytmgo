@@ -1,0 +1,59 @@
+{
+  "id": 41381505029,
+  "head_sha": "c15f02a005f25f97d3dd09e355119dad2a3c58cc",
+  "html_url": "https://github.com/mreasonyang/ytmgo/actions/runs/41381505029",
+  "event": "workflow_dispatch",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-11-02T03:09:23Z",
+  "updated_at": "2026-11-02T03:09:52Z",
+  "jobs": [
+    {
+      "name": "upgrade",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify public release upgrade",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Save upgrade receipt",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

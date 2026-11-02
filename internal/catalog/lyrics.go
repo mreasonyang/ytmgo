@@ -38,7 +38,36 @@ type LyricsResult struct {
 }
 
 func (c *Client) LyricsWithTiming(ctx context.Context, videoID string) (LyricsResult, error) {
-	return c.lyricsResult(ctx, videoID, true)
+	ctx, scope, err := c.operation(ctx)
+	if err != nil {
+		return LyricsResult{}, err
+	}
+	result, err := c.lyricsResult(ctx, videoID, true)
+	if err != nil || scope.session == nil || len(result.Lines) != 0 {
+		return result, err
+	}
+
+	// A signed-in browse can supply plain lyrics even when YouTube Music
+	// publishes cues for the same recording. Start from the video ID so no
+	// account headers, browse references or visitor data enter the public lookup.
+	c.mu.RLock()
+	public := NewWithOptions(Options{HTTPClient: c.http, Language: c.language, Region: c.region})
+	c.mu.RUnlock()
+	lookup, cancel := context.WithTimeout(ctx, 6*time.Second)
+	defer cancel()
+	items, browseID, lookupErr := public.watchQueue(lookup, videoID)
+	if lookupErr == nil && len(items) > 0 && items[0].ID == videoID && browseID != "" && c.scopeError(scope) == nil {
+		if synced, err := public.timedLyrics(lookup, browseID); err == nil && len(synced.Lines) > 0 {
+			result = synced
+		}
+	}
+	if err := ctx.Err(); err != nil {
+		return LyricsResult{}, err
+	}
+	if err := c.scopeError(scope); err != nil {
+		return LyricsResult{}, err
+	}
+	return result, nil
 }
 
 func (c *Client) lyricsResult(ctx context.Context, videoID string, timed bool) (LyricsResult, error) {
@@ -69,13 +98,8 @@ func (c *Client) lyricsResult(ctx context.Context, videoID string, timed bool) (
 	if reference.browseID == "" {
 		return LyricsResult{}, ErrNoLyrics
 	}
-	payload := map[string]any{"browseId": reference.browseID}
 	if timed {
-		response, requestErr := c.apiRequestWithOptions(ctx, "browse", payload, requestOptions{lyricsMobile: true})
-		var result LyricsResult
-		if requestErr == nil {
-			result, requestErr = parseTimedLyrics(response)
-		}
+		result, requestErr := c.timedLyrics(ctx, reference.browseID)
 		if err := ctx.Err(); err != nil {
 			return LyricsResult{}, err
 		}
@@ -88,7 +112,7 @@ func (c *Client) lyricsResult(ctx context.Context, videoID string, timed bool) (
 		// The mobile profile or timed response can be unavailable for a track.
 		// Retry the established plain-text path within the same account scope.
 	}
-	response, err := c.api(ctx, "browse", payload)
+	response, err := c.api(ctx, "browse", map[string]any{"browseId": reference.browseID})
 	if err != nil {
 		return LyricsResult{}, err
 	}
@@ -100,6 +124,14 @@ func (c *Client) lyricsResult(ctx context.Context, videoID string, timed bool) (
 		return LyricsResult{}, scopeErr
 	}
 	return result, err
+}
+
+func (c *Client) timedLyrics(ctx context.Context, browseID string) (LyricsResult, error) {
+	response, err := c.apiRequestWithOptions(ctx, "browse", map[string]any{"browseId": browseID}, requestOptions{lyricsMobile: true})
+	if err != nil {
+		return LyricsResult{}, err
+	}
+	return parseTimedLyrics(response)
 }
 
 func parseTimedLyrics(response map[string]any) (LyricsResult, error) {

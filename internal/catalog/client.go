@@ -290,18 +290,7 @@ func (c *Client) Queue(ctx context.Context, videoID string) ([]Item, error) {
 	if err != nil {
 		return nil, err
 	}
-	response, err := c.api(ctx, "next", map[string]any{
-		"videoId": videoID, "playlistId": "RDAMVM" + videoID,
-		"enablePersistentPlaylistPanel": true, "isAudioOnly": true,
-		"tunerSettingValue": "AUTOMIX_SETTING_NORMAL",
-		"watchEndpointMusicSupportedConfigs": map[string]any{"watchEndpointMusicConfig": map[string]any{
-			"hasPersistentPlaylistPanel": true, "musicVideoType": "MUSIC_VIDEO_TYPE_ATV",
-		}},
-	})
-	if err != nil {
-		return nil, err
-	}
-	items, lyrics, err := parseQueue(response)
+	items, lyrics, err := c.watchQueue(ctx, videoID)
 	if err != nil {
 		return nil, err
 	}
@@ -316,6 +305,21 @@ func (c *Client) Queue(ctx context.Context, videoID string) ([]Item, error) {
 	c.lyrics[videoID] = lyricsReference{browseID: lyrics, expires: time.Now().Add(10 * time.Minute)}
 	c.mu.Unlock()
 	return items, nil
+}
+
+func (c *Client) watchQueue(ctx context.Context, videoID string) ([]Item, string, error) {
+	response, err := c.api(ctx, "next", map[string]any{
+		"videoId": videoID, "playlistId": "RDAMVM" + videoID,
+		"enablePersistentPlaylistPanel": true, "isAudioOnly": true,
+		"tunerSettingValue": "AUTOMIX_SETTING_NORMAL",
+		"watchEndpointMusicSupportedConfigs": map[string]any{"watchEndpointMusicConfig": map[string]any{
+			"hasPersistentPlaylistPanel": true, "musicVideoType": "MUSIC_VIDEO_TYPE_ATV",
+		}},
+	})
+	if err != nil {
+		return nil, "", err
+	}
+	return parseQueue(response)
 }
 
 // Track refreshes a selected track from the service's real watch queue. Search

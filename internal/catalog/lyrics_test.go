@@ -303,3 +303,101 @@ func TestLyricsCancellationAndSessionChangeCannotPublishOrFallback(t *testing.T)
 		})
 	}
 }
+
+func TestSignedInPlainLyricsRecoverOnlyPublicTimingForSameRecording(t *testing.T) {
+	const id = "abc123DEF_-"
+	for _, mode := range []string{"timed", "signed_mobile_failed", "public_plain", "public_failed", "different_recording", "private_denied", "cancel", "account_changed"} {
+		t.Run(mode, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			var client *Client
+			var publicCalls, publicBrowses atomic.Int32
+			client = fixtureClient(t, func(w http.ResponseWriter, req *http.Request) {
+				var body object
+				if json.NewDecoder(req.Body).Decode(&body) != nil {
+					t.Error("invalid request body")
+					return
+				}
+				mobile := textAt(body, "context", "client", "clientName") == "ANDROID_MUSIC"
+				if req.Header.Get("Authorization") != "" {
+					if textAt(body, "browseId") != "MPLYt_account_only" {
+						t.Error("selected account lost its own browse reference")
+					}
+					if mode == "private_denied" || mode == "signed_mobile_failed" && mobile {
+						w.WriteHeader(403)
+						return
+					}
+					_ = json.NewEncoder(w).Encode(plainLyricsFixture())
+					return
+				}
+				publicCalls.Add(1)
+				for _, key := range []string{"Cookie", "Authorization", "X-Goog-Authuser", "X-Goog-Pageid", "X-Origin", "X-Goog-Visitor-Id"} {
+					if req.Header.Get(key) != "" {
+						t.Error("account or visitor header entered public lyric request")
+					}
+				}
+				if at(body, "context", "user") != nil || at(body, "context", "client", "visitorData") != nil || textAt(body, "context", "client", "hl") != "fr" {
+					t.Error("public request lost locale or retained identity")
+				}
+				if req.URL.Path == "/youtubei/v1/next" {
+					if textAt(body, "videoId") != id || at(body, "browseId") != nil {
+						t.Error("public lookup must start from the original video ID")
+					}
+					queue := queueResponse(true)
+					if mode == "different_recording" {
+						tabs := arrayAt(queue, "contents", "singleColumnMusicWatchNextResultsRenderer", "tabbedRenderer", "watchNextTabbedResultsRenderer", "tabs")
+						rows := arrayAt(tabs[0], "tabRenderer", "content", "musicQueueRenderer", "content", "playlistPanelRenderer", "contents")
+						rows[0] = panelSong("xyz456ABC_-", "Another recording")
+					}
+					_ = json.NewEncoder(w).Encode(queue)
+					return
+				}
+				publicBrowses.Add(1)
+				if !mobile || req.URL.Path != "/youtubei/v1/browse" || textAt(body, "browseId") != "MPLYt_lyrics" {
+					t.Error("public timing used the wrong profile or browse reference")
+				}
+				switch mode {
+				case "cancel":
+					cancel()
+				case "account_changed":
+					client.ClearSession()
+				case "public_failed":
+					w.WriteHeader(404)
+					return
+				case "public_plain":
+					_ = json.NewEncoder(w).Encode(timedLyricsFixture(object{"lyricLine": "Other plain text"}))
+					return
+				}
+				_ = json.NewEncoder(w).Encode(timedLyricsFixture(timedLyricFixture("Timed recording", "51430", "55030")))
+			})
+			client.SetLanguage("fr")
+			if client.SetSession(syntheticCookies(), 2, "synthetic_brand") != nil {
+				t.Fatal("invalid synthetic session")
+			}
+			client.lyrics[id] = lyricsReference{browseID: "MPLYt_account_only", expires: time.Now().Add(time.Minute)}
+			got, err := client.LyricsWithTiming(ctx, id)
+			switch mode {
+			case "private_denied":
+				if !errors.Is(err, ErrAuthenticationRequired) || publicCalls.Load() != 0 || got.Text != "" {
+					t.Fatal("denied account lyrics initiated a public lookup")
+				}
+			case "cancel", "account_changed":
+				want := ErrSessionChanged
+				if mode == "cancel" {
+					want = context.Canceled
+				}
+				if !errors.Is(err, want) || got.Text != "" {
+					t.Fatal("obsolete public timing reached the caller")
+				}
+			case "timed", "signed_mobile_failed":
+				if err != nil || len(got.Lines) != 1 || got.Lines[0].Start != 51430*time.Millisecond || publicCalls.Load() != 2 {
+					t.Fatal("real cue was lost after signed-in plain lyrics")
+				}
+			default:
+				if err != nil || got.Text != "Synthetic first line\nSynthetic second line" || len(got.Lines) != 0 || mode == "different_recording" && publicBrowses.Load() != 0 {
+					t.Fatal("failed or mismatched timing replaced the authorized lyrics")
+				}
+			}
+		})
+	}
+}

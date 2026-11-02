@@ -1,0 +1,10 @@
+{
+  "installed_app": "/Applications/ytmgo.app",
+  "previous_binary_sha256": "4ad34c5607643718be49cca4ec88f767dd0a9061ff207075591e99b7b4ff1c23",
+  "installed_binary_sha256": "92a0cf9c69c41b222ef8228914fd83ba931389c713edd04f6ed893429e710dca",
+  "matches_mounted_package": true,
+  "backup": "/Users/easonyang/Documents/projects/ytmgo/build/installed-artwork-20261102/installed-before/ytmgo.app",
+  "deep_signature": true,
+  "preserves_account_avatar_and_library_restore": true,
+  "from_readonly_dmg": true
+}

@@ -1,0 +1,69 @@
+{
+  "date": "2026-11-01",
+  "timezone": "Asia/Shanghai",
+  "status": "PARTIAL",
+  "scope": "Installed macOS arm64 candidate: artwork and focused startup/playback smoke",
+  "tests": [
+    {
+      "case": "Signed DMG/app and embedded code",
+      "result": "PASS"
+    },
+    {
+      "case": "Install from mounted DMG; installed executable matches packaged executable",
+      "result": "PASS"
+    },
+    {
+      "case": "Premium account restore on two launches without re-login",
+      "result": "PASS"
+    },
+    {
+      "case": "Saved library loads",
+      "result": "PASS"
+    },
+    {
+      "case": "Previously blank Hong Kong and Marijuana Girl Vol.2 artwork",
+      "result": "PASS",
+      "cold_restart_rechecked": true
+    },
+    {
+      "case": "Daft Punk search artist/song/album artwork",
+      "result": "PASS"
+    },
+    {
+      "case": "Player bar, immersive large cover and queue artwork",
+      "result": "PASS"
+    },
+    {
+      "case": "Newly visible home shelf artwork loads after scrolling",
+      "result": "PASS"
+    },
+    {
+      "case": "Playback progresses then pauses",
+      "result": "PASS",
+      "observed_positions_seconds": [
+        12.301,
+        24.205,
+        34.349,
+        46.957,
+        60.6,
+        73.85
+      ]
+    },
+    {
+      "case": "All artwork is resolved",
+      "result": "FAIL",
+      "remaining": [
+        "Liked Music placeholder in library/sidebar/home",
+        "Discover Mix placeholder in library/sidebar"
+      ],
+      "cause": "not established in this package test"
+    }
+  ],
+  "screenshots": "Native UI screenshots and accessibility snapshots are in this chat; no screenshot files were exported.",
+  "limits": [
+    "No long-duration playback acceptance",
+    "No network-outage injection; retry recovery is covered by the earlier synthetic tests",
+    "Local Developer ID signed candidate, not notarized or published"
+  ],
+  "final_state": "Candidate remains installed and open; playback stopped after cold restart."
+}

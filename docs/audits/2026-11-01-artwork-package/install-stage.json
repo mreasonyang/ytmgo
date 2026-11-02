@@ -1,0 +1,8 @@
+{
+  "mounted_app_signature": true,
+  "mounted_binary_matches_candidate": true,
+  "staged_app_signature": true,
+  "staged_binary_matches_candidate": true,
+  "stage_app": "/Applications/.ytmgo-artwork-20261101.app",
+  "old_app_backup": "/Users/easonyang/Documents/projects/ytmgo/build/artwork-20261101/installed-before/ytmgo.app"
+}

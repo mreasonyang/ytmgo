@@ -1,0 +1,25 @@
+{
+  "version": "0.6.0",
+  "candidate_app": "/Users/easonyang/Documents/projects/ytmgo/build/artwork-20261101/darwin-arm64/ytmgo.app",
+  "candidate_dmg": "/Users/easonyang/Documents/projects/ytmgo/build/artwork-20261101/ytmgo-0.6.0-arm64-artwork-candidate.dmg",
+  "binary_sha256": "44b9047f611c45525f4db61b05ca6734f57dda683ca6f69b9345d6a7e0782f9d",
+  "dmg_sha256": "7826d258e32853cf820a04bd57f9584190dc80d135f51d8f06cebf2e8bbe889a",
+  "previous_installed_binary_sha256": "ac5e2fc093397d2a2ebc50077bb685336792f0f297e00d4aa29dc8e5125d6042",
+  "source_sha256": {
+    "artwork.go": "65da6dac9ea6ffee613e6563639786daf61127eea54487a6e625b4ca0f26de84",
+    "artwork_test.go": "8e3df403ec605014a378debccd8f3ef86d487b96bc33cfcfc7f5bdddc79238fe"
+  },
+  "developer_id_signed": true,
+  "team": "2V4TX79LUZ",
+  "notarized": false,
+  "deep_signature": true,
+  "embedded_signatures": true,
+  "runtime_manifest": true,
+  "login_manifest": true,
+  "native_host_smoke": true,
+  "ffmpeg_smoke": true,
+  "source_tests": {
+    "go_test_race_all": "passed earlier in this chat",
+    "go_vet_all": "passed earlier in this chat"
+  }
+}

@@ -3,11 +3,13 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"image/png"
 	"io"
 	"net/http"
+	"net/url"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -118,5 +120,163 @@ func TestArtworkRejectsOversizedDownloadAndDecode(t *testing.T) {
 				t.Fatal("oversized image was retained or remained pending")
 			}
 		})
+	}
+}
+
+func TestArtworkFailedImageCanRecoverAfterBackoff(t *testing.T) {
+	for _, failure := range []string{"connection", "http", "decode"} {
+		t.Run(failure, func(t *testing.T) {
+			data := artworkTestPNG(t, 16, 16)
+			c := artworkTestCache(data)
+			c.queue = make(chan artRequest, artworkQueueLimit)
+			attempts := 0
+			c.client.Transport = artworkTransport(func(*http.Request) (*http.Response, error) {
+				attempts++
+				body, status := data, http.StatusOK
+				if attempts == 1 {
+					switch failure {
+					case "connection":
+						return nil, errors.New("synthetic connection failure")
+					case "http":
+						status = http.StatusServiceUnavailable
+					case "decode":
+						body = []byte("synthetic incomplete image")
+					}
+				}
+				return &http.Response{StatusCode: status, ContentLength: -1, Body: io.NopCloser(bytes.NewReader(body))}, nil
+			})
+			const raw = "https://i.ytimg.com/vi/example/hqdefault.jpg"
+			c.get(raw, 128)
+			request := <-c.queue
+			c.load(request)
+			e := c.entries[request]
+			if e.pending || e.bitmap != nil || !e.retryAt.After(time.Now()) {
+				t.Fatal("failed image did not enter retry backoff")
+			}
+			for range 100 {
+				c.get(raw, 128)
+			}
+			if len(c.queue) != 0 || attempts != 1 {
+				t.Fatal("redraws retried before backoff elapsed")
+			}
+			e.retryAt = time.Now().Add(-time.Second)
+			for range artworkQueueLimit {
+				c.queue <- artRequest{url: "synthetic queued image"}
+			}
+			c.get(raw, 128)
+			if e.pending || len(c.queue) != artworkQueueLimit {
+				t.Fatal("retry was marked pending while the queue was full")
+			}
+			for range artworkQueueLimit {
+				<-c.queue
+			}
+			for range 100 {
+				c.get(raw, 128)
+			}
+			if len(c.queue) != 1 || !e.pending {
+				t.Fatal("retry was lost or queued more than once")
+			}
+			c.load(<-c.queue)
+			if c.get(raw, 128) == nil || e.pending || e.failures != 0 || !e.retryAt.IsZero() || attempts != 2 {
+				t.Fatal("failed image remained empty after a successful retry")
+			}
+		})
+	}
+}
+
+func TestArtworkRetryBackoffIsCapped(t *testing.T) {
+	c := artworkTestCache([]byte("synthetic invalid image"))
+	request := artRequest{url: "https://i.ytimg.com/vi/example/hqdefault.jpg", edge: 128}
+	e := &artEntry{}
+	c.entries[request] = e
+	for attempt := range 10 {
+		before := time.Now()
+		c.load(request)
+		want := min(artworkRetryBase<<attempt, artworkRetryMax)
+		if e.retryAt.Before(before.Add(want)) || e.retryAt.After(time.Now().Add(want)) {
+			t.Fatal("retry did not use capped exponential backoff")
+		}
+	}
+}
+
+func TestArtworkRetryWakesIdleViewWithoutFetchingOffscreen(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	redraws := make(chan struct{}, 8)
+	c := newArtworkCache(ctx, func() { redraws <- struct{}{} })
+	t.Cleanup(func() { cancel(); c.workers.Wait() })
+	var attempts atomic.Int32
+	c.client.Transport = artworkTransport(func(*http.Request) (*http.Response, error) {
+		attempts.Add(1)
+		return &http.Response{StatusCode: http.StatusServiceUnavailable, Body: io.NopCloser(bytes.NewReader(nil))}, nil
+	})
+	c.get("https://i.ytimg.com/vi/example/hqdefault.jpg", 128)
+	for _, event := range []string{"failed load", "retry deadline"} {
+		select {
+		case <-redraws:
+		case <-time.After(artworkRetryBase + 2*time.Second):
+			t.Fatalf("idle view did not redraw after %s", event)
+		}
+	}
+	if attempts.Load() != 1 || len(c.queue) != 0 {
+		t.Fatal("retry timer fetched artwork without a visible view requesting it")
+	}
+}
+
+func TestArtworkRetryWakeHandlesDifferentDeadlines(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	redraws := make(chan struct{}, 8)
+	c := &artworkCache{ctx: ctx, entries: map[artRequest]*artEntry{}, redraw: func() { redraws <- struct{}{} }}
+	now := time.Now()
+	c.entries[artRequest{url: "first"}] = &artEntry{retryAt: now.Add(10 * time.Millisecond)}
+	c.entries[artRequest{url: "second"}] = &artEntry{retryAt: now.Add(500 * time.Millisecond)}
+	c.mu.Lock()
+	c.scheduleRetry(now)
+	c.mu.Unlock()
+	for range 2 {
+		select {
+		case <-redraws:
+		case <-time.After(2 * time.Second):
+			t.Fatal("a later retry deadline did not wake the view")
+		}
+	}
+}
+
+func TestSystemArtworkReachesDownloaderWithoutCDNSizeRewrite(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{}, 4)
+	c := newArtworkCache(ctx, func() { done <- struct{}{} })
+	t.Cleanup(func() { cancel(); c.workers.Wait() })
+	data := artworkTestPNG(t, 16, 16)
+	const raw = "https://gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png"
+	const mix = "https://music.youtube.com/image/synthetic-system-mix?r=synthetic-image-option"
+	c.client.Transport = artworkTransport(func(req *http.Request) (*http.Response, error) {
+		if (req.URL.String() != raw && req.URL.String() != mix) || req.Header.Get("Cookie") != "" || req.Header.Get("Authorization") != "" {
+			t.Error("system cover was rewritten or carried account credentials")
+		}
+		return &http.Response{StatusCode: http.StatusOK, ContentLength: int64(len(data)), Body: io.NopCloser(bytes.NewReader(data))}, nil
+	})
+	for _, source := range []string{raw, mix} {
+		c.get(source, 128)
+		select {
+		case <-done:
+		case <-time.After(2 * time.Second):
+			t.Fatal("official system artwork never reached the downloader")
+		}
+		if c.get(source, 128) == nil {
+			t.Fatal("system artwork did not decode")
+		}
+	}
+	for _, rejected := range []string{
+		"https://gstatic.com/other.png",
+		"https://gstatic.com/youtube/media/ytm/images/pbg/cover.png?signature=synthetic",
+		"https://gstatic.com.evil.test/youtube/media/ytm/images/pbg/cover.png",
+		"https://music.youtube.com/youtubei/v1/browse?r=synthetic",
+		"https://music.youtube.com/image/fixture?r=synthetic&account=synthetic",
+	} {
+		u, _ := url.Parse(rejected)
+		if artworkURL(u) {
+			t.Fatal("downloader accepts artwork outside the static directory")
+		}
 	}
 }

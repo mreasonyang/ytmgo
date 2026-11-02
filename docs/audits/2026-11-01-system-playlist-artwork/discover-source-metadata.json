@@ -1,0 +1,33 @@
+{
+  "Title": "Discover Mix",
+  "References": [
+    {
+      "Location": "thumbnailRenderer.musicThumbnailRenderer.thumbnail.thumbnails[]",
+      "Scheme": "https",
+      "Host": "music.youtube.com",
+      "PublicStaticPath": "",
+      "PathClass": "/image/\u003copaque\u003e",
+      "Resize": "",
+      "QueryKeys": [
+        "r"
+      ],
+      "EmbeddedStaticArtwork": [],
+      "HasQuery": true,
+      "Allowed": false
+    },
+    {
+      "Location": "thumbnailRenderer.musicThumbnailRenderer.thumbnail.thumbnails[]",
+      "Scheme": "https",
+      "Host": "music.youtube.com",
+      "PublicStaticPath": "",
+      "PathClass": "/image/\u003copaque\u003e",
+      "Resize": "",
+      "QueryKeys": [
+        "r"
+      ],
+      "EmbeddedStaticArtwork": [],
+      "HasQuery": true,
+      "Allowed": false
+    }
+  ]
+}

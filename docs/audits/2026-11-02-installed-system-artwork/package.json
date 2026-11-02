@@ -1,0 +1,22 @@
+{
+  "base_commit": "b6742fb8d75a1856312add9c455d43f730a59253",
+  "source_sha256": {
+    "artwork.go": "09b63b5a2c14f99dc67a95fa7cf06999badaa2fd9bc326a1074e4f6e40c49cd7",
+    "artwork_test.go": "684960be1e762945e0a3a65c9f94ccf41feef05e822178832ab9ede6dccb74aa",
+    "internal/catalog/parse.go": "a08f8c7ebaaec96f48442cb177422f37f4a1fa1ae46988480d43483dbeaf1296",
+    "internal/catalog/client_test.go": "6b665b0e6b1cf165bd1a0efb8b3ba959cc95583b42fb450b99571531a455c87e"
+  },
+  "includes_account_avatar_and_library_restore": true,
+  "app": "/Users/easonyang/Documents/projects/ytmgo/build/installed-artwork-20261102/darwin-arm64/ytmgo.app",
+  "binary_sha256": "92a0cf9c69c41b222ef8228914fd83ba931389c713edd04f6ed893429e710dca",
+  "dmg": "/Users/easonyang/Documents/projects/ytmgo/build/installed-artwork-20261102/ytmgo-0.6.0-arm64-artwork-installed-fix.dmg",
+  "dmg_sha256": "497a0ae84f71b7fce33e661cecc6122f2c4f5145e510261b02422cd48b39f00f",
+  "deep_signature": true,
+  "manifests_verified": true,
+  "script_host_check": true,
+  "ffmpeg_check": true,
+  "developer_id_team": "2V4TX79LUZ",
+  "notarized": false,
+  "focused_race_tests": true,
+  "go_vet_all": true
+}

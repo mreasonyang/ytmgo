@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"net/url"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -23,6 +24,32 @@ var metadataCountPatterns = []*regexp.Regexp{
 }
 
 var publicVideoArtworkPath = regexp.MustCompile(`^/(?:vi|vi_webp)/[a-zA-Z0-9_-]{11}/[a-zA-Z0-9_-]+\.(?:jpg|webp)$`)
+var publicSystemArtworkPath = regexp.MustCompile(`^/youtube/media/ytm/images/pbg/[a-zA-Z0-9_@.-]+\.(?:png|jpg|webp)$`)
+
+// System playlists and mixes use Google's dedicated static artwork directory,
+// independently of the album/video image CDNs. Keep this allowance narrow.
+func IsSystemArtworkURL(u *url.URL) bool {
+	if u == nil || u.Scheme != "https" || u.User != nil || u.Port() != "" || u.RawQuery != "" || u.Fragment != "" || u.RawPath != "" {
+		return false
+	}
+	host := strings.ToLower(u.Hostname())
+	return (host == "gstatic.com" || host == "www.gstatic.com") && publicSystemArtworkPath.MatchString(u.Path)
+}
+
+// YouTube Music also serves generated mix covers through its image endpoint.
+// Its opaque path and single r option must survive unchanged; no account
+// credentials are needed by the artwork downloader.
+func IsArtworkProxyURL(u *url.URL) bool {
+	if u == nil || u.Scheme != "https" || u.User != nil || u.Host != "music.youtube.com" || u.Fragment != "" || u.RawPath != "" || len(u.String()) > 4096 {
+		return false
+	}
+	if !strings.HasPrefix(u.Path, "/image/") || len(u.Path) <= len("/image/") || path.Clean(u.Path) != u.Path {
+		return false
+	}
+	query, err := url.ParseQuery(u.RawQuery)
+	options := query["r"]
+	return err == nil && len(query) == 1 && len(options) == 1 && len(options[0]) > 0
+}
 
 // The parser follows display containers only. Menus, logging payloads and
 // recommendation endpoints never become visible items or playable targets.
@@ -536,6 +563,9 @@ func safeArtwork(raw string) string {
 		return ""
 	}
 	host := strings.ToLower(u.Hostname())
+	if IsArtworkProxyURL(u) {
+		return raw
+	}
 	if u.RawQuery != "" {
 		// Public video thumbnails have a stable path. Remove service-added
 		// sizing/tracking query fields instead of retaining opaque URL tokens.
@@ -544,6 +574,9 @@ func safeArtwork(raw string) string {
 			return u.String()
 		}
 		return ""
+	}
+	if IsSystemArtworkURL(u) {
+		return raw
 	}
 	for _, domain := range []string{"ytimg.com", "googleusercontent.com", "ggpht.com"} {
 		if host == domain || strings.HasSuffix(host, "."+domain) {

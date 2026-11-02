@@ -1,0 +1,25 @@
+{
+  "base_commit": "2a7abf90a95c0d75eb2e5911948dc0e3dad35456",
+  "source_sha256": {
+    "artwork.go": "09b63b5a2c14f99dc67a95fa7cf06999badaa2fd9bc326a1074e4f6e40c49cd7",
+    "artwork_test.go": "684960be1e762945e0a3a65c9f94ccf41feef05e822178832ab9ede6dccb74aa",
+    "internal/catalog/parse.go": "a08f8c7ebaaec96f48442cb177422f37f4a1fa1ae46988480d43483dbeaf1296",
+    "internal/catalog/client_test.go": "6b665b0e6b1cf165bd1a0efb8b3ba959cc95583b42fb450b99571531a455c87e"
+  },
+  "app": "/Users/easonyang/Documents/projects/ytmgo/build/system-artwork-final-20261101/darwin-arm64/ytmgo.app",
+  "binary_sha256": "d63e8d99929f7646a203419954045d34a914505f4d6f3b8719808adec9c6b31e",
+  "developer_id_team": "2V4TX79LUZ",
+  "notarized": false,
+  "deep_signature": true,
+  "diagnostic_probe_removed": true,
+  "source_files": [
+    "artwork.go",
+    "artwork_test.go",
+    "internal/catalog/parse.go",
+    "internal/catalog/client_test.go"
+  ],
+  "dmg": "/Users/easonyang/Documents/projects/ytmgo/build/system-artwork-final-20261101/ytmgo-0.6.0-arm64-system-artwork-fixed.dmg",
+  "dmg_sha256": "9269d8720cb9764e328cb936f5588392336012c3ad45cd613bc084a32508308d",
+  "focused_race_tests": true,
+  "go_vet_all": true
+}

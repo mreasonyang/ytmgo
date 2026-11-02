@@ -1,0 +1,18 @@
+{
+  "version": "0.6.0",
+  "app": "/Users/easonyang/Documents/projects/ytmgo/build/system-artwork-20261101/darwin-arm64/ytmgo.app",
+  "dmg": "/Users/easonyang/Documents/projects/ytmgo/build/system-artwork-20261101/ytmgo-0.6.0-arm64-system-artwork-candidate.dmg",
+  "binary_sha256": "e167900fb4d1ad43574b5b963af1148c8d5ddea9fa9b264ab451b8058c812d79",
+  "dmg_sha256": "6e26b3d6a99395550084ca5b096eab892dfa146fc9088f1b21d473f35b83c3b8",
+  "previous_installed_binary_sha256": "4ad34c5607643718be49cca4ec88f767dd0a9061ff207075591e99b7b4ff1c23",
+  "matches_prior_installed_test_candidate": false,
+  "developer_id_team": "2V4TX79LUZ",
+  "notarized": false,
+  "deep_signature": true,
+  "embedded_signatures": true,
+  "manifests": true,
+  "native_host": true,
+  "ffmpeg": true,
+  "focused_race_tests": true,
+  "go_vet_all": true
+}

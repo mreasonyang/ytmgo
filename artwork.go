@@ -15,6 +15,9 @@ import (
 	"sync"
 	"time"
 
+	"ytmgo/internal/catalog"
+	"ytmgo/internal/netproxy"
+
 	"github.com/egoist/mygo/ui"
 	"golang.org/x/image/draw"
 	_ "golang.org/x/image/webp"
@@ -28,40 +31,57 @@ const (
 	artworkDownloadLimit = 4 << 20
 	artworkSourcePixels  = 4 << 20
 	artworkEdge          = 768
+	artworkRetryBase     = 2 * time.Second
+	artworkRetryMax      = time.Minute
 )
 
 // Artwork uses a bounded work queue and a 32 MiB retained pixel budget,
 // including every mipmap the native renderer may create. In-flight decoding
 // and renderer-owned GPU textures are separate from that cache budget.
 type artEntry struct {
-	bitmap  *ui.Bitmap
-	bytes   int
-	used    uint64
-	pending bool
+	bitmap   *ui.Bitmap
+	bytes    int
+	used     uint64
+	pending  bool
+	failures int
+	retryAt  time.Time
 }
 type artRequest struct {
 	url  string
 	edge int
 }
 type artworkCache struct {
-	ctx     context.Context
-	mu      sync.Mutex
-	entries map[artRequest]*artEntry
-	clock   uint64
-	bytes   int
-	queue   chan artRequest
-	workers sync.WaitGroup
-	redraw  func()
-	client  *http.Client
+	ctx        context.Context
+	mu         sync.Mutex
+	entries    map[artRequest]*artEntry
+	clock      uint64
+	bytes      int
+	queue      chan artRequest
+	workers    sync.WaitGroup
+	redraw     func()
+	client     *http.Client
+	retryTimer *time.Timer
+	retryAt    time.Time
 }
 
 func newArtworkCache(ctx context.Context, redraw func()) *artworkCache {
-	c := &artworkCache{ctx: ctx, entries: map[artRequest]*artEntry{}, queue: make(chan artRequest, artworkQueueLimit), redraw: redraw, client: &http.Client{Timeout: 15 * time.Second, CheckRedirect: func(r *http.Request, via []*http.Request) error {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.Proxy = netproxy.Proxy
+	c := &artworkCache{ctx: ctx, entries: map[artRequest]*artEntry{}, queue: make(chan artRequest, artworkQueueLimit), redraw: redraw, client: &http.Client{Transport: transport, Timeout: 15 * time.Second, CheckRedirect: func(r *http.Request, via []*http.Request) error {
 		if len(via) >= 10 || !artworkURL(r.URL) {
 			return http.ErrUseLastResponse
 		}
 		return nil
 	}}}
+	context.AfterFunc(ctx, func() {
+		c.mu.Lock()
+		if c.retryTimer != nil {
+			c.retryTimer.Stop()
+			c.retryTimer = nil
+		}
+		c.mu.Unlock()
+		transport.CloseIdleConnections()
+	})
 	for range artworkWorkers {
 		c.workers.Add(1)
 		go c.work()
@@ -71,6 +91,9 @@ func newArtworkCache(ctx context.Context, redraw func()) *artworkCache {
 func artworkURL(u *url.URL) bool {
 	if u.Scheme != "https" || u.User != nil || u.Port() != "" {
 		return false
+	}
+	if catalog.IsSystemArtworkURL(u) || catalog.IsArtworkProxyURL(u) {
+		return true
 	}
 	h := strings.ToLower(u.Hostname())
 	for _, base := range []string{"googleusercontent.com", "ggpht.com", "ytimg.com"} {
@@ -93,16 +116,20 @@ func (c *artworkCache) get(raw string, requestedEdge int) ui.ImageSource {
 	request := artRequest{url: raw, edge: edge}
 	c.mu.Lock()
 	c.clock++
-	if e := c.entries[request]; e != nil {
+	e := c.entries[request]
+	if e != nil {
 		e.used = c.clock
-		b := e.bitmap
-		c.mu.Unlock()
-		if b == nil {
+		if e.bitmap != nil {
+			b := e.bitmap
+			c.mu.Unlock()
+			return b
+		}
+		if e.pending || time.Now().Before(e.retryAt) {
+			c.mu.Unlock()
 			return nil
 		}
-		return b
 	}
-	for len(c.entries) >= artworkEntryLimit {
+	for e == nil && len(c.entries) >= artworkEntryLimit {
 		if !c.evictOldest(artRequest{}) {
 			c.mu.Unlock()
 			return nil
@@ -110,7 +137,11 @@ func (c *artworkCache) get(raw string, requestedEdge int) ui.ImageSource {
 	}
 	select {
 	case c.queue <- request:
-		c.entries[request] = &artEntry{pending: true, used: c.clock}
+		if e == nil {
+			e = &artEntry{used: c.clock}
+			c.entries[request] = e
+		}
+		e.pending = true
 	default:
 		// Completion redraws the visible views, which can request this image
 		// again once a worker has made room. Never spawn a waiting goroutine.
@@ -181,16 +212,66 @@ func (c *artworkCache) load(request artRequest) {
 		e.bitmap = bitmap
 		c.bytes += cost - e.bytes
 		e.bytes = cost
+		if bitmap == nil {
+			delay := min(artworkRetryBase<<e.failures, artworkRetryMax)
+			e.failures = min(e.failures+1, 6)
+			e.retryAt = time.Now().Add(delay)
+		} else {
+			e.failures = 0
+			e.retryAt = time.Time{}
+		}
 	}
 	for c.bytes > artworkPixelBudget {
 		if !c.evictOldest(request) {
 			break
 		}
 	}
+	c.scheduleRetry(time.Now())
 	c.mu.Unlock()
 	if c.redraw != nil && c.ctx.Err() == nil {
 		c.redraw()
 	}
+}
+
+// One timer wakes the view when failed entries become retryable, even while
+// playback is idle. Only get() queues work, so offscreen images are not retried.
+// Caller holds mu; expired entries need no further wakeup until requested again.
+func (c *artworkCache) scheduleRetry(now time.Time) {
+	if c.redraw == nil || c.ctx.Err() != nil {
+		return
+	}
+	next := time.Time{}
+	for _, e := range c.entries {
+		if !e.pending && e.bitmap == nil && e.retryAt.After(now) && (next.IsZero() || e.retryAt.Before(next)) {
+			next = e.retryAt
+		}
+	}
+	if c.retryTimer != nil {
+		if next.Equal(c.retryAt) {
+			return
+		}
+		c.retryTimer.Stop()
+		c.retryTimer = nil
+	}
+	c.retryAt = next
+	if next.IsZero() {
+		return
+	}
+	var timer *time.Timer
+	timer = time.AfterFunc(time.Until(next), func() {
+		c.mu.Lock()
+		if c.retryTimer != timer {
+			c.mu.Unlock()
+			return
+		}
+		c.retryTimer = nil
+		c.scheduleRetry(time.Now())
+		c.mu.Unlock()
+		if c.ctx.Err() == nil {
+			c.redraw()
+		}
+	})
+	c.retryTimer = timer
 }
 
 // Caller holds mu. Pending entries are bounded by the queue and worker count.

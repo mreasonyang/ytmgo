@@ -1,5 +1,74 @@
 # Native playback verification
 
+## Installed system playlist artwork — 2026-11-02 (Asia/Shanghai)
+
+The user still saw placeholders because the November 1 system-cover candidate
+had only been tested standalone. The installed 0.6.0 executable did not contain
+those artwork fixes. This follow-up reproduced both placeholders in the real
+installed app, then rebuilt from `b6742fb` (including account-avatar and saved
+library-restoration changes) plus the four artwork/parser source and test files.
+The Developer ID signed DMG was mounted read-only, verified, and installed at
+`/Applications/ytmgo.app`, with the previous app retained as a local backup.
+Installed binary identity matches the mounted package. Focused artwork/catalogue
+race tests, isolated `go vet ./...`, manifests, nested signatures, script-host
+check and FFmpeg execution passed. The first cold launch restored Premium,
+the saved library and account avatar, and visibly rendered both system covers.
+Focused installed UI results are recorded in
+`docs/audits/2026-11-02-installed-system-artwork/`. This is a local signed update;
+no notarization or public release was performed.
+
+## System playlist artwork — 2026-11-01 (Asia/Shanghai)
+
+Official Liked Music uses a purple/pink thumbs-up PNG from Google's dedicated
+YouTube Music static artwork directory. Discover Mix uses the canonical
+`music.youtube.com/image/` service with an opaque path and one `r` option.
+Both were discarded by the former artwork URL checks even though the items
+were correctly recognized as playlists. The parser and downloader now accept
+these narrowly scoped image sources while retaining their existing bounds and
+credential-free image requests. Generated-image options are preserved intact.
+
+Focused race/boundary tests and isolated-snapshot vet passed. A clean, same-team
+signed standalone candidate rendered Liked Music and Discover Mix in the
+library/sidebar and the Discover Mix generated cover in the detail header.
+The installed app had changed during the comparison, so it was preserved;
+after testing the independent candidate, the current installed app was reopened
+with its executable unchanged. The final signed DMG is verified but not
+notarized or published. Evidence and artifact hashes:
+`docs/audits/2026-11-01-system-playlist-artwork/`.
+
+## Artwork proxy selection and retry — 2026-11-01 (Asia/Shanghai)
+
+Artwork downloads now use the same `netproxy.Proxy` selection as catalogue and
+media requests. Previously they used Go's default transport, which recognizes
+proxy environment variables but does not read macOS system proxy settings.
+On this Mac, a public `i.ytimg.com` thumbnail failed with the previous default
+client and no selected proxy; the configured route selected a proxy, returned
+HTTP 200, and decoded a 480×360 image. The revised artwork cache also downloaded
+and decoded the same public image successfully. Probe output retained only
+route-presence booleans, HTTP status, decode success and image dimensions.
+
+Failed entries no longer remain empty indefinitely while cached. Visible views
+can retry after exponential backoff from 2 seconds to 1 minute. One shared
+timer wakes idle views; the timer does not fetch offscreen images. Existing
+worker, queue, entry, download, decode and pixel bounds remain in place.
+Regressions cover connection/HTTP/decode failure recovery, backoff, duplicate
+requests, a full queue and idle-view wakeups. Full `go test -race ./...`,
+`go vet ./...` and `git diff --check` passed. This is source and isolated network
+verification; the running installed app was not replaced or relaunched, and
+this does not establish the cause of every missing cover in its current page.
+
+The subsequent installed-package check supersedes the source-only installation
+status above. A same-team Developer ID signed 0.6.0 arm64 DMG was built, mounted,
+verified and installed at `/Applications/ytmgo.app`; the old app is backed up.
+The installed executable matches the tested package. Premium restore passed on
+two launches. Both previously blank video covers now render, including after a
+cold restart; search, player-bar, immersive and scrolling artwork checks passed.
+Playback progressed through 73.85 seconds before pausing. Liked Music and
+Discover Mix remain placeholders in the library/sidebar, so overall artwork
+acceptance is PARTIAL. This local candidate is not notarized or published.
+Hashes and focused UI results are in
+`docs/audits/2026-11-01-artwork-package/`.
+
 ## Distinct, reachable login application — 2026-10-31 (Asia/Shanghai)
 
 This supersedes the October 30 decision to hide the helper from the macOS Dock.

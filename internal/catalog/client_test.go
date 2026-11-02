@@ -277,6 +277,66 @@ func TestArtworkURLBoundary(t *testing.T) {
 	}
 }
 
+func TestSystemPlaylistArtworkIsRetainedWithoutChangingItsKind(t *testing.T) {
+	for _, fixture := range []struct{ title, id, source string }{
+		{"Liked Music", "VLLM", "https://gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png"},
+		{"Static system mix fixture", "VLstatic_mix_fixture", "https://www.gstatic.com/youtube/media/ytm/images/pbg/system-mix-fixture.png"},
+		{"Discover Mix", "VLsystem_mix_fixture", "https://music.youtube.com/image/synthetic-system-mix?r=synthetic-image-option"},
+	} {
+		t.Run(fixture.title, func(t *testing.T) {
+			renderer := object{
+				"title":              words(fixture.title),
+				"navigationEndpoint": browseEndpoint(fixture.id, "MUSIC_PAGE_TYPE_PLAYLIST"),
+				"thumbnailRenderer": object{"musicThumbnailRenderer": object{"thumbnail": object{"thumbnails": []any{
+					object{"url": fixture.source, "width": float64(1200), "height": float64(1200)},
+				}}}},
+			}
+			item, ok := parseItem(renderer, "musicTwoRowItemRenderer")
+			if !ok || item.Kind != "playlist" || item.Artwork != fixture.source || item.BrowseID != fixture.id {
+				t.Fatal("system playlist lost its upstream artwork or playlist semantics")
+			}
+		})
+	}
+}
+
+func TestSystemArtworkAllowanceStaysInYouTubeMusicDirectory(t *testing.T) {
+	for _, raw := range []string{
+		"https://gstatic.com/other/image.png",
+		"https://gstatic.com/youtube/media/ytm/images/pbg/../private.png",
+		"https://gstatic.com/youtube/media/ytm/images/pbg/%2e%2e.png",
+		"https://gstatic.com.evil.test/youtube/media/ytm/images/pbg/cover.png",
+		"https://evil.gstatic.com/youtube/media/ytm/images/pbg/cover.png",
+		"https://gstatic.com/youtube/media/ytm/images/pbg/cover.png?signature=synthetic",
+		"https://gstatic.com/youtube/media/ytm/images/pbg/cover.png#fragment",
+		"http://gstatic.com/youtube/media/ytm/images/pbg/cover.png",
+		"https://gstatic.com:444/youtube/media/ytm/images/pbg/cover.png",
+	} {
+		if safeArtwork(raw) != "" {
+			t.Fatal("system artwork escaped its public static directory")
+		}
+	}
+}
+
+func TestMixImageEndpointDoesNotAllowOtherRequests(t *testing.T) {
+	for _, raw := range []string{
+		"http://music.youtube.com/image/fixture?r=synthetic",
+		"https://music.youtube.com.evil.test/image/fixture?r=synthetic",
+		"https://music.youtube.com:444/image/fixture?r=synthetic",
+		"https://music.youtube.com/youtubei/v1/browse?r=synthetic",
+		"https://music.youtube.com/image/../youtubei?r=synthetic",
+		"https://music.youtube.com/image/%2e%2e?r=synthetic",
+		"https://music.youtube.com/image/fixture?r=synthetic#fragment",
+		"https://music.youtube.com/image/fixture?r=synthetic&account=synthetic",
+		"https://music.youtube.com/image/fixture?r=synthetic&r=duplicate",
+		"https://music.youtube.com/image/fixture?r=",
+		"https://music.youtube.com/image/fixture",
+	} {
+		if safeArtwork(raw) != "" {
+			t.Fatal("mix image allowance accepted an unrelated or malformed request")
+		}
+	}
+}
+
 func TestTransferredSessionAndLike(t *testing.T) {
 	var mutations atomic.Int32
 	client := fixtureClient(t, func(w http.ResponseWriter, req *http.Request) {

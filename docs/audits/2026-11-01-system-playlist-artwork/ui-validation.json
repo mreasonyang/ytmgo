@@ -1,0 +1,28 @@
+{
+  "time": "2026-11-01T14:47:17.775907+00:00",
+  "result": "PASS for the two reported system-cover cases",
+  "official_comparison": {
+    "liked_music": "Official web page in Brave: purple/pink gradient with white thumbs-up; public gstatic PNG",
+    "discover_mix": "Upstream catalogue image metadata: music.youtube.com/image/<opaque>?r=<opaque>; no image identifier or r value retained in evidence"
+  },
+  "native_candidate_checks": {
+    "liked_music_library_and_sidebar": "PASS; matches official thumbs-up image",
+    "discover_mix_library_and_sidebar": "PASS; branded blue/purple Discover Mix artwork with image material",
+    "discover_mix_detail_header": "PASS; full upstream generated cover, labelled Mix",
+    "premium_restore": "PASS"
+  },
+  "tested_binary_sha256": "d63e8d99929f7646a203419954045d34a914505f4d6f3b8719808adec9c6b31e",
+  "candidate_not_installed_over_current_app": true,
+  "restored_current_install_unchanged": true,
+  "current_installed_binary_sha256": "4ad34c5607643718be49cca4ec88f767dd0a9061ff207075591e99b7b4ff1c23",
+  "running_installed_app": true,
+  "diagnostic_code_excluded_from_final_candidate": true,
+  "tests": {
+    "artwork_race": "PASS",
+    "catalogue_race": "PASS",
+    "final_url_boundary_race": "PASS",
+    "isolated_snapshot_go_vet_all": "PASS"
+  },
+  "notarized": false,
+  "published": false
+}

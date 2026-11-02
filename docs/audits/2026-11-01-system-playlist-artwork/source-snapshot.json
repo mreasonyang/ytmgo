@@ -1,0 +1,18 @@
+{
+  "base_commit": "2a7abf90a95c0d75eb2e5911948dc0e3dad35456",
+  "patch_files": [
+    "artwork.go",
+    "artwork_test.go",
+    "internal/catalog/parse.go",
+    "internal/catalog/client_test.go"
+  ],
+  "source_sha256": {
+    "artwork.go": "c5753031ad374f45dcc56756c8e00d61b2f5ad86198b94973ec2def2f9aeab31",
+    "artwork_test.go": "a52aff4710f17d3e9eb6c87319cf197948ef1a3d2b1d9f0878cb70001d07016b",
+    "internal/catalog/parse.go": "e325d4cdbda07918fb88ddbefec27a72b19c59809a700676417e81c3a35c1762",
+    "internal/catalog/client_test.go": "7325afb85bfae0ebd635b19c844219035e18c9e4e535794558e358c0765446cf"
+  },
+  "isolated_source": "/Users/easonyang/Documents/projects/ytmgo/build/.system-artwork-snapshot",
+  "artifact_output": "/Users/easonyang/Documents/projects/ytmgo/build/system-artwork-20261101",
+  "purpose": "Exclude concurrent unrelated workspace changes from this system-artwork candidate."
+}

@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-02",
+  "timezone": "Asia/Shanghai",
+  "result": "PASS",
+  "scope": "Installed local macOS arm64 app; two reported system covers",
+  "installed_path": "/Applications/ytmgo.app",
+  "tested_binary_sha256": "92a0cf9c69c41b222ef8228914fd83ba931389c713edd04f6ed893429e710dca",
+  "running_process_executable_matches_install": true,
+  "old_install_placeholders_reproduced": true,
+  "checks": {
+    "cold_launch_premium_restore": "PASS",
+    "saved_library_restored_automatically": "PASS",
+    "signed_in_avatar_retained": "PASS",
+    "liked_music_sidebar": "PASS: purple/pink gradient and white thumbs-up",
+    "liked_music_home_shortcut": "PASS",
+    "liked_music_library": "PASS",
+    "discover_mix_sidebar": "PASS: branded blue/purple generated image",
+    "discover_mix_library": "PASS",
+    "discover_mix_detail_header": "PASS: full generated cover and Discover Mix label"
+  },
+  "final_state": "Installed fixed app left running on Discover Mix detail, playback idle",
+  "screenshots": "Native CUA screenshots and accessibility state in chat; no PNG files exported",
+  "notarized": false,
+  "published": false,
+  "new_playback_acceptance": false
+}

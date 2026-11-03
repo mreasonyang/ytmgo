@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Offline native protocol tests: no account, media, or audio device access."""
+import argparse
 import json
 import os
 from pathlib import Path
@@ -48,13 +49,16 @@ def run_tests(component, command, env):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--count", type=int, choices=(1, 3, 5), default=1)
+    args = parser.parse_args()
     suffix=".exe" if sys.platform=="win32" else ""
     env=os.environ.copy()
     env["YTMGO_TEST_NATIVE_HOST"]=str(ROOT / "build/runtime" / ("ytmgo-playback-host"+suffix))
     env["YTMGO_TEST_PROOF_DOM"]="1"
     env.pop("YTMGO_TEST_ANONYMOUS_WARM",None)
     commands = [("rust", ["cargo", "test", "--locked", "--manifest-path", str(ROOT / "native/playback-host/Cargo.toml")]),
-                ("go", ["go", "test", "-json", "./internal/streaming", "-count=1"])]
+                ("go", ["go", "test", "-json", "./internal/streaming", "-count=" + str(args.count)])]
     for component, command in commands:
         if not run_tests(component, command, env):
             print("Native runtime tests failed")

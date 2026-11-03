@@ -57,9 +57,14 @@ def main():
     env["YTMGO_TEST_NATIVE_HOST"]=str(ROOT / "build/runtime" / ("ytmgo-playback-host"+suffix))
     env["YTMGO_TEST_PROOF_DOM"]="1"
     env.pop("YTMGO_TEST_ANONYMOUS_WARM",None)
-    commands = [("rust", ["cargo", "test", "--locked", "--manifest-path", str(ROOT / "native/playback-host/Cargo.toml")]),
+    # Match the packaged build profile and reuse its dependencies, rather than
+    # rebuilding the entire WebView stack in a second, debug target directory.
+    commands = [("rust", ["cargo", "test", "--release", "--locked", "--target-dir", str(ROOT / "build/playback-target"),
+                          "--manifest-path", str(ROOT / "native/playback-host/Cargo.toml")]),
                 ("go", ["go", "test", "-json", "./internal/streaming", "-count=" + str(args.count)])]
+    print(json.dumps({"native_runtime_test_count": args.count}), flush=True)
     for component, command in commands:
+        print(json.dumps({"native_runtime_component": component, "status": "running"}), flush=True)
         if not run_tests(component, command, env):
             print("Native runtime tests failed")
             return 1

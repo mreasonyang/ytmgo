@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const resolverOperationTimeout = 45 * time.Second
+
 type scriptHost interface {
 	call(context.Context, string, any) error
 	Close()
@@ -62,7 +64,7 @@ func (r *Resolver) enter(ctx context.Context) (context.Context, func(), error) {
 		<-r.gate
 		return nil, nil, errors.New("runtime_closed")
 	}
-	op, cancel := context.WithTimeout(ctx, 45*time.Second)
+	op, cancel := context.WithTimeout(ctx, resolverOperationTimeout)
 	r.active = cancel
 	r.stateMu.Unlock()
 	stop := context.AfterFunc(r.life, cancel)

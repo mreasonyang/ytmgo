@@ -58,7 +58,10 @@ func TestNativeProofDOMHasNoPlaybackAPIs(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer h.Close()
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	// A cold WebView2 profile can outlast 15 seconds on Windows runners. Use
+	// the same bounded operation budget as the real resolver; the host itself
+	// allows 30 seconds for initialization before answering its first call.
+	ctx, cancel := context.WithTimeout(context.Background(), resolverOperationTimeout)
 	defer cancel()
 	var v []string
 	if err := h.call(ctx, "[typeof ytmgoProof.snapshot,typeof ytmgoProof.mint,typeof AudioContext,typeof Audio,document.cookie]", &v); err != nil {

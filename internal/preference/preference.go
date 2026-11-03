@@ -24,6 +24,11 @@ func Save(path, value string, valid func(string) bool) error {
 	if !valid(value) {
 		return errors.New("invalid preference value")
 	}
+	return WriteFile(path, []byte(value+"\n"))
+}
+
+// WriteFile atomically replaces a private settings file.
+func WriteFile(path string, data []byte) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 		return err
 	}
@@ -32,7 +37,7 @@ func Save(path, value string, valid func(string) bool) error {
 		return err
 	}
 	defer os.Remove(file.Name())
-	if _, err = file.WriteString(value + "\n"); err != nil {
+	if _, err = file.Write(data); err != nil {
 		file.Close()
 		return err
 	}

@@ -382,7 +382,7 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 			a.clearAccountRequestFailure(newIdentity)
 			a.preparedID = ""
 			if replay.pending && replay.generation == a.playGeneration {
-				a.startTrack(replay.item)
+				a.startTrackAt(replay.item, replay.position)
 			} else if a.model.Playing {
 				a.prepareNext()
 			}
@@ -479,7 +479,7 @@ func (a *desktop) useAnonymousPlayback() {
 			}
 			s.ready, s.configured = true, next
 			if replay.pending && replay.generation == a.playGeneration {
-				a.startTrack(replay.item)
+				a.startTrackAt(replay.item, replay.position)
 			}
 		})
 	}()
@@ -487,6 +487,7 @@ func (a *desktop) useAnonymousPlayback() {
 
 type accountReplay struct {
 	item       catalog.Item
+	position   time.Duration
 	generation uint64
 	pending    bool
 }
@@ -510,6 +511,7 @@ func (a *desktop) beforeAccountConfigure(ctx context.Context, generation uint64,
 			if a.loadPending || identityChanged {
 				if a.loadPending && !identityChanged {
 					replay.item = a.model.Current
+					replay.position = time.Duration(a.model.Position * float64(time.Second))
 					replay.pending = replay.item.ID != ""
 				}
 				if a.playCancel != nil {
@@ -682,6 +684,7 @@ func (a *desktop) clearAccountContent() {
 }
 
 func (a *desktop) clearAccountPlayback() {
+	a.restoredTrack = false
 	a.model.Queue = nil
 	a.model.Current = catalog.Item{}
 	a.queueIndex = -1
@@ -695,6 +698,7 @@ func (a *desktop) clearAccountPlayback() {
 	a.model.Video = false
 	a.syncVideo()
 	mygo.NowPlaying.Clear()
+	a.savePlayback()
 }
 func (a *desktop) signOut() {
 	if a.accountBusy || (!a.model.SignedIn && !nativeRestoreDeferred(&a.model)) {
@@ -739,18 +743,7 @@ func (a *desktop) signOut() {
 			a.model.SignedIn = false
 			a.model.MusicPremium = false
 			a.clearAccountContent()
-			a.model.Queue = nil
-			a.model.Current = catalog.Item{}
-			a.queueIndex = -1
-			a.model.PlaybackError = ""
-			a.model.clearLyrics("")
-			a.model.Liked = false
-			a.model.Position = 0
-			a.model.Duration = 0
-			a.model.Playing = false
-			a.model.Video = false
-			a.syncVideo()
-			mygo.NowPlaying.Clear()
+			a.clearAccountPlayback()
 			mygo.App.SetMenu(a.menu())
 			ctx := s.flow.begin(a.ctx, generation)
 			go func() {

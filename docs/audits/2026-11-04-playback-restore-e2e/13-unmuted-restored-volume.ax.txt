@@ -1,0 +1,187 @@
+Window: "ytmgo", App: ytmgo.
+0 standard window ytmgo, Secondary Actions: Raise
+	1 button ytmgo Home
+	2 button (disabled) Back
+	3 button (disabled) Forward
+	4 button Home
+	5 text field (settable) Description: Search, Placeholder: What do you want to play?
+	6 button Explore
+	7 button Settings
+	8 menu button Account · YouTube Music Premium, Help: YouTube Music Premium
+	9 button Library
+	10 button Collapse sidebar
+	11 button Playlists
+	12 button Albums
+	13 button Artists
+	14 scroll area Your playlists
+		15 button Liked Music · Auto playlist, Help: Liked Music
+		16 button New Release Mix · Mix, Help: New Release Mix
+		17 button Ultimate Wedding Playlist
+		18 button Dreamkid
+		19 button Best
+		20 button Antidote · Derik Fein, Help: Antidote
+		21 button Favorite Songs
+		22 button Mindhunter (Soundtrack Inspired by the TV Show) · Fandom, Help: Mindhunter (Soundtrack Inspired by the TV Show)
+		23 button UK R&B Hits 2024 · YouTube Music, Help: UK R&B Hits 2024
+		24 button Discover Mix · Mix, Help: Discover Mix
+		25 button ALT CTRL
+		26 button At the Airport
+		27 button Blues Replay
+		28 button Eminem: Next Steps
+		29 button ESL Pro League - Official Soundtrack
+		30 button Favorite Songs
+		31 button Feeling Good
+		32 button Gentle
+		33 button Hollywood Undead Essentials
+		34 button LINKIN PARK Essentials
+		35 button My Shazam Tracks
+		36 button OG
+		37 button Party Starters
+		38 button Powerful
+		39 button Replay 2018
+	40 scroll area Content
+		41 heading Late night listening
+		42 button Liked Music
+		43 button New Release Mix
+		44 button Ultimate Wedding Playlist
+		45 button Dreamkid
+		46 button Best
+		47 button Antidote
+		48 button Favorite Songs
+		49 button Mindhunter (Soundtrack Inspired by the TV Show)
+		50 heading Listen again
+		51 scroll area
+			52 button New Release Mix · Navjaxx, David Lee, daniel.mp3, NOYA
+			53 button Demon Samurai · ONI
+			54 button Marijuana Girl Vol.2 · Remixology_Lab
+			55 button The Weeknd - Hong Kong Ft. Faye Wong (Live in Hong Kong) · Weeknd Everyday
+			56 button Genre Blurring · Aaron Frazer, Leon Bridges, Masego, Big Data
+			57 button Cypress Hill Remixes That Hit Different 2026 · Remixology_Lab
+			58 button kill ur boyf vibes / women supreme · Rosalyn “Sera” Shard
+			59 button Liked Music · Auto playlist
+			60 button Vibe · Michael Porcayo
+			61 button Ultimate Wedding Playlist
+			62 button Sex & Drugs · Temper City
+			63 button Random Access Memories · Daft Punk
+			64 button 你从未离去 (抖音DJ版) - 于佰万『我不再迷茫 思念是唯一的行囊，满天的星光 有一颗是你的愿望。』♪ || 年度最佳抖音歌曲 | 抖音最火歌曲音 | 抖音 | TikTok ♪ · Fantastic Music Station
+			65 button Midnight Drive in Tokyo · Beat Flickers
+			66 button DOTB ROCK · Diggy Graves
+			67 button 711 · Xana
+			68 button Follow Me · Alec Benjamin
+			69 button TOKYO PARADISE CITY · Beat Flickers
+			70 button Over and Over / Tokyo Paradise City · Beat Flickers
+			71 button 在墜落時 · 汉堡黄
+		72 heading New releases
+		73 scroll area
+			74 button KNUCK · MUSHVENOM
+			75 button Chptr. 1 · JAY B
+			76 button Drown · Unroyal
+			77 button Muse · John Legend
+			78 button Sick Of Myself · Sara Beth
+			79 button And The Crowd Goes Mild · Sasha Alex Sloan
+			80 button My Confession · MOTHICA
+			81 button 打翻了整夜的香甜 · 陳忻玥
+			82 button For My Future Self · 9m88
+			83 button CLUBSOS VOL. 1 · 5 Seconds of Summer
+		84 heading Shows for you
+		85 scroll area
+			86 button 公开视频 · 政经鲁社长
+			87 button 翻转电台FlipRadio · FearNation 世界苦茶
+			88 button 大飞说科技 · Best Partners TV
+			89 button W 神秘檔案 · Wally Magazine
+			90 button 下一章閱讀｜經濟學人 Podcast · 下一章閱讀
+			91 button 二竹圍之聲-第二季 · 義竹數位機會中心
+			92 button 曾寶儀的人生藏寶圖 · 曾寶儀的人生藏寶圖
+			93 button US-CHINA DAILY PODCAST · 中環十一少 Mr.11
+			94 button WSJ Exclusive Interviews · The Wall Street Journal
+			95 button The WAN Show (Legacy) · Linus Tech Tips
+			96 button 【Podcast迷走大學】所有集數 · 迷走大學
+			97 button RAW by BLAST Podcasts · BLAST Premier
+			98 button 习近平的家族故事 · 政经鲁社长
+			99 button TVB Straight Talk/清心直說 · TVB NEWS Official 無綫新聞
+			100 button Podcast - Capital Market & Geopolitics · 中環十一少 Mr.11
+			101 button BLAST Push To Talk | Scrawny and Launders · BLAST Premier
+		102 heading From the community
+		103 scroll area
+			104 button Memandu tgh malam · Bwaa
+			105 button Tell me you have attachment issues without telling me you have attachment issues. · Gillian
+			106 button ㄹ · 김우빈
+			107 button NO CREDIT CHECKS FOR YOU · Thomas Thompson
+			108 button Nice beat songs · 𝔾𝕀ℝ𝕃 𝕊ℚ𝕌𝔸𝔻 ♡
+			109 button 成熟味歌單 · HaHa Lin
+			110 button love · Romario Rodriguez
+			111 button Vibe: Clean & Feel-Good · SHUBH9899
+			112 button who's a heretic now · Hazel 🦢
+			113 button Chinese song · 鄭大貓
+		114 heading Fresh finds, old favorites
+		115 scroll area
+			116 button Archive Mix · Ricchi E Poveri, One Direction, Katy Perry, MOTHICA
+			117 button New Release Mix · Navjaxx, David Lee, daniel.mp3, NOYA
+			118 button Liked Music · Auto playlist
+			119 button Discover Mix · My Song, Pino, The Romantic Playlist, Thundercat
+			120 button Replay Mix · Temper City, Christina Perri, Ashe, Black Omen Media
+		121 heading Featured playlists for you
+		122 scroll area
+			123 button Autumn Feel · girl in red, Phoebe Bridgers, sombr, Dermot Kennedy
+			124 button Top 100 Music Videos Global · YouTube Charts
+			125 button Hits Unplugged · Ella Henderson, Teddy Swims, David Guetta, Lewis Capaldi
+			126 button Top 100 Songs Global · YouTube Charts
+			127 button Top Weekly Videos International · YouTube Charts
+			128 button Korean Boom Bap Hip-Hop · nafla, DON MALIK, The Quiett, DOK2
+			129 button Sounds of Ibiza 2026 · HUGEL, Jonas Blue, ANOTR, Blond:ish
+			130 button I Don't Usually Like Country, But... · Morgan Wallen, Shaboozey, Jessie Murph, Jelly Roll
+			131 button '10s R&B Chill · Frank Ocean, Miguel, H.E.R., USHER
+			132 button Country Rock · HARDY, Chris Stapleton, Eddie And The Getaway, Brantley Gilbert
+	133 text (settable) Now Playing
+	134 button Immersive mode · Now Playing
+	135 button Close panel
+	136 button Cover
+	137 button Video
+	138 text (settable) Description: Contact, Value: Contact Daft Punk
+	139 button Like
+	140 button Queue · Now Playing
+	141 button Lyrics · Now Playing
+	142 scroll area
+		143 button Give Life Back to Music · Daft Punk
+		144 button The Game of Love · Daft Punk
+		145 button Giorgio by Moroder · Daft Punk
+		146 button Within · Daft Punk
+		147 button Instant Crush (feat. Julian Casablancas) · Daft Punk, Julian Casablancas
+		148 button Lose Yourself to Dance (feat. Pharrell Williams) · Daft Punk, Pharrell Williams
+		149 button Touch (feat. Paul Williams) · Daft Punk, Paul Williams
+		150 button Get Lucky (feat. Pharrell Williams and Nile Rodgers) · Daft Punk, Pharrell Williams, Nile Rodgers
+		151 button Beyond · Daft Punk
+		152 button Motherboard · Daft Punk
+		153 button Fragments of Time (feat. Todd Edwards) · Daft Punk, Todd Edwards
+		154 button Doin' it Right (feat. Panda Bear) · Daft Punk, Panda Bear
+		155 button Contact · Daft Punk
+	156 container Player controls
+		157 button Open Now Playing
+		158 button Like
+		159 button Shuffle queue
+		160 button Previous
+		161 button Play
+		162 button Next
+		163 button Repeat: off
+		164 text (settable) 1:31
+		165 slider (settable, float) Description: Playback position, Value: 91.386502025
+		166 text (settable) 6:23
+		167 button Lyrics
+		168 button Queue
+		169 button Mute
+		170 slider (settable, float) Description: Volume, Value: 0.3499999999999999
+		171 menu button More actions
+		172 button Immersive mode
+	173 close button
+	174 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	175 minimize button
+	176 text ytmgo
+177 menu bar
+	178 ytmgo
+	179 File
+	180 Edit
+	181 Playback
+	182 View
+	183 Window
+	184 Account
+	185 Help

@@ -288,6 +288,10 @@ func (a *desktop) playItem(it catalog.Item) {
 }
 
 func (a *desktop) startTrack(it catalog.Item) {
+	a.startTrackAt(it, 0)
+}
+
+func (a *desktop) startTrackAt(it catalog.Item, at time.Duration) {
 	if a.player == nil {
 		a.model.Error = a.tr("nativeRuntimeMissing")
 		a.model.ErrorScope = ""
@@ -310,8 +314,9 @@ func (a *desktop) startTrack(it catalog.Item) {
 	}
 	ctx, cancel := context.WithCancel(a.ctx)
 	a.playCancel = cancel
+	a.restoredTrack = false
 	a.model.Current = it
-	a.model.Position = 0
+	a.model.Position = at.Seconds()
 	a.model.Duration = it.Duration.Seconds()
 	a.model.Playing = false
 	a.model.PlaybackLoading = true
@@ -320,7 +325,7 @@ func (a *desktop) startTrack(it catalog.Item) {
 	a.model.Liked = it.Liked
 	a.model.PlaybackError = ""
 	a.endedHandled = true
-	mygo.NowPlaying.Set(mygo.NowPlayingInfo{Title: it.Title, Artist: it.Artist, Album: it.Album, Duration: it.Duration, State: mygo.PlaybackPaused, Commands: mygo.MediaPlay | mygo.MediaPause | mygo.MediaNext | mygo.MediaPrevious | mygo.MediaSeek})
+	a.publishPausedTrack()
 	a.invalidate()
 	if a.model.SignedIn && !it.LikeKnown {
 		accountGeneration, likeGeneration := a.accountGeneration, a.likeGeneration
@@ -337,7 +342,7 @@ func (a *desktop) startTrack(it catalog.Item) {
 		}()
 	}
 	go func() {
-		err := a.player.Load(ctx, it.ID)
+		err := a.player.LoadAt(ctx, it.ID, at)
 		a.post(func() {
 			if generation != a.playGeneration {
 				return
@@ -345,6 +350,9 @@ func (a *desktop) startTrack(it catalog.Item) {
 			a.loadPending = false
 			a.model.PlaybackLoading = false
 			if err != nil && ctx.Err() == nil {
+				// Resolution may fail before the decoder has a position (for
+				// example, during account setup). Keep the bookmark for Retry.
+				a.restoredTrack = at > 0
 				state := a.player.Snapshot()
 				recordPlaybackDiagnostic(a.diagnosticPath, "audio", state.Error, state.ErrorDetails)
 				a.playbackFailure(state)
@@ -437,7 +445,7 @@ func (a *desktop) prepareNext() {
 		return
 	}
 	id := ""
-	if !a.powerPlaybackSuspended && !a.loadPending && a.model.Current.ID != "" && a.model.PlaybackError == "" {
+	if !a.restoredTrack && !a.powerPlaybackSuspended && !a.loadPending && a.model.Current.ID != "" && a.model.PlaybackError == "" {
 		id = nextPreparedID(a.model.Queue, a.queueIndex, a.model.Repeat)
 	}
 	if id == a.preparedID {
@@ -482,8 +490,8 @@ func (a *desktop) toggle() {
 		}
 		return
 	}
-	if a.player.Snapshot().Error != "" {
-		a.startTrack(a.model.Current)
+	if a.restoredTrack || a.player.Snapshot().Error != "" {
+		a.retryPlayback()
 		return
 	}
 	if a.player.Snapshot().Playing {
@@ -492,6 +500,10 @@ func (a *desktop) toggle() {
 		a.resume()
 	}
 	a.invalidate()
+}
+
+func (a *desktop) retryPlayback() {
+	a.startTrackAt(a.model.Current, time.Duration(a.model.Position*float64(time.Second)))
 }
 
 func (a *desktop) cancelResume() {
@@ -518,8 +530,8 @@ func (a *desktop) resume() {
 		}
 		return
 	}
-	if a.player.Snapshot().Error != "" {
-		a.startTrack(a.model.Current)
+	if a.restoredTrack || a.player.Snapshot().Error != "" {
+		a.retryPlayback()
 		return
 	}
 	a.cancelResume()
@@ -581,6 +593,12 @@ func (a *desktop) seek(seconds float64) {
 	}
 	a.cancelResume()
 	seconds = math.Max(0, math.Min(a.model.Duration, seconds))
+	if a.restoredTrack {
+		a.model.Position = seconds
+		a.publishPausedTrack()
+		a.invalidate()
+		return
+	}
 	a.model.PlaybackError = ""
 	generation := a.playGeneration
 	a.seekGeneration++

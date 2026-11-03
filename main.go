@@ -38,6 +38,8 @@ type desktop struct {
 	prefs                           *Preferences
 	shortcut                        *shortcutBinding
 	languagePath                    string
+	playbackPath                    string
+	restoredTrack                   bool // shown paused until the first explicit play
 	diagnosticPath                  string
 	acceptanceProbe                 *acceptanceProbe
 	model                           UIModel
@@ -100,6 +102,8 @@ func main() {
 	recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 	recordPlaybackDiagnostic(a.diagnosticPath, "video", "ready")
 	a.model = UIModel{Route: "home", Appearance: a.prefs.Appearance(), Language: language.Load(a.languagePath), Volume: 0.7, PanelTab: "queue", Version: applicationVersion()}
+	a.playbackPath = filepath.Join(dataDir, "playback-session.json")
+	a.restorePlayback()
 	mygo.Theme.SetSource(mygo.ThemeSource(a.model.Appearance))
 	mygo.App.SetLanguages(language.Supported...)
 	a.applyLanguage()
@@ -113,7 +117,13 @@ func main() {
 			mygo.App.Quit()
 		}
 	})
-	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { a.quitting = true; a.cancelResume(); a.closeAccount(); a.cancel() })
+	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) {
+		a.quitting = true
+		a.savePlayback()
+		a.cancelResume()
+		a.closeAccount()
+		a.cancel()
+	})
 	mygo.App.OnWillQuit(func(*mygo.QuitEvent) {
 		// Keep the parent alive until cancellation has reaped every login child.
 		// Its bounded kill timer cannot run after this process has exited.
@@ -135,6 +145,9 @@ func main() {
 		}
 		if a.player != nil {
 			a.player.SetVolume(a.model.Volume)
+			if a.restoredTrack {
+				a.publishPausedTrack()
+			}
 		}
 		mygo.NowPlaying.OnCommand(func(cmd mygo.MediaCommand, pos time.Duration) {
 			if a.player == nil {
@@ -228,7 +241,7 @@ func (a *desktop) view(c *ui.Context) {
 }
 
 func (a *desktop) actions(artwork func(string, int, artworkPriority) ui.ImageSource) ViewActions {
-	return ViewActions{BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, RetryPlayback: func() { a.startTrack(a.model.Current) }, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: artwork}
+	return ViewActions{BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, RetryPlayback: a.retryPlayback, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: artwork}
 }
 
 func (a *desktop) pollPlayback() {
@@ -250,7 +263,7 @@ func (a *desktop) pollPlayback() {
 			}
 			previous = current
 			a.post(func() {
-				if a.loadPending {
+				if a.loadPending || a.restoredTrack {
 					return
 				}
 				state := a.player.Snapshot()

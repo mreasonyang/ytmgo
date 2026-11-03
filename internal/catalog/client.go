@@ -76,6 +76,15 @@ type Item struct {
 	LikeKnown    bool          `json:"likeKnown,omitempty"`
 }
 
+// PlaybackMetadata keeps the public track fields needed by a local queue.
+func (it Item) PlaybackMetadata() Item {
+	if !videoIDPattern.MatchString(it.ID) {
+		return Item{}
+	}
+	return Item{ID: it.ID, Title: it.Title, Artist: it.Artist, Album: it.Album,
+		Artwork: safeArtwork(it.Artwork), Duration: max(0, it.Duration), Kind: it.Kind}
+}
+
 type Shelf struct {
 	Title string `json:"title"`
 	Items []Item `json:"items"`

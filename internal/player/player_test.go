@@ -172,6 +172,24 @@ func TestPreparedTrackTransfersDecoderAndLease(t *testing.T) {
 	}
 }
 
+func TestLoadAtOpensFirstDecoderAtBookmark(t *testing.T) {
+	p := testPlayer()
+	defer p.Close()
+	var opened []time.Duration
+	p.open = func(_ context.Context, _ media, at time.Duration) (*pcmDecoder, error) {
+		opened = append(opened, at)
+		d, _ := zeroDecoder(60)
+		return d, nil
+	}
+	at := 21*time.Second + 137*time.Millisecond
+	if err := p.LoadAt(context.Background(), "aaaaaaaaaaa", at); err != nil {
+		t.Fatal(err)
+	}
+	if len(opened) != 1 || opened[0] != at || p.Snapshot().Position < at {
+		t.Fatal("decoder did not open directly at the saved position")
+	}
+}
+
 func TestLoadJoinsPendingPreparation(t *testing.T) {
 	p := testPlayer()
 	defer p.Close()

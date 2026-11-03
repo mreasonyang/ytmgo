@@ -9,7 +9,7 @@ import (
 )
 
 func (a *desktop) suspendForPower() {
-	if a.quitting || a.player == nil {
+	if a.quitting || a.player == nil || a.restoredTrack {
 		return
 	}
 	a.powerGeneration++

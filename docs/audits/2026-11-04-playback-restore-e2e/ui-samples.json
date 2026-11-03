@@ -1,0 +1,183 @@
+[
+  {
+    "name": "03-resume-loading",
+    "time": "2026-11-03T17:03:05.360Z",
+    "position": 84.077168692,
+    "volume": 0.3499999999999999,
+    "playing": false,
+    "current": "Contact Daft Punk",
+    "premium": true,
+    "controls": "container Player controls\n\t\t157 button Open Now Playing\n\t\t158 button Like\n\t\t159 button Shuffle queue\n\t\t160 button Previous\n\t\t161 button (disabled) Loading…\n\t\t162 button Next\n\t\t163 button Repeat: off\n\t\t164 text (settable) 1:24\n\t\t165 slider (disabled, settable, float) Description: Playback position, Value: 84.077168692\n\t\t166 text (settable) 6:23\n\t\t167 button Lyrics\n\t\t168 button Queue\n\t\t169 button Mute\n\t\t170 slider (settable, float) Description: Volume, Value: 0.3499999999999999\n\t\t171 menu button More actions\n\t\t172 button Immersive mode\n\t173 close button\n\t174 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window\n\t175 minimize button\n\t176 text ytmgo\n177 menu bar\n\t178 ytmgo\n\t179 File\n\t180 Edit\n\t181 Playback\n\t182 View\n\t183 Window\n\t184 Account\n\t185 Help\n\nThe focused UI element is 165 slider (disabled, settable, float) Description: Playback position, Value: 84.077168692"
+  },
+  {
+    "name": "04-resumed-playing",
+    "time": "2026-11-03T17:03:14.604Z",
+    "position": 84.079835358,
+    "volume": 0.3499999999999999,
+    "playing": true,
+    "current": "Contact Daft Punk",
+    "premium": true,
+    "controls": "container Player controls\n\t\t157 button Open Now Playing\n\t\t158 button Like\n\t\t159 button Shuffle queue\n\t\t160 button Previous\n\t\t161 button Pause\n\t\t162 button Next\n\t\t163 button Repeat: off\n\t\t164 text (settable) 1:24\n\t\t165 slider (settable, float) Description: Playback position, Value: 84.079835358\n\t\t166 text (settable) 6:23\n\t\t167 button Lyrics\n\t\t168 button Queue\n\t\t169 button Mute\n\t\t170 slider (settable, float) Description: Volume, Value: 0.3499999999999999\n\t\t171 menu button More actions\n\t\t172 button Immersive mode\n\t173 close button\n\t174 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window\n\t175 minimize button\n\t176 text ytmgo\n177 menu bar\n\t178 ytmgo\n\t179 File\n\t180 Edit\n\t181 Playback\n\t182 View\n\t183 Window\n\t184 Account\n\t185 Help\n\nThe focused UI element is 165 slider (settable, float) Description: Playback position, Value: 84.079835358"
+  },
+  {
+    "name": "05-before-playing-quit",
+    "time": "2026-11-03T17:03:24.112Z",
+    "position": 91.034502025,
+    "volume": 0.3499999999999999,
+    "playing": true,
+    "current": "Contact Daft Punk",
+    "premium": true,
+    "controls": "container Player controls\n\t\t157 button Open Now Playing\n\t\t158 button Like\n\t\t159 button Shuffle queue\n\t\t160 button Previous\n\t\t161 button Pause\n\t\t162 button Next\n\t\t163 button Repeat: off\n\t\t164 text (settable) 1:31\n\t\t165 slider (settable, float) Description: Playback position, Value: 91.03450202499999\n\t\t166 text (settable) 6:23\n\t\t167 button Lyrics\n\t\t168 button Queue\n\t\t169 button Mute\n\t\t170 slider (settable, float) Description: Volume, Value: 0.3499999999999999\n\t\t171 menu button More actions\n\t\t172 button Immersive mode\n\t173 close button\n\t174 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window\n\t175 minimize button\n\t176 text ytmgo\n177 menu bar\n\t178 ytmgo\n\t179 File\n\t180 Edit\n\t181 Playback\n\t182 View\n\t183 Window\n\t184 Account\n\t185 Help\n\nThe focused UI element is 165 slider (settable, float) Description: Playback position, Value: 91.03450202499999"
+  },
+  {
+    "name": "07-playing-quit-reopened",
+    "time": "2026-11-03T17:03:39.986Z",
+    "position": 91.386502025,
+    "volume": 0.3499999999999999,
+    "playing": false,
+    "current": "Restoring your account… Your playlists, albums and liked music appear here once your saved account is restored.",
+    "premium": false,
+    "controls": "container Player controls\n\t\t18 button Open Now Playing\n\t\t19 button Like\n\t\t20 button Shuffle queue\n\t\t21 button Previous\n\t\t22 button Play\n\t\t23 button Next\n\t\t24 button Repeat: off\n\t\t25 text (settable) 1:31\n\t\t26 slider (settable, float) Description: Playback position, Value: 91.386502025\n\t\t27 text (settable) 6:23\n\t\t28 button Lyrics\n\t\t29 button Queue\n\t\t30 button Mute\n\t\t31 slider (settable, float) Description: Volume, Value: 0.3499999999999999\n\t\t32 menu button More actions\n\t\t33 button Immersive mode\n\t34 close button\n\t35 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window\n\t36 minimize button\n\t37 text ytmgo\n38 menu bar\n\t39 ytmgo\n\t40 File\n\t41 Edit\n\t42 Playback\n\t43 View\n\t44 Window\n\t45 Account\n\t46 Help\n"
+  },
+  {
+    "name": "09-restored-quiet-after-account",
+    "time": "2026-11-03T17:03:49.979Z",
+    "position": 91.386502025,
+    "volume": 0.3499999999999999,
+    "playing": false,
+    "current": "Contact Daft Punk",
+    "premium": true,
+    "controls": "container Player controls\n\t\t154 button Open Now Playing\n\t\t155 button Like\n\t\t156 button Shuffle queue\n\t\t157 button Previous\n\t\t158 button Play\n\t\t159 button Next\n\t\t160 button Repeat: off\n\t\t161 text (settable) 1:31\n\t\t162 slider (settable, float) Description: Playback position, Value: 91.386502025\n\t\t163 text (settable) 6:23\n\t\t164 button Lyrics\n\t\t165 button Queue\n\t\t166 button Mute\n\t\t167 slider (settable, float) Description: Volume, Value: 0.3499999999999999\n\t\t168 menu button More actions\n\t\t169 button Immersive mode\n\t170 close button\n\t171 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window\n\t172 minimize button\n\t173 text ytmgo\n174 menu bar\n\t175 ytmgo\n\t176 File\n\t177 Edit\n\t178 Playback\n\t179 View\n\t180 Window\n\t181 Account\n\t182 Help\n"
+  },
+  {
+    "name": "10-muted-before-second-quit",
+    "time": "2026-11-03T17:03:57.600Z",
+    "position": 91.386502025,
+    "volume": 0,
+    "playing": false,
+    "current": "Contact Daft Punk",
+    "premium": true,
+    "controls": "container Player controls\n\t\t154 button Open Now Playing\n\t\t155 button Like\n\t\t156 button Shuffle queue\n\t\t157 button Previous\n\t\t158 button Play\n\t\t159 button Next\n\t\t160 button Repeat: off\n\t\t161 text (settable) 1:31\n\t\t162 slider (settable, float) Description: Playback position, Value: 91.386502025\n\t\t163 text (settable) 6:23\n\t\t164 button Lyrics\n\t\t165 button Queue\n\t\t166 button Unmute\n\t\t167 slider (settable, float) Description: Volume, Value: 0\n\t\t168 menu button More actions\n\t\t169 button Immersive mode\n\t170 close button\n\t171 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window\n\t172 minimize button\n\t173 text ytmgo\n174 menu bar\n\t175 ytmgo\n\t176 File\n\t177 Edit\n\t178 Playback\n\t179 View\n\t180 Window\n\t181 Account\n\t182 Help\n"
+  },
+  {
+    "name": "12-muted-reopened",
+    "time": "2026-11-03T17:05:05.077Z",
+    "position": 91.386502025,
+    "volume": 0,
+    "playing": false,
+    "loading": false,
+    "current": null,
+    "premium": true,
+    "controls": "container Player controls\n\t\t134 button Open Now Playing\n\t\t135 button Like\n\t\t136 button Shuffle queue\n\t\t137 button Previous\n\t\t138 button Play\n\t\t139 button Next\n\t\t140 button Repeat: off\n\t\t141 text (settable) 1:31\n\t\t142 slider (settable, float) Description: Playback position, Value: 91.386502025\n\t\t143 text (settable) 6:23\n\t\t144 button Lyrics\n\t\t145 button Queue\n\t\t146 button Unmute\n\t\t147 slider (settable, float) Description: Volume, Value: 0\n\t\t148 menu button More actions\n\t\t149 button Immersive mode\n\t150 close button\n\t151 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window\n\t152 minimize button\n\t153 text ytmgo\n154 menu bar\n\t155 ytmgo\n\t156 File\n\t157 Edit\n\t158 Playback\n\t159 View\n\t160 Window\n\t161 Account\n\t162 Help\n"
+  },
+  {
+    "name": "13-unmuted-restored-volume",
+    "time": "2026-11-03T17:05:08.572Z",
+    "position": 91.386502025,
+    "volume": 0.3499999999999999,
+    "playing": false,
+    "loading": false,
+    "current": "Contact Daft Punk",
+    "premium": true,
+    "controls": "container Player controls\n\t\t157 button Open Now Playing\n\t\t158 button Like\n\t\t159 button Shuffle queue\n\t\t160 button Previous\n\t\t161 button Play\n\t\t162 button Next\n\t\t163 button Repeat: off\n\t\t164 text (settable) 1:31\n\t\t165 slider (settable, float) Description: Playback position, Value: 91.386502025\n\t\t166 text (settable) 6:23\n\t\t167 button Lyrics\n\t\t168 button Queue\n\t\t169 button Mute\n\t\t170 slider (settable, float) Description: Volume, Value: 0.3499999999999999\n\t\t171 menu button More actions\n\t\t172 button Immersive mode\n\t173 close button\n\t174 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window\n\t175 minimize button\n\t176 text ytmgo\n177 menu bar\n\t178 ytmgo\n\t179 File\n\t180 Edit\n\t181 Playback\n\t182 View\n\t183 Window\n\t184 Account\n\t185 Help\n"
+  },
+  {
+    "name": "14-switch-interior-track",
+    "time": "2026-11-03T17:05:16.142Z",
+    "position": 0,
+    "volume": 0.3499999999999999,
+    "playing": false,
+    "loading": true,
+    "current": "Within Daft Punk",
+    "premium": true,
+    "controls": "container Player controls\n\t\t157 button Open Now Playing\n\t\t158 button Like\n\t\t159 button Shuffle queue\n\t\t160 button Previous\n\t\t161 button (disabled) Loading…\n\t\t162 button Next\n\t\t163 button Repeat: off\n\t\t164 text (settable) 0:00\n\t\t165 slider (disabled, settable, float) Description: Playback position, Value: 0\n\t\t166 text (settable) 3:49\n\t\t167 button Lyrics\n\t\t168 button Queue\n\t\t169 button Mute\n\t\t170 slider (settable, float) Description: Volume, Value: 0.3499999999999999\n\t\t171 menu button More actions\n\t\t172 button Immersive mode\n\t173 close button\n\t174 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window\n\t175 minimize button\n\t176 text ytmgo\n177 menu bar\n\t178 ytmgo\n\t179 File\n\t180 Edit\n\t181 Playback\n\t182 View\n\t183 Window\n\t184 Account\n\t185 Help\n"
+  },
+  {
+    "name": "15-interior-track-playing",
+    "time": "2026-11-03T17:05:27.374Z",
+    "position": 2.008,
+    "volume": 0.3499999999999999,
+    "playing": true,
+    "loading": false,
+    "current": "Within Daft Punk",
+    "premium": true,
+    "controls": "container Player controls\n\t\t157 button Open Now Playing\n\t\t158 button Like\n\t\t159 button Shuffle queue\n\t\t160 button Previous\n\t\t161 button Pause\n\t\t162 button Next\n\t\t163 button Repeat: off\n\t\t164 text (settable) 0:02\n\t\t165 slider (settable, float) Description: Playback position, Value: 2.008\n\t\t166 text (settable) 3:48\n\t\t167 button Lyrics\n\t\t168 button Queue\n\t\t169 button Mute\n\t\t170 slider (settable, float) Description: Volume, Value: 0.3499999999999999\n\t\t171 menu button More actions\n\t\t172 button Immersive mode\n\t173 close button\n\t174 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window\n\t175 minimize button\n\t176 text ytmgo\n177 menu bar\n\t178 ytmgo\n\t179 File\n\t180 Edit\n\t181 Playback\n\t182 View\n\t183 Window\n\t184 Account\n\t185 Help\n"
+  },
+  {
+    "name": "16-paused-seek-before-quit",
+    "time": "2026-11-03T17:05:31.717Z",
+    "position": 71.598302093,
+    "volume": 0.7,
+    "playing": false,
+    "loading": true,
+    "current": "Within Daft Punk",
+    "premium": true,
+    "controls": "container Player controls\n\t\t157 button Open Now Playing\n\t\t158 button Like\n\t\t159 button Shuffle queue\n\t\t160 button Previous\n\t\t161 button (disabled) Loading…\n\t\t162 button Next\n\t\t163 button Repeat: off\n\t\t164 text (settable) 1:11\n\t\t165 slider (disabled, settable, float) Description: Playback position, Value: 71.598302093\n\t\t166 text (settable) 3:48\n\t\t167 button Lyrics\n\t\t168 button Queue\n\t\t169 button Mute\n\t\t170 slider (settable, float) Description: Volume, Value: 0.7\n\t\t171 menu button More actions\n\t\t172 button Immersive mode\n\t173 close button\n\t174 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window\n\t175 minimize button\n\t176 text ytmgo\n177 menu bar\n\t178 ytmgo\n\t179 File\n\t180 Edit\n\t181 Playback\n\t182 View\n\t183 Window\n\t184 Account\n\t185 Help\n\nThe focused UI element is 165 slider (disabled, settable, float) Description: Playback position, Value: 71.598302093"
+  },
+  {
+    "name": "17-paused-seek-ready",
+    "time": "2026-11-03T17:05:41.165Z",
+    "position": 71.598302093,
+    "volume": 0.7,
+    "playing": false,
+    "loading": false,
+    "current": "Within Daft Punk",
+    "premium": true,
+    "controls": "container Player controls\n\t\t157 button Open Now Playing\n\t\t158 button Like\n\t\t159 button Shuffle queue\n\t\t160 button Previous\n\t\t161 button Play\n\t\t162 button Next\n\t\t163 button Repeat: off\n\t\t164 text (settable) 1:11\n\t\t165 slider (settable, float) Description: Playback position, Value: 71.598302093\n\t\t166 text (settable) 3:48\n\t\t167 button Lyrics\n\t\t168 button Queue\n\t\t169 button Mute\n\t\t170 slider (settable, float) Description: Volume, Value: 0.7\n\t\t171 menu button More actions\n\t\t172 button Immersive mode\n\t173 close button\n\t174 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window\n\t175 minimize button\n\t176 text ytmgo\n177 menu bar\n\t178 ytmgo\n\t179 File\n\t180 Edit\n\t181 Playback\n\t182 View\n\t183 Window\n\t184 Account\n\t185 Help\n\nThe focused UI element is 165 slider (settable, float) Description: Playback position, Value: 71.598302093"
+  },
+  {
+    "name": "19-paused-reopened",
+    "time": "2026-11-03T17:06:13.975Z",
+    "position": 71.598302093,
+    "volume": 0.7,
+    "playing": false,
+    "loading": false,
+    "current": "Within Daft Punk",
+    "premium": true,
+    "controls": "container Player controls\n\t\t156 button Open Now Playing\n\t\t157 button Like\n\t\t158 button Shuffle queue\n\t\t159 button Previous\n\t\t160 button Play\n\t\t161 button Next\n\t\t162 button Repeat: off\n\t\t163 text (settable) 1:11\n\t\t164 slider (settable, float) Description: Playback position, Value: 71.598302093\n\t\t165 text (settable) 3:48\n\t\t166 button Lyrics\n\t\t167 button Queue\n\t\t168 button Mute\n\t\t169 slider (settable, float) Description: Volume, Value: 0.7\n\t\t170 menu button More actions\n\t\t171 button Immersive mode\n\t172 close button\n\t173 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window\n\t174 minimize button\n\t175 text ytmgo\n176 menu bar\n\t177 ytmgo\n\t178 File\n\t179 Edit\n\t180 Playback\n\t181 View\n\t182 Window\n\t183 Account\n\t184 Help\n"
+  },
+  {
+    "name": "20-restored-next-track",
+    "time": "2026-11-03T17:06:14.647Z",
+    "position": 0,
+    "volume": 0.7,
+    "playing": false,
+    "loading": true,
+    "current": "Instant Crush (feat. Julian Casablancas) Daft Punk, Julian Casablancas",
+    "premium": true,
+    "controls": "container Player controls\n\t\t156 button Open Now Playing\n\t\t157 button Like\n\t\t158 button Shuffle queue\n\t\t159 button Previous\n\t\t160 button (disabled) Loading…\n\t\t161 button Next\n\t\t162 button Repeat: off\n\t\t163 text (settable) 0:00\n\t\t164 slider (disabled, settable, float) Description: Playback position, Value: 0\n\t\t165 text (settable) 5:38\n\t\t166 button Lyrics\n\t\t167 button Queue\n\t\t168 button Mute\n\t\t169 slider (settable, float) Description: Volume, Value: 0.7\n\t\t170 menu button More actions\n\t\t171 button Immersive mode\n\t172 close button\n\t173 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window\n\t174 minimize button\n\t175 text ytmgo\n176 menu bar\n\t177 ytmgo\n\t178 File\n\t179 Edit\n\t180 Playback\n\t181 View\n\t182 Window\n\t183 Account\n\t184 Help\n"
+  },
+  {
+    "name": "21-rapid-previous-track",
+    "time": "2026-11-03T17:06:15.255Z",
+    "position": 0,
+    "volume": 0.7,
+    "playing": false,
+    "loading": true,
+    "current": "Within Daft Punk",
+    "premium": true,
+    "controls": "container Player controls\n\t\t156 button Open Now Playing\n\t\t157 button Like\n\t\t158 button Shuffle queue\n\t\t159 button Previous\n\t\t160 button (disabled) Loading…\n\t\t161 button Next\n\t\t162 button Repeat: off\n\t\t163 text (settable) 0:00\n\t\t164 slider (disabled, settable, float) Description: Playback position, Value: 0\n\t\t165 text (settable) 3:48\n\t\t166 button Lyrics\n\t\t167 button Queue\n\t\t168 button Mute\n\t\t169 slider (settable, float) Description: Volume, Value: 0.7\n\t\t170 menu button More actions\n\t\t171 button Immersive mode\n\t172 close button\n\t173 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window\n\t174 minimize button\n\t175 text ytmgo\n176 menu bar\n\t177 ytmgo\n\t178 File\n\t179 Edit\n\t180 Playback\n\t181 View\n\t182 Window\n\t183 Account\n\t184 Help\n"
+  },
+  {
+    "name": "22-rapid-previous-settled",
+    "time": "2026-11-03T17:06:35.337Z",
+    "position": 1.698666666,
+    "volume": 0.7,
+    "playing": true,
+    "loading": false,
+    "current": "Within Daft Punk",
+    "premium": true,
+    "controls": "container Player controls\n\t\t156 button Open Now Playing\n\t\t157 button Like\n\t\t158 button Shuffle queue\n\t\t159 button Previous\n\t\t160 button Pause\n\t\t161 button Next\n\t\t162 button Repeat: off\n\t\t163 text (settable) 0:01\n\t\t164 slider (settable, float) Description: Playback position, Value: 1.698666666\n\t\t165 text (settable) 3:48\n\t\t166 button Lyrics\n\t\t167 button Queue\n\t\t168 button Mute\n\t\t169 slider (settable, float) Description: Volume, Value: 0.7\n\t\t170 menu button More actions\n\t\t171 button Immersive mode\n\t172 close button\n\t173 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window\n\t174 minimize button\n\t175 text ytmgo\n176 menu bar\n\t177 ytmgo\n\t178 File\n\t179 Edit\n\t180 Playback\n\t181 View\n\t182 Window\n\t183 Account\n\t184 Help\n"
+  },
+  {
+    "name": "24-original-state-restored",
+    "time": "2026-11-03T17:07:20.457Z",
+    "position": 24.476999999,
+    "volume": 0.7,
+    "playing": false,
+    "loading": false,
+    "current": "Contact Daft Punk",
+    "premium": true,
+    "controls": "container Player controls\n\t\t155 button Open Now Playing\n\t\t156 button Like\n\t\t157 button Shuffle queue\n\t\t158 button Previous\n\t\t159 button Play\n\t\t160 button Next\n\t\t161 button Repeat: off\n\t\t162 text (settable) 0:24\n\t\t163 slider (settable, float) Description: Playback position, Value: 24.476999999\n\t\t164 text (settable) 6:23\n\t\t165 button Lyrics\n\t\t166 button Queue\n\t\t167 button Mute\n\t\t168 slider (settable, float) Description: Volume, Value: 0.7\n\t\t169 menu button More actions\n\t\t170 button Immersive mode\n\t171 close button\n\t172 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window\n\t173 minimize button\n\t174 text ytmgo\n175 menu bar\n\t176 ytmgo\n\t177 File\n\t178 Edit\n\t179 Playback\n\t180 View\n\t181 Window\n\t182 Account\n\t183 Help\n"
+  }
+]

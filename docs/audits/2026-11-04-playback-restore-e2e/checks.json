@@ -1,0 +1,35 @@
+{
+  "commands": [
+    {
+      "command": "go test -race ./...",
+      "exitCode": 0,
+      "cache": "cached"
+    },
+    {
+      "command": "go test -race -count=1 ./...",
+      "exitCode": 0,
+      "cache": "disabled",
+      "packages": {
+        "ytmgo": "119.897s",
+        "cmd/update-package": "2.185s",
+        "internal/accountlogin": "45.167s",
+        "internal/accountsession": "2.360s",
+        "internal/appearance": "2.101s",
+        "internal/catalog": "2.264s",
+        "internal/language": "2.091s",
+        "internal/netproxy": "2.112s",
+        "internal/player": "18.685s",
+        "internal/streaming": "24.636s"
+      }
+    },
+    {
+      "command": "go vet ./...",
+      "exitCode": 0
+    },
+    {
+      "command": "codesign --verify --deep --strict build/playback-restore-20261104/darwin-arm64/ytmgo.app",
+      "exitCode": 0
+    }
+  ],
+  "productSourceEdits": false
+}

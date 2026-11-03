@@ -1,0 +1,48 @@
+Window: "ytmgo", App: ytmgo.
+0 standard window ytmgo, Secondary Actions: Raise
+	1 button ytmgo Home
+	2 button (disabled) Back
+	3 button (disabled) Forward
+	4 button Home
+	5 text field (settable) Description: Search, Placeholder: What do you want to play?
+	6 button Explore
+	7 button Settings
+	8 container Restoring your account…
+		9 progress indicator
+		10 text (settable) Restoring your account…
+	11 button Library
+	12 button Collapse sidebar
+	13 text (settable) Description: Restoring your account…, Value: Restoring your account… Your playlists, albums and liked music appear here once your saved account is restored.
+	14 scroll area Content
+		15 progress indicator Loading…
+		16 text (settable) Loading…
+	17 container Player controls
+		18 button Open Now Playing
+		19 button Like
+		20 button Shuffle queue
+		21 button Previous
+		22 button Play
+		23 button Next
+		24 button Repeat: off
+		25 text (settable) 1:31
+		26 slider (settable, float) Description: Playback position, Value: 91.386502025
+		27 text (settable) 6:23
+		28 button Lyrics
+		29 button Queue
+		30 button Mute
+		31 slider (settable, float) Description: Volume, Value: 0.3499999999999999
+		32 menu button More actions
+		33 button Immersive mode
+	34 close button
+	35 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	36 minimize button
+	37 text ytmgo
+38 menu bar
+	39 ytmgo
+	40 File
+	41 Edit
+	42 Playback
+	43 View
+	44 Window
+	45 Account
+	46 Help

@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "index": 12,
+  "positionNs": 91386502025,
+  "volume": 0.34999999999999987,
+  "unmutedVolume": 0.34999999999999987,
+  "queue": [
+    {
+      "id": "zKSsP2084nU",
+      "title": "Give Life Back to Music",
+      "artist": "Daft Punk",
+      "album": "Random Access Memories",
+      "duration": 276000000000,
+      "kind": "song"
+    },
+    {
+      "id": "_vOcbrUsmjM",
+      "title": "The Game of Love",
+      "artist": "Daft Punk",
+      "album": "Random Access Memories",
+      "duration": 323000000000,
+      "kind": "song"
+    },
+    {
+      "id": "ZFZM6jDTWd4",
+      "title": "Giorgio by Moroder",
+      "artist": "Daft Punk",
+      "album": "Random Access Memories",
+      "duration": 545000000000,
+      "kind": "song"
+    },
+    {
+      "id": "iNjGNNoUjkk",
+      "title": "Within",
+      "artist": "Daft Punk",
+      "album": "Random Access Memories",
+      "duration": 229000000000,
+      "kind": "song"
+    },
+    {
+      "id": "khnokW3Mw24",
+      "title": "Instant Crush (feat. Julian Casablancas)",
+      "artist": "Daft Punk, Julian Casablancas",
+      "album": "Random Access Memories",
+      "duration": 338000000000,
+      "kind": "song"
+    },
+    {
+      "id": "iU7oF4OXZSE",
+      "title": "Lose Yourself to Dance (feat. Pharrell Williams)",
+      "artist": "Daft Punk, Pharrell Williams",
+      "album": "Random Access Memories",
+      "duration": 354000000000,
+      "kind": "song"
+    },
+    {
+      "id": "RRMbhEdmhYw",
+      "title": "Touch (feat. Paul Williams)",
+      "artist": "Daft Punk, Paul Williams",
+      "album": "Random Access Memories",
+      "duration": 499000000000,
+      "kind": "song"
+    },
+    {
+      "id": "4D7u5KF7SP8",
+      "title": "Get Lucky (feat. Pharrell Williams and Nile Rodgers)",
+      "artist": "Daft Punk, Pharrell Williams, Nile Rodgers",
+      "album": "Random Access Memories",
+      "duration": 370000000000,
+      "kind": "song"
+    },
+    {
+      "id": "RE_XX6jk2Lo",
+      "title": "Beyond",
+      "artist": "Daft Punk",
+      "album": "Random Access Memories",
+      "duration": 291000000000,
+      "kind": "song"
+    },
+    {
+      "id": "3x-Q-iRvib4",
+      "title": "Motherboard",
+      "artist": "Daft Punk",
+      "album": "Random Access Memories",
+      "duration": 342000000000,
+      "kind": "song"
+    },
+    {
+      "id": "3rpQTqpFTF4",
+      "title": "Fragments of Time (feat. Todd Edwards)",
+      "artist": "Daft Punk, Todd Edwards",
+      "album": "Random Access Memories",
+      "duration": 280000000000,
+      "kind": "song"
+    },
+    {
+      "id": "wmSkU6R9Zi8",
+      "title": "Doin' it Right (feat. Panda Bear)",
+      "artist": "Daft Punk, Panda Bear",
+      "album": "Random Access Memories",
+      "duration": 252000000000,
+      "kind": "song"
+    },
+    {
+      "id": "UoF1dFWKsVk",
+      "title": "Contact",
+      "artist": "Daft Punk",
+      "album": "Random Access Memories",
+      "duration": 383641000000,
+      "kind": "song"
+    }
+  ],
+  "time": "2026-11-03T17:03:46.577057+00:00",
+  "mode": "0o600",
+  "processes": [
+    {
+      "pid": 43567,
+      "ppid": 43508,
+      "uid": 501,
+      "state": "R",
+      "executable": "/private/var/folders/j8/x2fwt58j2p1dkbhktw_s5wph0000gn/T/go-build1441094175/b001/ytmgo.test"
+    },
+    {
+      "pid": 43700,
+      "ppid": 1,
+      "uid": 501,
+      "state": "S",
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/playback-restore-20261104/darwin-arm64/ytmgo.app/Contents/MacOS/ytmgo"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "time": "2026-11-03T17:03:11.860064+00:00",
+  "head": "89182a5d1a3ea7bb49252d04c6fee1f5e76d23a5",
+  "appPath": "/Users/easonyang/Documents/projects/ytmgo/build/playback-restore-20261104/darwin-arm64/ytmgo.app",
+  "binarySHA256": "48e3e2510c8021f881a340953c7a67da2b0ece8d6140beea3f35b9d52aad4a0f",
+  "sourceSHA256": {
+    "main.go": "f4f2058e506ea362d421f91e5934f9eeadf8d8ca320a3338bb96771dd67e66df",
+    "controller.go": "2a431c4f54a6c8f6126b420feb3bccc2a88871d35c8bc3e024cfd5da317f95df",
+    "account.go": "6cf7c12e89b1b1cad76f0ea21d3039b1035b8cceb52cecb3c5ecb2f8bc8620fe",
+    "power_controller.go": "5c30a228f6acbc0a1777ee69cd1056e84d53443bbab158204b973093f35f085e",
+    "playback_session.go": "195ede60a3549917601b16959fd939f9fc55c283b17dad58cd8a0b691517d2d9",
+    "playback_session_test.go": "da283c9bd8260da224d29923c246d33cbb24e03e8ac8657c4d6527f323c70540",
+    "internal/player/player.go": "8873adcd694c513e086d53686d3c8b8b88bf2dc5bcb981762cd6ff804df29831",
+    "internal/catalog/client.go": "31ef11c0c1425b9d87f2ec3865afbaa66e8633e8be698be611c2fac1feb15c7f",
+    "internal/preference/preference.go": "52ffe16a2dc9d47be71f043745390d1ed87037b6cf0362fb565a210a09ea0c7b"
+  },
+  "processes": [
+    {
+      "pid": 42006,
+      "ppid": 1,
+      "uid": 501,
+      "state": "S",
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/playback-restore-20261104/darwin-arm64/ytmgo.app/Contents/MacOS/ytmgo"
+    }
+  ]
+}

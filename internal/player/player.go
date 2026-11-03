@@ -104,6 +104,12 @@ func New() (*Player, error) {
 // A newer Load/Seek/Stop/Close cancels this operation and its child processes.
 // ctx bounds loading only; successful playback has its own lifetime.
 func (p *Player) Load(ctx context.Context, videoID string) error {
+	return p.LoadAt(ctx, videoID, 0)
+}
+
+// LoadAt opens directly at the bookmark so no audio from the start leaks through.
+func (p *Player) LoadAt(ctx context.Context, videoID string, at time.Duration) error {
+	at = max(at, 0)
 	if !videoIDPattern.MatchString(videoID) {
 		return errors.New("invalid_video_id")
 	}
@@ -111,7 +117,7 @@ func (p *Player) Load(ctx context.Context, videoID string) error {
 		return err
 	}
 	oldMedia := p.media
-	ctx, gen, previous, err := p.beginLocked(ctx, 0, true, true)
+	ctx, gen, previous, err := p.beginLocked(ctx, at, true, true)
 	if err != nil {
 		p.mu.Unlock()
 		return err
@@ -119,7 +125,7 @@ func (p *Player) Load(ctx context.Context, videoID string) error {
 	p.suspended, p.sleeping = nil, false
 	p.videoID = videoID
 	prepared := p.prepared
-	if prepared != nil && prepared.id == videoID && prepared.ctx.Err() == nil {
+	if at == 0 && prepared != nil && prepared.id == videoID && prepared.ctx.Err() == nil {
 		p.prepared = nil // Transfer ownership to this Load, including a pending open.
 		loadCancel := p.cancel
 		p.cancel = func() {
@@ -162,12 +168,16 @@ func (p *Player) Load(ctx context.Context, videoID string) error {
 	if err != nil {
 		return p.fail(gen, err)
 	}
-	d, err := p.open(ctx, info, 0)
+	// An already finished track starts over on an explicit Play.
+	if info.Duration > 0 && at >= info.Duration {
+		at = 0
+	}
+	d, err := p.open(ctx, info, at)
 	if err != nil {
 		releaseMedia(&info)
 		return p.fail(gen, err)
 	}
-	return p.installDecoder(ctx, gen, info, d, 0, true)
+	return p.installDecoder(ctx, gen, info, d, at, true)
 }
 
 // Prepare resolves and opens only the next queued track. It never changes the

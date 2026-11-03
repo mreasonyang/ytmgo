@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "platform": "macOS arm64",
+  "restartCyclesUnderTest": 3,
+  "cleanupLaunches": 1,
+  "cases": [
+    "Restored paused seek and manual resume from the edited bookmark",
+    "Playing quit: exact bookmark, volume, selected track and ordered queue restored",
+    "Asynchronous Premium account restore leaves playback paused",
+    "Muted quit and a second restart without playback retain the bookmark and unmute volume",
+    "Interior queue selection starts at zero; paused seek survives quit and restart",
+    "Restored queue index drives Next; rapid Previous wins over the pending load"
+  ],
+  "productSourceEdited": false,
+  "limitations": [
+    "Normal graceful quits only; no crash or forced-kill durability test",
+    "No Windows/Linux, account switch, sign-out, offline recovery, sleep/wake, or release-package acceptance",
+    "Playback verified by native UI/decoder position advancement; no acoustic loopback recording"
+  ]
+}

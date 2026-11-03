@@ -33,6 +33,7 @@ type Player struct {
 	ops                sync.WaitGroup
 	resolve            func(context.Context, string) (media, error)
 	open               func(context.Context, media, time.Duration) (*pcmDecoder, error)
+	outputError        func() error // nil uses the native audio device's error
 	resolver           *resolver
 	shutdown           func()
 	gen                uint64
@@ -560,7 +561,11 @@ func (p *Player) Snapshot() State {
 				p.state.Error, p.state.ErrorDetails = "audio_stream_failed", FailureDetails{}
 			}
 		}
-		if p.state.Playing && audio.Err() != nil {
+		outputError := p.outputError
+		if outputError == nil {
+			outputError = audio.Err
+		}
+		if p.state.Playing && outputError() != nil {
 			p.state.Error, p.state.ErrorDetails = "audio_output_unavailable", FailureDetails{}
 			p.state.Playing = false
 			s.output.Pause()

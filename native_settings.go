@@ -298,7 +298,9 @@ func nativeAppearanceControl(c *ui.Context, m *UIModel, a ViewActions, p nativeP
 			label := a.Tr(option.key)
 			b := seg.Segment(i).Height(32).PaddingX(10).Gap(6).Radius(8).Label(label).TextColor(p.secondary).Background(ui.Transparent)
 			if narrow {
-				b.Grow(1).Basis(0).MinWidth(0)
+				// Share spare space after each label's natural width, so longer
+				// system labels also fit with Linux's CJK fallback fonts.
+				b.Grow(1)
 			}
 			if i == chosen {
 				b.Background(p.text).TextColor(p.base)

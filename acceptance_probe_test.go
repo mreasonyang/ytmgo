@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -84,8 +85,12 @@ func TestAcceptanceProbeWritesOnlyClosedStateAndExpires(t *testing.T) {
 	if string(updated) != string(expired) {
 		t.Fatal("probe continued after expiry")
 	}
-	info, _ := os.Stat(path)
-	if info.Mode().Perm() != 0600 {
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Go's Windows mode bits describe the read-only attribute, not the ACL.
+	if runtime.GOOS != "windows" && info.Mode().Perm() != 0600 {
 		t.Fatal("acceptance state has broad permissions")
 	}
 	entries, _ := os.ReadDir(dir)

@@ -94,13 +94,32 @@ func zeroDecoder(seconds int) (*pcmDecoder, *zeroStream) {
 	return &pcmDecoder{reader: s, input: s, cancel: func() {}, wait: done, length: int64(seconds * sampleRate)}, s
 }
 func testPlayer() *Player {
-	p := &Player{state: State{Volume: 0}}
+	// Keep the real PCM/output lifecycle, including its paced null device on
+	// headless runners, without making state-machine tests depend on a sound card.
+	p := &Player{state: State{Volume: 0}, outputError: func() error { return nil }}
 	p.resolve = func(context.Context, string) (media, error) { return media{Duration: 60 * time.Second}, nil }
 	p.open = func(context.Context, media, time.Duration) (*pcmDecoder, error) {
 		d, _ := zeroDecoder(60)
 		return d, nil
 	}
 	return p
+}
+
+func TestSnapshotPausesUnavailableOutput(t *testing.T) {
+	p := testPlayer()
+	defer p.Close()
+	p.outputError = func() error { return errors.New("synthetic-output-failure") }
+	if err := p.Load(context.Background(), "aaaaaaaaaaa"); err != nil {
+		t.Fatal(err)
+	}
+	state := p.Snapshot()
+	if state.Playing || state.Error != "audio_output_unavailable" || p.wantPlay || p.session.output.Playing() {
+		t.Fatal("unavailable audio output did not safely pause playback")
+	}
+	p.outputError = func() error { return nil }
+	if p.Snapshot().Playing {
+		t.Fatal("device recovery resumed playback without user intent")
+	}
 }
 
 func waitPlayerCondition(t *testing.T, ready func() bool) {

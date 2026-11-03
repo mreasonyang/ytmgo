@@ -300,7 +300,8 @@ func nativeAppearanceControl(c *ui.Context, m *UIModel, a ViewActions, p nativeP
 			if narrow {
 				// Share spare space after each label's natural width, so longer
 				// system labels also fit with Linux's CJK fallback fonts.
-				b.Grow(1)
+				w, _ := ui.ShapeText(label, ui.Font{Size: 13, Weight: 600}, 0).Size()
+				b.Grow(1).Basis(w + 16 + 6 + 20)
 			}
 			if i == chosen {
 				b.Background(p.text).TextColor(p.base)

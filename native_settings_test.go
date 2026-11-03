@@ -22,10 +22,25 @@ func nativeSettingsFixture(width, height int) (*UIModel, ViewActions, *ui.Tester
 // At the narrowest window every appearance label fits its segment on one
 // line, beside its icon, in every language.
 func TestNativeSettingsAppearanceFitsNarrow(t *testing.T) {
-	for _, locale := range []string{"en", "zh-Hans", "zh-Hant", "ja"} {
-		t.Run(locale, func(t *testing.T) {
+	for _, test := range []struct{ name, locale, systemLabel string }{
+		{"en", "en", ""}, {"zh-Hans", "zh-Hans", ""}, {"zh-Hant", "zh-Hant", ""}, {"ja", "ja", ""},
+		// Exercise unequal label widths on macOS too: its system fonts can
+		// otherwise hide the clipping seen with Linux's CJK fallback fonts.
+		{"long-system-label", "en", "Follow system"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
 			m, a, tt := nativeSettingsFixture(380, 700)
-			m.Language = locale
+			m.Language = test.locale
+			if test.systemLabel != "" {
+				translate := a.Tr
+				a.Tr = func(key string) string {
+					if key == "shellThemeSystem" {
+						return test.systemLabel
+					}
+					return translate(key)
+				}
+				tt = ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 380, 700)
+			}
 			tt.Frame()
 			for _, key := range []string{"shellThemeSystem", "shellThemeDark", "shellThemeLight"} {
 				label := a.Tr(key)
@@ -36,6 +51,9 @@ func TestNativeSettingsAppearanceFitsNarrow(t *testing.T) {
 				w, _ := ui.ShapeText(label, ui.Font{Size: 13, Weight: 600}, 0).Size()
 				if need := w + 16 + 6 + 20; r.W < need {
 					t.Fatalf("%q segment is %.0f wide, needs %.0f", label, r.W, need)
+				}
+				if r.X < 0 || r.X+r.W > 380 {
+					t.Fatalf("%q segment extends beyond the window", label)
 				}
 			}
 		})

@@ -126,6 +126,7 @@ type continuation struct {
 	cursor          pageCursor
 	visitorData     string
 	payload         map[string]any
+	album           *albumMetadata
 	expires         time.Time
 }
 type lyricsReference struct {
@@ -239,16 +240,20 @@ func (c *Client) Continue(ctx context.Context, handle string) (Page, error) {
 		return Page{}, ErrExpiredContinuation
 	}
 	if entry.cursor.query {
-		return c.loadPage(ctx, entry.endpoint, entry.payload, entry.title, entry.cursor.token, entry.visitorData)
+		return c.loadPage(ctx, entry.endpoint, entry.payload, entry.title, entry.cursor.token, entry.visitorData, entry.album)
 	}
-	return c.loadPage(ctx, entry.endpoint, map[string]any{"continuation": entry.cursor.token}, entry.title, "", entry.visitorData)
+	return c.loadPage(ctx, entry.endpoint, map[string]any{"continuation": entry.cursor.token}, entry.title, "", entry.visitorData, entry.album)
 }
 
 func (c *Client) page(ctx context.Context, endpoint string, payload map[string]any, title string) (Page, error) {
-	return c.loadPage(ctx, endpoint, payload, title, "", "")
+	var album *albumMetadata
+	if endpoint == "browse" && strings.HasPrefix(textAt(payload, "browseId"), "MPRE") {
+		album = &albumMetadata{}
+	}
+	return c.loadPage(ctx, endpoint, payload, title, "", "", album)
 }
 
-func (c *Client) loadPage(ctx context.Context, endpoint string, payload map[string]any, title, queryContinuation, visitorData string) (Page, error) {
+func (c *Client) loadPage(ctx context.Context, endpoint string, payload map[string]any, title, queryContinuation, visitorData string, album *albumMetadata) (Page, error) {
 	ctx, scope, err := c.operation(ctx)
 	if err != nil {
 		return Page{}, err
@@ -264,6 +269,11 @@ func (c *Client) loadPage(ctx context.Context, endpoint string, payload map[stri
 	if page.Title == "" {
 		page.Title = title
 	}
+	if album != nil {
+		// Never mutate a context already shared by a remembered cursor.
+		completed := completeAlbumTracks(&page, *album)
+		album = &completed
+	}
 	if token.token != "" {
 		// Continuations are bound to the visitor that produced the page. Keep
 		// this opaque value with its local handle, not in global client state:
@@ -271,7 +281,10 @@ func (c *Client) loadPage(ctx context.Context, endpoint string, payload map[stri
 		if visitor := textAt(response, "responseContext", "visitorData"); validVisitorData(visitor) {
 			visitorData = visitor
 		}
-		page.Continuation, err = c.rememberContinuation(scope, endpoint, token, page.Title, payload, visitorData)
+		if !token.trackShelf {
+			album = nil
+		}
+		page.Continuation, err = c.rememberContinuation(scope, endpoint, token, page.Title, payload, visitorData, album)
 		if err != nil {
 			return Page{}, err
 		}
@@ -524,7 +537,7 @@ func (c *Client) request(req *http.Request, stage string, limit int64) ([]byte, 
 	return data, nil
 }
 
-func (c *Client) rememberContinuation(scope sessionScope, endpoint string, cursor pageCursor, title string, payload map[string]any, visitorData string) (string, error) {
+func (c *Client) rememberContinuation(scope sessionScope, endpoint string, cursor pageCursor, title string, payload map[string]any, visitorData string, album *albumMetadata) (string, error) {
 	var random [16]byte
 	if _, err := rand.Read(random[:]); err != nil {
 		return "", nil
@@ -550,6 +563,6 @@ func (c *Client) rememberContinuation(scope sessionScope, endpoint string, curso
 		}
 		delete(c.continuations, oldestKey)
 	}
-	c.continuations[handle] = continuation{endpoint: endpoint, cursor: cursor, visitorData: visitorData, title: title, payload: payload, expires: time.Now().Add(30 * time.Minute)}
+	c.continuations[handle] = continuation{endpoint: endpoint, cursor: cursor, visitorData: visitorData, title: title, payload: payload, album: album, expires: time.Now().Add(30 * time.Minute)}
 	return handle, nil
 }

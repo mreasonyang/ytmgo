@@ -61,8 +61,9 @@ var containerKeys = []string{
 }
 
 type pageCursor struct {
-	token string
-	query bool
+	token      string
+	query      bool
+	trackShelf bool
 }
 
 func parsePage(response map[string]any) (Page, pageCursor, error) {
@@ -134,6 +135,15 @@ func parsePage(response map[string]any) (Page, pageCursor, error) {
 						// A card's own title names its top result; only the
 						// header names the section, such as "Top result".
 						title = joinedText(at(shelf, "header", "musicCardShelfHeaderBasicRenderer", "title"))
+					}
+					if title == "" && len(page.Shelves) == 0 && (kind == "musicShelfRenderer" || kind == "musicPlaylistShelfRenderer" || kind == "musicShelfContinuation" || kind == "musicPlaylistShelfContinuation") {
+						origin := continuationToken(shelf)
+						for _, item := range items {
+							if item.ID != "" && token.token != "" && token.token == origin.token && token.query == origin.query {
+								token.trackShelf = true
+								break
+							}
+						}
 					}
 					appendShelf(title, items)
 					return

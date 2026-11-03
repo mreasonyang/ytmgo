@@ -149,11 +149,11 @@ func TestNativeQueueArtworkVisibleInEveryPresentation(t *testing.T) {
 			}
 			requested := map[string]bool{}
 			original := a.Artwork
-			a.Artwork = func(src string, edge int) ui.ImageSource {
+			a.Artwork = func(src string, edge int, priority artworkPriority) ui.ImageSource {
 				if edge <= 128 && src != m.Current.Artwork {
 					requested[src] = true
 				}
-				return original(src, edge)
+				return original(src, edge, priority)
 			}
 			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, layout.width, layout.height)
 			if layout.name == "floating" || layout.name == "compact-immersive" {

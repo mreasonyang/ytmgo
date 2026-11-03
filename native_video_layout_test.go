@@ -55,11 +55,11 @@ func TestNativeShortImmersiveVideoUsesHeightBudget(t *testing.T) {
 						m.Current.Artwork = "distinct-cover"
 						m.VideoFrame = ui.NewBitmap(videoLayoutFrame(160, 90))
 						originalArtwork := a.Artwork
-						a.Artwork = func(source string, edge int) ui.ImageSource {
+						a.Artwork = func(source string, edge int, priority artworkPriority) ui.ImageSource {
 							if source == "distinct-cover" {
 								return cover
 							}
-							return originalArtwork(source, edge)
+							return originalArtwork(source, edge, priority)
 						}
 						// 609/640 windows leave 409/440 DIPs of immersive content: the
 						// cover takes what the switch, gaps and the title block, as the

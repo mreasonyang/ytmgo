@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -24,15 +25,18 @@ import (
 )
 
 const (
-	artworkWorkers       = 4
-	artworkQueueLimit    = 64
-	artworkEntryLimit    = 160
-	artworkPixelBudget   = 32 << 20
-	artworkDownloadLimit = 4 << 20
-	artworkSourcePixels  = 4 << 20
-	artworkEdge          = 768
-	artworkRetryBase     = 2 * time.Second
-	artworkRetryMax      = time.Minute
+	artworkWorkers        = 12
+	artworkLargeLimit     = 4
+	artworkSecondaryLimit = 4
+	artworkDecoders       = 2
+	artworkQueueLimit     = 64
+	artworkEntryLimit     = 160
+	artworkPixelBudget    = 32 << 20
+	artworkDownloadLimit  = 4 << 20
+	artworkSourcePixels   = 4 << 20
+	artworkEdge           = 768
+	artworkRetryBase      = 2 * time.Second
+	artworkRetryMax       = time.Minute
 )
 
 // Artwork uses a bounded work queue and a 32 MiB retained pixel budget,
@@ -42,7 +46,7 @@ type artEntry struct {
 	bitmap   *ui.Bitmap
 	bytes    int
 	used     uint64
-	pending  bool
+	cancel   context.CancelFunc
 	failures int
 	retryAt  time.Time
 }
@@ -50,29 +54,64 @@ type artRequest struct {
 	url  string
 	edge int
 }
+
+type artworkPriority uint8
+
+const (
+	artPrimary artworkPriority = iota
+	artSecondary
+	artAvatar
+)
+
+type artDemand struct {
+	artRequest
+	priority artworkPriority
+}
+
+// A frame records visible misses before starting work. On desktop the library
+// is drawn first, but its thumbnails must not get a head start over the page.
+type artworkFrame struct {
+	cache  *artworkCache
+	wanted map[artRequest]artworkPriority
+	order  [3][]artRequest
+}
+
 type artworkCache struct {
-	ctx        context.Context
-	mu         sync.Mutex
-	entries    map[artRequest]*artEntry
-	clock      uint64
-	bytes      int
-	queue      chan artRequest
-	workers    sync.WaitGroup
-	redraw     func()
-	client     *http.Client
-	retryTimer *time.Timer
-	retryAt    time.Time
+	ctx                                  context.Context
+	mu                                   sync.Mutex
+	entries                              map[artRequest]*artEntry
+	clock                                uint64
+	bytes                                int
+	queue                                []artDemand
+	active, secondaryActive, largeActive int
+	disk                                 *artworkDisk
+	decoding                             chan struct{}
+	workers                              sync.WaitGroup
+	redraw                               func()
+	client                               *http.Client
+	retryTimer                           *time.Timer
+	retryAt                              time.Time
 }
 
 func newArtworkCache(ctx context.Context, redraw func()) *artworkCache {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.Proxy = netproxy.Proxy
-	c := &artworkCache{ctx: ctx, entries: map[artRequest]*artEntry{}, queue: make(chan artRequest, artworkQueueLimit), redraw: redraw, client: &http.Client{Transport: transport, Timeout: 15 * time.Second, CheckRedirect: func(r *http.Request, via []*http.Request) error {
-		if len(via) >= 10 || !artworkURL(r.URL) {
-			return http.ErrUseLastResponse
-		}
-		return nil
-	}}}
+	c := &artworkCache{
+		ctx:      ctx,
+		entries:  make(map[artRequest]*artEntry),
+		decoding: make(chan struct{}, artworkDecoders),
+		redraw:   redraw,
+		client: &http.Client{
+			Transport: transport,
+			Timeout:   15 * time.Second,
+			CheckRedirect: func(r *http.Request, via []*http.Request) error {
+				if len(via) >= 10 || !artworkURL(r.URL) {
+					return http.ErrUseLastResponse
+				}
+				return nil
+			},
+		},
+	}
 	context.AfterFunc(ctx, func() {
 		c.mu.Lock()
 		if c.retryTimer != nil {
@@ -82,12 +121,9 @@ func newArtworkCache(ctx context.Context, redraw func()) *artworkCache {
 		c.mu.Unlock()
 		transport.CloseIdleConnections()
 	})
-	for range artworkWorkers {
-		c.workers.Add(1)
-		go c.work()
-	}
 	return c
 }
+
 func artworkURL(u *url.URL) bool {
 	if u.Scheme != "https" || u.User != nil || u.Port() != "" {
 		return false
@@ -103,7 +139,9 @@ func artworkURL(u *url.URL) bool {
 	}
 	return false
 }
-func (c *artworkCache) get(raw string, requestedEdge int) ui.ImageSource {
+
+func (f *artworkFrame) get(raw string, requestedEdge int, priority artworkPriority) ui.ImageSource {
+	c := f.cache
 	if c.ctx.Err() != nil {
 		return nil
 	}
@@ -113,105 +151,203 @@ func (c *artworkCache) get(raw string, requestedEdge int) ui.ImageSource {
 	if err != nil || !artworkURL(u) {
 		return nil
 	}
-	request := artRequest{url: raw, edge: edge}
+	key := artRequest{url: raw, edge: edge}
 	c.mu.Lock()
-	c.clock++
-	e := c.entries[request]
-	if e != nil {
+	if e := c.entries[key]; e != nil {
+		c.clock++
 		e.used = c.clock
 		if e.bitmap != nil {
 			b := e.bitmap
 			c.mu.Unlock()
 			return b
 		}
-		if e.pending || time.Now().Before(e.retryAt) {
+		if time.Now().Before(e.retryAt) {
 			c.mu.Unlock()
 			return nil
 		}
-	}
-	for e == nil && len(c.entries) >= artworkEntryLimit {
-		if !c.evictOldest(artRequest{}) {
-			c.mu.Unlock()
-			return nil
-		}
-	}
-	select {
-	case c.queue <- request:
-		if e == nil {
-			e = &artEntry{used: c.clock}
-			c.entries[request] = e
-		}
-		e.pending = true
-	default:
-		// Completion redraws the visible views, which can request this image
-		// again once a worker has made room. Never spawn a waiting goroutine.
 	}
 	c.mu.Unlock()
+	if previous, ok := f.wanted[key]; ok && previous <= priority {
+		return nil
+	}
+	if len(f.order[priority]) < artworkQueueLimit+artworkWorkers {
+		if f.wanted == nil {
+			f.wanted = make(map[artRequest]artworkPriority)
+		}
+		f.wanted[key] = priority
+		f.order[priority] = append(f.order[priority], key)
+	}
 	return nil
 }
 
-func (c *artworkCache) work() {
-	defer c.workers.Done()
-	for {
-		select {
-		case <-c.ctx.Done():
-			return
-		case raw := <-c.queue:
-			if c.ctx.Err() != nil {
-				return
-			}
-			c.load(raw)
+func (f *artworkFrame) submit() {
+	c := f.cache
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.active == 0 && len(f.wanted) == 0 {
+		return
+	}
+	for key, e := range c.entries {
+		if _, visible := f.wanted[key]; e.cancel != nil && !visible {
+			e.cancel()
+			delete(c.entries, key)
 		}
+	}
+	clear(c.queue)
+	c.queue = c.queue[:0]
+	now := time.Now()
+	for tier, keys := range f.order {
+		priority := artworkPriority(tier)
+		for _, key := range keys {
+			// A thumbnail shared by the library and the page uses the page's tier.
+			if f.wanted[key] != priority || len(c.queue) >= artworkQueueLimit {
+				continue
+			}
+			if e := c.entries[key]; e != nil && (e.cancel != nil || e.bitmap != nil || now.Before(e.retryAt)) {
+				continue
+			}
+			c.queue = append(c.queue, artDemand{key, priority})
+		}
+	}
+	c.startQueued()
+}
+
+// Caller holds mu. The secondary limit leaves room for page covers even if
+// the library finishes loading before the catalogue response arrives.
+func (c *artworkCache) startQueued() {
+	for len(c.queue) > 0 && c.active < artworkWorkers && c.ctx.Err() == nil {
+		// Small visible thumbnails can use the remaining slots while large
+		// cards share the link. Preserve display order among eligible covers.
+		index := slices.IndexFunc(c.queue, func(d artDemand) bool {
+			return (d.edge <= 128 || c.largeActive < artworkLargeLimit) &&
+				(d.priority == artPrimary || c.secondaryActive < artworkSecondaryLimit)
+		})
+		if index < 0 {
+			return
+		}
+		d := c.queue[index]
+		c.queue = slices.Delete(c.queue, index, index+1)
+		e := c.entries[d.artRequest]
+		if e == nil {
+			if len(c.entries) >= artworkEntryLimit {
+				c.evictOldest(artRequest{})
+			}
+			e = &artEntry{}
+			c.entries[d.artRequest] = e
+		}
+		ctx, cancel := context.WithCancel(c.ctx)
+		e.cancel = cancel
+		c.clock++
+		e.used = c.clock
+		c.active++
+		if d.edge > 128 {
+			c.largeActive++
+		}
+		if d.priority != artPrimary {
+			c.secondaryActive++
+		}
+		c.workers.Go(func() {
+			bitmap := c.load(ctx, d)
+			c.finish(d, e, bitmap)
+		})
 	}
 }
 
-func (c *artworkCache) load(request artRequest) {
-	var bitmap *ui.Bitmap
-	cost := 0
-	func() {
-		req, err := http.NewRequestWithContext(c.ctx, http.MethodGet, request.url, nil)
-		if err != nil {
-			return
+func (c *artworkCache) download(ctx context.Context, raw string) ([]byte, time.Time) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, raw, nil)
+	if err != nil {
+		return nil, time.Time{}
+	}
+	start := time.Now()
+	res, err := c.client.Do(req)
+	if err != nil {
+		return nil, time.Time{}
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK || res.ContentLength > artworkDownloadLimit {
+		return nil, time.Time{}
+	}
+	data, err := io.ReadAll(io.LimitReader(res.Body, artworkDownloadLimit+1))
+	if err != nil || len(data) > artworkDownloadLimit {
+		return nil, time.Time{}
+	}
+	var expiry time.Time
+	if res.Request == nil || res.Request.URL.String() == raw {
+		expiry = artworkFreshUntil(res.Header, start)
+	}
+	return data, expiry
+}
+
+func (c *artworkCache) load(ctx context.Context, d artDemand) *ui.Bitmap {
+	var key string
+	if c.disk != nil && d.priority != artAvatar {
+		key = artworkDiskKey(d.url)
+	}
+	if key != "" {
+		if bitmap := c.decode(ctx, c.disk.read(key), d.edge); bitmap != nil {
+			return bitmap
 		}
-		res, err := c.client.Do(req)
-		if err != nil {
-			return
-		}
-		defer res.Body.Close()
-		if res.StatusCode != http.StatusOK || res.ContentLength > artworkDownloadLimit {
-			return
-		}
-		data, err := io.ReadAll(io.LimitReader(res.Body, artworkDownloadLimit+1))
-		if err != nil || len(data) > artworkDownloadLimit {
-			return
-		}
-		cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
-		if err != nil || cfg.Width < 1 || cfg.Height < 1 || cfg.Width > 4096 || cfg.Height > 4096 || cfg.Width*cfg.Height > artworkSourcePixels {
-			return
-		}
-		im, _, err := image.Decode(bytes.NewReader(data))
-		if err != nil {
-			return
-		}
-		w, h := im.Bounds().Dx(), im.Bounds().Dy()
-		if w > request.edge || h > request.edge {
-			scale := float64(request.edge) / float64(max(w, h))
-			w = max(1, int(float64(w)*scale))
-			h = max(1, int(float64(h)*scale))
-			dst := image.NewRGBA(image.Rect(0, 0, w, h))
-			draw.CatmullRom.Scale(dst, dst.Bounds(), im, im.Bounds(), draw.Src, nil)
-			im = dst
-		}
-		bitmap = ui.NewBitmap(im)
-		cost = artworkPixelCost(w, h)
-	}()
+	}
+	if ctx.Err() != nil {
+		return nil
+	}
+	data, expiry := c.download(ctx, d.url)
+	bitmap := c.decode(ctx, data, d.edge)
+	if key != "" && bitmap != nil && ctx.Err() == nil && expiry.After(time.Now()) {
+		c.disk.write(key, data, expiry)
+	}
+	return bitmap
+}
+
+func (c *artworkCache) decode(ctx context.Context, data []byte, edge int) *ui.Bitmap {
+	if len(data) == 0 {
+		return nil
+	}
+	select {
+	case c.decoding <- struct{}{}:
+		defer func() { <-c.decoding }()
+	case <-ctx.Done():
+		return nil
+	}
+	if ctx.Err() != nil {
+		return nil
+	}
+	cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
+	if err != nil || cfg.Width < 1 || cfg.Height < 1 || cfg.Width > 4096 || cfg.Height > 4096 || cfg.Width*cfg.Height > artworkSourcePixels {
+		return nil
+	}
+	im, _, err := image.Decode(bytes.NewReader(data))
+	if err != nil {
+		return nil
+	}
+	w, h := im.Bounds().Dx(), im.Bounds().Dy()
+	if w > edge || h > edge {
+		scale := float64(edge) / float64(max(w, h))
+		w = max(1, int(float64(w)*scale))
+		h = max(1, int(float64(h)*scale))
+		dst := image.NewRGBA(image.Rect(0, 0, w, h))
+		draw.CatmullRom.Scale(dst, dst.Bounds(), im, im.Bounds(), draw.Src, nil)
+		im = dst
+	}
+	return ui.NewBitmap(im)
+}
+
+func (c *artworkCache) finish(d artDemand, e *artEntry, bitmap *ui.Bitmap) {
 	c.mu.Lock()
-	e := c.entries[request]
-	if e != nil {
-		e.pending = false
+	c.active--
+	if d.edge > 128 {
+		c.largeActive--
+	}
+	if d.priority != artPrimary {
+		c.secondaryActive--
+	}
+	// A canceled request may return after the same cover has become visible
+	// again. Only the entry that started this load can publish its result.
+	current := c.entries[d.artRequest] == e
+	e.cancel()
+	e.cancel = nil
+	if current {
 		e.bitmap = bitmap
-		c.bytes += cost - e.bytes
-		e.bytes = cost
 		if bitmap == nil {
 			delay := min(artworkRetryBase<<e.failures, artworkRetryMax)
 			e.failures = min(e.failures+1, 6)
@@ -219,22 +355,25 @@ func (c *artworkCache) load(request artRequest) {
 		} else {
 			e.failures = 0
 			e.retryAt = time.Time{}
+			e.bytes = artworkPixelCost(bitmap.Size())
+			c.bytes += e.bytes
+			for c.bytes > artworkPixelBudget {
+				if !c.evictOldest(d.artRequest) {
+					break
+				}
+			}
 		}
+		c.scheduleRetry(time.Now())
 	}
-	for c.bytes > artworkPixelBudget {
-		if !c.evictOldest(request) {
-			break
-		}
-	}
-	c.scheduleRetry(time.Now())
+	c.startQueued()
 	c.mu.Unlock()
-	if c.redraw != nil && c.ctx.Err() == nil {
+	if current && c.redraw != nil && c.ctx.Err() == nil {
 		c.redraw()
 	}
 }
 
 // One timer wakes the view when failed entries become retryable, even while
-// playback is idle. Only get() queues work, so offscreen images are not retried.
+// playback is idle. Only visible views request work, so offscreen images are not retried.
 // Caller holds mu; expired entries need no further wakeup until requested again.
 func (c *artworkCache) scheduleRetry(now time.Time) {
 	if c.redraw == nil || c.ctx.Err() != nil {
@@ -242,7 +381,7 @@ func (c *artworkCache) scheduleRetry(now time.Time) {
 	}
 	next := time.Time{}
 	for _, e := range c.entries {
-		if !e.pending && e.bitmap == nil && e.retryAt.After(now) && (next.IsZero() || e.retryAt.Before(next)) {
+		if e.cancel == nil && e.bitmap == nil && e.retryAt.After(now) && (next.IsZero() || e.retryAt.Before(next)) {
 			next = e.retryAt
 		}
 	}
@@ -274,11 +413,11 @@ func (c *artworkCache) scheduleRetry(now time.Time) {
 	c.retryTimer = timer
 }
 
-// Caller holds mu. Pending entries are bounded by the queue and worker count.
+// Caller holds mu. In-flight loads keep their entries until they finish or are canceled.
 func (c *artworkCache) evictOldest(except artRequest) bool {
 	oldest, tick := artRequest{}, ^uint64(0)
 	for key, entry := range c.entries {
-		if key != except && !entry.pending && entry.used < tick {
+		if key != except && entry.cancel == nil && entry.used < tick {
 			oldest, tick = key, entry.used
 		}
 	}

@@ -19,7 +19,7 @@ import (
 	"ytmgo/locales"
 )
 
-const version = "0.6.1"
+const version = "0.6.2"
 
 //go:embed locales/en.json resources/icon.png resources/tray.png
 var assets embed.FS
@@ -159,7 +159,10 @@ func main() {
 		a.art = newArtworkCache(a.ctx, func() {
 			a.invalidate()
 		})
-		a.window = mygo.NewWindow(mygo.WindowOptions{Title: locales.AppName(), Width: 1440, Height: 940, MinWidth: 380, MinHeight: 640, StateKey: "native-main", BackgroundColor: "light-dark(#e7e7ea, #050506)", Content: ui.View(func(c *ui.Context) { nativeView(c, &a.model, a.actions()); a.syncVideo() })})
+		if dir, err := mygo.App.Path(mygo.PathCache); err == nil {
+			a.art.disk = &artworkDisk{dir: filepath.Join(dir, "artwork-v1")}
+		}
+		a.window = mygo.NewWindow(mygo.WindowOptions{Title: locales.AppName(), Width: 1440, Height: 940, MinWidth: 380, MinHeight: 640, StateKey: "native-main", BackgroundColor: "light-dark(#e7e7ea, #050506)", Content: ui.View(a.view)})
 		a.windowVisible = true
 		a.window.OnHide(func() { a.cancelShortcut(); a.windowVisible = false; a.syncVideo() })
 		a.window.OnShow(func() { a.windowVisible = true; a.syncVideo() })
@@ -217,8 +220,15 @@ func (a *desktop) show() {
 	}
 }
 
-func (a *desktop) actions() ViewActions {
-	return ViewActions{BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, RetryPlayback: func() { a.startTrack(a.model.Current) }, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: a.art.get}
+func (a *desktop) view(c *ui.Context) {
+	frame := artworkFrame{cache: a.art}
+	nativeView(c, &a.model, a.actions(frame.get))
+	frame.submit()
+	a.syncVideo()
+}
+
+func (a *desktop) actions(artwork func(string, int, artworkPriority) ui.ImageSource) ViewActions {
+	return ViewActions{BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, RetryPlayback: func() { a.startTrack(a.model.Current) }, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: artwork}
 }
 
 func (a *desktop) pollPlayback() {
@@ -313,7 +323,7 @@ func (a *desktop) accountMenuItems() []*mygo.MenuItem {
 
 func (a *desktop) invalidate() {
 	if a.window != nil {
-		a.window.Update(func() {})
+		a.window.Invalidate()
 	}
 }
 func (a *desktop) trayMenu() *mygo.Menu {

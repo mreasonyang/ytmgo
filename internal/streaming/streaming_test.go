@@ -3,6 +3,7 @@ package streaming
 import (
 	"bufio"
 	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"errors"
@@ -337,6 +338,55 @@ func TestResponseLimitDoesNotReturnPartialData(t *testing.T) {
 	}
 }
 
+func TestPlayerScriptGzip(t *testing.T) {
+	const script = "function play(){}"
+	compress := func(text string, level int) []byte {
+		t.Helper()
+		var b bytes.Buffer
+		w, err := gzip.NewWriterLevel(&b, level)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := io.WriteString(w, text); err != nil {
+			t.Fatal(err)
+		}
+		if err := w.Close(); err != nil {
+			t.Fatal(err)
+		}
+		return b.Bytes()
+	}
+	compressed := compress(script, gzip.DefaultCompression)
+	large := strings.Repeat("x", maxResponse+1)
+	for _, tc := range []struct {
+		name, encoding, failure string
+		body                    []byte
+	}{
+		{"compressed", "gzip", "", compressed},
+		{"uncompressed", "", "", []byte(script)},
+		{"truncated", "gzip", "resolver_http_error", compressed[:len(compressed)-1]},
+		{"expanded limit", "gzip", "resolver_response_limit", compress(large, gzip.BestSpeed)},
+		{"wire limit", "gzip", "resolver_response_limit", compress(large[:maxResponse], gzip.NoCompression)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			r := testResolver(t, func(req *http.Request) (*http.Response, error) {
+				if req.Header.Get("Accept-Encoding") != "gzip" {
+					t.Fatal("public player script did not negotiate gzip")
+				}
+				return &http.Response{StatusCode: 200, Header: http.Header{"Content-Encoding": {tc.encoding}},
+					Body: io.NopCloser(bytes.NewReader(tc.body)), ContentLength: -1}, nil
+			})
+			data, err := r.request(context.Background(), "GET", "https://www.youtube.com/s/player/fixture/base.js", nil, nil, "bootstrap", "player_script")
+			if tc.failure == "" {
+				if err != nil || string(data) != script {
+					t.Fatal("player did not receive the original script")
+				}
+			} else if err == nil || err.Error() != tc.failure || data != nil {
+				t.Fatal("invalid script was not rejected with the expected category")
+			}
+		})
+	}
+}
+
 func TestProofAndPlayerAgentContractsRemainSeparate(t *testing.T) {
 	r := testResolver(t, func(req *http.Request) (*http.Response, error) {
 		expected := userAgent
@@ -345,6 +395,9 @@ func TestProofAndPlayerAgentContractsRemainSeparate(t *testing.T) {
 		}
 		if req.Header.Get("User-Agent") != expected {
 			t.Error("request agent contract changed")
+		}
+		if req.Header.Get("Accept-Encoding") != "identity" {
+			t.Error("non-script request unexpectedly negotiated compression")
 		}
 		return response("fixture"), nil
 	})

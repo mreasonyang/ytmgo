@@ -10,14 +10,25 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/egoist/mygo/ui"
 )
 
 type artworkTransport func(*http.Request) (*http.Response, error)
 
 func (f artworkTransport) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
+
+func requestTestArtwork(c *artworkCache, raw string, edge int) ui.ImageSource {
+	f := artworkFrame{cache: c}
+	image := f.get(raw, edge, artPrimary)
+	f.submit()
+	return image
+}
 
 func TestArtworkWorkRemainsBoundedWhileScrolling(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -34,9 +45,11 @@ func TestArtworkWorkRemainsBoundedWhileScrolling(t *testing.T) {
 		return nil, r.Context().Err()
 	})
 	t.Cleanup(func() { cancel(); c.workers.Wait() })
+	frame := artworkFrame{cache: c}
 	for i := range 5000 {
-		c.get(fmt.Sprintf("https://i.ytimg.com/vi/item-%d/hqdefault.jpg", i), 128)
+		frame.get(fmt.Sprintf("https://i.ytimg.com/vi/item-%d/hqdefault.jpg", i), 128, artPrimary)
 	}
+	frame.submit()
 	for range artworkWorkers {
 		select {
 		case <-started:
@@ -47,7 +60,7 @@ func TestArtworkWorkRemainsBoundedWhileScrolling(t *testing.T) {
 	c.mu.Lock()
 	entries, queued := len(c.entries), len(c.queue)
 	c.mu.Unlock()
-	if entries > artworkWorkers+artworkQueueLimit || queued > artworkQueueLimit || maximum.Load() > artworkWorkers {
+	if len(frame.wanted) > artworkWorkers+artworkQueueLimit || entries > artworkWorkers || queued > artworkQueueLimit || maximum.Load() > artworkWorkers {
 		t.Fatalf("unbounded pending artwork: entries=%d queued=%d workers=%d", entries, queued, maximum.Load())
 	}
 	cancel()
@@ -60,6 +73,171 @@ func TestArtworkWorkRemainsBoundedWhileScrolling(t *testing.T) {
 	}
 }
 
+// A desktop frame sees the library first. If its first thumbnail also appears
+// on the page it should share the page request, even with a full waiting list.
+func TestArtworkSchedulesPageBeforeSidebarAndDropsOldViewport(t *testing.T) {
+	c := artworkTestCache(t, nil)
+	started := make(chan *http.Request, 2*artworkWorkers)
+	c.client.Transport = artworkTransport(func(r *http.Request) (*http.Response, error) {
+		started <- r
+		<-r.Context().Done()
+		return nil, r.Context().Err()
+	})
+	const origin = "https://i.ytimg.com"
+	frame := artworkFrame{cache: c}
+	for i := range artworkQueueLimit {
+		frame.get(fmt.Sprintf("%s/side/%d", origin, i), 128, artSecondary)
+	}
+	frame.get(origin+"/side/0", 128, artPrimary)
+	for i := 1; i < artworkWorkers; i++ {
+		frame.get(fmt.Sprintf("%s/page/%d", origin, i), 128, artPrimary)
+	}
+	frame.submit()
+	first := map[string]*http.Request{}
+	for range artworkWorkers {
+		select {
+		case req := <-started:
+			path := req.URL.Path
+			if first[path] != nil || (path != "/side/0" && !strings.HasPrefix(path, "/page/")) {
+				t.Fatalf("duplicate or lower-priority request in the first batch: %s", path)
+			}
+			first[path] = req
+		case <-time.After(2 * time.Second):
+			t.Fatal("page did not use all available slots")
+		}
+	}
+	// A new viewport retains one in-flight cover and replaces everything else.
+	next := artworkFrame{cache: c}
+	next.get(origin+"/side/0", 128, artSecondary)
+	next.get(origin+"/new", 128, artPrimary)
+	next.submit()
+	select {
+	case req := <-started:
+		if req.URL.Path != "/new" {
+			t.Fatal("work from the previous viewport was started")
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("new page waited behind obsolete requests")
+	}
+	for path, req := range first {
+		if (req.Context().Err() == nil) != (path == "/side/0") {
+			t.Fatalf("wrong request survived the viewport change: %s", path)
+		}
+	}
+}
+
+func TestArtworkSidebarLeavesCapacityForLatePage(t *testing.T) {
+	c := artworkTestCache(t, nil)
+	started := make(chan string, artworkWorkers)
+	c.client.Transport = artworkTransport(func(r *http.Request) (*http.Response, error) {
+		started <- r.URL.Path
+		<-r.Context().Done()
+		return nil, r.Context().Err()
+	})
+	render := func(withPage bool) {
+		f := artworkFrame{cache: c}
+		for i := range artworkWorkers {
+			f.get(fmt.Sprintf("https://i.ytimg.com/side/%d", i), 128, artSecondary)
+		}
+		if withPage {
+			f.get("https://i.ytimg.com/page", 384, artPrimary)
+		}
+		f.submit()
+	}
+	render(false)
+	c.mu.Lock()
+	active := c.active
+	c.mu.Unlock()
+	if active != artworkSecondaryLimit {
+		t.Fatalf("%d simultaneous sidebar requests", active)
+	}
+	for range artworkSecondaryLimit {
+		select {
+		case <-started:
+		case <-time.After(2 * time.Second):
+			t.Fatal("sidebar did not load")
+		}
+	}
+	render(true)
+	select {
+	case path := <-started:
+		if path != "/page" {
+			t.Fatal("sidebar displaced new page")
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("page waited for the sidebar")
+	}
+}
+
+func TestArtworkLargeCoversLeaveSlotsForListThumbnails(t *testing.T) {
+	c := artworkTestCache(t, nil)
+	c.client.Transport = artworkTransport(func(req *http.Request) (*http.Response, error) {
+		<-req.Context().Done()
+		return nil, req.Context().Err()
+	})
+	frame := artworkFrame{cache: c}
+	for _, edge := range []int{384, 128} {
+		for i := range artworkWorkers {
+			frame.get(fmt.Sprintf("https://i.ytimg.com/%d/%d", edge, i), edge, artPrimary)
+		}
+	}
+	frame.submit()
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.active != artworkWorkers || c.largeActive != artworkLargeLimit {
+		t.Fatalf("unexpected mix of in-flight covers: %d total, %d large", c.active, c.largeActive)
+	}
+}
+
+func TestArtworkCanceledLoadCannotReplaceRevisitedCover(t *testing.T) {
+	data := artworkTestPNG(t, 16, 16)
+	c := artworkTestCache(t, data)
+	original := c.client.Transport
+	first := make(chan struct{})
+	release := make(chan struct{})
+	unblock := sync.OnceFunc(func() { close(release) })
+	defer unblock()
+	var attempts atomic.Int32
+	c.client.Transport = artworkTransport(func(r *http.Request) (*http.Response, error) {
+		if attempts.Add(1) == 1 {
+			close(first)
+			<-r.Context().Done()
+			// Hold the old failure until after the replacement is cached.
+			select {
+			case <-release:
+			case <-c.ctx.Done():
+			}
+			return nil, r.Context().Err()
+		}
+		return original.RoundTrip(r)
+	})
+	completed := make(chan struct{}, 2)
+	c.redraw = func() { completed <- struct{}{} }
+	const raw = "https://i.ytimg.com/revisited"
+	requestTestArtwork(c, raw, 128)
+	select {
+	case <-first:
+	case <-time.After(2 * time.Second):
+		t.Fatal("first download never started")
+	}
+	empty := artworkFrame{cache: c}
+	empty.submit()
+	requestTestArtwork(c, raw, 128)
+	select {
+	case <-completed:
+	case <-time.After(2 * time.Second):
+		t.Fatal("revisited cover did not load")
+	}
+	if requestTestArtwork(c, raw, 128) == nil {
+		t.Fatal("replacement did not publish its bitmap")
+	}
+	unblock()
+	c.workers.Wait()
+	if requestTestArtwork(c, raw, 128) == nil || attempts.Load() != 2 || len(completed) != 0 {
+		t.Fatal("obsolete result replaced the image, retried, or requested a redraw")
+	}
+}
+
 func artworkTestPNG(t *testing.T, width, height int) []byte {
 	t.Helper()
 	var data bytes.Buffer
@@ -69,17 +247,22 @@ func artworkTestPNG(t *testing.T, width, height int) []byte {
 	return data.Bytes()
 }
 
-func artworkTestCache(data []byte) *artworkCache {
-	return &artworkCache{ctx: context.Background(), entries: map[artRequest]*artEntry{}, client: &http.Client{Transport: artworkTransport(func(*http.Request) (*http.Response, error) {
+func artworkTestCache(t *testing.T, data []byte) *artworkCache {
+	t.Helper()
+	ctx, cancel := context.WithCancel(t.Context())
+	c := newArtworkCache(ctx, nil)
+	t.Cleanup(func() { cancel(); c.workers.Wait() })
+	c.client.Transport = artworkTransport(func(*http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, ContentLength: -1, Body: io.NopCloser(bytes.NewReader(data))}, nil
-	})}}
+	})
+	return c
 }
 
 func TestArtworkResizePreservesAspectAndCapsRetainedPixels(t *testing.T) {
-	c := artworkTestCache(artworkTestPNG(t, 1536, 768))
+	c := artworkTestCache(t, artworkTestPNG(t, 1536, 768))
 	request := artRequest{url: "https://i.ytimg.com/vi/example/hqdefault.jpg", edge: 128}
-	c.entries[request] = &artEntry{pending: true}
-	c.load(request)
+	requestTestArtwork(c, request.url, request.edge)
+	c.workers.Wait()
 	if c.entries[request].bitmap == nil {
 		t.Fatal("valid artwork did not decode")
 	}
@@ -89,11 +272,11 @@ func TestArtworkResizePreservesAspectAndCapsRetainedPixels(t *testing.T) {
 	if c.bytes <= 128*64*4 {
 		t.Fatal("retained pixel budget excludes renderer mipmaps")
 	}
-	c = artworkTestCache(artworkTestPNG(t, 768, 768))
+	c = artworkTestCache(t, artworkTestPNG(t, 768, 768))
 	for i := range 24 {
 		request := artRequest{url: fmt.Sprintf("https://i.ytimg.com/vi/%d/hqdefault.jpg", i), edge: artworkEdge}
-		c.entries[request] = &artEntry{pending: true, used: uint64(i + 1)}
-		c.load(request)
+		requestTestArtwork(c, request.url, request.edge)
+		c.workers.Wait()
 		if c.bytes > artworkPixelBudget {
 			t.Fatalf("retained pixels exceeded budget after %d covers: %d", i+1, c.bytes)
 		}
@@ -112,11 +295,11 @@ func TestArtworkRejectsOversizedDownloadAndDecode(t *testing.T) {
 		{"decoded", artworkTestPNG(t, 3000, 2000)},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			c := artworkTestCache(tc.data)
+			c := artworkTestCache(t, tc.data)
 			request := artRequest{url: "https://i.ytimg.com/vi/example/hqdefault.jpg", edge: artworkEdge}
-			c.entries[request] = &artEntry{pending: true}
-			c.load(request)
-			if c.entries[request].bitmap != nil || c.bytes != 0 || c.entries[request].pending {
+			requestTestArtwork(c, request.url, request.edge)
+			c.workers.Wait()
+			if c.entries[request].bitmap != nil || c.bytes != 0 || c.entries[request].cancel != nil {
 				t.Fatal("oversized image was retained or remained pending")
 			}
 		})
@@ -127,8 +310,7 @@ func TestArtworkFailedImageCanRecoverAfterBackoff(t *testing.T) {
 	for _, failure := range []string{"connection", "http", "decode"} {
 		t.Run(failure, func(t *testing.T) {
 			data := artworkTestPNG(t, 16, 16)
-			c := artworkTestCache(data)
-			c.queue = make(chan artRequest, artworkQueueLimit)
+			c := artworkTestCache(t, data)
 			attempts := 0
 			c.client.Transport = artworkTransport(func(*http.Request) (*http.Response, error) {
 				attempts++
@@ -146,52 +328,43 @@ func TestArtworkFailedImageCanRecoverAfterBackoff(t *testing.T) {
 				return &http.Response{StatusCode: status, ContentLength: -1, Body: io.NopCloser(bytes.NewReader(body))}, nil
 			})
 			const raw = "https://i.ytimg.com/vi/example/hqdefault.jpg"
-			c.get(raw, 128)
-			request := <-c.queue
-			c.load(request)
+			request := artRequest{url: raw, edge: 128}
+			requestTestArtwork(c, raw, 128)
+			c.workers.Wait()
 			e := c.entries[request]
-			if e.pending || e.bitmap != nil || !e.retryAt.After(time.Now()) {
+			if e.cancel != nil || e.bitmap != nil || !e.retryAt.After(time.Now()) {
 				t.Fatal("failed image did not enter retry backoff")
 			}
 			for range 100 {
-				c.get(raw, 128)
+				requestTestArtwork(c, raw, 128)
 			}
 			if len(c.queue) != 0 || attempts != 1 {
 				t.Fatal("redraws retried before backoff elapsed")
 			}
 			e.retryAt = time.Now().Add(-time.Second)
-			for range artworkQueueLimit {
-				c.queue <- artRequest{url: "synthetic queued image"}
-			}
-			c.get(raw, 128)
-			if e.pending || len(c.queue) != artworkQueueLimit {
-				t.Fatal("retry was marked pending while the queue was full")
-			}
-			for range artworkQueueLimit {
-				<-c.queue
-			}
+			frame := artworkFrame{cache: c}
 			for range 100 {
-				c.get(raw, 128)
+				frame.get(raw, 128, artPrimary)
 			}
-			if len(c.queue) != 1 || !e.pending {
-				t.Fatal("retry was lost or queued more than once")
-			}
-			c.load(<-c.queue)
-			if c.get(raw, 128) == nil || e.pending || e.failures != 0 || !e.retryAt.IsZero() || attempts != 2 {
-				t.Fatal("failed image remained empty after a successful retry")
+			frame.submit()
+			c.workers.Wait()
+			if requestTestArtwork(c, raw, 128) == nil || e.cancel != nil || e.failures != 0 || !e.retryAt.IsZero() || attempts != 2 {
+				t.Fatal("failed image did not recover with a single successful retry")
 			}
 		})
 	}
 }
 
 func TestArtworkRetryBackoffIsCapped(t *testing.T) {
-	c := artworkTestCache([]byte("synthetic invalid image"))
+	c := artworkTestCache(t, []byte("synthetic invalid image"))
 	request := artRequest{url: "https://i.ytimg.com/vi/example/hqdefault.jpg", edge: 128}
 	e := &artEntry{}
 	c.entries[request] = e
 	for attempt := range 10 {
+		e.retryAt = time.Time{}
 		before := time.Now()
-		c.load(request)
+		requestTestArtwork(c, request.url, request.edge)
+		c.workers.Wait()
 		want := min(artworkRetryBase<<attempt, artworkRetryMax)
 		if e.retryAt.Before(before.Add(want)) || e.retryAt.After(time.Now().Add(want)) {
 			t.Fatal("retry did not use capped exponential backoff")
@@ -209,7 +382,7 @@ func TestArtworkRetryWakesIdleViewWithoutFetchingOffscreen(t *testing.T) {
 		attempts.Add(1)
 		return &http.Response{StatusCode: http.StatusServiceUnavailable, Body: io.NopCloser(bytes.NewReader(nil))}, nil
 	})
-	c.get("https://i.ytimg.com/vi/example/hqdefault.jpg", 128)
+	requestTestArtwork(c, "https://i.ytimg.com/vi/example/hqdefault.jpg", 128)
 	for _, event := range []string{"failed load", "retry deadline"} {
 		select {
 		case <-redraws:
@@ -257,13 +430,13 @@ func TestSystemArtworkReachesDownloaderWithoutCDNSizeRewrite(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, ContentLength: int64(len(data)), Body: io.NopCloser(bytes.NewReader(data))}, nil
 	})
 	for _, source := range []string{raw, mix} {
-		c.get(source, 128)
+		requestTestArtwork(c, source, 128)
 		select {
 		case <-done:
 		case <-time.After(2 * time.Second):
 			t.Fatal("official system artwork never reached the downloader")
 		}
-		if c.get(source, 128) == nil {
+		if requestTestArtwork(c, source, 128) == nil {
 			t.Fatal("system artwork did not decode")
 		}
 	}

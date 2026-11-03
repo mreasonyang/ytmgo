@@ -23,7 +23,7 @@ func TestNativeAccountAvatarImageAndMenu(t *testing.T) {
 				bitmap := ui.NewBitmap(photo)
 				loaded := false
 				originalArtwork := a.Artwork
-				a.Artwork = func(src string, edge int) ui.ImageSource {
+				a.Artwork = func(src string, edge int, priority artworkPriority) ui.ImageSource {
 					if src == m.AccountAvatar {
 						if edge < 64 {
 							t.Error("avatar resolution is too low for Retina")
@@ -33,7 +33,7 @@ func TestNativeAccountAvatarImageAndMenu(t *testing.T) {
 						}
 						return nil
 					}
-					return originalArtwork(src, edge)
+					return originalArtwork(src, edge, priority)
 				}
 				tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, 900)
 				label := a.Tr("menuAccount") + " · " + nativeAccountStatus(m, a)

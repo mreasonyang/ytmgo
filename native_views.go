@@ -93,7 +93,7 @@ type ViewActions struct {
 	RestoreAccount, SkipRestore, RetryLibrary           func()
 	Seek, Volume                                        func(float64)
 	Appearance, Language                                func(string)
-	Artwork                                             func(string, int) ui.ImageSource
+	Artwork                                             func(string, int, artworkPriority) ui.ImageSource
 	Video                                               func(bool)
 	RetryPlayback                                       func()
 	LoadMore                                            func()
@@ -101,6 +101,7 @@ type ViewActions struct {
 	SetShortcut                                         func(string)
 	artViewport                                         ui.Rect
 	artClipped                                          bool
+	artPriority                                         artworkPriority
 }
 
 // Window geometry. Above 1180 DIPs the library is a full panel and Now Playing
@@ -386,7 +387,7 @@ func nativeAvatar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, siz
 	}
 	var avatar ui.ImageSource
 	if m.SignedIn && m.AccountAvatar != "" && a.Artwork != nil {
-		avatar = a.Artwork(m.AccountAvatar, int(math.Ceil(float64(size)*2)))
+		avatar = a.Artwork(m.AccountAvatar, int(math.Ceil(float64(size)*2)), artAvatar)
 	}
 	return ui.Box(c).Size(size, size).Shrink(0).Radius(size / 2).Clip().Background(bg).TextColor(fg).Center().PassThrough().Children(func() {
 		if avatar != nil {
@@ -533,6 +534,7 @@ func nativeResultLabel(item catalog.Item, m *UIModel, a ViewActions) string {
 }
 
 func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) {
+	a.artPriority = artSecondary
 	full := width > 1180 && !m.SidebarCollapsed
 	panelWidth := float32(nativeRailWidth)
 	if full {
@@ -1148,7 +1150,7 @@ func nativeArtwork(c *ui.Context, src string, size, radius float32, a ViewAction
 			}
 			visible := nativeIntersection(bounds, viewport)
 			if visible.W > 0 && visible.H > 0 {
-				artwork = a.Artwork(src, int(math.Ceil(float64(size)*2)))
+				artwork = a.Artwork(src, int(math.Ceil(float64(size)*2)), a.artPriority)
 			}
 		}
 	}
@@ -1889,7 +1891,7 @@ func nativeBackdrop(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 	}
 	var artwork ui.ImageSource
 	if src != "" && a.Artwork != nil {
-		artwork = a.Artwork(src, artworkEdge)
+		artwork = a.Artwork(src, artworkEdge, artSecondary)
 	}
 	strength := float32(0.5)
 	if !p.dark {

@@ -2,6 +2,7 @@ package streaming
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"crypto/tls"
 	"encoding/json"
@@ -70,7 +71,12 @@ func (r *Resolver) request(ctx context.Context, method, raw string, body []byte,
 	if stage == "proof_init" {
 		req.Header.Set("User-Agent", proofUserAgent)
 	}
-	req.Header.Set("Accept-Encoding", "identity")
+	playerScript := req.URL.Host == "www.youtube.com" && strings.HasPrefix(req.URL.Path, "/s/player/")
+	if playerScript {
+		req.Header.Set("Accept-Encoding", "gzip")
+	} else {
+		req.Header.Set("Accept-Encoding", "identity")
+	}
 	if req.Header.Get("Accept") == "" {
 		req.Header.Set("Accept", "*/*")
 	}
@@ -124,7 +130,17 @@ func (r *Resolver) request(ctx context.Context, method, raw string, body []byte,
 	if res.ContentLength > maxResponse {
 		return nil, failure("resolver_response_limit", stage)
 	}
-	data, err := io.ReadAll(io.LimitReader(res.Body, maxResponse+1))
+	// Cap both the network transfer and the script passed to the JS runtime.
+	wire := &io.LimitedReader{R: res.Body, N: maxResponse + 1}
+	var data []byte
+	if playerScript && strings.EqualFold(res.Header.Get("Content-Encoding"), "gzip") {
+		data, err = readGzipScript(wire)
+	} else {
+		data, err = io.ReadAll(wire)
+	}
+	if wire.N == 0 || len(data) > maxResponse {
+		return nil, failure("resolver_response_limit", stage)
+	}
 	if err != nil {
 		if parent.Err() != nil {
 			return nil, parent.Err()
@@ -134,11 +150,18 @@ func (r *Resolver) request(ctx context.Context, method, raw string, body []byte,
 		}
 		return nil, failure("resolver_http_error", stage)
 	}
-	if len(data) > maxResponse {
-		return nil, failure("resolver_response_limit", stage)
-	}
 	return data, nil
 }
+
+func readGzipScript(wire io.Reader) ([]byte, error) {
+	r, err := gzip.NewReader(wire)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+	return io.ReadAll(io.LimitReader(r, maxResponse+1))
+}
+
 func mimeClass(s string) string {
 	switch {
 	case strings.Contains(s, "text/html"):

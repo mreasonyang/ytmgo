@@ -40,7 +40,7 @@ func nativeViewFixture() (*UIModel, ViewActions) {
 		art[fmt.Sprintf("art-%d", i)] = ui.NewBitmap(pic)
 	}
 	noop := func() {}
-	a := ViewActions{Tr: func(key string) string { return locales.Catalog.Format(m.Language, key, nil) }, TrArgs: func(key string, args map[string]any) string { return locales.Catalog.Format(m.Language, key, args) }, Navigate: func(route string) { m.Route = route }, Search: func(query string) { m.Route = "search"; m.Query = query }, Open: func(item catalog.Item) { m.Page = catalog.Page{Title: item.Title} }, Play: func(item catalog.Item) { m.Current = item; m.Playing = true }, QueueAppend: func(item catalog.Item) { m.Queue = append(m.Queue, item) }, PlayQueue: func(i int) { m.Current = m.Queue[i] }, Toggle: func() { m.Playing = !m.Playing }, Next: noop, Previous: noop, Like: func() { m.Liked = !m.Liked }, Shuffle: func() { m.Shuffle = !m.Shuffle }, Repeat: func() { m.Repeat = (m.Repeat + 1) % 3 }, Mute: func() { m.Muted = !m.Muted }, Back: noop, Forward: noop, Reload: noop, Account: noop, SignOut: noop, Seek: func(value float64) { m.Position = value }, Volume: func(value float64) { m.Volume = value }, Appearance: func(value string) { m.Appearance = value }, Language: func(value string) { m.Language = value }, Artwork: func(src string, _ int) ui.ImageSource { return art[src] }}
+	a := ViewActions{Tr: func(key string) string { return locales.Catalog.Format(m.Language, key, nil) }, TrArgs: func(key string, args map[string]any) string { return locales.Catalog.Format(m.Language, key, args) }, Navigate: func(route string) { m.Route = route }, Search: func(query string) { m.Route = "search"; m.Query = query }, Open: func(item catalog.Item) { m.Page = catalog.Page{Title: item.Title} }, Play: func(item catalog.Item) { m.Current = item; m.Playing = true }, QueueAppend: func(item catalog.Item) { m.Queue = append(m.Queue, item) }, PlayQueue: func(i int) { m.Current = m.Queue[i] }, Toggle: func() { m.Playing = !m.Playing }, Next: noop, Previous: noop, Like: func() { m.Liked = !m.Liked }, Shuffle: func() { m.Shuffle = !m.Shuffle }, Repeat: func() { m.Repeat = (m.Repeat + 1) % 3 }, Mute: func() { m.Muted = !m.Muted }, Back: noop, Forward: noop, Reload: noop, Account: noop, SignOut: noop, Seek: func(value float64) { m.Position = value }, Volume: func(value float64) { m.Volume = value }, Appearance: func(value string) { m.Appearance = value }, Language: func(value string) { m.Language = value }, Artwork: func(src string, _ int, _ artworkPriority) ui.ImageSource { return art[src] }}
 	a.Video = func(video bool) { m.Video = video }
 	a.LoadMore = func() { m.Page.Continuation = "" }
 	return m, a
@@ -553,6 +553,23 @@ func TestNativePlaybackFailureRetry(t *testing.T) {
 	}
 }
 
+func TestNativeHomePrioritizesSharedShortcutOverSidebar(t *testing.T) {
+	m, a := nativeViewFixture()
+	m.SignedIn = true
+	m.LibraryItems = []catalog.Item{{Title: "Shared", Kind: "playlist", BrowseID: "shared", Artwork: "shared-cover"}}
+	seen := map[artworkPriority]bool{}
+	a.Artwork = func(src string, _ int, priority artworkPriority) ui.ImageSource {
+		if src == "shared-cover" {
+			seen[priority] = true
+		}
+		return nil
+	}
+	ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 940)
+	if !seen[artPrimary] || !seen[artSecondary] {
+		t.Fatal("the home shortcut and sidebar did not submit their cover at distinct priorities")
+	}
+}
+
 func TestNativeArtworkOnlyRequestsVisibleCovers(t *testing.T) {
 	m, a := nativeViewFixture()
 	m.Current = catalog.Item{}
@@ -562,7 +579,7 @@ func TestNativeArtworkOnlyRequestsVisibleCovers(t *testing.T) {
 		m.Page.Items = append(m.Page.Items, catalog.Item{ID: fmt.Sprint(i), Title: fmt.Sprintf("Track %d", i), Artwork: fmt.Sprintf("cover-%d", i)})
 	}
 	requested := map[string]int{}
-	a.Artwork = func(src string, edge int) ui.ImageSource { requested[src] = edge; return nil }
+	a.Artwork = func(src string, edge int, _ artworkPriority) ui.ImageSource { requested[src] = edge; return nil }
 	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1100, 900)
 	if len(requested) == 0 || len(requested) > 16 {
 		t.Fatalf("initial view requested offscreen artwork: %d covers", len(requested))
@@ -605,7 +622,7 @@ func TestNativeArtworkClipsHorizontalShelves(t *testing.T) {
 	}
 	m.Page = catalog.Page{Title: "Explore", Shelves: []catalog.Shelf{{Title: "Albums", Items: items}}}
 	requested := map[string]int{}
-	a.Artwork = func(src string, edge int) ui.ImageSource { requested[src] = edge; return nil }
+	a.Artwork = func(src string, edge int, _ artworkPriority) ui.ImageSource { requested[src] = edge; return nil }
 	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1100, 900)
 	if len(requested) == 0 || len(requested) > 7 {
 		t.Fatalf("horizontal shelf requested hidden albums: %d covers", len(requested))

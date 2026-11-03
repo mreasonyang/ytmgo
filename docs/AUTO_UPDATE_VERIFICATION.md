@@ -1,5 +1,11 @@
 # 自动升级验收
 
+## 0.6.2 — 2026-11-04
+
+**PASS**。本机从公开的 0.6.1 通过 **Check for Updates… → Install Update → Relaunch Now** 升级至 0.6.2。自动重启后，设置与更新窗口均显示 0.6.2。安装包与独立下载的正式 ZIP 一致，Apple 签名、公证票据和 Gatekeeper 检查通过。[发布与本机验收记录](audits/2026-11-04-release-0.6.2/README.md)
+
+Premium、个人曲库和封面在升级后可用。播放器重启时处于空闲状态，手动恢复升级前的曲目和进度后可正常播放。远端还从公开 0.6.1 ZIP 单独验证了生产更新源、安装及最终应用包。[公开包升级回执](audits/2026-11-04-release-0.6.2/public-upgrade-receipt.json)
+
 ## 0.6.1 — 2026-11-03
 
 **PASS**：已公开发布 [0.6.1](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.1)，完成本机原生更新窗口升级及独立的公开 0.6.0 → 0.6.1 包升级。

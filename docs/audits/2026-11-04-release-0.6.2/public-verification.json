@@ -1,0 +1,24 @@
+{
+  "source_commit": "f2c50e8b0df3fb7a743fde9571070251a26d0b05",
+  "tag": "v0.6.2",
+  "version": "0.6.2",
+  "github_asset_digests_verified": 6,
+  "sha256": {
+    "ytmgo-0.6.2-arm64-notarized.zip": "6dd038f2dd62af9bafd87f9b9d8ac29f84030345588961852f187a28519ba9b4",
+    "ytmgo-0.6.2-arm64-notarized.dmg": "c477b4336a4652d151f3b6802e92ec10deda926cbdc72bb81d1504a4278c6a8e",
+    "build.json": "208ce0154630570742403aded5e66fd42348a48bc5b391ff0ea43609444eeef3",
+    "ytmgo-0.6.2-darwin-arm64.tar.gz": "2e0d2e6f575719fa5d38e478e76b79f3cc1545ceafb99813cb006d3bb3039406",
+    "update-darwin-arm64.json": "f4f58edbf9fdf7647b58d0e6a12c542cffe78d4a7ed037db53893859d146cedc"
+  },
+  "stable_feed_matches_versioned": true,
+  "ed25519_verified": true,
+  "public_bundle": {
+    "apple_signature": true,
+    "stapled_ticket": true,
+    "gatekeeper": true,
+    "version": "0.6.2",
+    "cli_version": "0.6.2",
+    "executable_sha256": "a2299222b6192acdda135a0c13120c9a66261ec87165f06ec8714fecc38c7464"
+  },
+  "dmg_integrity_signature_ticket_gatekeeper": true
+}

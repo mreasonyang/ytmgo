@@ -1,0 +1,77 @@
+{
+  "commit": "f2c50e8b0df3fb7a743fde9571070251a26d0b05",
+  "go_race": {
+    "passed_tests_and_subtests": 981,
+    "skipped": 27,
+    "passed_packages": 10
+  },
+  "go_vet": true,
+  "i18n": {
+    "languages": 4,
+    "messages": 239
+  },
+  "release_script_tests": 23,
+  "native_playback_ci": {
+    "run": 41674807334,
+    "macos": "success",
+    "windows": "success",
+    "linux": "success"
+  },
+  "account_login_ci": {
+    "macos": "success",
+    "other_platforms": [
+      {
+        "run": 41674807423,
+        "platform": "Windows",
+        "api_ok": true,
+        "failed_existing_tests": [
+          "TestAcceptanceProbeWritesOnlyClosedStateAndExpires",
+          "TestCanceledWakeRetainsBookmarkForExplicitPlay",
+          "TestLateWakeLosesToUserActions",
+          "TestSuspendPreservesPausedIntentAndSeek",
+          "TestSuspendRetiresMediaAndResolvesFreshAtBookmark",
+          "TestWakeRetriesOnlyTransientTransportFailure"
+        ]
+      },
+      {
+        "run": 41674807423,
+        "platform": "Linux",
+        "api_ok": true,
+        "failed_existing_tests": [
+          "TestCanceledWakeRetainsBookmarkForExplicitPlay",
+          "TestLateWakeLosesToUserActions",
+          "TestNativeSettingsAppearanceFitsNarrow",
+          "TestSuspendPreservesPausedIntentAndSeek",
+          "TestSuspendRetiresMediaAndResolvesFreshAtBookmark",
+          "TestWakeRetriesOnlyTransientTransportFailure"
+        ]
+      },
+      {
+        "run": 41596981677,
+        "platform": "Linux",
+        "api_ok": true,
+        "failed_existing_tests": [
+          "TestCanceledWakeRetainsBookmarkForExplicitPlay",
+          "TestLateWakeLosesToUserActions",
+          "TestNativeSettingsAppearanceFitsNarrow",
+          "TestSuspendPreservesPausedIntentAndSeek",
+          "TestSuspendRetiresMediaAndResolvesFreshAtBookmark",
+          "TestWakeRetriesOnlyTransientTransportFailure"
+        ]
+      },
+      {
+        "run": 41596981677,
+        "platform": "Windows",
+        "api_ok": true,
+        "failed_existing_tests": [
+          "TestAcceptanceProbeWritesOnlyClosedStateAndExpires",
+          "TestCanceledWakeRetainsBookmarkForExplicitPlay",
+          "TestLateWakeLosesToUserActions",
+          "TestSuspendPreservesPausedIntentAndSeek",
+          "TestSuspendRetiresMediaAndResolvesFreshAtBookmark",
+          "TestWakeRetriesOnlyTransientTransportFailure"
+        ]
+      }
+    ]
+  }
+}

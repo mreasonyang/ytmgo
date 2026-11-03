@@ -1,0 +1,48 @@
+{
+  "local_platform": {
+    "macos": "27.0.1",
+    "architecture": "arm64"
+  },
+  "before": {
+    "installed_version": "0.6.1",
+    "check_for_updates": "up_to_date",
+    "premium": true
+  },
+  "offer": {
+    "current": "0.6.1",
+    "available": "0.6.2",
+    "automatic_future_updates_checked": false
+  },
+  "actions": [
+    "Check for Updates",
+    "Install Update",
+    "Downloading update",
+    "Ready to Relaunch",
+    "Relaunch Now"
+  ],
+  "relaunch": {
+    "new_process_observed_before_reopening_app": true,
+    "bundle_path": "/Applications/ytmgo.app",
+    "final_version_in_settings": "0.6.2",
+    "final_check_for_updates": "up_to_date"
+  },
+  "account": {
+    "premium_restored": true,
+    "personalized_home_visible": true,
+    "personal_library_loaded": true,
+    "liked_music_and_discover_mix_visible": true,
+    "system_playlist_and_album_covers_visually_checked": true
+  },
+  "playback": {
+    "playing_before_upgrade": true,
+    "position_before_opening_updater_s": 230.957333333,
+    "resumed_automatically": false,
+    "same_album_and_track_reopened": true,
+    "position_before_seek_s": 32.92,
+    "position_after_manual_seek_s": 231.409777546,
+    "observed_playing_at_s": 237.524444212,
+    "volume_before_and_after": 0.7
+  },
+  "appearance_after": "Dark",
+  "language_after": "English"
+}

@@ -1,0 +1,20 @@
+{
+  "release_url": "https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.1",
+  "source_commit": "a3193c5d1a53fb1445a3edff9516fc98841821d0",
+  "version": "0.6.1",
+  "public_asset_set_complete": true,
+  "github_asset_digests_match_checksums": true,
+  "public_zip_sha256": "886d851713ae631c5f4699d077ede7aa833d5654533b9ce24e46ca8a59c107fd",
+  "public_update_archive_signature_verified": true,
+  "stable_feed_matches_versioned_feed": true,
+  "bundle": "/Users/easonyang/Documents/projects/ytmgo/build/upgrade-0.6.1-20261103/public-release/0.6.1/ytmgo.app",
+  "integrity": {
+    "apple_signature": true,
+    "stapled_ticket": true,
+    "gatekeeper": true,
+    "version": "0.6.1",
+    "cli_version": "0.6.1",
+    "executable_sha256": "fd078a3d5f0719fdcbff7eec037fdf1d388384ed9758fef5c776be37f5b46113"
+  },
+  "scope": "public downloads and isolated public bundle; installed app not replaced"
+}

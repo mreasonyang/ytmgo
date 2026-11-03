@@ -1,0 +1,36 @@
+{
+  "time_utc": "2026-11-03T07:44:58.616774+00:00",
+  "native_settings_version": "0.6.1",
+  "premium_restored": true,
+  "saved_library_restored": true,
+  "account_avatar_restored": true,
+  "language": "en",
+  "appearance": "dark",
+  "volume": 0.7,
+  "global_shortcut": "Command+Shift+Space",
+  "album_checks": "passed",
+  "albums": {
+    "Antidote": {
+      "track_list_visible_artwork": true,
+      "artist_labels_all_13_tracks": true,
+      "album_column_present": true,
+      "current_player_artwork": true,
+      "now_playing_artwork": true,
+      "visible_queue_artwork": true,
+      "playback_progress_seconds": 52.069,
+      "paused_after_check": true
+    },
+    "Random Access Memories": {
+      "track_list_visible_artwork": true,
+      "artist_labels_all_13_tracks": true,
+      "explicit_collaborator_credits_preserved": true,
+      "album_column_present": true,
+      "current_player_artwork": true,
+      "now_playing_artwork": true,
+      "visible_queue_artwork": true,
+      "playback_progress_seconds": 130.725,
+      "paused_after_check": true
+    }
+  },
+  "completed_utc": "2026-11-03T07:50:10.562674+00:00"
+}

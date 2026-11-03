@@ -1,5 +1,16 @@
 # 自动升级验收
 
+## 0.6.1 — 2026-11-03
+
+**PASS**：已公开发布 [0.6.1](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.1)，完成本机原生更新窗口升级及独立的公开 0.6.0 → 0.6.1 包升级。
+
+- [构建与发布](https://github.com/mreasonyang/ytmgo/actions/runs/41596986992)完成 Developer ID 签名、Apple 公证、更新签名和全部六项资产发布，源码及 tag 为 `a3193c5d1a53fb1445a3edff9516fc98841821d0`。
+- 本机已安装的签名 E2E 0.6.0 构建，经 **Check for Updates → Install Update → Relaunch Now** 自动升级并重启至 0.6.1。再次检查显示已是最新版；Premium、头像、曲库及语言、外观、音量和快捷键设置恢复。安装后全部文件、权限及符号链接与公开 ZIP 一致，Apple 签名、公证票据及 Gatekeeper 通过。
+- [独立公开包升级](https://github.com/mreasonyang/ytmgo/actions/runs/41598046551)另从正式 0.6.0 ZIP 出发，在隔离 bundle 中通过生产 feed 完成升级及同样的完整性校验。
+- 升级后的真实账号播放复测确认 Antidote 与 Random Access Memories 的曲目封面、歌手、当前播放和队列展示恢复。
+
+基线区别、范围和结构化回执见 [0.6.1 发布与应用内升级验收](audits/2026-11-03-release-0.6.1/README.md)。本次判定升级链路通过，不替代睡眠唤醒、其他平台或长时间运行验收。
+
 ## 0.6.0 — 2026-11-02
 
 **PASS**：已公开发布 [0.6.0](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.0)，生产 feed 已指向 0.6.0，并从真实公开的 0.5.1 包完成升级。

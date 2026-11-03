@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "seconds": 117.44,
+  "tests": {
+    "pass": 972,
+    "skip": 20
+  },
+  "failures": [],
+  "source_sha256": {
+    "internal/catalog/client.go": "4f28eef46657bcdf70eef4c5e6cdbd4523714a3f63cf8939b1aafcee41a77da6",
+    "internal/catalog/parse.go": "f29b6103178914a475d605354da17d317d10d6d1a2d87562ad6a810276cf1a44",
+    "internal/catalog/album_metadata.go": "9f89fc3ac781bd6779e34cf996620206a0ffed301288a8b0351e454b54b5fb4e",
+    "internal/catalog/album_metadata_test.go": "040ac566211c88a65b69db5f8d3af3d1c2dacff051a982f2acf24e7dfc7ecf43",
+    "internal/catalog/album_metadata_live_test.go": "75856cf68b0d96789b0850e461f5deb628942593f577bf3259a5cf5e59a67eae"
+  },
+  "source_unchanged_during_run": true
+}

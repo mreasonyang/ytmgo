@@ -1,0 +1,44 @@
+{
+  "baseline_version": "0.6.0",
+  "baseline_source": "c15f02a005f25f97d3dd09e355119dad2a3c58cc",
+  "baseline_zip_sha256": "58e29e2eed4819d5ca19faed48bdf37468624ea631fdb6adf0ea0ae87f13234f",
+  "baseline": {
+    "apple_signature": true,
+    "stapled_ticket": true,
+    "gatekeeper": true,
+    "version": "0.6.0",
+    "cli_version": "0.6.0",
+    "executable_sha256": "6fd968913ad856370be67bb9f4025095ca09efacb7b349e8bb126b004943c3c0"
+  },
+  "stable_version": "0.6.1",
+  "stable_source": "a3193c5d1a53fb1445a3edff9516fc98841821d0",
+  "stable_zip_sha256": "886d851713ae631c5f4699d077ede7aa833d5654533b9ce24e46ca8a59c107fd",
+  "checked": {
+    "available": true,
+    "available_version": "0.6.1",
+    "enabled": true,
+    "version": "0.6.0"
+  },
+  "staged": {
+    "available": true,
+    "available_version": "0.6.1",
+    "enabled": true,
+    "install_staged": true,
+    "version": "0.6.0"
+  },
+  "installed": {
+    "apple_signature": true,
+    "stapled_ticket": true,
+    "gatekeeper": true,
+    "version": "0.6.1",
+    "cli_version": "0.6.1",
+    "executable_sha256": "fd078a3d5f0719fdcbff7eec037fdf1d388384ed9758fef5c776be37f5b46113"
+  },
+  "bundle_matches_public_zip": true,
+  "scope": "isolated released bundles; production feed; maintenance CLI; no account store initialized",
+  "runner": {
+    "macos": "27.0.1",
+    "architecture": "arm64"
+  },
+  "workflow_url": "https://github.com/mreasonyang/ytmgo/actions/runs/41598046551"
+}

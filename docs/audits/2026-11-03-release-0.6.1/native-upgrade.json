@@ -1,0 +1,28 @@
+{
+  "from": "0.6.0",
+  "to": "0.6.1",
+  "trigger": "native updater Check for Updates > Install Update > Relaunch Now",
+  "automatic_relaunch_observed_before_getApp": true,
+  "observed_processes": [
+    {
+      "pid": 66352,
+      "ppid": 1,
+      "uid": 501,
+      "state": "S",
+      "executable": "/Applications/ytmgo.app/Contents/MacOS/ytmgo"
+    }
+  ],
+  "integrity": {
+    "apple_signature": true,
+    "stapled_ticket": true,
+    "gatekeeper": true,
+    "version": "0.6.1",
+    "cli_version": "0.6.1",
+    "executable_sha256": "fd078a3d5f0719fdcbff7eec037fdf1d388384ed9758fef5c776be37f5b46113"
+  },
+  "installed_bundle_matches_public_zip_bytes_modes_symlinks": true,
+  "manual_bundle_replacement": false,
+  "local_install_cli_used": false,
+  "time_utc": "2026-11-03T07:44:02.247937+00:00",
+  "baseline_kind": "installed Developer ID signed local E2E 0.6.0 build, not the public 0.6.0 asset"
+}

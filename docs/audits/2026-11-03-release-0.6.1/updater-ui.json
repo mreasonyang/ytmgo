@@ -1,0 +1,32 @@
+{
+  "pre_publish_manual_check": {
+    "trigger": "ytmgo native menu > Check for Updates",
+    "checking_window_visible": true,
+    "result": "up_to_date",
+    "displayed_version": "0.6.0",
+    "time_utc": "2026-11-03T07:35:35.862049+00:00"
+  },
+  "post_publish_upgrade": {
+    "trigger": "ytmgo native menu > Check for Updates",
+    "from_version": "0.6.0",
+    "offered_version": "0.6.1",
+    "offer_visible": true,
+    "automatic_future_updates_checkbox_before": false,
+    "install_update_clicked": true,
+    "downloading_window_visible": true,
+    "download_started_utc": "2026-11-03T07:42:51.378195+00:00",
+    "manual_bundle_replacement": false,
+    "ready_to_relaunch_visible": true,
+    "relaunch_now_clicked": true,
+    "automatic_relaunch_observed": true,
+    "installed_version": "0.6.1",
+    "installed_bundle_matches_public_release": true
+  },
+  "post_upgrade_manual_check": {
+    "result": "up_to_date",
+    "displayed_version": "0.6.1",
+    "message": "ytmgo 0.6.1 is currently the newest version available.",
+    "time_utc": "2026-11-03T07:51:26.615865+00:00",
+    "dialog_dismissed": true
+  }
+}

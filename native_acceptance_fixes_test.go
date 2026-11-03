@@ -31,7 +31,7 @@ func TestNativeSearchAccessibleTypes(t *testing.T) {
 							if rows {
 								nativeTrack(c, item, i, m, a, palette(true), nativeTrackRow, false)
 							} else {
-								nativeCard(c, item, m, a, palette(true), false)
+								nativeCard(c, item, m, a, palette(true), nativeCardArt(false))
 							}
 						}
 					})
@@ -188,7 +188,7 @@ func TestLibrarySidebarRetriesWithoutLeavingHome(t *testing.T) {
 	if err := tt.Click(actions.Tr("buttonRetry")); err != nil {
 		t.Fatal(err)
 	}
-	if retries != 1 || m.Route != "home" || !tt.HasText(actions.Tr("nativeLibraryLoadingTitle")) {
+	if _, loading := tt.Find(actions.Tr("nativeLibraryLoadingTitle")); retries != 1 || m.Route != "home" || !loading {
 		t.Fatal("retry should start the sidebar load and keep Home visible")
 	}
 	if _, ok := tt.Find(actions.Tr("buttonRetry")); ok {

@@ -583,7 +583,10 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 			items = m.LibraryItems
 		}
 		if len(items) == 0 {
-			if full {
+			switch {
+			case m.SignedIn && !m.LibraryLoaded && m.LibraryErrorKey == "":
+				nativeLibrarySkeleton(c, a, p, full)
+			case full:
 				nativeLibraryPrompt(c, m, a, p)
 			}
 			return
@@ -638,6 +641,34 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 				nativeLibraryRow(c.Key(fmt.Sprintf("library-%d", i)), item, m, clipped, p, full)
 			}
 		})
+	})
+}
+
+// nativeLibrarySkeleton holds the shape of library rows while the saved
+// library loads, as Spotify does, instead of describing the wait.
+func nativeLibrarySkeleton(c *ui.Context, a ViewActions, p nativePalette, full bool) {
+	pad := float32(8)
+	if !full {
+		pad = 4
+	}
+	ui.Column(c).Padding(0, pad, 8).Label(a.Tr("nativeLibraryLoadingTitle")).Children(func() {
+		for i := range 6 {
+			row := ui.Row(c.Key(fmt.Sprintf("skeleton-%d", i))).Height(64).Padding(8).Gap(12).AlignItems(ui.Center).PassThrough()
+			if !full {
+				row.Padding(4).Justify(ui.Center)
+			}
+			row.Children(func() {
+				ui.Box(c).Size(48, 48).Shrink(0).Radius(4).Background(p.highlight)
+				if !full {
+					return
+				}
+				// Bars of varied length read as titles rather than a table.
+				ui.Column(c).Grow(1).MinWidth(0).Gap(10).Children(func() {
+					ui.Box(c).Width(float32(120 + 40*(i%3))).Height(12).Radius(6).Background(p.highlight)
+					ui.Box(c).Width(float32(72 + 24*((i+1)%3))).Height(10).Radius(5).Background(p.highlight)
+				})
+			})
+		}
 	})
 }
 
@@ -729,11 +760,22 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 	}
 }
 
-func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool) {
-	inset := float32(24)
+func nativeContentInset(compact bool) float32 {
 	if compact {
-		inset = 16
+		return 16
 	}
+	return 24
+}
+
+// nativeColumns fits as many columns of at least minWidth as width holds and
+// returns how many, with the width that makes them fill it exactly.
+func nativeColumns(width, minWidth, gap float32) (int, float32) {
+	n := max(1, int((width+gap)/(minWidth+gap)))
+	return n, float32(math.Floor(float64((width - gap*float32(n-1)) / float32(n))))
+}
+
+func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool) {
+	inset := nativeContentInset(compact)
 	scroll := ui.Scroll(c.Key("content-" + m.Route + "-" + m.Page.Title)).Grow(1).MinHeight(0).Label(a.Tr("shellContent"))
 	contentWidth := scroll.Bounds().W
 	a = nativeArtworkViewport(c, a, scroll)
@@ -895,6 +937,12 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 		})
 	}
 	browse := strings.HasPrefix(m.Route, "browse:")
+	// Shelves and grids size to the content column; its width is known from
+	// the second frame, so the first lays out at a typical desktop width.
+	inner := contentWidth - 2*nativeContentInset(compact)
+	if contentWidth == 0 {
+		inner = 960
+	}
 	for i, shelf := range m.Page.Shelves {
 		ui.Column(c.Key(fmt.Sprintf("shelf-%d", i))).Gap(12).Children(func() {
 			if shelf.Title != "" {
@@ -911,6 +959,13 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 				columnWidth := float32(340)
 				if compact {
 					columnWidth = 300
+				}
+				// Columns that all fit stretch to fill the row; more than fit
+				// keep their width so the next one peeks in to scroll to.
+				if groups := (len(shelf.Items) + 3) / 4; groups > 0 {
+					if fit, _ := nativeColumns(inner, columnWidth, 16); groups <= fit {
+						columnWidth = min(float32(math.Floor(float64((inner-16*float32(groups-1))/float32(groups)))), 560)
+					}
 				}
 				shelfScroll := ui.ScrollHorizontal(c).Gap(16).PaddingY(4).Height(4*56 + 8)
 				clipped := nativeArtworkViewport(c, a, shelfScroll)
@@ -929,7 +984,7 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 				clipped := nativeArtworkViewport(c, a, shelfScroll)
 				shelfScroll.Children(func() {
 					for j, item := range shelf.Items {
-						nativeCard(c.Key(fmt.Sprintf("card-%d", j)), item, m, clipped, p, compact)
+						nativeCard(c.Key(fmt.Sprintf("card-%d", j)), item, m, clipped, p, size)
 					}
 				})
 			}
@@ -939,9 +994,12 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 		if nativeSongShelf(m.Page.Items) {
 			nativeTrackList(c, m.Page.Items, m, a, p, compact, browse)
 		} else {
-			ui.Row(c).Wrap().MarginX(-12).Children(func() {
+			// Cards take the column count that fits and grow to fill the
+			// row, so a grid never ends in a ragged gap.
+			columns, cell := nativeColumns(inner+24, nativeCardArt(compact)+24, 0)
+			ui.Grid(c).Columns(columns).MarginX(-12).Children(func() {
 				for i, item := range m.Page.Items {
-					nativeCard(c.Key(fmt.Sprintf("item-%d", i)), item, m, a, p, compact)
+					nativeCard(c.Key(fmt.Sprintf("item-%d", i)), item, m, a, p, cell-24)
 				}
 			})
 		}
@@ -1141,8 +1199,7 @@ func nativeCardArt(compact bool) float32 {
 
 // nativeCard is Spotify's shelf card: cover, title and a two-line subtitle,
 // with a play button rising over playable covers on hover.
-func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p nativePalette, compact bool) {
-	size := nativeCardArt(compact)
+func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p nativePalette, size float32) {
 	b := ui.ButtonBase(c).Column().Width(size + 24).Shrink(0).Padding(12).Gap(8).Radius(8).AlignItems(ui.Stretch).Justify(ui.Start).Label(nativeResultLabel(item, m, a))
 	hovered := b.Hovered()
 	if hovered {

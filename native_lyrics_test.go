@@ -45,7 +45,7 @@ func requireLyricVisible(t *testing.T, tt *ui.Tester, line int) ui.Rect {
 	t.Helper()
 	r, ok := tt.Find(fmt.Sprintf("Synthetic lyric line %02d", line))
 	v, vok := tt.Find("Lyrics · Content")
-	if !ok || !vok || r.Y < v.Y-1 || r.Y+r.H > v.Y+v.H+1 {
+	if !ok || !vok || r.H <= 0 || r.Y < v.Y-1 || r.Y+r.H > v.Y+v.H+1 {
 		t.Fatalf("line %d not visible: row=%+v viewport=%+v", line, r, v)
 	}
 	return r
@@ -54,6 +54,9 @@ func requireLyricVisible(t *testing.T, tt *ui.Tester, line int) ui.Rect {
 func TestNativeLyricsFollowSeekPauseAndManualScroll(t *testing.T) {
 	m, a := nativeTimedLyricsFixture()
 	tt := ui.NewTester(func(c *ui.Context) { nativePanelCard(c, m, a, palette(true)).Grow(1) }, 360, 340)
+	if tt.HasText(a.Tr("nativeLyricsFollowing")) || tt.HasText(a.Tr("nativeLyricsFollow")) {
+		t.Fatal("timed lyrics should follow silently until the reader scrolls")
+	}
 	requireLyricVisible(t, tt, 0)
 	m.Position = 86
 	tt.Frame()
@@ -74,6 +77,9 @@ func TestNativeLyricsFollowSeekPauseAndManualScroll(t *testing.T) {
 	if !tt.HasText(a.Tr("nativeLyricsFollow")) {
 		t.Fatal("manual scroll did not suspend automatic following")
 	}
+	if manualView, _ := tt.Find("Lyrics · Content"); manualView.Y != v.Y {
+		t.Fatal("showing the follow action displaced the reader's viewport")
+	}
 	before, _ := tt.Find("Synthetic lyric line 02")
 	m.Position = 131
 	m.Playing = true
@@ -85,11 +91,14 @@ func TestNativeLyricsFollowSeekPauseAndManualScroll(t *testing.T) {
 	if err := tt.Click(a.Tr("nativeLyricsFollow")); err != nil {
 		t.Fatal(err)
 	}
+	if !tt.Focused("Lyrics · Content") {
+		t.Fatal("resuming follow did not return focus to the lyrics")
+	}
 	requireLyricVisible(t, tt, 26)
 	tt.SetSize(360, 240)
 	requireLyricVisible(t, tt, 26)
-	if !tt.HasText(a.Tr("nativeLyricsFollowing")) {
-		t.Fatal("follow state did not resume")
+	if tt.HasText(a.Tr("nativeLyricsFollow")) || tt.HasText(a.Tr("nativeLyricsFollowing")) {
+		t.Fatal("the follow control should disappear after resuming")
 	}
 	nativeSnapshot(t, tt, "lyrics-follow-resumed")
 	// Switching track resets both scroll position and the manual-follow override.
@@ -120,7 +129,8 @@ func TestNativeLyricsKeyboardHoverStopsFollow(t *testing.T) {
 	m, a := nativeTimedLyricsFixture()
 	m.Position = 41
 	tt := ui.NewTester(func(c *ui.Context) { nativePanelCard(c, m, a, palette(true)).Grow(1) }, 360, 340)
-	if err := tt.Click(a.Tr("nativeLyricsFollowing")); err != nil {
+	// Keep focus on a sibling while the keyboard scrolls the hovered lyrics.
+	if err := tt.Click(a.Tr("shellLyrics") + " · " + a.Tr("shellNowPlaying")); err != nil {
 		t.Fatal(err)
 	}
 	v, _ := tt.Find("Lyrics · Content")
@@ -136,5 +146,83 @@ func TestNativeLyricsKeyboardHoverStopsFollow(t *testing.T) {
 	stable, _ := tt.Find("Synthetic lyric line 08")
 	if after.Y != stable.Y {
 		t.Fatal("next cue overrode a keyboard reader gesture")
+	}
+	for i := 0; i < 3 && !tt.Focused("Lyrics · Content"); i++ {
+		tt.Key(0, ui.KeyTab)
+	}
+	if !tt.Focused("Lyrics · Content") {
+		t.Fatal("keyboard reader could not reach the lyrics viewport")
+	}
+	tt.Key(0, ui.KeyTab) // resume action immediately after the lyrics
+	if !tt.Focused(a.Tr("nativeLyricsFollow")) {
+		t.Fatal("keyboard reader could not reach the resume action")
+	}
+	tt.Key(0, ui.KeyEnter)
+	requireLyricVisible(t, tt, 20)
+	if tt.HasText(a.Tr("nativeLyricsFollow")) || !tt.Focused("Lyrics · Content") {
+		t.Fatal("resuming by keyboard should dismiss the action and focus the lyrics")
+	}
+}
+
+func TestNativeLyricsFollowIgnoresIncidentalInput(t *testing.T) {
+	for _, gesture := range []string{"horizontal drift", "scroll past top", "click"} {
+		t.Run(gesture, func(t *testing.T) {
+			m, a := nativeTimedLyricsFixture()
+			tt := ui.NewTester(func(c *ui.Context) { nativePanelCard(c, m, a, palette(true)).Grow(1) }, 360, 340)
+			before := requireLyricVisible(t, tt, 2)
+			x, y := before.X+10, before.Y+10
+			switch gesture {
+			case "horizontal drift":
+				tt.Scroll(x, y, 80, 1)
+			case "scroll past top":
+				tt.Scroll(x, y, 0, -32)
+			case "click":
+				tt.ClickAt(x, y)
+			}
+			if after := requireLyricVisible(t, tt, 2); after.Y != before.Y || tt.HasText(a.Tr("nativeLyricsFollow")) {
+				t.Fatalf("input moved lyrics by %g or disabled follow", after.Y-before.Y)
+			}
+			m.Position = 125
+			tt.Frame()
+			requireLyricVisible(t, tt, 25)
+		})
+	}
+}
+
+func TestNativeLyricsFollowKeepsOuterPanelStill(t *testing.T) {
+	for _, layout := range []struct {
+		name      string
+		width     int
+		immersive bool
+	}{{"floating", 960, false}, {"compact immersive", 420, true}} {
+		t.Run(layout.name, func(t *testing.T) {
+			m, a := nativeTimedLyricsFixture()
+			m.Immersive, m.Panel, m.Position = layout.immersive, !layout.immersive, 4.9
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, layout.width, 620)
+			tab := func() ui.Rect {
+				r, ok := tt.Find(a.Tr("shellLyrics") + " · " + a.Tr("shellNowPlaying"))
+				if !ok {
+					t.Fatal("lyrics tab missing")
+				}
+				return r
+			}
+			// Scroll the outer panel back to the cover, then let playback
+			// cross a cue boundary and seek well beyond the first screen.
+			x := tab().X + 4
+			tt.Scroll(x, 200, 0, -1200)
+			before := tab()
+			for _, position := range []float64{5.1, 125} {
+				m.Position = position
+				tt.Frame()
+				if after := tab(); after.Y != before.Y {
+					t.Fatalf("at %.1fs the outer panel moved by %g", position, after.Y-before.Y)
+				}
+			}
+			tt.Scroll(x, 200, 0, 1200)
+			if tt.HasText(a.Tr("nativeLyricsFollow")) {
+				t.Fatal("scrolling the outer panel disabled follow")
+			}
+			requireLyricVisible(t, tt, 25)
+		})
 	}
 }

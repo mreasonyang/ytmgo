@@ -426,18 +426,18 @@ func (a *desktop) appendQueue(it catalog.Item) {
 
 // The queue is already in its current shuffle order. Repeat-one reuses the
 // current track via Seek, so it does not reserve a second media stream.
-func nextPreparedID(queue []catalog.Item, index, repeat int) string {
+func nextPreparedTrack(queue []catalog.Item, index, repeat int) catalog.Item {
 	if repeat == 2 || index < 0 || index >= len(queue) || len(queue) == 0 {
-		return ""
+		return catalog.Item{}
 	}
 	next := index + 1
 	if next == len(queue) {
 		if repeat != 1 {
-			return ""
+			return catalog.Item{}
 		}
 		next = 0
 	}
-	return queue[next].ID
+	return queue[next]
 }
 
 func (a *desktop) prepareNext() {
@@ -446,7 +446,7 @@ func (a *desktop) prepareNext() {
 	}
 	id := ""
 	if !a.restoredTrack && !a.powerPlaybackSuspended && !a.loadPending && a.model.Current.ID != "" && a.model.PlaybackError == "" {
-		id = nextPreparedID(a.model.Queue, a.queueIndex, a.model.Repeat)
+		id = nextPreparedTrack(a.model.Queue, a.queueIndex, a.model.Repeat).ID
 	}
 	if id == a.preparedID {
 		return

@@ -36,15 +36,15 @@ func TestPreparedCandidateFollowsQueueAndRepeatMode(t *testing.T) {
 	}{
 		{0, 0, "second"}, {1, 0, "third"}, {2, 0, ""}, {2, 1, "first"}, {0, 2, ""}, {-1, 1, ""}, {3, 1, ""},
 	} {
-		if got := nextPreparedID(queue, tc.index, tc.repeat); got != tc.want {
+		if got := nextPreparedTrack(queue, tc.index, tc.repeat).ID; got != tc.want {
 			t.Fatalf("index=%d repeat=%d candidate=%q want=%q", tc.index, tc.repeat, got, tc.want)
 		}
 	}
 	queue[1], queue[2] = queue[2], queue[1]
-	if got := nextPreparedID(queue, 0, 0); got != "third" {
+	if got := nextPreparedTrack(queue, 0, 0).ID; got != "third" {
 		t.Fatal("prepared candidate ignored shuffled order")
 	}
-	if got := nextPreparedID(nil, 0, 1); got != "" {
+	if got := nextPreparedTrack(nil, 0, 1).ID; got != "" {
 		t.Fatal("empty queue prepared a track")
 	}
 }

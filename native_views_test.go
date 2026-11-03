@@ -26,7 +26,8 @@ func nativeViewFixture() (*UIModel, ViewActions) {
 	for i, title := range []string{"Random Access Memories", "Discovery", "Homework", "Alive 2007", "Human After All"} {
 		albums = append(albums, catalog.Item{Title: title, Artist: "Daft Punk", Kind: "album", BrowseID: fmt.Sprintf("album-%d", i), Artwork: fmt.Sprintf("art-%d", i)})
 	}
-	m := &UIModel{Route: "home", Appearance: "dark", Language: "en", Current: items[0], Queue: items, Playing: true, Duration: 240, Position: 48, Volume: 0.7, CanBack: true, Page: catalog.Page{Title: "Good evening", Shelves: []catalog.Shelf{{Title: "Listen again", Items: items}, {Title: "Albums for you", Items: albums}}, Items: items}, Lyrics: "It might not be the right time\nI might not be the right one"}
+	// An established playback session with Now Playing dismissed.
+	m := &UIModel{playbackViewSeen: true, Route: "home", Appearance: "dark", Language: "en", Current: items[0], Queue: items, Playing: true, Duration: 240, Position: 48, Volume: 0.7, CanBack: true, Page: catalog.Page{Title: "Good evening", Shelves: []catalog.Shelf{{Title: "Listen again", Items: items}, {Title: "Albums for you", Items: albums}}, Items: items}, Lyrics: "It might not be the right time\nI might not be the right one"}
 	colors := []color.RGBA{{28, 65, 84, 255}, {90, 50, 94, 255}, {164, 113, 49, 255}, {64, 85, 52, 255}, {117, 47, 63, 255}, {42, 84, 106, 255}, {76, 64, 101, 255}, {85, 94, 82, 255}}
 	art := map[string]ui.ImageSource{}
 	for i, col := range colors {
@@ -238,6 +239,66 @@ func TestNativeSeekAbandonsPreviewWhenPlaybackDisables(t *testing.T) {
 	}
 	if seeks != 1 {
 		t.Fatal("seek stayed blocked after playback finished loading")
+	}
+}
+
+func TestFirstPlaybackShowsLyricsAndPreservesPanelChoice(t *testing.T) {
+	for _, size := range [][2]int{{420, 640}, {960, 740}, {1440, 900}} {
+		t.Run(fmt.Sprintf("%dx%d", size[0], size[1]), func(t *testing.T) {
+			m, a := nativeTimedLyricsFixture()
+			m.Playing, m.playbackViewSeen, m.PanelTab = false, false, ""
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, size[0], size[1])
+			if m.Panel {
+				t.Fatal("restoring a paused track opened Now Playing")
+			}
+			m.Playing = true
+			tt.Frame()
+			if !m.Panel || m.Immersive {
+				t.Fatal("first playback did not open Now Playing")
+			}
+			first := requireLyricVisible(t, tt, 0)
+			nativeSnapshot(t, tt, fmt.Sprintf("first-play-%dx%d", size[0], size[1]))
+			m.Position = 125
+			tt.Frame()
+			if later := requireLyricVisible(t, tt, 25); math.Abs(float64(later.H-first.H)) > 1 {
+				t.Fatalf("active lyric clipped by player panel: first=%+v later=%+v", first, later)
+			}
+			if err := tt.Click(a.Tr("shellQueue") + " · " + a.Tr("shellNowPlaying")); err != nil {
+				t.Fatal(err)
+			}
+			m.Current = m.Queue[1]
+			tt.Frame()
+			if !m.Panel || m.selectedPanelTab() != "queue" || tt.HasText("Synthetic lyric line 00") {
+				t.Fatal("changing track replaced the selected queue")
+			}
+			if err := tt.Click(a.Tr("shellClosePanel")); err != nil {
+				t.Fatal(err)
+			}
+			m.Playing = false
+			tt.Frame()
+			m.Current, m.Playing = m.Queue[2], true
+			tt.Frame()
+			if m.Panel {
+				t.Fatal("resuming or advancing reopened a dismissed panel")
+			}
+		})
+	}
+}
+
+func TestFirstPlaybackRespectsPlayerVisitedWhilePaused(t *testing.T) {
+	m, a := nativeViewFixture()
+	m.Playing, m.playbackViewSeen = false, false
+	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
+	if err := tt.Click(a.Tr("shellQueue")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.Click(a.Tr("shellClosePanel")); err != nil {
+		t.Fatal(err)
+	}
+	m.Playing = true
+	tt.Frame()
+	if m.Panel || m.selectedPanelTab() != "queue" {
+		t.Fatal("first playback overrode the choice made while paused")
 	}
 }
 
@@ -609,6 +670,53 @@ func TestNativeArtworkOnlyRequestsVisibleCovers(t *testing.T) {
 	}
 	if len(requested) > 32 {
 		t.Fatalf("scroll requested too many offscreen covers: %d", len(requested))
+	}
+}
+
+func TestNativeShelfScrollUsesDominantAxis(t *testing.T) {
+	for _, kind := range []string{"song", "album"} {
+		t.Run(kind, func(t *testing.T) {
+			m, a := nativeViewFixture()
+			shelf := catalog.Shelf{Title: "Listen again"}
+			for i := range 20 {
+				key := fmt.Sprintf("%s-%d", kind, i)
+				item := catalog.Item{Title: key, Kind: kind, Artist: "Artist"}
+				if kind == "song" {
+					item.ID = key
+				} else {
+					item.BrowseID = key
+				}
+				shelf.Items = append(shelf.Items, item)
+			}
+			m.Page.Shelves = append([]catalog.Shelf{shelf}, m.Page.Shelves...)
+			const width, height = 900, 600
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, height)
+			index := 1
+			if kind == "song" {
+				index = 4 // first track in the second column
+			}
+			label := nativeItemLabel(shelf.Items[index])
+			for _, step := range []struct {
+				name                 string
+				dx, dy, wantX, wantY float32
+			}{
+				{"vertical with drift", 1, 32, 0, -32},
+				{"horizontal with drift", 32, 1, -32, 0},
+				{"back to shelf start", -32, -1, 32, 0},
+				{"at shelf edge", -32, 1, 0, 0},
+				{"equal axes favor page", 8, -8, 0, 8},
+				{"back to page start", 1, -64, 0, 24},
+				{"at page edge", 1, -32, 0, 0},
+			} {
+				before := nativeAssertVisible(t, tt, label, width, height)
+				tt.Scroll(before.X+24, before.Y+24, step.dx, step.dy)
+				after := nativeAssertVisible(t, tt, label, width, height)
+				x, y := after.X-before.X, after.Y-before.Y
+				if math.Abs(float64(x-step.wantX)) > 0.01 || math.Abs(float64(y-step.wantY)) > 0.01 {
+					t.Fatalf("%s: item moved (%g, %g), want (%g, %g)", step.name, x, y, step.wantX, step.wantY)
+				}
+			}
+		})
 	}
 }
 

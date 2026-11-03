@@ -101,7 +101,7 @@ func main() {
 	a.accountState.store = &accountsession.Store{Secrets: nativeAccountSecrets{}, Path: filepath.Join(dataDir, "account", "session.enc")}
 	recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 	recordPlaybackDiagnostic(a.diagnosticPath, "video", "ready")
-	a.model = UIModel{Route: "home", Appearance: a.prefs.Appearance(), Language: language.Load(a.languagePath), Volume: 0.7, PanelTab: "queue", Version: applicationVersion()}
+	a.model = UIModel{Route: "home", Appearance: a.prefs.Appearance(), Language: language.Load(a.languagePath), Volume: 0.7, Version: applicationVersion()}
 	a.playbackPath = filepath.Join(dataDir, "playback-session.json")
 	a.restorePlayback()
 	mygo.Theme.SetSource(mygo.ThemeSource(a.model.Appearance))
@@ -236,8 +236,18 @@ func (a *desktop) show() {
 func (a *desktop) view(c *ui.Context) {
 	frame := artworkFrame{cache: a.art}
 	nativeView(c, &a.model, a.actions(frame.get))
+	a.prefetchNextCover(&frame)
 	frame.submit()
 	a.syncVideo()
+}
+
+func (a *desktop) prefetchNextCover(frame *artworkFrame) {
+	if frame.playerEdge > 0 && a.preparedID != "" {
+		next := nextPreparedTrack(a.model.Queue, a.queueIndex, a.model.Repeat)
+		if next.ID == a.preparedID && next.Artwork != "" && next.Artwork != a.model.Current.Artwork {
+			frame.get(next.Artwork, frame.playerEdge, artPrefetch)
+		}
+	}
 }
 
 func (a *desktop) actions(artwork func(string, int, artworkPriority) ui.ImageSource) ViewActions {

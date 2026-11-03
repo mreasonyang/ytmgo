@@ -58,9 +58,12 @@ type artRequest struct {
 type artworkPriority uint8
 
 const (
-	artPrimary artworkPriority = iota
+	artPlayer artworkPriority = iota
+	artPrimary
 	artSecondary
 	artAvatar
+	artPrefetch
+	artPriorityCount
 )
 
 type artDemand struct {
@@ -71,15 +74,17 @@ type artDemand struct {
 // A frame records visible misses before starting work. On desktop the library
 // is drawn first, but its thumbnails must not get a head start over the page.
 type artworkFrame struct {
-	cache  *artworkCache
-	wanted map[artRequest]artworkPriority
-	order  [3][]artRequest
+	cache      *artworkCache
+	wanted     map[artRequest]artworkPriority
+	order      [artPriorityCount][]artRequest
+	playerEdge int // largest player cover drawn in this frame
 }
 
 type artworkCache struct {
 	ctx                                  context.Context
 	mu                                   sync.Mutex
 	entries                              map[artRequest]*artEntry
+	lastPlayerCover                      string // source last shown, never pins pixels outside the LRU
 	clock                                uint64
 	bytes                                int
 	queue                                []artDemand
@@ -146,29 +151,80 @@ func (f *artworkFrame) get(raw string, requestedEdge int, priority artworkPriori
 		return nil
 	}
 	edge := artworkBucket(requestedEdge)
-	raw = artworkRequestAt(raw, edge)
-	u, err := url.Parse(raw)
-	if err != nil || !artworkURL(u) {
-		return nil
-	}
-	key := artRequest{url: raw, edge: edge}
+	key := artRequest{url: artworkRequestAt(raw, edge), edge: edge}
+	u, err := url.Parse(key.url)
 	c.mu.Lock()
-	if e := c.entries[key]; e != nil {
-		c.clock++
-		e.used = c.clock
-		if e.bitmap != nil {
-			b := e.bitmap
-			c.mu.Unlock()
-			return b
+	defer c.mu.Unlock()
+	if err != nil || !artworkURL(u) {
+		if priority == artPlayer {
+			c.lastPlayerCover = ""
 		}
-		if time.Now().Before(e.retryAt) {
-			c.mu.Unlock()
-			return nil
+		return nil
+	}
+	entry := c.entries[key]
+	if entry != nil {
+		c.clock++
+		entry.used = c.clock
+	}
+	if priority == artPlayer {
+		f.playerEdge = max(f.playerEdge, edge)
+	}
+	if entry != nil && entry.bitmap != nil {
+		if priority == artPlayer {
+			c.lastPlayerCover = raw
+		}
+		return entry.bitmap
+	}
+
+	failed := entry != nil && time.Now().Before(entry.retryAt)
+	if priority == artPlayer {
+		// A queue thumbnail can paint immediately while the large cover loads.
+		// Conversely, the player bar can use a prefetched large cover as-is.
+		if bitmap, size := c.cachedCover(raw, edge); bitmap != nil {
+			c.lastPlayerCover = raw
+			if size < edge && !failed {
+				f.want(key, priority)
+			}
+			return bitmap
 		}
 	}
-	c.mu.Unlock()
+	if !failed {
+		f.want(key, priority)
+	}
+	if priority == artPlayer {
+		if failed {
+			c.lastPlayerCover = ""
+		} else if c.lastPlayerCover != "" && c.lastPlayerCover != raw {
+			// A cold skip keeps the last displayed cover until the new one
+			// arrives or fails. A worker never changes the displayed source.
+			if bitmap, _ := c.cachedCover(c.lastPlayerCover, 0); bitmap != nil {
+				return bitmap
+			}
+		}
+	}
+	return nil
+}
+
+// Caller holds mu. Look up only existing buckets; never fetch a fallback.
+func (c *artworkCache) cachedCover(raw string, except int) (*ui.Bitmap, int) {
+	for i := len(artworkBuckets) - 1; i >= 0; i-- {
+		size := artworkBuckets[i]
+		if size == except {
+			continue
+		}
+		key := artRequest{artworkRequestAt(raw, size), size}
+		if e := c.entries[key]; e != nil && e.bitmap != nil {
+			c.clock++
+			e.used = c.clock
+			return e.bitmap, size
+		}
+	}
+	return nil, 0
+}
+
+func (f *artworkFrame) want(key artRequest, priority artworkPriority) {
 	if previous, ok := f.wanted[key]; ok && previous <= priority {
-		return nil
+		return
 	}
 	if len(f.order[priority]) < artworkQueueLimit+artworkWorkers {
 		if f.wanted == nil {
@@ -177,13 +233,15 @@ func (f *artworkFrame) get(raw string, requestedEdge int, priority artworkPriori
 		f.wanted[key] = priority
 		f.order[priority] = append(f.order[priority], key)
 	}
-	return nil
 }
 
 func (f *artworkFrame) submit() {
 	c := f.cache
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if f.playerEdge == 0 {
+		c.lastPlayerCover = ""
+	}
 	if c.active == 0 && len(f.wanted) == 0 {
 		return
 	}
@@ -220,7 +278,7 @@ func (c *artworkCache) startQueued() {
 		// cards share the link. Preserve display order among eligible covers.
 		index := slices.IndexFunc(c.queue, func(d artDemand) bool {
 			return (d.edge <= 128 || c.largeActive < artworkLargeLimit) &&
-				(d.priority == artPrimary || c.secondaryActive < artworkSecondaryLimit)
+				(d.priority <= artPrimary || c.secondaryActive < artworkSecondaryLimit)
 		})
 		if index < 0 {
 			return
@@ -243,7 +301,7 @@ func (c *artworkCache) startQueued() {
 		if d.edge > 128 {
 			c.largeActive++
 		}
-		if d.priority != artPrimary {
+		if d.priority > artPrimary {
 			c.secondaryActive++
 		}
 		c.workers.Go(func() {
@@ -338,7 +396,7 @@ func (c *artworkCache) finish(d artDemand, e *artEntry, bitmap *ui.Bitmap) {
 	if d.edge > 128 {
 		c.largeActive--
 	}
-	if d.priority != artPrimary {
+	if d.priority > artPrimary {
 		c.secondaryActive--
 	}
 	// A canceled request may return after the same cover has become visible
@@ -448,8 +506,10 @@ func artworkRequest(raw string) string {
 	return artworkRequestAt(raw, artworkEdge)
 }
 
+var artworkBuckets = [...]int{128, 384, artworkEdge}
+
 func artworkBucket(edge int) int {
-	for _, size := range [...]int{128, 384, artworkEdge} {
+	for _, size := range artworkBuckets {
 		if edge <= size {
 			return size
 		}

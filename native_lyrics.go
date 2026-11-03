@@ -41,61 +41,55 @@ type nativeLyricsFollow struct {
 	track         string
 	revision      uint64
 	follow        bool
-	last          int
 	width, height float32
 	language      string
 	scroll        ui.ScrollState
-	observedY     float32
+	expectedY     float32
+}
+
+// revealLine moves only the lyrics viewport, even when it is below the
+// fold in a scrolling player panel. A line taller than the viewport
+// starts at the top so its first words remain readable.
+func (s *nativeLyricsFollow) revealLine(view, line ui.Rect) {
+	if view.H <= 0 || line.H <= 0 {
+		return
+	}
+	top := line.Y - view.Y
+	lastTop := max(0, view.H-line.H)
+	y := s.scroll.Y
+	if top < 0 {
+		y += top
+	} else if top > lastTop {
+		y += top - lastTop
+	}
+	s.scroll.Y = max(0, min(y, s.scroll.MaxY))
+	s.expectedY = s.scroll.Y
 }
 
 func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) ui.Element {
 	body := ui.Column(c.Key("lyrics-body")).Grow(1).MinHeight(68).Gap(8)
-	state := ui.Local(body, "follow", func() nativeLyricsFollow { return nativeLyricsFollow{last: -2, follow: true} })
+	state := ui.Local(body, "follow", func() nativeLyricsFollow { return nativeLyricsFollow{follow: true} })
 	if state.track != m.Current.ID || state.revision != m.LyricsRevision {
-		*state = nativeLyricsFollow{track: m.Current.ID, revision: m.LyricsRevision, follow: true, last: -2}
+		*state = nativeLyricsFollow{track: m.Current.ID, revision: m.LyricsRevision, follow: true}
 	}
 	width, height := c.Size()
 	resized := state.width != width || state.height != height || state.language != m.Language
-	// Native keyboard scrolling can target the hovered scroll area while the
-	// keyboard focus is on a sibling button, bypassing this area's input handler.
-	// Observe actual offsets too. DrawOver records the final laid-out offset,
-	// after ScrollIntoView, so automatic reveals are not reader gestures.
-	if !resized && state.scroll.Y != state.observedY {
+	// A wheel, key or scrollbar takes over when it moves the lyrics.
+	// Layout can also clamp the offset if the content becomes shorter.
+	if state.scroll.Y != min(state.expectedY, state.scroll.MaxY) {
 		state.follow = false
 	}
-	state.observedY = state.scroll.Y
+	state.expectedY = state.scroll.Y
+	state.width, state.height, state.language = width, height, m.Language
 	return body.Children(func() {
-		if len(m.LyricLines) > 0 {
-			ui.Row(c).Shrink(0).Children(func() {
-				key := "nativeLyricsFollow"
-				if state.follow {
-					key = "nativeLyricsFollowing"
-				}
-				if nativeChip(c, a.Tr(key), p, state.follow).Clicked() {
-					state.follow, state.last = true, -2
-				}
-			})
-		} else if m.LyricsAvailable {
+		if len(m.LyricLines) == 0 && m.LyricsAvailable {
 			ui.Text(c, a.Tr("nativeLyricsUnsynced")).Shrink(0).FontSize(12).TextColor(p.secondary)
 		}
 		scroll := ui.Scroll(c.Key("lyrics-scroll")).Grow(1).MinHeight(0).Gap(12).TrackScroll(&state.scroll).Focusable().Label(a.Tr("shellLyrics") + " · " + a.Tr("shellContent"))
-		scroll.DrawOver(func(_ *ui.Painter, _ ui.Rect) { state.observedY = state.scroll.Y })
 		scroll.HandleInput(func(ev ui.InputEvent) bool {
-			// A wheel, trackpad or scrollbar gesture gives control to the reader.
-			if ev.Kind == ui.InputScroll && ev.DY != 0 || ev.Kind == ui.InputPointerDown {
-				state.follow = false
-			}
-			if ev.Kind == ui.InputKeyDown {
-				switch ev.Key {
-				case ui.KeyUp, ui.KeyDown, ui.KeyPageUp, ui.KeyPageDown, ui.KeyHome, ui.KeyEnd:
-					state.follow = false
-				}
-			}
-			return false
+			return ev.Kind == ui.InputScroll && math.Abs(float64(ev.DX)) > math.Abs(float64(ev.DY))
 		})
 		active, target := nativeLyricIndices(m.LyricLines, m.Position)
-		reveal := state.follow && target >= 0 && (state.last != target || resized)
-		state.width, state.height, state.language = width, height, m.Language
 		scroll.Children(func() {
 			if len(m.LyricLines) == 0 {
 				lyrics, color := m.Lyrics, p.text
@@ -110,8 +104,13 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 						color = p.text
 					}
 					row := ui.Text(c.Key(fmt.Sprintf("lyric-%d", i)), line.Text).Shrink(0).FontSize(20).FontWeight(700).LineHeight(1.6).TextColor(color)
-					if reveal && i == target {
-						row.ScrollIntoView()
+					if state.follow && i == target {
+						if resized {
+							// Bounds from this layout are available next frame.
+							c.Invalidate()
+						} else {
+							state.revealLine(scroll.LayoutBounds(), row.LayoutBounds())
+						}
 					}
 				}
 			}
@@ -119,9 +118,13 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 				ui.Text(c, m.LyricsSource).FontSize(12).TextColor(p.secondary).Shrink(0)
 			}
 		})
-		if reveal {
-			state.last = target
-			c.Invalidate()
+		if len(m.LyricLines) > 0 && !state.follow {
+			// Put the action below the viewport so the line being read stays put.
+			if nativeLinkButton(c, a.Tr("nativeLyricsFollow"), p, "").AlignSelf(ui.End).Shrink(0).Clicked() {
+				state.follow = true
+				scroll.Focus()
+				c.Invalidate()
+			}
 		}
 	})
 }

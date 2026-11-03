@@ -43,7 +43,8 @@ type UIModel struct {
 	AccountAvatar                                               string
 	Version                                                     string
 
-	// Sheet presentation the view owns.
+	// Presentation state for this window.
+	playbackViewSeen                bool // first playback opens Now Playing unless already visited
 	settingsScroll, shortcutsScroll ui.ScrollState
 	shortcutFieldFocused            bool // the recorder has had the focus
 	revealShortcut                  bool // bring the global shortcut row into view
@@ -100,8 +101,8 @@ type ViewActions struct {
 	BeginShortcut, CancelShortcut                       func()
 	SetShortcut                                         func(string)
 	artViewport                                         ui.Rect
-	artClipped                                          bool
-	artPriority                                         artworkPriority
+	viewportScroll                                      *ui.ScrollState
+	secondaryArtwork                                    bool
 }
 
 // Window geometry. Above 1180 DIPs the library is a full panel and Now Playing
@@ -119,6 +120,13 @@ const (
 )
 
 func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
+	// Apply the default once. Opening either player view before the music starts
+	// also counts, so dismissing it while paused or loading is respected.
+	firstPlayback := m.Playing && !m.playbackViewSeen && !m.Panel && !m.Immersive
+	if firstPlayback {
+		m.Panel = true
+	}
+	m.playbackViewSeen = m.playbackViewSeen || m.Panel || m.Immersive
 	before := nativePresentation(m)
 	nativeKeyboard(c, m, a)
 	defer func() {
@@ -146,7 +154,7 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 		ui.DialogBase(c, &m.Panel, func(backdrop, panel ui.Element) {
 			backdrop.Background(ui.RGBA(0, 0, 0, 0.5))
 			panel.Width(panelWidth).Height(min(height-100, 760)).Radius(8).Background(p.surface).Shadow(0, 16, 48, 0, ui.RGBA(0, 0, 0, 0.5)).Clip().Children(func() {
-				nativeNowPlaying(c, m, a, p, panelWidth, true).Fill()
+				nativeNowPlaying(c, m, a, p, panelWidth, true, firstPlayback).Fill()
 			})
 		}).Label(a.Tr("shellNowPlaying"))
 	}
@@ -181,7 +189,7 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 				})
 			})
 			if m.Panel && !m.Immersive && width > 1180 {
-				nativeNowPlaying(c, m, a, p, nativePanelWidth, false).Width(nativePanelWidth).Shrink(0)
+				nativeNowPlaying(c, m, a, p, nativePanelWidth, false, false).Width(nativePanelWidth).Shrink(0)
 			}
 		})
 		nativePlayerBar(c, m, a, p, width).Height(nativePlayerHeight).Shrink(0)
@@ -534,7 +542,7 @@ func nativeResultLabel(item catalog.Item, m *UIModel, a ViewActions) string {
 }
 
 func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) {
-	a.artPriority = artSecondary
+	a.secondaryArtwork = true
 	full := width > 1180 && !m.SidebarCollapsed
 	panelWidth := float32(nativeRailWidth)
 	if full {
@@ -970,7 +978,7 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 					}
 				}
 				shelfScroll := ui.ScrollHorizontal(c).Gap(16).PaddingY(4).Height(4*56 + 8)
-				clipped := nativeArtworkViewport(c, a, shelfScroll)
+				clipped := nativeShelfViewport(c, a, shelfScroll)
 				shelfScroll.Children(func() {
 					for start := 0; start < len(shelf.Items); start += 4 {
 						ui.Column(c.Key(fmt.Sprintf("songs-%d", start))).Width(columnWidth).Shrink(0).Children(func() {
@@ -983,7 +991,7 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 			default:
 				size := nativeCardArt(compact)
 				shelfScroll := ui.ScrollHorizontal(c).PaddingY(4).Height(size + 112).MarginX(-12)
-				clipped := nativeArtworkViewport(c, a, shelfScroll)
+				clipped := nativeShelfViewport(c, a, shelfScroll)
 				shelfScroll.Children(func() {
 					for j, item := range shelf.Items {
 						nativeCard(c.Key(fmt.Sprintf("card-%d", j)), item, m, clipped, p, size)
@@ -1134,10 +1142,26 @@ func nativeShortcutTile(c *ui.Context, item catalog.Item, m *UIModel, a ViewActi
 	}
 }
 
+// The current cover is shared by the panel and transport. Resolve it on the
+// first frame, even before layout; only lists need viewport-based scheduling.
+func nativePlayerArtwork(c *ui.Context, src string, size, radius float32, a ViewActions, p nativePalette) ui.Element {
+	return nativeCover(c, src, size, radius, a, p, artPlayer)
+}
+
 func nativeArtwork(c *ui.Context, src string, size, radius float32, a ViewActions, p nativePalette) ui.Element {
+	priority := artPrimary
+	if a.secondaryArtwork {
+		priority = artSecondary
+	}
+	return nativeCover(c, src, size, radius, a, p, priority)
+}
+
+func nativeCover(c *ui.Context, src string, size, radius float32, a ViewActions, p nativePalette, priority artworkPriority) ui.Element {
 	box := ui.Box(c).Size(size, size).Shrink(0).Radius(radius).Clip().Center()
 	var artwork ui.ImageSource
-	if a.Artwork != nil && src != "" {
+	if a.Artwork != nil && src != "" && priority == artPlayer {
+		artwork = a.Artwork(src, int(math.Ceil(float64(size)*2)), artPlayer)
+	} else if a.Artwork != nil && src != "" {
 		bounds := box.Bounds()
 		if bounds.W == 0 || bounds.H == 0 {
 			// Bounds describe the previous layout; resolve a new cover on the
@@ -1145,12 +1169,12 @@ func nativeArtwork(c *ui.Context, src string, size, radius float32, a ViewAction
 			c.Invalidate()
 		} else {
 			viewport := a.artViewport
-			if !a.artClipped {
+			if a.viewportScroll == nil {
 				viewport.W, viewport.H = c.Size()
 			}
 			visible := nativeIntersection(bounds, viewport)
 			if visible.W > 0 && visible.H > 0 {
-				artwork = a.Artwork(src, int(math.Ceil(float64(size)*2)), a.artPriority)
+				artwork = a.Artwork(src, int(math.Ceil(float64(size)*2)), priority)
 			}
 		}
 	}
@@ -1179,12 +1203,37 @@ func nativeArtworkViewport(c *ui.Context, a ViewActions, scroller ui.Element) Vi
 	if bounds.W == 0 || bounds.H == 0 {
 		c.Invalidate()
 	}
-	if !a.artClipped {
+	if a.viewportScroll == nil {
 		a.artViewport.W, a.artViewport.H = c.Size()
 	}
 	a.artViewport = nativeIntersection(a.artViewport, bounds)
-	a.artClipped = true
+	a.viewportScroll = &state.scroll
 	return a
+}
+
+func nativeShelfViewport(c *ui.Context, a ViewActions, scroller ui.Element) ViewActions {
+	page := a.viewportScroll
+	shelf := nativeArtworkViewport(c, a, scroller)
+	row := shelf.viewportScroll
+	rtl := c.Direction() == ui.RightToLeft
+	scroller.HandleInput(func(ev ui.InputEvent) bool {
+		// Leave single-axis scrolling (including Shift+wheel) to MyGo.
+		// For diagonal input, consume the minor axis even at an edge.
+		if ev.Kind != ui.InputScroll || ev.DX == 0 || ev.DY == 0 {
+			return false
+		}
+		if math.Abs(float64(ev.DY)) >= math.Abs(float64(ev.DX)) {
+			page.Y = max(0, min(page.MaxY, page.Y+ev.DY))
+		} else {
+			dx := ev.DX
+			if rtl {
+				dx = -dx
+			}
+			row.X = max(0, min(row.MaxX, row.X+dx))
+		}
+		return true
+	})
+	return shelf
 }
 
 func nativeIntersection(a, b ui.Rect) ui.Rect {
@@ -1355,7 +1404,7 @@ func nativePlayerBar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 				info.Background(p.hover)
 			}
 			info.Children(func() {
-				nativeArtwork(c, m.Current.Artwork, 56, 4, a, p)
+				nativePlayerArtwork(c, m.Current.Artwork, 56, 4, a, p)
 				nativeTrackCaption(c, m, a, p)
 			})
 			if info.Clicked() {
@@ -1390,11 +1439,11 @@ func nativePlayerBar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 		})
 		ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(4).AlignItems(ui.Center).Justify(ui.End).Children(func() {
 			if width > 1000 {
-				if nativeIconButton(c, "lyrics", a.Tr("shellLyrics"), p, m.Panel && m.PanelTab == "lyrics", 32).Clicked() {
+				if nativeIconButton(c, "lyrics", a.Tr("shellLyrics"), p, m.Panel && m.selectedPanelTab() == "lyrics", 32).Clicked() {
 					nativeTogglePanel(m, "lyrics")
 				}
 			}
-			if nativeIconButton(c, "queue", a.Tr("shellQueue"), p, m.Panel && m.PanelTab != "lyrics", 32).Clicked() {
+			if nativeIconButton(c, "queue", a.Tr("shellQueue"), p, m.Panel && m.selectedPanelTab() == "queue", 32).Clicked() {
 				nativeTogglePanel(m, "queue")
 			}
 			nativeVolume(c, m, a, p, width > 1000)
@@ -1408,14 +1457,17 @@ func nativePlayerBar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 	})
 }
 
+func (m *UIModel) selectedPanelTab() string {
+	if m.PanelTab == "queue" {
+		return "queue"
+	}
+	return "lyrics"
+}
+
 // nativeTogglePanel opens Now Playing on a tab, or closes it when that tab is
 // already showing, as Spotify's queue and lyrics buttons do.
 func nativeTogglePanel(m *UIModel, tab string) {
-	current := m.PanelTab
-	if current != "lyrics" {
-		current = "queue"
-	}
-	if m.Panel && current == tab {
+	if m.Panel && m.selectedPanelTab() == tab {
 		m.Panel = false
 		return
 	}
@@ -1457,7 +1509,7 @@ func nativeMiniPlayer(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 		ui.Column(c).Height(60).Radius(8).Background(p.raised).Clip().Children(func() {
 			ui.Row(c).Grow(1).Padding(0, 4, 0, 8).Gap(4).AlignItems(ui.Center).Children(func() {
 				info := ui.ButtonBase(c).Grow(1).MinWidth(0).Height(52).Gap(10).Justify(ui.Start).Radius(6).Label(a.Tr("shellOpenNowPlaying")).Children(func() {
-					nativeArtwork(c, m.Current.Artwork, 40, 4, a, p)
+					nativePlayerArtwork(c, m.Current.Artwork, 40, 4, a, p)
 					nativeTrackCaption(c, m, a, p)
 				})
 				if info.Clicked() {
@@ -1618,7 +1670,7 @@ func nativeTabbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 
 // nativeNowPlaying is the right-hand Now Playing view: large cover, title,
 // and a card holding the queue or lyrics.
-func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32, overlay bool) ui.Element {
+func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32, overlay, revealLyrics bool) ui.Element {
 	_, windowHeight := c.Size()
 	gap := float32(16)
 	if windowHeight < 760 {
@@ -1676,6 +1728,11 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 			card := nativePanelCard(c, m, a, p)
 			if overlay {
 				card.Height(300).Shrink(0)
+				if revealLyrics {
+					// On short windows the card begins below the fold. Reveal it
+					// on entry only, so the reader can still scroll back to the cover.
+					card.ScrollIntoView()
+				}
 			} else {
 				card.Grow(1).MinHeight(120)
 			}
@@ -1700,8 +1757,8 @@ func nativePanelCard(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 
 func nativePanelTabs(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 	ui.Row(c).Shrink(0).Gap(8).Children(func() {
-		for _, tab := range []struct{ id, key string }{{"queue", "shellQueue"}, {"lyrics", "shellLyrics"}} {
-			active := m.PanelTab == tab.id || (m.PanelTab == "" && tab.id == "queue")
+		for _, tab := range []struct{ id, key string }{{"lyrics", "shellLyrics"}, {"queue", "shellQueue"}} {
+			active := m.selectedPanelTab() == tab.id
 			if nativeChip(c, a.Tr(tab.key), p, active).Label(a.Tr(tab.key) + " · " + a.Tr("shellNowPlaying")).Clicked() {
 				m.PanelTab = tab.id
 			}
@@ -1710,10 +1767,10 @@ func nativePanelTabs(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 }
 
 func nativePanelBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) ui.Element {
-	if m.PanelTab == "lyrics" {
+	if m.selectedPanelTab() == "lyrics" {
 		return nativeLyricsBody(c, m, a, p)
 	}
-	scroll := ui.Scroll(c.Key("panel-" + m.PanelTab)).Grow(1).MinHeight(68)
+	scroll := ui.Scroll(c.Key("panel-queue")).Grow(1).MinHeight(68)
 	a = nativeArtworkViewport(c, a, scroll)
 	return scroll.Children(func() {
 		for i, item := range m.Queue {
@@ -1885,13 +1942,13 @@ func nativePresentation(m *UIModel) nativePresentationKey {
 // collection, the current track's cover in immersive mode, or a stable tint
 // for pages without artwork.
 func nativeBackdrop(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
-	src := m.Page.Artwork
+	src, priority := m.Page.Artwork, artSecondary
 	if m.Immersive {
-		src = m.Current.Artwork
+		src, priority = m.Current.Artwork, artPlayer
 	}
 	var artwork ui.ImageSource
 	if src != "" && a.Artwork != nil {
-		artwork = a.Artwork(src, artworkEdge, artSecondary)
+		artwork = a.Artwork(src, artworkEdge, priority)
 	}
 	strength := float32(0.5)
 	if !p.dark {
@@ -2024,7 +2081,7 @@ func nativeMediaSwitch(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 
 func nativeMedia(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, size float32) ui.Element {
 	if !m.Video {
-		return nativeArtwork(c, m.Current.Artwork, size, 8, a, p)
+		return nativePlayerArtwork(c, m.Current.Artwork, size, 8, a, p)
 	}
 	return ui.Box(c).Size(size, size*9/16).Shrink(0).Radius(8).Background(ui.Hex("#000000")).Clip().Center().Label(a.Tr("nativeVideo")).Children(func() {
 		if m.VideoError != "" {

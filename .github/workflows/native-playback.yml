@@ -4,6 +4,17 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      os:
+        description: Platform to validate (all preserves the automatic three-platform matrix)
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - macos-latest
+          - windows-latest
+          - ubuntu-24.04
 permissions:
   contents: read
 jobs:
@@ -11,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-24.04]
+        os: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.os != '' && inputs.os != 'all' && format('["{0}"]', inputs.os) || '["macos-latest","windows-latest","ubuntu-24.04"]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     env:

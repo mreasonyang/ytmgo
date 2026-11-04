@@ -1,0 +1,74 @@
+{
+  "exit_code": 0,
+  "tests": {
+    "pass": 6,
+    "fail": 0,
+    "skip": 0
+  },
+  "failed_tests": [],
+  "metrics": [
+    {
+      "test": "TestNativeVideoMovingClockLive/1m13.125s",
+      "target_seconds": 73.125,
+      "first_frame_seconds": 7.319
+    },
+    {
+      "test": "TestNativeVideoMovingClockLive/1m57.625s",
+      "target_seconds": 117.625,
+      "first_frame_seconds": 1.452
+    },
+    {
+      "test": "TestNativeVideoDuringAnonymousAudioLive",
+      "anonymous_audio_load_seconds": 4.996
+    },
+    {
+      "test": "TestNativeVideoDuringAnonymousAudioLive/1m13.125s",
+      "anonymous_audio_seek_target_seconds": 73.125,
+      "seek_seconds": 0.847
+    },
+    {
+      "test": "TestNativeVideoDuringAnonymousAudioLive/1m13.125s",
+      "video_during_audio_first_frame_seconds": 1.277,
+      "audio_position_seconds": 74.653,
+      "width": 480.0,
+      "height": 480.0
+    },
+    {
+      "test": "TestNativeVideoDuringAnonymousAudioLive/1m13.125s",
+      "video_during_audio_observation_seconds": 2.017,
+      "frames": 48.0,
+      "audio_advance_seconds": 2.016
+    },
+    {
+      "test": "TestNativeVideoDuringAnonymousAudioLive/1m13.125s",
+      "video_during_audio_observation_seconds": 2.002,
+      "frames": 47.0,
+      "audio_advance_seconds": 2.005
+    },
+    {
+      "test": "TestNativeVideoDuringAnonymousAudioLive/1m57.625s",
+      "anonymous_audio_seek_target_seconds": 117.625,
+      "seek_seconds": 0.668
+    },
+    {
+      "test": "TestNativeVideoDuringAnonymousAudioLive/1m57.625s",
+      "video_during_audio_first_frame_seconds": 0.622,
+      "audio_position_seconds": 118.513,
+      "width": 480.0,
+      "height": 480.0
+    },
+    {
+      "test": "TestNativeVideoDuringAnonymousAudioLive/1m57.625s",
+      "video_during_audio_observation_seconds": 2.015,
+      "frames": 48.0,
+      "audio_advance_seconds": 2.016
+    },
+    {
+      "test": "TestNativeVideoDuringAnonymousAudioLive/1m57.625s",
+      "video_during_audio_observation_seconds": 2.001,
+      "frames": 47.0,
+      "audio_advance_seconds": 2.005
+    }
+  ],
+  "elapsed_seconds": 31.213
+}

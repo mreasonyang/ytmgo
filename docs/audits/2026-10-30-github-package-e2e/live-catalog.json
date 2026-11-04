@@ -1,0 +1,46 @@
+{
+  "exit_code": 0,
+  "seconds": 9.216,
+  "events": [
+    {
+      "Action": "pass",
+      "Test": "TestLiveCatalog",
+      "Elapsed": 5.41
+    },
+    {
+      "Action": "pass",
+      "Test": "TestLiveHomeContinuationContext",
+      "Elapsed": 2.34
+    },
+    {
+      "Action": "pass",
+      "Elapsed": 8.081
+    }
+  ],
+  "counts": [
+    {
+      "page": "search",
+      "continuation": false,
+      "shelves": 1,
+      "items": 31
+    },
+    {
+      "page": "explore",
+      "continuation": false,
+      "shelves": 5,
+      "items": 110
+    },
+    {
+      "page": "home",
+      "continuation": false,
+      "shelves": 2,
+      "items": 30
+    },
+    {
+      "page": "home",
+      "continuation": true,
+      "shelves": 3,
+      "items": 22
+    }
+  ]
+}

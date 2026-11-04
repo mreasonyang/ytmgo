@@ -1,0 +1,22 @@
+{
+  "check": "live-js-final",
+  "packages": [
+    {
+      "Package": "ytmgo/internal/streaming",
+      "Action": "pass",
+      "Elapsed": 5.087
+    }
+  ],
+  "counts": {
+    "pass": 1,
+    "fail": 0,
+    "skip": 0
+  },
+  "categories": [],
+  "locations": [
+    "player_cache_test.go:414"
+  ],
+  "metrics": [
+    "public player cache: cold=4.958s restart=1ms code_bytes=181616 restart_network_requests=0 restart_extractions=0"
+  ]
+}

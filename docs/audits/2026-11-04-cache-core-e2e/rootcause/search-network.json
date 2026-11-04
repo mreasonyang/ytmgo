@@ -1,0 +1,54 @@
+[
+  {
+    "case": 1,
+    "success": true,
+    "items": 31,
+    "total_ms": 1983,
+    "request": {
+      "status": 200,
+      "header_ms": 1647,
+      "total_ms": 1977,
+      "bytes": 236367,
+      "cause": "none"
+    }
+  },
+  {
+    "case": 2,
+    "success": true,
+    "items": 31,
+    "total_ms": 993,
+    "request": {
+      "status": 200,
+      "header_ms": 663,
+      "total_ms": 991,
+      "bytes": 235503,
+      "cause": "none"
+    }
+  },
+  {
+    "case": 3,
+    "success": true,
+    "items": 31,
+    "total_ms": 1180,
+    "request": {
+      "status": 200,
+      "header_ms": 845,
+      "total_ms": 1173,
+      "bytes": 236367,
+      "cause": "none"
+    }
+  },
+  {
+    "case": 4,
+    "success": true,
+    "items": 33,
+    "total_ms": 1238,
+    "request": {
+      "status": 200,
+      "header_ms": 689,
+      "total_ms": 1234,
+      "bytes": 243792,
+      "cause": "none"
+    }
+  }
+]

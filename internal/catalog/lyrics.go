@@ -3,6 +3,7 @@ package catalog
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"math"
 	"strconv"
 	"strings"
@@ -35,10 +36,13 @@ type LyricLine struct {
 type LyricsResult struct {
 	Text, Source string
 	Lines        []LyricLine
+	// A temporary timing lookup failure must not turn readable fallback text
+	// into a completed ten-minute cache entry. Concurrent callers still coalesce.
+	retryTiming bool
 }
 
 func (c *Client) LyricsWithTiming(ctx context.Context, videoID string) (LyricsResult, error) {
-	result, err := memoized(c, ctx, &c.lyricResults, "timed:"+videoID, 10*time.Minute, 2<<20, lyricsBytes, func(work context.Context) (LyricsResult, error) { return c.loadLyricsWithTiming(work, videoID) })
+	result, err := memoized(c, ctx, &c.lyricResults, "timed:"+videoID, 10*time.Minute, 2<<20, lyricsBytes, func(work context.Context) (LyricsResult, error) { return c.loadLyricsWithTiming(work, videoID) }, func(result LyricsResult) bool { return !result.retryTiming })
 	return cloneLyrics(result), err
 }
 
@@ -61,9 +65,15 @@ func (c *Client) loadLyricsWithTiming(ctx context.Context, videoID string) (Lyri
 	lookup, cancel := context.WithTimeout(ctx, 6*time.Second)
 	defer cancel()
 	items, browseID, lookupErr := public.watchQueue(lookup, videoID)
+	result.retryTiming = true
 	if lookupErr == nil && len(items) > 0 && items[0].ID == videoID && browseID != "" && c.scopeError(scope) == nil {
-		if synced, err := public.timedLyrics(lookup, browseID); err == nil && len(synced.Lines) > 0 {
-			result = synced
+		if synced, err := public.timedLyrics(lookup, browseID); err == nil {
+			result.retryTiming = false
+			if len(synced.Lines) > 0 {
+				result = synced
+			}
+		} else if errors.Is(err, ErrNoLyrics) {
+			result.retryTiming = false
 		}
 	}
 	if err := ctx.Err(); err != nil {
@@ -103,6 +113,7 @@ func (c *Client) lyricsResult(ctx context.Context, videoID string, timed bool) (
 	if reference.browseID == "" {
 		return LyricsResult{}, ErrNoLyrics
 	}
+	retryTiming := false
 	if timed {
 		result, requestErr := c.timedLyrics(ctx, reference.browseID)
 		if err := ctx.Err(); err != nil {
@@ -114,6 +125,7 @@ func (c *Client) lyricsResult(ctx context.Context, videoID string, timed bool) (
 		if requestErr == nil {
 			return result, nil
 		}
+		retryTiming = !errors.Is(requestErr, ErrNoLyrics)
 		// The mobile profile or timed response can be unavailable for a track.
 		// Retry the established plain-text path within the same account scope.
 	}
@@ -122,6 +134,7 @@ func (c *Client) lyricsResult(ctx context.Context, videoID string, timed bool) (
 		return LyricsResult{}, err
 	}
 	result, err := parsePlainLyrics(response)
+	result.retryTiming = retryTiming
 	if ctxErr := ctx.Err(); ctxErr != nil {
 		return LyricsResult{}, ctxErr
 	}

@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "index": 0,
+  "positionNs": 216768000000,
+  "volume": 0,
+  "unmutedVolume": 0.6591679453849792,
+  "queue": [
+    {
+      "id": "4D7u5KF7SP8",
+      "title": "Get Lucky (feat. Pharrell Williams and Nile Rodgers)",
+      "duration": 369641000000
+    },
+    {
+      "id": "5NV6Rdv1a3I",
+      "title": "Get Lucky (Official Audio) (feat. Pharrell Williams & Nile Rodgers)",
+      "duration": null
+    },
+    {
+      "id": "HCfPhZQz2CE",
+      "title": "Daft Punk - 'Get Lucky' (10 min loop)",
+      "duration": 600000000000
+    },
+    {
+      "id": "Rgrt_8mXrK8",
+      "title": "Get Lucky (Radio Edit - feat. Pharrell Williams and Nile Rodgers)",
+      "duration": null
+    },
+    {
+      "id": "gx7GyiDZQms",
+      "title": "Get Lucky (Radio Edit - feat. Pharrell Williams and Nile Rodgers)",
+      "duration": 370000000000
+    },
+    {
+      "id": "DhLEUHApFFo",
+      "title": "Get Lucky",
+      "duration": null
+    },
+    {
+      "id": "_-mF4-XndnU",
+      "title": "Daft Punk - Get Lucky (slowed + reverb)",
+      "duration": 450000000000
+    },
+    {
+      "id": "9FKe3friDm8",
+      "title": "Get Lucky (Radio Edit)",
+      "duration": null
+    },
+    {
+      "id": "J1oQmd0MwgE",
+      "title": "Daft Punk - Get Lucky (feat. Pharrell Williams) ( Extended ) -HQ-",
+      "duration": null
+    },
+    {
+      "id": "kzrTLNhwI84",
+      "title": "Daft Punk ft. Pharrell Williams, Nile Rodgers - Get Lucky (Extended Mix)",
+      "duration": null
+    },
+    {
+      "id": "7o72nwOGu1E",
+      "title": "Get Lucky",
+      "duration": null
+    },
+    {
+      "id": "s5ZpdM_eCSQ",
+      "title": "Get Lucky",
+      "duration": null
+    }
+  ],
+  "processes": [],
+  "time": "2026-11-04T14:56:55.294480+00:00"
+}

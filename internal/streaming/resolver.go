@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"ytmgo/internal/videoquality"
 )
 
 // First use may download a large public player; ordinary requests retain their
@@ -263,6 +265,14 @@ func (r *Resolver) Warm(ctx context.Context) error {
 	return r.warm(ctx)
 }
 func (r *Resolver) Resolve(ctx context.Context, id, kind string) (Media, error) {
+	return r.resolve(ctx, id, kind, videoquality.Default)
+}
+
+func (r *Resolver) ResolveVideo(ctx context.Context, id string, quality int) (Media, error) {
+	return r.resolve(ctx, id, "video", quality)
+}
+
+func (r *Resolver) resolve(ctx context.Context, id, kind string, quality int) (Media, error) {
 	if !videoID.MatchString(id) || (kind != "audio" && kind != "video") {
 		return Media{}, errors.New("invalid_video_id")
 	}
@@ -290,7 +300,7 @@ func (r *Resolver) Resolve(ctx context.Context, id, kind string) (Media, error) 
 		}
 		return Media{}, failure("playability_unavailable", "player_request")
 	}
-	selected, err := chooseFormat(response, kind)
+	selected, err := chooseFormat(response, kind, quality)
 	if err != nil {
 		return Media{}, err
 	}

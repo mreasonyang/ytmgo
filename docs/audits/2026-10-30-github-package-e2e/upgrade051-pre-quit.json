@@ -1,0 +1,62 @@
+{
+  "main_pid": 69065,
+  "owned": [
+    {
+      "pid": 69065,
+      "executable": "/Applications/ytmgo.app/Contents/MacOS/ytmgo",
+      "ppid": 1,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 69089,
+      "executable": "/Applications/ytmgo.app/Contents/Resources/runtime/node",
+      "ppid": 69065,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 69090,
+      "executable": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    },
+    {
+      "pid": 69259,
+      "executable": "/System/Library/Frameworks/AppKit.framework/Versions/C/XPCServices/ThemeWidgetControlViewService.xpc/Contents/MacOS/ThemeWidgetControlViewService",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    },
+    {
+      "pid": 69263,
+      "executable": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    },
+    {
+      "pid": 70331,
+      "executable": "/Applications/ytmgo.app/Contents/Resources/runtime/node",
+      "ppid": 69089,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 70347,
+      "executable": "/Applications/ytmgo.app/Contents/Resources/runtime/ffmpeg",
+      "ppid": 69065,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 71010,
+      "executable": "/Applications/ytmgo.app/Contents/Resources/runtime/ffmpeg",
+      "ppid": 69065,
+      "uid": 501,
+      "state": "S"
+    }
+  ],
+  "known_login_or_webkit_helpers_remaining": []
+}

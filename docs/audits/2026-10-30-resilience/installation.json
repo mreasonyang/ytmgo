@@ -1,0 +1,10 @@
+{
+  "version": "0.5.3",
+  "source_commit": "630af4d6b3155ec4f09f9c00c6ef0b5a3296ce4e",
+  "main_sha256": "fb1f47321d9bd229c429601e6b6cc648d2d7c66ba4e6aad44dec01d3088c3137",
+  "signature_pass": true,
+  "normal_old_main_exit": true,
+  "backup_retained": true,
+  "acceptance_probe_until": "2026-10-30T18:16:59.267458+00:00",
+  "account_session_files_touched": false
+}

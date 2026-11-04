@@ -1,0 +1,71 @@
+[
+  {
+    "stage": "focused_lyrics",
+    "exit_code": 0,
+    "passed": true,
+    "elapsed_seconds": 3.34,
+    "counts": {
+      "pass": 20
+    },
+    "failures": []
+  },
+  {
+    "stage": "go_race",
+    "exit_code": 0,
+    "passed": true,
+    "elapsed_seconds": 125.93,
+    "counts": {
+      "pass": 1013,
+      "skip": 20
+    },
+    "failures": []
+  },
+  {
+    "stage": "go_vet",
+    "exit_code": 0,
+    "passed": true,
+    "elapsed_seconds": 2.19
+  },
+  {
+    "stage": "translations",
+    "exit_code": 0,
+    "passed": true,
+    "elapsed_seconds": 0.21
+  },
+  {
+    "stage": "runtime_manifest",
+    "exit_code": 0,
+    "passed": true,
+    "elapsed_seconds": 0.13
+  },
+  {
+    "stage": "runtime_protocol",
+    "exit_code": 0,
+    "passed": true,
+    "elapsed_seconds": 0.06
+  },
+  {
+    "stage": "runtime_tests",
+    "exit_code": 0,
+    "passed": true,
+    "elapsed_seconds": 33.66
+  },
+  {
+    "stage": "login_tests",
+    "exit_code": 0,
+    "passed": true,
+    "elapsed_seconds": 0.39
+  },
+  {
+    "stage": "login_verify",
+    "exit_code": 0,
+    "passed": true,
+    "elapsed_seconds": 0.06
+  },
+  {
+    "stage": "diff_check",
+    "exit_code": 0,
+    "passed": true,
+    "elapsed_seconds": 0.01
+  }
+]

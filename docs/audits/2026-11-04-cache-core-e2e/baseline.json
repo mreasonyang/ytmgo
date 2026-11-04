@@ -1,0 +1,7 @@
+{
+  "time": "2026-11-04T14:45:31.346245+00:00",
+  "source_commit": "d94b40ddc5d9a7768cae2f139b1bf54f121c6b06",
+  "test_bundle": "/Users/easonyang/Documents/projects/.codex-artifacts/ytmgo-reload-fix-20261104/package/darwin-arm64/ytmGO.app",
+  "cache_exists_before": false,
+  "binary_sha256": "a117238f4a6b0824d9e1bdc672a1e92bdeb2e8475e1d41ab0559a170b46cf4cb"
+}

@@ -1,0 +1,18 @@
+{
+  "processes_before_restore": [],
+  "queue_equal": true,
+  "position_equal": true,
+  "volume_equal": true,
+  "index_equal": true,
+  "queue_count": 25,
+  "position_seconds": 29.765,
+  "volume": 0,
+  "final_process_executable": "/Applications/ytmGO.app/Contents/MacOS/ytmGO",
+  "final_process": {
+    "pid": 91953,
+    "ppid": 1,
+    "uid": 501,
+    "state": "S",
+    "executable": "/Applications/ytmGO.app/Contents/MacOS/ytmGO"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "time": "2026-10-30T05:08:11.715079+00:00",
+  "version": "0.5.1",
+  "main_sha256": "2214521b90dc4b3b3f5b645df0636fe23e331e9ea0a6d2ad8c088689cd0d5c15",
+  "running_main": {
+    "pid": 71381,
+    "ppid": 1,
+    "uid": 501,
+    "state": "S",
+    "executable": "/Applications/ytmgo.app/Contents/MacOS/ytmgo"
+  },
+  "account_category": "premium",
+  "library_loaded": true,
+  "autoplay": false,
+  "language": "zh-Hant",
+  "appearance": "dark",
+  "volume": 0.7,
+  "owned_processes": [
+    {
+      "pid": 71381,
+      "executable": "/Applications/ytmgo.app/Contents/MacOS/ytmgo",
+      "ppid": 1,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 71391,
+      "executable": "/Applications/ytmgo.app/Contents/Resources/runtime/node",
+      "ppid": 71381,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 71392,
+      "executable": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    },
+    {
+      "pid": 71394,
+      "executable": "/System/Library/Frameworks/AppKit.framework/Versions/C/XPCServices/ThemeWidgetControlViewService.xpc/Contents/MacOS/ThemeWidgetControlViewService",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    },
+    {
+      "pid": 71396,
+      "executable": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    }
+  ],
+  "login_helper_present": false,
+  "installed_path": "/Applications/ytmgo.app",
+  "package_commit": "52790e0161c534f391eb620bf956bc60649b1df0",
+  "public_release": "https://github.com/mreasonyang/ytmgo/releases/tag/v0.5.1"
+}

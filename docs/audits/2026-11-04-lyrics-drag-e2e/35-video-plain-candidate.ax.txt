@@ -1,0 +1,40 @@
+Window: "ytmGO", App: ytmGO.
+0 standard window ytmGO, Secondary Actions: Raise
+	1 container Now Playing
+		2 text (settable) Now Playing
+		3 button Immersive mode · Now Playing
+		4 button Close panel
+		5 scroll area
+			6 button Cover
+			7 button Video
+			8 text (settable) GENER8ION, Adèle Castillon - Try (Lyrics)
+			9 text (settable) Luna Liebling
+			10 button Like
+			11 button Previous
+			12 button Pause
+			13 button Next
+			14 text (settable) 0:00
+			15 slider (settable, float) Description: Playback position, Value: 0.002666666
+			16 text (settable) 3:00
+			17 button Unmute
+			18 slider (settable, float) Description: Volume, Value: 0
+			19 button Lyrics · Now Playing
+			20 button Queue · Now Playing
+			21 button Restore cover size
+			22 scroll area Lyrics · Content
+				23 text (settable) Loading…
+	24 close button
+	25 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	26 minimize button
+	27 text ytmGO
+28 menu bar
+	29 ytmGO
+	30 File
+	31 Edit
+	32 Playback
+	33 View
+	34 Window
+	35 Account
+	36 Help
+
+The focused UI element is 3 button Immersive mode · Now Playing

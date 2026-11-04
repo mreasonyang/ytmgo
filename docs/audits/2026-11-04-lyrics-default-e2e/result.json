@@ -1,0 +1,32 @@
+{
+  "installed_main_flows_passed": true,
+  "new_product_failures": [],
+  "source_unchanged_during_acceptance": true,
+  "installed_manifest_matches_build": true,
+  "original_playback_restored": true,
+  "restart_queue_count": 11,
+  "original_queue_count": 90,
+  "native_window_size_coverage": "1920x995/996 logical pixels; compact layouts tested with native UI Tester",
+  "ui_tester_sizes": [
+    "420x640",
+    "960x740",
+    "1440x900"
+  ],
+  "pending_physical_input_checks": [
+    "Installed app in a genuinely narrow/short OS window: window drags did not obtain the requested size",
+    "Global Command+Shift+Space: configuration retained; synthetic keys sent with Calculator in front did not toggle playback"
+  ],
+  "not_covered": [
+    "physical diagonal trackpad gestures",
+    "acoustic loopback",
+    "network fault injection",
+    "sleep/wake",
+    "crash/force-quit recovery",
+    "account sign-out/switching",
+    "Windows/Linux",
+    "long-duration soak",
+    "public notarized release package"
+  ],
+  "scope": "initial_acceptance_phase",
+  "latest_conclusion": "retry/result.json"
+}

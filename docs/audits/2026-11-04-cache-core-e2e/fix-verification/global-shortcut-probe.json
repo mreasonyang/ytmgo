@@ -1,0 +1,10 @@
+{
+  "chord": "Command+Shift+Space",
+  "source_app": "Calculator",
+  "before_playing": true,
+  "before_position_ms": 119736,
+  "after_playing": true,
+  "after_position_ms": 130232,
+  "injected_chord_observed_toggle": false,
+  "physical_keyboard_certified": false
+}

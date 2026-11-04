@@ -1,0 +1,45 @@
+Window: "ytmgo", App: ytmgo.
+0 standard window ytmgo, Secondary Actions: Raise
+	1 container Settings
+		2 text (settable) Settings
+		3 button Close
+		4 scroll area
+			5 text (settable) Account
+			6 text (settable) YouTube Music Premium
+			7 button Manage Google account
+			8 button Sign out and clear local data…
+			9 text (settable) General
+			10 text (settable) Appearance
+			11 text (settable) Follow your system or pick a theme.
+			12 Appearance
+				13 radio button (settable, integer) System, Value: 0
+				14 radio button (settable, integer) Dark, Value: 1
+				15 radio button (settable, integer) Light, Value: 0
+			16 text (settable) Language
+			17 text (settable) Used for menus, buttons and messages.
+			18 pop up button (settable) Language, Value: English
+			19 text (settable) Keyboard
+			20 text (settable) Global play / pause
+			21 text (settable) Works even while you use other apps.
+			22 button Record shortcut
+			23 button Turn off
+			24 text (settable) Keyboard shortcuts
+			25 text (settable) Every shortcut that works inside ytmgo.
+			26 button View all
+			27 text (settable) About
+			28 text (settable) ytmgo
+			29 text (settable) Version 0.6.2
+			30 text (settable) Music and accounts are provided by YouTube Music
+	31 close button
+	32 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	33 minimize button
+	34 text ytmgo
+35 menu bar
+	36 ytmgo
+	37 File
+	38 Edit
+	39 Playback
+	40 View
+	41 Window
+	42 Account
+	43 Help

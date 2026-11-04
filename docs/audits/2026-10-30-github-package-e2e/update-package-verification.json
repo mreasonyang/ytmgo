@@ -1,0 +1,6 @@
+{
+  "ed25519_public_key_verification_pass": true,
+  "exit_code": 0,
+  "config_commit": "58fd1c77cb1b2b181c4097e4c8fd7503c39049fa",
+  "first_attempt": "workspace_version_changed_to_0.5.1_while_manifest_is_0.5.0"
+}

@@ -1,0 +1,11 @@
+{
+  "time": "2026-10-30T04:52:30.378506+00:00",
+  "root_pid": 31296,
+  "scope": "root ownership closure and exact executable identity",
+  "terminated_decoder_pids": [
+    56102,
+    56135
+  ],
+  "signal": "SIGTERM",
+  "main_and_node_not_targeted": true
+}

@@ -1,0 +1,28 @@
+{
+  "time": "2026-11-04T15:23:13.007291+00:00",
+  "status": "fail",
+  "product_implementation_changed": false,
+  "release_published": false,
+  "formal_bundle_replaced": false,
+  "observed_failures": [
+    "anonymous proof homepage body read failure",
+    "Premium mid-track audio_stream_failed; Retry recovered",
+    "video search failed and Retry failed"
+  ],
+  "unverified": [
+    "physical global shortcut",
+    "dynamic MV",
+    "compact real window"
+  ],
+  "test_processes_stopped": true,
+  "state_files_restored": true,
+  "acceptance_request_removed": true,
+  "screen_lock_resolved": true,
+  "formal_app_ui_verified": true,
+  "confirmed_new_cache_defects": [
+    "degraded plain lyrics cached for ten minutes after transient public timing recovery failure"
+  ],
+  "timed_lyrics_gesture": "Original component native probe reproduced focus=false at release; supports automation false-negative explanation; full foreground physical acceptance remains unverified",
+  "rootcause_report": "rootcause/README.md",
+  "rootcause_updated": "2026-11-04T15:50:16.818527+00:00"
+}

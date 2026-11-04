@@ -1,0 +1,15 @@
+{
+  "time": "2026-11-04T14:57:50.147052+00:00",
+  "acceptance": {
+    "Sequence": 9,
+    "ElapsedMS": 42820,
+    "PositionMS": 237453,
+    "DurationMS": 369641,
+    "Playing": true,
+    "Loading": false,
+    "Ended": false,
+    "Failed": false
+  },
+  "cache_mtime_ns": 1793803753253443667,
+  "cache_unchanged": true
+}

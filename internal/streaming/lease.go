@@ -26,6 +26,7 @@ type Lease struct {
 	cancel      context.CancelFunc
 	timer       *time.Timer
 	category    string
+	httpStatus  int
 	once        sync.Once
 	requests    sync.WaitGroup
 }
@@ -72,13 +73,16 @@ func (l *Lease) Err() error {
 	if l.category == "" {
 		return nil
 	}
-	return errors.New(l.category)
+	return &Failure{Category: l.category, Stage: "media_stream", HTTPStatus: l.httpStatus}
 }
-func (l *Lease) fail(category string) {
+func (l *Lease) fail(category string, status ...int) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if l.category == "" {
 		l.category = category
+		if len(status) == 1 && status[0] >= 100 && status[0] <= 599 {
+			l.httpStatus = status[0]
+		}
 	}
 }
 
@@ -136,16 +140,11 @@ func streamError(err error) string {
 }
 func (l *Lease) rangeRequest(ctx context.Context, remote *url.URL, start, end int64) (*http.Response, context.CancelFunc, error) {
 	u := *remote
-	q := u.Query()
-	q.Set("range", fmt.Sprintf("%d-%d", start, end))
-	u.RawQuery = q.Encode()
 	for attempt := 0; attempt < 3; attempt++ {
 		// A new timeout belongs to each chunk, never to the whole track.
 		requestCtx, cancel := context.WithCancel(ctx)
 		timer := time.AfterFunc(20*time.Second, cancel)
-		req, _ := http.NewRequestWithContext(requestCtx, "GET", u.String(), nil)
-		req.Header = http.Header{"Accept": {"*/*"}, "Accept-Encoding": {"identity"}, "Origin": {"https://www.youtube.com"}, "Referer": {"https://www.youtube.com"}, "Dnt": {"?1"}}
-		res, err := l.owner.client.Do(req)
+		res, err := l.requestRangeWithRedirects(requestCtx, u, start, end)
 		stopped := timer.Stop()
 		if !stopped && ctx.Err() == nil {
 			err = context.DeadlineExceeded
@@ -167,6 +166,48 @@ func (l *Lease) rangeRequest(ctx context.Context, remote *url.URL, start, end in
 		}
 	}
 	return nil, func() {}, errors.New("audio_connection_failed")
+}
+
+// Only media requests may follow CDN relocation. Each hop is independently
+// validated against the same media-origin boundary as the original lease;
+// account/protocol clients still refuse redirects. Signed URLs stay in Go.
+func (l *Lease) requestRangeWithRedirects(ctx context.Context, endpoint url.URL, start, end int64) (*http.Response, error) {
+	for hop := 0; ; hop++ {
+		q := endpoint.Query()
+		q.Set("range", fmt.Sprintf("%d-%d", start, end))
+		endpoint.RawQuery = q.Encode()
+		req, err := http.NewRequestWithContext(ctx, "GET", endpoint.String(), nil)
+		if err != nil {
+			return nil, errors.New("audio_connection_failed")
+		}
+		req.Header = http.Header{"Accept": {"*/*"}, "Accept-Encoding": {"identity"}, "Origin": {"https://www.youtube.com"}, "Referer": {"https://www.youtube.com"}, "Dnt": {"?1"}}
+		res, err := l.owner.client.Do(req)
+		if err != nil {
+			return res, err
+		}
+		switch res.StatusCode {
+		case 301, 302, 303, 307, 308:
+		default:
+			return res, nil
+		}
+		if hop >= 3 {
+			return res, nil
+		}
+		location := res.Header.Get("Location")
+		if len(location) == 0 || len(location) > 65536 {
+			return res, nil
+		}
+		next, err := endpoint.Parse(location)
+		if err != nil {
+			return res, nil
+		}
+		validated, err := mediaURL(next.String())
+		if err != nil {
+			return res, nil
+		}
+		res.Body.Close()
+		endpoint = *validated
+	}
 }
 
 // ServeHTTP is mounted behind a per-decoder random loopback capability. It
@@ -244,9 +285,9 @@ func (l *Lease) ServeHTTP(w http.ResponseWriter, in *http.Request) {
 		return
 	}
 	sent := false
-	fail := func(category string, status int) {
+	fail := func(category string, status int, upstreamStatus ...int) {
 		if ctx.Err() == nil {
-			l.fail(category)
+			l.fail(category, upstreamStatus...)
 		}
 		if sent {
 			panic(http.ErrAbortHandler)
@@ -258,12 +299,15 @@ func (l *Lease) ServeHTTP(w http.ResponseWriter, in *http.Request) {
 	if l.contentType == "video/mp4" {
 		chunk = 512 << 10
 	}
+	last, bodyRetries := start-1, 0
 	for offset := start; offset <= end; {
 		if ctx.Err() != nil {
 			fail("", 410)
 			return
 		}
-		last := min(end, offset+chunk-1)
+		if offset > last {
+			last, bodyRetries = min(end, offset+chunk-1), 0
+		}
 		expected := last - offset + 1
 		res, cancelRequest, err := l.rangeRequest(ctx, remote, offset, last)
 		if err != nil {
@@ -283,7 +327,7 @@ func (l *Lease) ServeHTTP(w http.ResponseWriter, in *http.Request) {
 			}
 			res.Body.Close()
 			cancelRequest()
-			fail(category, status)
+			fail(category, status, res.StatusCode)
 			return
 		}
 		cr := res.Header.Get("Content-Range")
@@ -329,8 +373,11 @@ func (l *Lease) ServeHTTP(w http.ResponseWriter, in *http.Request) {
 					return
 				}
 			}
+			if received == expected {
+				break
+			}
 			if readErr != nil {
-				if readErr != io.EOF {
+				if readErr != io.EOF && readErr != io.ErrUnexpectedEOF {
 					category = streamError(readErr)
 				} else if received != expected {
 					category = "audio_stream_truncated"
@@ -341,6 +388,22 @@ func (l *Lease) ServeHTTP(w http.ResponseWriter, in *http.Request) {
 		res.Body.Close()
 		cancelRequest()
 		if category != "" {
+			// Resume only undelivered bytes of this exact range. Already-written
+			// bytes are never replayed, and a failing range gets at most two body
+			// recoveries. Range mismatches and access refusals remain terminal.
+			retryable := category == "audio_network_timeout" || category == "audio_connection_failed" || category == "audio_stream_truncated"
+			if retryable && bodyRetries < 2 && ctx.Err() == nil {
+				bodyRetries++
+				offset += received
+				timer := time.NewTimer(time.Duration(bodyRetries) * 250 * time.Millisecond)
+				select {
+				case <-ctx.Done():
+					timer.Stop()
+					return
+				case <-timer.C:
+					continue
+				}
+			}
 			fail(category, 502)
 			return
 		}

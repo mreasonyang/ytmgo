@@ -1,0 +1,16 @@
+{
+  "test_exited": true,
+  "test_processes_left": 0,
+  "restored_files_match": {
+    "playback-session.json": true,
+    "appearance": true,
+    "language": true,
+    "lyrics-layout": true
+  },
+  "restored_position_ns": 12650000000,
+  "restored_volume": 0.6591679453849792,
+  "restored_queue_index": 0,
+  "restored_queue_items": 12,
+  "installed_sha256": "485d6a62848b1541dcbc5d95657795f2da333591d387304c64d7e73684b3a3fe",
+  "acceptance_request_removed": true
+}

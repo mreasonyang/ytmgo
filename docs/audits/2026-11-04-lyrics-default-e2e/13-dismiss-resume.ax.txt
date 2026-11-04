@@ -1,0 +1,4 @@
+The following is a diff from the previous accessibility tree for Window: "ytmgo" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+~		143 button Pause
+~		147 slider (settable, float) Description: Playback position, Value: 5.511666666
+The focused UI element is 147 slider (settable, float) Description: Playback position, Value: 5.511666666

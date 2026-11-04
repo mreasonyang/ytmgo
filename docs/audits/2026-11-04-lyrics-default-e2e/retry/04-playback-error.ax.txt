@@ -1,0 +1,63 @@
+Window: "ytmgo", App: ytmgo.
+0 standard window ytmgo, Secondary Actions: Raise
+	1 container Now Playing
+		2 text (settable) Now Playing
+		3 button Immersive mode · Now Playing
+		4 button Close panel
+		5 scroll area
+			6 text (settable) Unable to play this track. Try again or choose another song.
+			7 button Retry
+			8 button Cover
+			9 button Video
+			10 text (settable) Can't Help Falling In Love
+			11 text (settable) Kina Grannis
+			12 button Remove like
+			13 button Previous
+			14 button Play
+			15 button Next
+			16 text (settable) 2:48
+			17 slider (settable, float) Description: Playback position, Value: 168.280166666
+			18 text (settable) 3:21
+			19 button Mute
+			20 slider (settable, float) Description: Volume, Value: 0.7
+			21 button Lyrics · Now Playing
+			22 button Queue · Now Playing
+			23 scroll area Lyrics · Content
+				24 text (settable) ♪
+				25 text (settable) Wise men say
+				26 text (settable) Only fools rush in
+				27 text (settable) But I can't help falling in love with you
+				28 text (settable) Shall I stay?
+				29 text (settable) Would it be a sin?
+				30 text (settable) If I can't help falling in love with you
+				31 text (settable) Like a river flows
+				32 text (settable) Surely to the sea
+				33 text (settable) Darling, so it goes
+				34 text (settable) Some things are meant to be
+				35 text (settable) So take my hand
+				36 text (settable) Take my whole life, too
+				37 text (settable) For I can't help falling in love with you
+				38 text (settable) Like a river flows
+				39 text (settable) Surely to the sea
+				40 text (settable) Darling, so it goes
+				41 text (settable) Some things are meant to be
+				42 text (settable) So take my hand
+				43 text (settable) Take my whole life, too
+				44 text (settable) For I can't help falling in love with you
+				45 text (settable) For I can't help falling in love with you
+				46 text (settable) Source: Musixmatch
+	47 close button
+	48 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	49 minimize button
+	50 text ytmgo
+51 menu bar
+	52 ytmgo
+	53 File
+	54 Edit
+	55 Playback
+	56 View
+	57 Window
+	58 Account
+	59 Help
+
+The focused UI element is 3 button Immersive mode · Now Playing

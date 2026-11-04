@@ -1,0 +1,165 @@
+Window: "ytmGO", App: ytmGO.
+0 standard window ytmGO, Secondary Actions: Raise
+	1 button ytmGO Home
+	2 button (disabled) Back
+	3 button (disabled) Forward
+	4 button Home
+	5 text field (settable) Description: Search, Placeholder: What do you want to play?
+	6 button Explore
+	7 button Settings
+	8 menu button Account · YouTube Music Premium, Help: YouTube Music Premium
+	9 button Library
+	10 button Collapse sidebar
+	11 button Playlists
+	12 button Albums
+	13 button Artists
+	14 scroll area Your playlists
+		15 button Liked Music · Auto playlist, Help: Liked Music
+		16 button New Release Mix · Mix, Help: New Release Mix
+		17 button Ultimate Wedding Playlist
+		18 button Dreamkid
+		19 button Best
+		20 button Antidote · Derik Fein, Help: Antidote
+		21 button Favorite Songs
+		22 button Mindhunter (Soundtrack Inspired by the TV Show) · Fandom, Help: Mindhunter (Soundtrack Inspired by the TV Show)
+		23 button UK R&B Hits 2024 · YouTube Music, Help: UK R&B Hits 2024
+		24 button Discover Mix · Mix, Help: Discover Mix
+		25 button ALT CTRL
+		26 button At the Airport
+		27 button Blues Replay
+		28 button Eminem: Next Steps
+		29 button ESL Pro League - Official Soundtrack
+		30 button Favorite Songs
+		31 button Feeling Good
+		32 button Gentle
+		33 button Hollywood Undead Essentials
+		34 button LINKIN PARK Essentials
+		35 button My Shazam Tracks
+		36 button OG
+		37 button Party Starters
+		38 button Powerful
+		39 button Replay 2018
+	40 scroll area Content
+		41 heading Good afternoon
+		42 button Liked Music
+		43 button New Release Mix
+		44 button Ultimate Wedding Playlist
+		45 button Dreamkid
+		46 button Best
+		47 button Antidote
+		48 button Favorite Songs
+		49 button Mindhunter (Soundtrack Inspired by the TV Show)
+		50 heading Listen again
+		51 scroll area
+			52 button New Release Mix · VOILÀ, Dominic Fike, Sasha Alex Sloan, girl in red
+			53 button Demon Samurai · ONI
+			54 button Liked Music · Auto playlist
+			55 button The Weeknd - HONG KONG (After Hours Til Dawn) [No Crowd] · 𝐊 𝐢 𝐧 𝐅 𝐌
+			56 button The Weeknd - Hong Kong Ft. Faye Wong (Live in Hong Kong) · Weeknd Everyday
+			57 button Vibe · Michael Porcayo
+			58 button The Urban Wanderer · Forrest Rose
+			59 button Ultimate Wedding Playlist
+			60 button 你从未离去 (抖音DJ版) - 于佰万『我不再迷茫 思念是唯一的行囊，满天的星光 有一颗是你的愿望。』♪ || 年度最佳抖音歌曲 | 抖音最火歌曲音 | 抖音 | TikTok ♪ · Fantastic Music Station
+			61 button The Fatal Flaw · Paris Paloma
+			62 button Ellie My Love · SOUTHERN ALL STARS
+			63 button Murder Me · Diggy Graves
+			64 button 在墜落時 · 汉堡黄
+			65 button 711 · Xana
+			66 button Over and Over / Tokyo Paradise City · Beat Flickers
+			67 button DOTB ROCK · Diggy Graves
+			68 button Midnight Drive in Tokyo · Beat Flickers
+			69 button Baby, Don't Cry 人魚的眼淚 · EXO
+			70 button Empty · Sasha Alex Sloan
+			71 button TOKYO PARADISE CITY · Beat Flickers
+		72 heading New releases
+		73 scroll area
+			74 button Get Ready (From "Snoopy Presents: 12 Days of Snoopy") · John Legend, Peanuts
+			75 button BLUE · girl in red
+			76 button KNUCK · MUSHVENOM
+			77 button Beautiful Damage · NØLIVE
+			78 button CEMETERY (from the Ryuu series "Granite Waves" by Tezeze) · Call Me Karizma, Gloomy Culture
+			79 button CLUBSOS VOL. 1 · 5 Seconds of Summer
+			80 button TRICK OR TREAT SMELL MY WEED · DeShawn Williams
+			81 button 打翻了整夜的香甜 · 陳忻玥
+			82 button Bedroom Confessional (xtras) · Ellise
+			83 button Horror Story of the Week · Xana
+		84 heading Covers and remixes
+		85 scroll area
+			86 button NewJeans (뉴진스) , Kendrick Lamar - OMG x LOVE remix · Befreee
+			87 button 《懸溺+空心》Mix懸空串烧改编LIVE(Cover by K.D)Sa vào nguy hiểm+Trống rỗng【我主張剋制不了就放任x熱愛曾是唯一的信仰】動態歌詞Pinyin Lyrics · K.D
+			88 button Worth It · Corbin
+			89 button Babydoll x Softcore (Slowed + Reverb) · Luke Muzzic
+			90 button PARTY 4 U x NEVER BE LIKE YOU (ALTÉGO MIX) · ALTÉGO
+			91 button Call of Silence（Remix） · Clear Sky
+			92 button STAY (Japanese Version) · ShiroNeko
+			93 button Cheriimoya - Living Life, In The Night (Zusebi Remix) (feat. Sierra Kidd) · Zusebi
+			94 button Watson (feat. Oslo Green) · Petite Meller
+			95 button WANTCHU (HTOWN REMIX) · keshi
+			96 button Stay with me (phonk remix) · 23Heaven
+			97 button Mood (Remix Version) · DPR IAN
+			98 button Mind Games (with Chris Grey) (Remix) · Sickick, Chris Grey
+			99 button Ariana Grande - bye [Altare Remix] · Altare
+			100 button Can't Get You Out Of My Head · AnnenMayKantereit, Parcels
+			101 button Steelix – Lay it down [Nu Funk] · Grizzly Music
+			102 button ERIIC - No lie (male cover) · ERIIC
+		103 heading From the community
+		104 scroll area
+			105 button Memandu tgh malam · Bwaa
+			106 button ㄹ · 김우빈
+			107 button Tell me you have attachment issues without telling me you have attachment issues. · Gillian
+			108 button Raps · Vanta.Gaming
+			109 button 우울리듬 · 김명석
+			110 button Nice beat songs · 𝔾𝕀ℝ𝕃 𝕊ℚ𝕌𝔸𝔻 ♡
+			111 button NO CREDIT CHECKS FOR YOU · Thomas Thompson
+			112 button 成熟味歌單 · HaHa Lin
+			113 button Stockhomsy · Educational
+			114 button im.tired... · Arianna Rivers
+		115 heading The Weeknd
+		116 scroll area
+			117 button Don Toliver
+			118 button Chill Drives · Saksham Gaur
+			119 button Tarriq
+			120 button Presenting Drake · Drake, 21 Savage, DJ Khaled, Rick Ross
+			121 button Presenting The Weeknd · The Weeknd, Ariana Grande, Gesaffelstein, Future
+			122 button Majid Jordan
+			123 button R’N’B · Ildar Khabibullin
+			124 button Shutupnlove · Makey
+			125 button Alone at Prom · Tory Lanez
+			126 button Presenting Khalid · Khalid, Kane Brown, Marshmello, Billie Eilish
+		127 heading Fresh finds, old favorites
+		128 scroll area
+			129 button Archive Mix · Ricchi E Poveri, One Direction, Katy Perry, MOTHICA
+			130 button Liked Music · Auto playlist
+			131 button New Release Mix · VOILÀ, Dominic Fike, Sasha Alex Sloan, girl in red
+			132 button Discover Mix · Ethan Horahn, RAAHIIM, 徐佳莹, Bestlife
+			133 button Replay Mix · Temper City, Christina Perri, Alec Benjamin
+	134 container Player controls
+		135 button Open Now Playing
+		136 button Like
+		137 button Shuffle queue
+		138 button Previous
+		139 button Play
+		140 button Next
+		141 button Repeat: off
+		142 text (settable) 1:04
+		143 slider (settable, float) Description: Playback position, Value: 64.2
+		144 text (settable) 2:59
+		145 button Lyrics
+		146 button Queue
+		147 button Unmute
+		148 slider (settable, float) Description: Volume, Value: 0
+		149 menu button More actions
+		150 button Immersive mode
+	151 close button
+	152 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	153 minimize button
+	154 text ytmGO
+155 menu bar
+	156 ytmGO
+	157 File
+	158 Edit
+	159 Playback
+	160 View
+	161 Window
+	162 Account
+	163 Help

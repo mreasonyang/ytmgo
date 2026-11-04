@@ -1,0 +1,71 @@
+{
+  "check": "go_race_all",
+  "counts": {
+    "pass": 1176,
+    "fail": 0,
+    "skip": 30
+  },
+  "packages": [
+    {
+      "Package": "ytmgo/internal/netproxy",
+      "Action": "pass",
+      "Elapsed": 0
+    },
+    {
+      "Package": "ytmgo/internal/librarysnapshot",
+      "Action": "pass",
+      "Elapsed": 1.397
+    },
+    {
+      "Package": "ytmgo/cmd/update-package",
+      "Action": "pass",
+      "Elapsed": 1.424
+    },
+    {
+      "Package": "ytmgo/internal/language",
+      "Action": "pass",
+      "Elapsed": 1.433
+    },
+    {
+      "Package": "ytmgo/internal/appearance",
+      "Action": "pass",
+      "Elapsed": 1.445
+    },
+    {
+      "Package": "ytmgo/cmd/sign-desktop-update",
+      "Action": "pass",
+      "Elapsed": 1.4689999999999999
+    },
+    {
+      "Package": "ytmgo/internal/catalog",
+      "Action": "pass",
+      "Elapsed": 1.5430000000000001
+    },
+    {
+      "Package": "ytmgo/internal/accountsession",
+      "Action": "pass",
+      "Elapsed": 1.7469999999999999
+    },
+    {
+      "Package": "ytmgo/internal/player",
+      "Action": "pass",
+      "Elapsed": 18.073
+    },
+    {
+      "Package": "ytmgo/internal/streaming",
+      "Action": "pass",
+      "Elapsed": 24.166
+    },
+    {
+      "Package": "ytmgo/internal/accountlogin",
+      "Action": "pass",
+      "Elapsed": 44.43
+    },
+    {
+      "Package": "ytmgo",
+      "Action": "pass",
+      "Elapsed": 138.461
+    }
+  ],
+  "failed_tests": []
+}

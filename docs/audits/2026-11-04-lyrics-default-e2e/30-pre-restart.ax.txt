@@ -1,0 +1,119 @@
+Window: "ytmgo", App: ytmgo.
+0 standard window ytmgo, Secondary Actions: Raise
+	1 button ytmgo Home
+	2 button Back
+	3 button (disabled) Forward
+	4 button Home
+	5 text field (settable) Description: Search, Placeholder: What do you want to play?
+	6 button Explore
+	7 button Settings
+	8 menu button Account · YouTube Music Premium, Help: YouTube Music Premium
+	9 button Library
+	10 button Collapse sidebar
+	11 button Playlists
+	12 button Albums
+	13 button Artists
+	14 scroll area Your playlists
+		15 button Liked Music · Auto playlist, Help: Liked Music
+		16 button New Release Mix · Mix, Help: New Release Mix
+		17 button Ultimate Wedding Playlist
+		18 button Dreamkid
+		19 button Best
+		20 button Antidote · Derik Fein, Help: Antidote
+		21 button Favorite Songs
+		22 button Mindhunter (Soundtrack Inspired by the TV Show) · Fandom, Help: Mindhunter (Soundtrack Inspired by the TV Show)
+		23 button UK R&B Hits 2024 · YouTube Music, Help: UK R&B Hits 2024
+		24 button Discover Mix · Mix, Help: Discover Mix
+		25 button ALT CTRL
+		26 button At the Airport
+		27 button Blues Replay
+		28 button Eminem: Next Steps
+		29 button ESL Pro League - Official Soundtrack
+		30 button Favorite Songs
+		31 button Feeling Good
+		32 button Gentle
+		33 button Hollywood Undead Essentials
+		34 button LINKIN PARK Essentials
+		35 button My Shazam Tracks
+		36 button OG
+		37 button Party Starters
+		38 button Powerful
+		39 button Replay 2018
+	40 scroll area Content
+		41 heading Discovery
+		42 text (settable) Daft Punk
+		43 text (settable) Album • 2001
+		44 button Pause · Discovery, Help: Pause
+		45 text (settable) #
+		46 text (settable) Title
+		47 text (settable) Album
+		48 container Duration
+		49 button One More Time · Daft Punk
+		50 button Aerodynamic · Daft Punk
+		51 button Digital Love · Daft Punk
+		52 button Harder, Better, Faster, Stronger · Daft Punk
+		53 button Crescendolls · Daft Punk
+		54 button Nightvision · Daft Punk
+		55 button Superheroes · Daft Punk
+		56 button High Life · Daft Punk
+		57 button Something About Us · Daft Punk
+		58 button Voyager · Daft Punk
+		59 button Veridis Quo · Daft Punk
+		60 button Short Circuit · Daft Punk
+		61 button Face to Face · Daft Punk
+		62 button Too Long · Daft Punk
+		63 heading Releases for you
+		64 scroll area
+			65 button Torches · Foster The People
+			66 button By Your Side · Breakbot
+			67 button Pulsar · L'Impératrice
+			68 button Super Crooks (Soundtrack from the Netflix Series) · TOWA TEI
+			69 button 50//50 · Vantage
+			70 button Captain · Gaspard Augé, Justice
+			71 button Straight To The Morning (feat. Jarvis Cocker) · Hot Chip
+			72 button Random Access Memories (Drumless Edition) · Daft Punk
+			73 button Still Waters · Breakbot
+			74 button Full Heart Fancy (Instrumental) · Lucky Chops
+	75 text (settable) Now Playing
+	76 button Immersive mode · Now Playing
+	77 button Close panel
+	78 button Cover
+	79 button Video
+	80 text (settable) Description: Voyager, Value: Voyager Daft Punk
+	81 button Like
+	82 button Lyrics · Now Playing
+	83 button Queue · Now Playing
+	84 scroll area Lyrics · Content
+		85 text (settable) Lyrics are not available for this track.
+	86 container Player controls
+		87 button Open Now Playing
+		88 button Like
+		89 button Shuffle queue
+		90 button Previous
+		91 button Pause
+		92 button Next
+		93 button Repeat: off
+		94 text (settable) 0:45
+		95 slider (settable, float) Description: Playback position, Value: 45.229333333
+		96 text (settable) 3:47
+		97 button Lyrics
+		98 button Queue
+		99 button Mute
+		100 slider (settable, float) Description: Volume, Value: 0.7
+		101 menu button More actions
+		102 button Immersive mode
+	103 close button
+	104 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	105 minimize button
+	106 text ytmgo
+107 menu bar
+	108 ytmgo
+	109 File
+	110 Edit
+	111 Playback
+	112 View
+	113 Window
+	114 Account
+	115 Help
+
+The focused UI element is 5 text field (settable) Description: Search, Placeholder: What do you want to play?

@@ -1,0 +1,70 @@
+{
+  "samples": 1252,
+  "complete_samples": 1229,
+  "incomplete_samples": 23,
+  "elapsed_span_seconds": 1249.895,
+  "metric": "sum ri_phys_footprint over root, responsibility-owned processes and descendants",
+  "source_samples_sha256": "58b2475ccc6291d1660030bec4ca005c33b20021933b0a8903a5fb44c742cbb4",
+  "source_samples_local_path": "/Users/easonyang/Documents/projects/ytmgo/build/diagnostics/github-package-e2e-20261030/memory/samples.jsonl",
+  "phases": {
+    "login_handoff": {
+      "samples": 107,
+      "median_MiB": 407.78,
+      "peak_MiB": 1016.62,
+      "observed_span_seconds": 107.103
+    },
+    "signed_in_idle": {
+      "samples": 34,
+      "median_MiB": 148.81,
+      "peak_MiB": 311.57,
+      "observed_span_seconds": 32.933
+    },
+    "premium_browsing": {
+      "samples": 101,
+      "median_MiB": 386.06,
+      "peak_MiB": 403.64,
+      "observed_span_seconds": 101.209
+    },
+    "premium_paused_seek": {
+      "samples": 78,
+      "median_MiB": 255.61,
+      "peak_MiB": 417.41,
+      "observed_span_seconds": 80.778
+    },
+    "premium_playing": {
+      "samples": 414,
+      "median_MiB": 437.95,
+      "peak_MiB": 527.39,
+      "observed_span_seconds": 423.237
+    },
+    "premium_browse_playing": {
+      "samples": 168,
+      "median_MiB": 476.87,
+      "peak_MiB": 486.7,
+      "observed_span_seconds": 169.938
+    },
+    "decoder_interruption": {
+      "samples": 111,
+      "median_MiB": 306.6,
+      "peak_MiB": 473.33,
+      "observed_span_seconds": 110.935
+    },
+    "hidden_window_playing": {
+      "samples": 212,
+      "median_MiB": 307.92,
+      "peak_MiB": 471.95,
+      "observed_span_seconds": 212.051
+    },
+    "pre_quit_paused": {
+      "samples": 4,
+      "median_MiB": 306.17,
+      "peak_MiB": 306.25,
+      "observed_span_seconds": 2.979
+    }
+  },
+  "overall_mixed_interaction": {
+    "median_MiB": 401.15,
+    "peak_MiB": 1016.62
+  },
+  "phase_labels_are_operator_markers_not_controlled_workloads": true
+}

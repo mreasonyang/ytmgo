@@ -1,0 +1,1068 @@
+diff --git a/acceptance_probe.go b/acceptance_probe.go
+index b21c8b4..029be00 100644
+--- a/acceptance_probe.go
++++ b/acceptance_probe.go
+@@ -40,7 +40,7 @@ func loadAcceptanceProbe(directory string, now time.Time) *acceptanceProbe {
+ 	var request acceptanceRequest
+ 	decoder := json.NewDecoder(io.LimitReader(f, 1024))
+ 	decoder.DisallowUnknownFields()
+-	if decoder.Decode(&request) != nil || decoder.Decode(new(any)) != io.EOF || request.Version != version || !request.Until.After(now) || request.Until.Sub(now) > 4*time.Hour {
++	if decoder.Decode(&request) != nil || decoder.Decode(new(any)) != io.EOF || request.Version != applicationVersion() || !request.Until.After(now) || request.Until.Sub(now) > 4*time.Hour {
+ 		return nil
+ 	}
+ 	return &acceptanceProbe{directory: directory, started: now, until: request.Until}
+@@ -60,7 +60,7 @@ func (p *acceptanceProbe) observe(now time.Time, state player.State) {
+ 		PositionMS, DurationMS int64
+ 		Playing, Loading       bool
+ 		Ended, Failed          bool
+-	}{version, now.UTC(), p.sequence, now.Sub(p.started).Milliseconds(),
++	}{applicationVersion(), now.UTC(), p.sequence, now.Sub(p.started).Milliseconds(),
+ 		max(state.Position.Milliseconds(), 0), max(state.Duration.Milliseconds(), 0),
+ 		state.Playing, state.Loading, state.Ended, state.Error != ""})
+ 	if err != nil {
+diff --git a/controller.go b/controller.go
+index ec9ea82..75c23bf 100644
+--- a/controller.go
++++ b/controller.go
+@@ -84,6 +84,7 @@ func (a *desktop) loadPage(route, q string, record bool) {
+ 	a.invalidate()
+ 	go func() {
+ 		defer cancel()
++		started := time.Now()
+ 		var page catalog.Page
+ 		var err error
+ 		switch {
+@@ -103,6 +104,7 @@ func (a *desktop) loadPage(route, q string, record bool) {
+ 			if generation != a.pageGeneration {
+ 				return
+ 			}
++			recordCatalogDiagnostic(a.diagnosticPath, err, time.Since(started))
+ 			a.model.Loading = false
+ 			if err != nil {
+ 				a.catalogFailure(err)
+diff --git a/diagnostics.go b/diagnostics.go
+index 1f647ff..ecc141c 100644
+--- a/diagnostics.go
++++ b/diagnostics.go
+@@ -1,11 +1,14 @@
+ package main
+ 
+ import (
++	"context"
+ 	"encoding/json"
++	"errors"
+ 	"os"
+ 	"path/filepath"
+ 	"time"
+ 
++	"ytmgo/internal/catalog"
+ 	"ytmgo/internal/player"
+ )
+ 
+@@ -41,7 +44,7 @@ func recordPlaybackDiagnostic(directory, component, category string, details ...
+ 		HTTPStatus                         int    `json:"HTTPStatus,omitempty"`
+ 		Redirect                           string `json:"Redirect,omitempty"`
+ 		MIME                               string `json:"MIME,omitempty"`
+-	}{time.Now().UTC().Format(time.RFC3339), version, component, category,
++	}{time.Now().UTC().Format(time.RFC3339), applicationVersion(), component, category,
+ 		metadata.Stage, metadata.BootstrapStep, metadata.HTTPStatus, metadata.Redirect, metadata.MIME})
+ 	if os.MkdirAll(directory, 0700) == nil {
+ 		_ = os.WriteFile(filepath.Join(directory, component+"-status.json"), data, 0600)
+@@ -61,9 +64,54 @@ func recordAccountDiagnostic(directory, category string) {
+ 		category = "session_failed"
+ 	}
+ 	data, _ := json.Marshal(struct{ Time, Version, Component, Category string }{
+-		time.Now().UTC().Format(time.RFC3339), version, "account", category,
++		time.Now().UTC().Format(time.RFC3339), applicationVersion(), "account", category,
+ 	})
+ 	if os.MkdirAll(directory, 0700) == nil {
+ 		_ = os.WriteFile(filepath.Join(directory, "account-status.json"), data, 0600)
+ 	}
+ }
++
++func recordCatalogDiagnostic(directory string, err error, elapsed time.Duration) {
++	if directory == "" || errors.Is(err, context.Canceled) || errors.Is(err, catalog.ErrSessionChanged) {
++		return
++	}
++	category, stage, status := "ready", "", 0
++	if err != nil {
++		category = "catalog_unavailable"
++		var transport *catalog.TransportError
++		var httpError *catalog.HTTPError
++		switch {
++		case errors.Is(err, context.DeadlineExceeded):
++			category = "catalog_network_timeout"
++		case errors.As(err, &transport):
++			stage = transport.Stage
++			switch transport.Category {
++			case "catalog_network_timeout", "catalog_connection_failed", "catalog_response_truncated":
++				category = transport.Category
++			}
++		case errors.As(err, &httpError):
++			stage = httpError.Stage
++			if httpError.StatusCode >= 100 && httpError.StatusCode <= 599 {
++				status = httpError.StatusCode
++				category = "catalog_http_error"
++			}
++		case errors.Is(err, catalog.ErrInvalidResponse):
++			category = "catalog_invalid_response"
++		case errors.Is(err, catalog.ErrResponseTooLarge):
++			category = "catalog_response_limit"
++		}
++	}
++	switch stage {
++	case "search", "browse", "next":
++	default:
++		stage = ""
++	}
++	data, _ := json.Marshal(struct {
++		Time, Version, Component, Category, Stage string
++		HTTPStatus                                int
++		ElapsedMS                                 int64
++	}{time.Now().UTC().Format(time.RFC3339), applicationVersion(), "catalog", category, stage, status, max(0, elapsed.Milliseconds())})
++	if os.MkdirAll(directory, 0700) == nil {
++		_ = os.WriteFile(filepath.Join(directory, "catalog-status.json"), data, 0600)
++	}
++}
+diff --git a/diagnostics_test.go b/diagnostics_test.go
+index 7374f6e..d7955d2 100644
+--- a/diagnostics_test.go
++++ b/diagnostics_test.go
+@@ -1,15 +1,52 @@
+ package main
+ 
+ import (
++	"context"
+ 	"encoding/json"
++	"errors"
+ 	"os"
+ 	"path/filepath"
+ 	"strings"
+ 	"testing"
++	"time"
+ 
++	"ytmgo/internal/catalog"
+ 	"ytmgo/internal/player"
+ )
+ 
++func TestCatalogDiagnosticsRetainOnlySafeFailureMetadata(t *testing.T) {
++	for _, tc := range []struct {
++		err             error
++		category, stage string
++		status          int
++	}{
++		{nil, "ready", "", 0},
++		{context.DeadlineExceeded, "catalog_network_timeout", "", 0},
++		{&catalog.TransportError{Stage: "search", Category: "catalog_connection_failed"}, "catalog_connection_failed", "search", 0},
++		{&catalog.HTTPError{Stage: "search", StatusCode: 429}, "catalog_http_error", "search", 429},
++		{&catalog.TransportError{Stage: "synthetic-private-stage", Category: "synthetic-private-error"}, "catalog_unavailable", "", 0},
++		{&catalog.HTTPError{Stage: "synthetic-private-stage", StatusCode: 600}, "catalog_unavailable", "", 0},
++		{errors.New("synthetic-private-error"), "catalog_unavailable", "", 0},
++	} {
++		dir := t.TempDir()
++		recordCatalogDiagnostic(dir, tc.err, 123*time.Millisecond)
++		data, err := os.ReadFile(filepath.Join(dir, "catalog-status.json"))
++		var row struct {
++			Category, Stage, Version string
++			HTTPStatus               int
++			ElapsedMS                int64
++		}
++		if err != nil || json.Unmarshal(data, &row) != nil || strings.Contains(string(data), "synthetic") || row.Category != tc.category || row.Stage != tc.stage || row.HTTPStatus != tc.status || row.ElapsedMS != 123 || row.Version != applicationVersion() {
++			t.Fatal("catalog diagnostic lost safe metadata or persisted an untrusted value")
++		}
++	}
++	dir := t.TempDir()
++	recordCatalogDiagnostic(dir, context.Canceled, 0)
++	if entries, err := os.ReadDir(dir); err != nil || len(entries) != 0 {
++		t.Fatal("canceled navigation replaced the useful diagnostic")
++	}
++}
++
+ func TestPlaybackDiagnosticsExcludeUntrustedDetails(t *testing.T) {
+ 	dir := t.TempDir()
+ 	recordPlaybackDiagnostic(dir, "audio", "synthetic-private-detail https://example.invalid/media")
+diff --git a/internal/catalog/cache.go b/internal/catalog/cache.go
+index 3fa86b5..083744f 100644
+--- a/internal/catalog/cache.go
++++ b/internal/catalog/cache.go
+@@ -53,7 +53,7 @@ func (m *responseCache[T]) remove(key string) {
+ 	}
+ }
+ 
+-func memoized[T any](c *Client, ctx context.Context, m *responseCache[T], key string, ttl time.Duration, budget int, size func(T) int, load func(context.Context) (T, error)) (T, error) {
++func memoized[T any](c *Client, ctx context.Context, m *responseCache[T], key string, ttl time.Duration, budget int, size func(T) int, load func(context.Context) (T, error), cacheable ...func(T) bool) (T, error) {
+ 	var zero T
+ 	ctx, scope, err := c.operation(ctx)
+ 	if err != nil {
+@@ -115,7 +115,11 @@ func memoized[T any](c *Client, ctx context.Context, m *responseCache[T], key st
+ 			}
+ 			if m.flights[key] == f {
+ 				delete(m.flights, key)
+-				if err == nil || errors.Is(err, ErrNoLyrics) {
++				retain := err == nil || errors.Is(err, ErrNoLyrics)
++				for _, accept := range cacheable {
++					retain = retain && accept(value)
++				}
++				if retain {
+ 					weight, lifetime := size(value)+len(key)+128, ttl
+ 					if err != nil {
+ 						lifetime = 30 * time.Second
+diff --git a/internal/catalog/client.go b/internal/catalog/client.go
+index 72f1799..1d9d7cf 100644
+--- a/internal/catalog/client.go
++++ b/internal/catalog/client.go
+@@ -12,6 +12,7 @@ import (
+ 	"errors"
+ 	"fmt"
+ 	"io"
++	"net"
+ 	"net/http"
+ 	"net/url"
+ 	"regexp"
+@@ -129,6 +130,24 @@ type HTTPError struct {
+ 	Redirect   string
+ }
+ 
++// TransportError discards the dependency error entirely: net/http errors may
++// embed credential-bearing URLs. Only a fixed category and API stage survive.
++type TransportError struct{ Stage, Category string }
++
++func (e *TransportError) Error() string { return e.Category }
++func (e *TransportError) Unwrap() error { return ErrUnavailable }
++
++func transportFailure(stage string, err error) error {
++	category := "catalog_connection_failed"
++	var ne net.Error
++	if errors.Is(err, context.DeadlineExceeded) || errors.As(err, &ne) && ne.Timeout() {
++		category = "catalog_network_timeout"
++	} else if errors.Is(err, io.ErrUnexpectedEOF) {
++		category = "catalog_response_truncated"
++	}
++	return &TransportError{Stage: stage, Category: category}
++}
++
+ func (e *HTTPError) Error() string {
+ 	return fmt.Sprintf("YouTube Music %s returned HTTP %d", e.Stage, e.StatusCode)
+ }
+@@ -570,7 +589,7 @@ func (c *Client) request(req *http.Request, stage string, limit int64) ([]byte,
+ 		if req.Context().Err() != nil {
+ 			return nil, req.Context().Err()
+ 		}
+-		return nil, ErrUnavailable // net/http errors can contain credentials and signed URLs.
++		return nil, transportFailure(stage, err)
+ 	}
+ 	defer response.Body.Close()
+ 	if response.StatusCode != http.StatusOK {
+@@ -588,7 +607,7 @@ func (c *Client) request(req *http.Request, stage string, limit int64) ([]byte,
+ 		if req.Context().Err() != nil {
+ 			return nil, req.Context().Err()
+ 		}
+-		return nil, ErrUnavailable
++		return nil, transportFailure(stage, err)
+ 	}
+ 	if int64(len(data)) > limit {
+ 		return nil, ErrResponseTooLarge
+diff --git a/internal/catalog/client_test.go b/internal/catalog/client_test.go
+index 92594a8..c6fbede 100644
+--- a/internal/catalog/client_test.go
++++ b/internal/catalog/client_test.go
+@@ -211,11 +211,29 @@ func TestTransportFailuresAreSanitized(t *testing.T) {
+ 		return nil, errors.New("synthetic-secret-bearing-transport-error")
+ 	})}})
+ 	_, err := client.Home(context.Background())
+-	if err != ErrUnavailable {
++	var failure *TransportError
++	if !errors.Is(err, ErrUnavailable) || !errors.As(err, &failure) || failure.Category != "catalog_connection_failed" || failure.Stage != "browse" || strings.Contains(err.Error(), "synthetic") {
+ 		t.Fatal("transport details escaped the catalog error boundary")
+ 	}
+ }
+ 
++func TestTransportFailureCategories(t *testing.T) {
++	for _, tc := range []struct {
++		err      error
++		category string
++	}{
++		{context.DeadlineExceeded, "catalog_network_timeout"},
++		{io.ErrUnexpectedEOF, "catalog_response_truncated"},
++		{errors.New("synthetic-private-detail"), "catalog_connection_failed"},
++	} {
++		err := transportFailure("search", tc.err)
++		var failure *TransportError
++		if !errors.Is(err, ErrUnavailable) || !errors.As(err, &failure) || failure.Stage != "search" || failure.Category != tc.category || strings.Contains(err.Error(), "synthetic") {
++			t.Fatal("transport error did not retain only its safe classification")
++		}
++	}
++}
++
+ func TestResponseSizeAndHTTPFailureBounds(t *testing.T) {
+ 	t.Run("oversized", func(t *testing.T) {
+ 		client := fixtureClient(t, func(w http.ResponseWriter, req *http.Request) {
+diff --git a/internal/catalog/lyrics.go b/internal/catalog/lyrics.go
+index 854663c..fba64cb 100644
+--- a/internal/catalog/lyrics.go
++++ b/internal/catalog/lyrics.go
+@@ -3,6 +3,7 @@ package catalog
+ import (
+ 	"context"
+ 	"encoding/json"
++	"errors"
+ 	"math"
+ 	"strconv"
+ 	"strings"
+@@ -35,10 +36,13 @@ type LyricLine struct {
+ type LyricsResult struct {
+ 	Text, Source string
+ 	Lines        []LyricLine
++	// A temporary timing lookup failure must not turn readable fallback text
++	// into a completed ten-minute cache entry. Concurrent callers still coalesce.
++	retryTiming bool
+ }
+ 
+ func (c *Client) LyricsWithTiming(ctx context.Context, videoID string) (LyricsResult, error) {
+-	result, err := memoized(c, ctx, &c.lyricResults, "timed:"+videoID, 10*time.Minute, 2<<20, lyricsBytes, func(work context.Context) (LyricsResult, error) { return c.loadLyricsWithTiming(work, videoID) })
++	result, err := memoized(c, ctx, &c.lyricResults, "timed:"+videoID, 10*time.Minute, 2<<20, lyricsBytes, func(work context.Context) (LyricsResult, error) { return c.loadLyricsWithTiming(work, videoID) }, func(result LyricsResult) bool { return !result.retryTiming })
+ 	return cloneLyrics(result), err
+ }
+ 
+@@ -61,9 +65,15 @@ func (c *Client) loadLyricsWithTiming(ctx context.Context, videoID string) (Lyri
+ 	lookup, cancel := context.WithTimeout(ctx, 6*time.Second)
+ 	defer cancel()
+ 	items, browseID, lookupErr := public.watchQueue(lookup, videoID)
++	result.retryTiming = true
+ 	if lookupErr == nil && len(items) > 0 && items[0].ID == videoID && browseID != "" && c.scopeError(scope) == nil {
+-		if synced, err := public.timedLyrics(lookup, browseID); err == nil && len(synced.Lines) > 0 {
+-			result = synced
++		if synced, err := public.timedLyrics(lookup, browseID); err == nil {
++			result.retryTiming = false
++			if len(synced.Lines) > 0 {
++				result = synced
++			}
++		} else if errors.Is(err, ErrNoLyrics) {
++			result.retryTiming = false
+ 		}
+ 	}
+ 	if err := ctx.Err(); err != nil {
+@@ -103,6 +113,7 @@ func (c *Client) lyricsResult(ctx context.Context, videoID string, timed bool) (
+ 	if reference.browseID == "" {
+ 		return LyricsResult{}, ErrNoLyrics
+ 	}
++	retryTiming := false
+ 	if timed {
+ 		result, requestErr := c.timedLyrics(ctx, reference.browseID)
+ 		if err := ctx.Err(); err != nil {
+@@ -114,6 +125,7 @@ func (c *Client) lyricsResult(ctx context.Context, videoID string, timed bool) (
+ 		if requestErr == nil {
+ 			return result, nil
+ 		}
++		retryTiming = !errors.Is(requestErr, ErrNoLyrics)
+ 		// The mobile profile or timed response can be unavailable for a track.
+ 		// Retry the established plain-text path within the same account scope.
+ 	}
+@@ -122,6 +134,7 @@ func (c *Client) lyricsResult(ctx context.Context, videoID string, timed bool) (
+ 		return LyricsResult{}, err
+ 	}
+ 	result, err := parsePlainLyrics(response)
++	result.retryTiming = retryTiming
+ 	if ctxErr := ctx.Err(); ctxErr != nil {
+ 		return LyricsResult{}, ctxErr
+ 	}
+diff --git a/internal/catalog/lyrics_test.go b/internal/catalog/lyrics_test.go
+index b41e2e2..f449fe8 100644
+--- a/internal/catalog/lyrics_test.go
++++ b/internal/catalog/lyrics_test.go
+@@ -401,3 +401,67 @@ func TestSignedInPlainLyricsRecoverOnlyPublicTimingForSameRecording(t *testing.T
+ 		})
+ 	}
+ }
++
++func TestLyricsTimingCacheRecoversAfterTransientFailure(t *testing.T) {
++	const id = "abc123DEF_-"
++	for _, mode := range []string{"public_queue", "public_browse", "anonymous_mobile", "confirmed_plain"} {
++		t.Run(mode, func(t *testing.T) {
++			var recovered atomic.Bool
++			var requests atomic.Int32
++			client := fixtureClient(t, func(w http.ResponseWriter, req *http.Request) {
++				requests.Add(1)
++				var body object
++				if json.NewDecoder(req.Body).Decode(&body) != nil {
++					t.Error("invalid synthetic request")
++					return
++				}
++				signed := req.Header.Get("Authorization") != ""
++				mobile := textAt(body, "context", "client", "clientName") == "ANDROID_MUSIC"
++				if req.URL.Path == "/youtubei/v1/next" {
++					if !signed && mode == "public_queue" && !recovered.Load() {
++						w.WriteHeader(http.StatusServiceUnavailable)
++						return
++					}
++					_ = json.NewEncoder(w).Encode(queueResponse(true))
++					return
++				}
++				if signed || !mobile || mode == "confirmed_plain" {
++					_ = json.NewEncoder(w).Encode(plainLyricsFixture())
++					return
++				}
++				if !recovered.Load() {
++					w.WriteHeader(http.StatusServiceUnavailable)
++					return
++				}
++				_ = json.NewEncoder(w).Encode(timedLyricsFixture(timedLyricFixture("Synthetic timing", "0", "1000")))
++			})
++			if mode != "anonymous_mobile" {
++				if client.SetSession(syntheticCookies(), 0, "") != nil {
++					t.Fatal("synthetic session rejected")
++				}
++			}
++			first, err := client.LyricsWithTiming(context.Background(), id)
++			if err != nil || first.Text == "" || len(first.Lines) != 0 {
++				t.Fatal("temporary failure lost readable lyrics")
++			}
++			before := requests.Load()
++			recovered.Store(true)
++			second, err := client.LyricsWithTiming(context.Background(), id)
++			if mode == "confirmed_plain" {
++				if err != nil || second.Text != first.Text || len(second.Lines) != 0 || requests.Load() != before {
++					t.Fatal("confirmed plain lyrics were not reused")
++				}
++				return
++			}
++			if err != nil || len(second.Lines) != 1 || requests.Load() <= before {
++				t.Fatal("temporary timing failure was retained after recovery")
++			}
++			before = requests.Load()
++			second.Lines[0].Text = "caller mutation"
++			third, err := client.LyricsWithTiming(context.Background(), id)
++			if err != nil || len(third.Lines) != 1 || third.Lines[0].Text != "Synthetic timing" || requests.Load() != before {
++				t.Fatal("recovered timing was not privately cached")
++			}
++		})
++	}
++}
+diff --git a/internal/player/decoder.go b/internal/player/decoder.go
+index b74c6ee..819f566 100644
+--- a/internal/player/decoder.go
++++ b/internal/player/decoder.go
+@@ -20,6 +20,18 @@ const channels = 2
+ const firstPCMTimeout = 30 * time.Second
+ const pcmDurationTolerance = time.Second / 2
+ 
++// Compatibility relays get a watchdog longer than their upstream retry budget.
++// Native Go leases own bounded header/read retries and cancellation themselves;
++// a second FFmpeg watchdog must not interrupt their recovery or backpressure.
++const decoderReadTimeout = 90 * time.Second
++
++func mediaReadTimeout(info media) time.Duration {
++	if info.source != nil {
++		return 0
++	}
++	return decoderReadTimeout
++}
++
+ type pcmDecoder struct {
+ 	reader      io.ReadCloser
+ 	input       io.Reader
+@@ -30,10 +42,17 @@ type pcmDecoder struct {
+ 	length      int64
+ 	readFrames  int64
+ 	checkLength bool
++	diagnostic  *decoderDiagnostics
++	failure     atomic.Pointer[decoderFailure]
+ 	buf         [16 << 10]byte
+ 	eof, failed atomic.Bool
+ }
+ 
++type decoderFailure struct {
++	category string
++	details  FailureDetails
++}
++
+ // decoderDiagnostics retains only a short parsing tail while the process runs.
+ // It emits fixed categories and erases the tail when read; never expose stderr.
+ type decoderDiagnostics struct {
+@@ -92,7 +111,7 @@ func startDecoder(ctx context.Context, executable string, info media, at time.Du
+ 		return nil, err
+ 	}
+ 	cmd := childCommand(life, executable, "-hide_banner", "-loglevel", "error", "-nostdin",
+-		"-ss", fmt.Sprintf("%.6f", at.Seconds()), "-rw_timeout", "10000000",
++		"-ss", fmt.Sprintf("%.6f", at.Seconds()), "-rw_timeout", fmt.Sprint(mediaReadTimeout(info).Microseconds()),
+ 		"-protocol_whitelist", "pipe,file,http,tcp,concatf", "-i", "concatf:pipe:0",
+ 		"-vn", "-sn", "-dn", "-threads", "1", "-ac", "2", "-ar", "48000", "-f", "f32le", "pipe:1")
+ 	diagnostic := &decoderDiagnostics{}
+@@ -120,7 +139,7 @@ func startDecoder(ctx context.Context, executable string, info media, at time.Du
+ 	wr.Close()
+ 	done := make(chan error, 1)
+ 	go func() { done <- cmd.Wait(); close(done) }()
+-	d := &pcmDecoder{reader: rd, input: rd, cancel: cancel, wait: done, bridge: bridge, length: int64((info.Duration - at).Seconds() * sampleRate), checkLength: true}
++	d := &pcmDecoder{reader: rd, input: rd, cancel: cancel, wait: done, bridge: bridge, diagnostic: diagnostic, length: int64((info.Duration - at).Seconds() * sampleRate), checkLength: true}
+ 	stop := context.AfterFunc(ready, func() { d.Close() })
+ 	defer stop()
+ 	// Require actual PCM except when a successful decoder has already reached
+@@ -169,6 +188,9 @@ func (d *pcmDecoder) SetPosition(frame int64) error {
+ 	return errors.New("decoder_requires_reopen")
+ }
+ func (d *pcmDecoder) Read(dst []float32) (int, error) {
++	if d.eof.Load() {
++		return 0, io.EOF
++	}
+ 	count := min(len(dst)-len(dst)%channels, len(d.buf)/4)
+ 	if count == 0 {
+ 		return 0, nil
+@@ -180,25 +202,54 @@ func (d *pcmDecoder) Read(dst []float32) (int, error) {
+ 		dst[i] = math.Float32frombits(binary.LittleEndian.Uint32(d.buf[i*4:]))
+ 	}
+ 	if err != nil {
+-		d.eof.Store(true)
++		category := ""
++		details := FailureDetails{}
+ 		if err != io.EOF && err != io.ErrUnexpectedEOF {
+-			d.failed.Store(true)
++			category = "audio_stream_failed"
+ 		}
+ 		if result := <-d.wait; result != nil {
+-			d.failed.Store(true)
++			category = "audio_stream_failed"
++			if d.diagnostic != nil {
++				category = d.diagnostic.result().Error()
++			}
+ 		}
+ 		// FFmpeg can exit successfully when a CDN truncates the stream. Require
+ 		// the advertised PCM duration (allowing codec padding), not only exit 0.
+ 		if d.checkLength && d.readFrames+int64(pcmDurationTolerance.Seconds()*sampleRate) < d.length {
+-			d.failed.Store(true)
++			if category == "" || category == "audio_stream_failed" {
++				category = "audio_stream_truncated"
++			}
++		}
++		if d.bridge != nil {
++			if bridgeErr := d.bridge.Err(); bridgeErr != nil {
++				category = safeError(bridgeErr)
++				details = DiagnosticDetails(bridgeErr)
++			}
+ 		}
+-		if d.bridge != nil && d.bridge.Err() != nil {
++		if category != "" {
++			d.failure.Store(&decoderFailure{category: category, details: details})
+ 			d.failed.Store(true)
+ 		}
++		// Publish EOF last: Snapshot must see the final failure classification.
++		d.eof.Store(true)
+ 		return n / 4, io.EOF
+ 	}
+ 	return n / 4, nil
+ }
++
++func (d *pcmDecoder) errorCategory() string {
++	if category := d.failure.Load(); category != nil {
++		return category.category
++	}
++	return "audio_stream_failed"
++}
++
++func (d *pcmDecoder) errorDetails() FailureDetails {
++	if failure := d.failure.Load(); failure != nil {
++		return failure.details.Sanitized()
++	}
++	return FailureDetails{}
++}
+ func (d *pcmDecoder) Close() error {
+ 	d.closeOnce.Do(func() {
+ 		d.cancel()
+diff --git a/internal/player/failure_details.go b/internal/player/failure_details.go
+index 4396668..23fdce4 100644
+--- a/internal/player/failure_details.go
++++ b/internal/player/failure_details.go
+@@ -1,6 +1,9 @@
+ package player
+ 
+-import "errors"
++import (
++	"errors"
++	"ytmgo/internal/streaming"
++)
+ 
+ // FailureDetails contains only fixed categories and bounded HTTP status codes.
+ // It never contains upstream messages, URLs, headers, bodies or account data.
+@@ -43,6 +46,11 @@ func (d FailureDetails) Sanitized() FailureDetails {
+ 			return d
+ 		}
+ 		return FailureDetails{Stage: d.Stage}
++	case "media_stream":
++		if d.HTTPStatus >= 100 && d.HTTPStatus <= 599 {
++			return FailureDetails{Stage: d.Stage, HTTPStatus: d.HTTPStatus}
++		}
++		return FailureDetails{Stage: d.Stage}
+ 	case "sdk_create", "account_validation", "proof_config_request", "proof_config_parse", "proof_init", "player_request", "decipher", "proof_mint":
+ 		return FailureDetails{Stage: d.Stage}
+ 	default:
+@@ -57,5 +65,9 @@ func DiagnosticDetails(err error) FailureDetails {
+ 	if errors.As(err, &failure) {
+ 		return failure.details.Sanitized()
+ 	}
++	var media *streaming.Failure
++	if errors.As(err, &media) && media.Stage == "media_stream" {
++		return (FailureDetails{Stage: media.Stage, HTTPStatus: media.HTTPStatus}).Sanitized()
++	}
+ 	return FailureDetails{}
+ }
+diff --git a/internal/player/failure_details_test.go b/internal/player/failure_details_test.go
+index b7e511f..1e65c10 100644
+--- a/internal/player/failure_details_test.go
++++ b/internal/player/failure_details_test.go
+@@ -60,3 +60,21 @@ func TestExplicitLoginRequirementSurvivesIntoPlayerState(t *testing.T) {
+ 		t.Fatal("explicit service sign-in requirement was reduced to a generic playback failure")
+ 	}
+ }
++
++func TestMediaFailureMetadataIsBounded(t *testing.T) {
++	for _, status := range []int{0, 403, 416, 503, 600} {
++		err := &streaming.Failure{Category: "audio_server_error", Stage: "media_stream", HTTPStatus: status, Redirect: "synthetic-private", MIME: "synthetic-private"}
++		want := FailureDetails{Stage: "media_stream"}
++		if status >= 100 && status <= 599 {
++			want.HTTPStatus = status
++		}
++		if DiagnosticDetails(err) != want {
++			t.Fatal("media status missing or private metadata retained")
++		}
++		d := &pcmDecoder{}
++		d.failure.Store(&decoderFailure{category: "audio_server_error", details: DiagnosticDetails(err)})
++		if d.errorCategory() != "audio_server_error" || d.errorDetails() != want {
++			t.Fatal("decoder lost media failure metadata")
++		}
++	}
++}
+diff --git a/internal/player/player.go b/internal/player/player.go
+index a38876a..766e10a 100644
+--- a/internal/player/player.go
++++ b/internal/player/player.go
+@@ -558,7 +558,7 @@ func (p *Player) Snapshot() State {
+ 		if !p.state.Playing && p.wantPlay && s.decoder.eof.Load() {
+ 			p.state.Ended = !s.decoder.failed.Load()
+ 			if s.decoder.failed.Load() {
+-				p.state.Error, p.state.ErrorDetails = "audio_stream_failed", FailureDetails{}
++				p.state.Error, p.state.ErrorDetails = s.decoder.errorCategory(), s.decoder.errorDetails()
+ 			}
+ 		}
+ 		outputError := p.outputError
+diff --git a/internal/player/video.go b/internal/player/video.go
+index 48db2d5..5a0b915 100644
+--- a/internal/player/video.go
++++ b/internal/player/video.go
+@@ -482,7 +482,7 @@ func startVideoDecoder(ctx context.Context, executable string, info videoMedia,
+ 	// concat input from its beginning. Preserve negative keyframe preroll
+ 	// timestamps through decoding, then trim at output time: input-side
+ 	// -ss 0 discards reordered H.264 frames and can lose the tail entirely.
+-	manifest := fmt.Sprintf("ffconcat version 1.0\nfile '%s'\ninpoint %.6f\nduration %.6f\noption rw_timeout 10000000\n", bridge.URL, at.Seconds(), max(info.Duration-at, 0).Seconds())
++	manifest := fmt.Sprintf("ffconcat version 1.0\nfile '%s'\ninpoint %.6f\nduration %.6f\noption rw_timeout %d\n", bridge.URL, at.Seconds(), max(info.Duration-at, 0).Seconds(), mediaReadTimeout(info.media).Microseconds())
+ 	// Trim before fps quantization: otherwise a slightly negative preroll
+ 	// timestamp can round to zero and leak the preceding frame into output.
+ 	filter := fmt.Sprintf("trim=start=0,scale=%d:%d:flags=fast_bilinear,fps=24,format=rgba", info.width, info.height)
+diff --git a/internal/player/video_moving_clock_live_test.go b/internal/player/video_moving_clock_live_test.go
+index 907831f..0a1ae69 100644
+--- a/internal/player/video_moving_clock_live_test.go
++++ b/internal/player/video_moving_clock_live_test.go
+@@ -25,6 +25,18 @@ func TestNativeVideoMovingClockLive(t *testing.T) {
+ 		t.Fatal("video_runtime_unavailable")
+ 	}
+ 	defer v.Close()
++	resolve := v.resolve
++	v.resolve = func(ctx context.Context, id string) (videoMedia, error) {
++		info, err := resolve(ctx, id)
++		if err != nil {
++			category := safeError(err)
++			if err.Error() == "no_video_format" {
++				category = "no_video_format"
++			}
++			t.Logf("video_resolution_category=%s stage=%s", category, safeErrorStage(err))
++		}
++		return info, err
++	}
+ 	for _, at := range []time.Duration{73*time.Second + 125*time.Millisecond, 117*time.Second + 625*time.Millisecond} {
+ 		t.Run(at.String(), func(t *testing.T) {
+ 			ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
+diff --git a/internal/streaming/lease.go b/internal/streaming/lease.go
+index 94e85c3..0520a3c 100644
+--- a/internal/streaming/lease.go
++++ b/internal/streaming/lease.go
+@@ -26,6 +26,7 @@ type Lease struct {
+ 	cancel      context.CancelFunc
+ 	timer       *time.Timer
+ 	category    string
++	httpStatus  int
+ 	once        sync.Once
+ 	requests    sync.WaitGroup
+ }
+@@ -72,13 +73,16 @@ func (l *Lease) Err() error {
+ 	if l.category == "" {
+ 		return nil
+ 	}
+-	return errors.New(l.category)
++	return &Failure{Category: l.category, Stage: "media_stream", HTTPStatus: l.httpStatus}
+ }
+-func (l *Lease) fail(category string) {
++func (l *Lease) fail(category string, status ...int) {
+ 	l.mu.Lock()
+ 	defer l.mu.Unlock()
+ 	if l.category == "" {
+ 		l.category = category
++		if len(status) == 1 && status[0] >= 100 && status[0] <= 599 {
++			l.httpStatus = status[0]
++		}
+ 	}
+ }
+ 
+@@ -136,16 +140,11 @@ func streamError(err error) string {
+ }
+ func (l *Lease) rangeRequest(ctx context.Context, remote *url.URL, start, end int64) (*http.Response, context.CancelFunc, error) {
+ 	u := *remote
+-	q := u.Query()
+-	q.Set("range", fmt.Sprintf("%d-%d", start, end))
+-	u.RawQuery = q.Encode()
+ 	for attempt := 0; attempt < 3; attempt++ {
+ 		// A new timeout belongs to each chunk, never to the whole track.
+ 		requestCtx, cancel := context.WithCancel(ctx)
+ 		timer := time.AfterFunc(20*time.Second, cancel)
+-		req, _ := http.NewRequestWithContext(requestCtx, "GET", u.String(), nil)
+-		req.Header = http.Header{"Accept": {"*/*"}, "Accept-Encoding": {"identity"}, "Origin": {"https://www.youtube.com"}, "Referer": {"https://www.youtube.com"}, "Dnt": {"?1"}}
+-		res, err := l.owner.client.Do(req)
++		res, err := l.requestRangeWithRedirects(requestCtx, u, start, end)
+ 		stopped := timer.Stop()
+ 		if !stopped && ctx.Err() == nil {
+ 			err = context.DeadlineExceeded
+@@ -169,6 +168,48 @@ func (l *Lease) rangeRequest(ctx context.Context, remote *url.URL, start, end in
+ 	return nil, func() {}, errors.New("audio_connection_failed")
+ }
+ 
++// Only media requests may follow CDN relocation. Each hop is independently
++// validated against the same media-origin boundary as the original lease;
++// account/protocol clients still refuse redirects. Signed URLs stay in Go.
++func (l *Lease) requestRangeWithRedirects(ctx context.Context, endpoint url.URL, start, end int64) (*http.Response, error) {
++	for hop := 0; ; hop++ {
++		q := endpoint.Query()
++		q.Set("range", fmt.Sprintf("%d-%d", start, end))
++		endpoint.RawQuery = q.Encode()
++		req, err := http.NewRequestWithContext(ctx, "GET", endpoint.String(), nil)
++		if err != nil {
++			return nil, errors.New("audio_connection_failed")
++		}
++		req.Header = http.Header{"Accept": {"*/*"}, "Accept-Encoding": {"identity"}, "Origin": {"https://www.youtube.com"}, "Referer": {"https://www.youtube.com"}, "Dnt": {"?1"}}
++		res, err := l.owner.client.Do(req)
++		if err != nil {
++			return res, err
++		}
++		switch res.StatusCode {
++		case 301, 302, 303, 307, 308:
++		default:
++			return res, nil
++		}
++		if hop >= 3 {
++			return res, nil
++		}
++		location := res.Header.Get("Location")
++		if len(location) == 0 || len(location) > 65536 {
++			return res, nil
++		}
++		next, err := endpoint.Parse(location)
++		if err != nil {
++			return res, nil
++		}
++		validated, err := mediaURL(next.String())
++		if err != nil {
++			return res, nil
++		}
++		res.Body.Close()
++		endpoint = *validated
++	}
++}
++
+ // ServeHTTP is mounted behind a per-decoder random loopback capability. It
+ // performs bounded direct HTTPS ranges, without a second HTTP relay or cache.
+ func (l *Lease) ServeHTTP(w http.ResponseWriter, in *http.Request) {
+@@ -244,9 +285,9 @@ func (l *Lease) ServeHTTP(w http.ResponseWriter, in *http.Request) {
+ 		return
+ 	}
+ 	sent := false
+-	fail := func(category string, status int) {
++	fail := func(category string, status int, upstreamStatus ...int) {
+ 		if ctx.Err() == nil {
+-			l.fail(category)
++			l.fail(category, upstreamStatus...)
+ 		}
+ 		if sent {
+ 			panic(http.ErrAbortHandler)
+@@ -258,12 +299,15 @@ func (l *Lease) ServeHTTP(w http.ResponseWriter, in *http.Request) {
+ 	if l.contentType == "video/mp4" {
+ 		chunk = 512 << 10
+ 	}
++	last, bodyRetries := start-1, 0
+ 	for offset := start; offset <= end; {
+ 		if ctx.Err() != nil {
+ 			fail("", 410)
+ 			return
+ 		}
+-		last := min(end, offset+chunk-1)
++		if offset > last {
++			last, bodyRetries = min(end, offset+chunk-1), 0
++		}
+ 		expected := last - offset + 1
+ 		res, cancelRequest, err := l.rangeRequest(ctx, remote, offset, last)
+ 		if err != nil {
+@@ -283,7 +327,7 @@ func (l *Lease) ServeHTTP(w http.ResponseWriter, in *http.Request) {
+ 			}
+ 			res.Body.Close()
+ 			cancelRequest()
+-			fail(category, status)
++			fail(category, status, res.StatusCode)
+ 			return
+ 		}
+ 		cr := res.Header.Get("Content-Range")
+@@ -329,8 +373,11 @@ func (l *Lease) ServeHTTP(w http.ResponseWriter, in *http.Request) {
+ 					return
+ 				}
+ 			}
++			if received == expected {
++				break
++			}
+ 			if readErr != nil {
+-				if readErr != io.EOF {
++				if readErr != io.EOF && readErr != io.ErrUnexpectedEOF {
+ 					category = streamError(readErr)
+ 				} else if received != expected {
+ 					category = "audio_stream_truncated"
+@@ -341,6 +388,22 @@ func (l *Lease) ServeHTTP(w http.ResponseWriter, in *http.Request) {
+ 		res.Body.Close()
+ 		cancelRequest()
+ 		if category != "" {
++			// Resume only undelivered bytes of this exact range. Already-written
++			// bytes are never replayed, and a failing range gets at most two body
++			// recoveries. Range mismatches and access refusals remain terminal.
++			retryable := category == "audio_network_timeout" || category == "audio_connection_failed" || category == "audio_stream_truncated"
++			if retryable && bodyRetries < 2 && ctx.Err() == nil {
++				bodyRetries++
++				offset += received
++				timer := time.NewTimer(time.Duration(bodyRetries) * 250 * time.Millisecond)
++				select {
++				case <-ctx.Done():
++					timer.Stop()
++					return
++				case <-timer.C:
++					continue
++				}
++			}
+ 			fail(category, 502)
+ 			return
+ 		}
+diff --git a/internal/streaming/network.go b/internal/streaming/network.go
+index 298d2d5..7940bbb 100644
+--- a/internal/streaming/network.go
++++ b/internal/streaming/network.go
+@@ -66,6 +66,10 @@ func (r *Resolver) requestWithHeaders(ctx context.Context, method, raw string, b
+ 		budget = 60 * time.Second
+ 	} else if stage == "bootstrap" && step == "player_identifier" {
+ 		budget = 5 * time.Second
++	} else if stage == "proof_init" && method == "GET" && raw == "https://www.youtube.com/" {
++		// Proof initialization needs the complete HTML document, which is much
++		// larger than an API reply even when the server negotiates gzip.
++		budget = 60 * time.Second
+ 	}
+ 	ctx, cancel := context.WithTimeout(ctx, budget)
+ 	defer cancel()
+@@ -81,12 +85,9 @@ func (r *Resolver) requestWithHeaders(ctx context.Context, method, raw string, b
+ 	if stage == "proof_init" {
+ 		req.Header.Set("User-Agent", proofUserAgent)
+ 	}
+-	playerScript := req.URL.Host == "www.youtube.com" && strings.HasPrefix(req.URL.Path, "/s/player/")
+-	if playerScript {
+-		req.Header.Set("Accept-Encoding", "gzip")
+-	} else {
+-		req.Header.Set("Accept-Encoding", "identity")
+-	}
++	// Decode explicitly so both wire and expanded response sizes stay bounded.
++	// This includes the large proof HTML page, not only the player script.
++	req.Header.Set("Accept-Encoding", "gzip")
+ 	if req.Header.Get("Accept") == "" {
+ 		req.Header.Set("Accept", "*/*")
+ 	}
+@@ -140,13 +141,16 @@ func (r *Resolver) requestWithHeaders(ctx context.Context, method, raw string, b
+ 	if res.ContentLength > maxResponse {
+ 		return nil, failure("resolver_response_limit", stage)
+ 	}
+-	// Cap both the network transfer and the script passed to the JS runtime.
++	// Cap both the network transfer and the expanded response.
+ 	wire := &io.LimitedReader{R: res.Body, N: maxResponse + 1}
+ 	var data []byte
+-	if playerScript && strings.EqualFold(res.Header.Get("Content-Encoding"), "gzip") {
+-		data, err = readGzipScript(wire)
+-	} else {
++	switch strings.ToLower(strings.TrimSpace(res.Header.Get("Content-Encoding"))) {
++	case "gzip":
++		data, err = readGzipResponse(wire)
++	case "", "identity":
+ 		data, err = io.ReadAll(wire)
++	default:
++		return nil, failure("resolver_http_error", stage)
+ 	}
+ 	if wire.N == 0 || len(data) > maxResponse {
+ 		return nil, failure("resolver_response_limit", stage)
+@@ -166,7 +170,7 @@ func (r *Resolver) requestWithHeaders(ctx context.Context, method, raw string, b
+ 	return data, nil
+ }
+ 
+-func readGzipScript(wire io.Reader) ([]byte, error) {
++func readGzipResponse(wire io.Reader) ([]byte, error) {
+ 	r, err := gzip.NewReader(wire)
+ 	if err != nil {
+ 		return nil, err
+diff --git a/internal/streaming/player_cache_test.go b/internal/streaming/player_cache_test.go
+index 662c0f7..5010ca2 100644
+--- a/internal/streaming/player_cache_test.go
++++ b/internal/streaming/player_cache_test.go
+@@ -413,3 +413,26 @@ func TestPublicPlayerCacheRestart(t *testing.T) {
+ 	}
+ 	t.Logf("public player cache: cold=%s restart=%s code_bytes=%d restart_network_requests=0 restart_extractions=0", cold.Round(time.Millisecond), time.Since(began).Round(time.Millisecond), len(restarted.seed.Code))
+ }
++
++func TestProofHTMLBudgetAndCancellation(t *testing.T) {
++	r := testResolver(t, func(req *http.Request) (*http.Response, error) {
++		deadline, ok := req.Context().Deadline()
++		if !ok || time.Until(deadline) > 60*time.Second || time.Until(deadline) < 59*time.Second {
++			t.Fatal("proof HTML did not get a complete-document budget")
++		}
++		return response("fixture"), nil
++	})
++	if _, err := r.request(context.Background(), "GET", "https://www.youtube.com/", nil, nil, "proof_init", ""); err != nil {
++		t.Fatal("proof HTML request failed")
++	}
++	r = testResolver(t, func(req *http.Request) (*http.Response, error) {
++		res := response("")
++		res.Body = &cancelledBody{ctx: req.Context()}
++		return res, nil
++	})
++	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
++	defer cancel()
++	if data, err := r.request(ctx, "GET", "https://www.youtube.com/", nil, nil, "proof_init", ""); !errors.Is(err, context.DeadlineExceeded) || len(data) != 0 {
++		t.Fatal("HTML download ignored cancellation or returned a partial response")
++	}
++}
+diff --git a/internal/streaming/streaming_test.go b/internal/streaming/streaming_test.go
+index 20a237b..88c61e2 100644
+--- a/internal/streaming/streaming_test.go
++++ b/internal/streaming/streaming_test.go
+@@ -271,9 +271,13 @@ func TestRangeAndBoundedDirectTransport(t *testing.T) {
+ 	}
+ }
+ func TestTruncatedStreamClosesAndReportsFixedFailure(t *testing.T) {
+-	r := testResolver(t, func(*http.Request) (*http.Response, error) {
++	var calls atomic.Int32
++	r := testResolver(t, func(req *http.Request) (*http.Response, error) {
++		calls.Add(1)
++		var start, end int64
++		_, _ = fmt.Sscanf(req.URL.Query().Get("range"), "%d-%d", &start, &end)
+ 		res := response("x")
+-		res.ContentLength = 10
++		res.ContentLength = end - start + 1
+ 		return res, nil
+ 	})
+ 	remote, _ := url.Parse("https://r.googlevideo.com/x?expire=" + fmt.Sprint(time.Now().Add(time.Hour).Unix()))
+@@ -285,7 +289,7 @@ func TestTruncatedStreamClosesAndReportsFixedFailure(t *testing.T) {
+ 		_, err = io.ReadAll(res.Body)
+ 		res.Body.Close()
+ 	}
+-	if err == nil || lease.Err() == nil || lease.Err().Error() != "audio_stream_truncated" {
++	if err == nil || lease.Err() == nil || lease.Err().Error() != "audio_stream_truncated" || calls.Load() != 3 {
+ 		t.Fatal("truncation became success")
+ 	}
+ }
+@@ -339,7 +343,7 @@ func TestResponseLimitDoesNotReturnPartialData(t *testing.T) {
+ 	}
+ }
+ 
+-func TestPlayerScriptGzip(t *testing.T) {
++func TestResolverGzipResponses(t *testing.T) {
+ 	const script = "function play(){}"
+ 	compress := func(text string, level int) []byte {
+ 		t.Helper()
+@@ -365,26 +369,34 @@ func TestPlayerScriptGzip(t *testing.T) {
+ 		{"compressed", "gzip", "", compressed},
+ 		{"uncompressed", "", "", []byte(script)},
+ 		{"truncated", "gzip", "resolver_http_error", compressed[:len(compressed)-1]},
++		{"unsupported encoding", "br", "resolver_http_error", compressed},
+ 		{"expanded limit", "gzip", "resolver_response_limit", compress(large, gzip.BestSpeed)},
+ 		{"wire limit", "gzip", "resolver_response_limit", compress(large[:maxResponse], gzip.NoCompression)},
+ 	} {
+-		t.Run(tc.name, func(t *testing.T) {
+-			r := testResolver(t, func(req *http.Request) (*http.Response, error) {
+-				if req.Header.Get("Accept-Encoding") != "gzip" {
+-					t.Fatal("public player script did not negotiate gzip")
++		for _, target := range []struct{ name, method, url, stage, step string }{
++			{"player", "GET", "https://www.youtube.com/s/player/fixture/base.js", "bootstrap", "player_script"},
++			{"html", "GET", "https://www.youtube.com/", "proof_init", ""},
++			{"interpreter", "GET", "https://www.google.com/js/th/fixture.js", "proof_init", ""},
++			{"api", "POST", "https://music.youtube.com/youtubei/v1/player", "player_request", ""},
++		} {
++			t.Run(target.name+"/"+tc.name, func(t *testing.T) {
++				r := testResolver(t, func(req *http.Request) (*http.Response, error) {
++					if req.Header.Get("Accept-Encoding") != "gzip" {
++						t.Fatal("resolver did not negotiate gzip")
++					}
++					return &http.Response{StatusCode: 200, Header: http.Header{"Content-Encoding": {tc.encoding}},
++						Body: io.NopCloser(bytes.NewReader(tc.body)), ContentLength: -1}, nil
++				})
++				data, err := r.request(context.Background(), target.method, target.url, nil, nil, target.stage, target.step)
++				if tc.failure == "" {
++					if err != nil || string(data) != script {
++						t.Fatal("resolver did not return the original response")
++					}
++				} else if err == nil || err.Error() != tc.failure || data != nil {
++					t.Fatal("invalid response was not rejected with the expected category")
+ 				}
+-				return &http.Response{StatusCode: 200, Header: http.Header{"Content-Encoding": {tc.encoding}},
+-					Body: io.NopCloser(bytes.NewReader(tc.body)), ContentLength: -1}, nil
+ 			})
+-			data, err := r.request(context.Background(), "GET", "https://www.youtube.com/s/player/fixture/base.js", nil, nil, "bootstrap", "player_script")
+-			if tc.failure == "" {
+-				if err != nil || string(data) != script {
+-					t.Fatal("player did not receive the original script")
+-				}
+-			} else if err == nil || err.Error() != tc.failure || data != nil {
+-				t.Fatal("invalid script was not rejected with the expected category")
+-			}
+-		})
++		}
+ 	}
+ }
+ 
+@@ -397,8 +409,8 @@ func TestProofAndPlayerAgentContractsRemainSeparate(t *testing.T) {
+ 		if req.Header.Get("User-Agent") != expected {
+ 			t.Error("request agent contract changed")
+ 		}
+-		if req.Header.Get("Accept-Encoding") != "identity" {
+-			t.Error("non-script request unexpectedly negotiated compression")
++		if req.Header.Get("Accept-Encoding") != "gzip" {
++			t.Error("resolver response did not negotiate bounded compression")
+ 		}
+ 		return response("fixture"), nil
+ 	})
+diff --git a/scripts/runtime/README.md b/scripts/runtime/README.md
+index c2f50aa..370dbd6 100644
+--- a/scripts/runtime/README.md
++++ b/scripts/runtime/README.md
+@@ -45,6 +45,19 @@ leases and four active media requests covers current audio, next-track prefetch,
+ on-demand video and transitions. Audio ranges are 64 KiB, video ranges 512 KiB;
+ forwarding uses 32 KiB with backpressure and no whole-track cache.
+ 
++Public protocol responses negotiate gzip with separate 16 MiB limits on wire
++and expanded bytes. The complete proof HTML document gets a 60-second budget;
++caller cancellation still wins. Media leases allow 20 seconds per upstream
++read and recover a broken body at most twice per range, requesting only bytes
++not already delivered. Native leases own these finite retry budgets, so FFmpeg
++does not impose a competing loopback read timeout. Audio startup retains its
++30-second first-PCM deadline, and seek/account changes/shutdown cancel stalled
++work immediately. Compatibility relays retain a 90-second read watchdog.
++Media ranges may follow at most three CDN redirects, validating every target
++against the original HTTPS `*.googlevideo.com` media boundary and preserving
++the requested bytes. Account/protocol redirects remain disabled; authentication
++headers and media URLs are never forwarded to FFmpeg.
++
+ ## Build
+ 
+ Install Go, Rust/Cargo, Python 3 and native C build tools. Linux also requires

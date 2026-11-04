@@ -1,0 +1,16 @@
+{
+  "audio-status.json": {
+    "Time": "2026-11-04T08:52:16Z",
+    "Version": "0.6.2",
+    "Component": "audio",
+    "Category": "bootstrap_network_timeout",
+    "Stage": "bootstrap",
+    "BootstrapStep": "player_script"
+  },
+  "account-status.json": {
+    "Time": "2026-11-04T08:51:03Z",
+    "Version": "0.6.2",
+    "Component": "account",
+    "Category": "premium"
+  }
+}

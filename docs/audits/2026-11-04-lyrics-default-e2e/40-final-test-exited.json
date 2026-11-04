@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "index": 7,
+  "positionNs": 104015999999,
+  "volume": 0.7,
+  "unmutedVolume": 0.7,
+  "queue": [
+    {
+      "id": "UoF1dFWKsVk",
+      "title": "Contact",
+      "artist": "Daft Punk",
+      "album": null,
+      "duration": 384000000000,
+      "kind": "song"
+    },
+    {
+      "id": "zrYi1zIUvb8",
+      "title": "Contact / We Are Human / Daft Funk Live in Amsterdam 2025 #daftpunk #tribute #contact #livemusic",
+      "artist": "Daft Funk Live",
+      "album": null,
+      "duration": 237000000000,
+      "kind": "video"
+    },
+    {
+      "id": "qz5E-wsXfek",
+      "title": "Daft Punk - Contact (Apollo 11 Extended Version)",
+      "artist": "derkaiser1",
+      "album": null,
+      "duration": 591000000000,
+      "kind": "video"
+    },
+    {
+      "id": "ZbbTmR6Xaag",
+      "title": "Contact",
+      "artist": "Daft Punk",
+      "album": null,
+      "duration": null,
+      "kind": "video"
+    },
+    {
+      "id": "JI5noh4OyXc",
+      "title": "Contact (Official Audio)",
+      "artist": "Daft Punk",
+      "album": null,
+      "duration": null,
+      "kind": "video"
+    },
+    {
+      "id": "gdfEIQ7QdLw",
+      "title": "Aerodynamite",
+      "artist": "Daft Punk",
+      "album": null,
+      "duration": null,
+      "kind": "song"
+    },
+    {
+      "id": "qPRNIHxLhmc",
+      "title": "I Feel It Coming (feat. Daft Punk)",
+      "artist": "The Weeknd",
+      "album": null,
+      "duration": null,
+      "kind": "song"
+    },
+    {
+      "id": "OWiVJMgms9E",
+      "title": "Voyager",
+      "artist": "Daft Punk",
+      "album": null,
+      "duration": 227881000000,
+      "kind": "song"
+    },
+    {
+      "id": "3_g2un5M350",
+      "title": "Starboy (feat. Daft Punk)",
+      "artist": "The Weeknd",
+      "album": null,
+      "duration": null,
+      "kind": "song"
+    },
+    {
+      "id": "MNVcs2RSG60",
+      "title": "One More Time / Aerodynamic",
+      "artist": "Daft Punk",
+      "album": null,
+      "duration": null,
+      "kind": "song"
+    },
+    {
+      "id": "4tVyP2k2NGo",
+      "title": "Daft Punk - Contact",
+      "artist": "I'm Human After All",
+      "album": null,
+      "duration": null,
+      "kind": "video"
+    }
+  ],
+  "time": "2026-11-03T18:24:53.401497+00:00",
+  "processes": []
+}

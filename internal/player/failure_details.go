@@ -1,6 +1,9 @@
 package player
 
-import "errors"
+import (
+	"errors"
+	"ytmgo/internal/streaming"
+)
 
 // FailureDetails contains only fixed categories and bounded HTTP status codes.
 // It never contains upstream messages, URLs, headers, bodies or account data.
@@ -43,7 +46,12 @@ func (d FailureDetails) Sanitized() FailureDetails {
 			return d
 		}
 		return FailureDetails{Stage: d.Stage}
-	case "sdk_create", "account_validation", "proof_config_request", "proof_config_parse", "proof_init", "player_request", "decipher", "proof_mint":
+	case "media_stream":
+		if d.HTTPStatus >= 100 && d.HTTPStatus <= 599 {
+			return FailureDetails{Stage: d.Stage, HTTPStatus: d.HTTPStatus}
+		}
+		return FailureDetails{Stage: d.Stage}
+	case "sdk_create", "account_validation", "proof_config_request", "proof_config_parse", "proof_init", "player_request", "decipher", "proof_mint", "video_resolution", "video_first_frame", "video_playback":
 		return FailureDetails{Stage: d.Stage}
 	default:
 		return FailureDetails{}
@@ -56,6 +64,10 @@ func DiagnosticDetails(err error) FailureDetails {
 	var failure *resolutionFailure
 	if errors.As(err, &failure) {
 		return failure.details.Sanitized()
+	}
+	var media *streaming.Failure
+	if errors.As(err, &media) && media.Stage == "media_stream" {
+		return (FailureDetails{Stage: media.Stage, HTTPStatus: media.HTTPStatus}).Sanitized()
 	}
 	return FailureDetails{}
 }

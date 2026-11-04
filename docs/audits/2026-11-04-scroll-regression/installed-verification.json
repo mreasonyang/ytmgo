@@ -1,0 +1,28 @@
+{
+  "identical": true,
+  "source_entries": 178,
+  "installed_entries": 178,
+  "installed_processes": [
+    {
+      "pid": 50671,
+      "ppid": 1,
+      "uid": 501,
+      "state": "S",
+      "executable": "/Applications/ytmgo.app/Contents/MacOS/ytmgo"
+    },
+    {
+      "pid": 51437,
+      "ppid": 50671,
+      "uid": 501,
+      "state": "S",
+      "executable": "/Applications/ytmgo.app/Contents/Resources/runtime/ffmpeg"
+    },
+    {
+      "pid": 51443,
+      "ppid": 50671,
+      "uid": 501,
+      "state": "S",
+      "executable": "/Applications/ytmgo.app/Contents/Resources/runtime/ffmpeg"
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+package streaming
+
+import (
+	"compress/gzip"
+	"context"
+	"crypto/tls"
+	"encoding/json"
+	"errors"
+	"io"
+	"net"
+	"net/http"
+	"os"
+	"testing"
+	"time"
+)
+
+type rootcauseCountReader struct {
+	io.Reader
+	n int64
+}
+
+func (r *rootcauseCountReader) Read(p []byte) (int, error) {
+	n, e := r.Reader.Read(p)
+	r.n += int64(n)
+	return n, e
+}
+
+func rootcauseError(ctx context.Context, err error) string {
+	if err == nil {
+		return "none"
+	}
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) || errors.Is(err, context.DeadlineExceeded) {
+		return "deadline"
+	}
+	if errors.Is(err, io.ErrUnexpectedEOF) {
+		return "unexpected_eof"
+	}
+	var cert *tls.CertificateVerificationError
+	if errors.As(err, &cert) {
+		return "tls"
+	}
+	var ne net.Error
+	if errors.As(err, &ne) && ne.Timeout() {
+		return "network_timeout"
+	}
+	return "transport_other"
+}
+
+// Anonymous public endpoint only. Never retain body, identifiers or headers.
+func TestRootCauseProofHomeEncodingAB(t *testing.T) {
+	if os.Getenv("YTMGO_ROOTCAUSE_PUBLIC_NETWORK") != "1" {
+		t.Skip("explicit public network diagnosis not selected")
+	}
+	type result struct {
+		Encoding     string `json:"requested_encoding"`
+		Status       int    `json:"status"`
+		HeaderMS     int64  `json:"header_ms"`
+		TotalMS      int64  `json:"total_ms"`
+		WireBytes    int64  `json:"wire_bytes"`
+		DecodedBytes int    `json:"decoded_bytes"`
+		Gzip         bool   `json:"gzip"`
+		Cause        string `json:"cause"`
+		Parsed       bool   `json:"proof_page_parsed"`
+	}
+	client := transportClient(nil)
+	defer client.CloseIdleConnections()
+	var rows []result
+	for _, encoding := range []string{"identity", "gzip", "gzip", "identity"} {
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		began := time.Now()
+		req, _ := http.NewRequestWithContext(ctx, "GET", "https://www.youtube.com/", nil)
+		req.Header = http.Header{"User-Agent": {proofUserAgent}, "Accept": {"text/html"}, "Accept-Language": {"en-US,en;q=0.7"}, "Accept-Encoding": {encoding}}
+		res, err := client.Do(req)
+		row := result{Encoding: encoding, HeaderMS: time.Since(began).Milliseconds()}
+		if err == nil {
+			row.Status = res.StatusCode
+			wire := &rootcauseCountReader{Reader: res.Body}
+			var reader io.Reader = wire
+			if res.Header.Get("Content-Encoding") == "gzip" {
+				row.Gzip = true
+				var gz *gzip.Reader
+				gz, err = gzip.NewReader(wire)
+				if err == nil {
+					defer gz.Close()
+					reader = gz
+				}
+			}
+			var body []byte
+			if err == nil {
+				body, err = io.ReadAll(io.LimitReader(reader, maxResponse+1))
+			}
+			row.WireBytes, row.DecodedBytes = wire.n, len(body)
+			if err == nil && res.StatusCode == 200 {
+				_, parseErr := parseProofPage(body)
+				row.Parsed = parseErr == nil
+			}
+			res.Body.Close()
+		}
+		row.Cause = rootcauseError(ctx, err)
+		row.TotalMS = time.Since(began).Milliseconds()
+		cancel()
+		rows = append(rows, row)
+		if path := os.Getenv("YTMGO_LIVE_EVIDENCE"); path != "" {
+			b, _ := json.MarshalIndent(rows, "", "  ")
+			_ = os.WriteFile(path, append(b, '\n'), 0600)
+		}
+	}
+}

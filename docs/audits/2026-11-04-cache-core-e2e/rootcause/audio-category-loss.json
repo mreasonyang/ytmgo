@@ -1,0 +1,14 @@
+[
+  {
+    "observed": "audio_stream_failed",
+    "underlying": "audio_network_timeout"
+  },
+  {
+    "observed": "audio_stream_failed",
+    "underlying": "audio_access_denied"
+  },
+  {
+    "observed": "audio_stream_failed",
+    "underlying": "audio_stream_truncated"
+  }
+]

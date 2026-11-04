@@ -1,0 +1,9 @@
+{
+  "category": "visual_motion_missing",
+  "official_video_matched": true,
+  "startup_ms": 14096,
+  "Samples": 59,
+  "MovingSamples": 0,
+  "frames_advanced": 72,
+  "maximum_pixel_difference": 0.013276143790849673
+}

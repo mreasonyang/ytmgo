@@ -1,0 +1,36 @@
+{
+  "runtime": "/Applications/ytmgo.app/Contents/Resources/runtime",
+  "exit_code": 0,
+  "seconds": 146.887,
+  "events": [
+    {
+      "Action": "pass",
+      "Test": "TestNativeFullDecodeLive",
+      "Elapsed": 93.97
+    },
+    {
+      "Action": "pass",
+      "Test": "TestNativeEndedRestartLive",
+      "Elapsed": 17.08
+    },
+    {
+      "Action": "pass",
+      "Test": "TestNativeVideoDuringAnonymousAudioLive/1m13.125s",
+      "Elapsed": 8.85
+    },
+    {
+      "Action": "pass",
+      "Test": "TestNativeVideoDuringAnonymousAudioLive/1m57.625s",
+      "Elapsed": 8.64
+    },
+    {
+      "Action": "pass",
+      "Test": "TestNativeVideoDuringAnonymousAudioLive",
+      "Elapsed": 30.47
+    },
+    {
+      "Action": "pass",
+      "Elapsed": 141.93
+    }
+  ]
+}

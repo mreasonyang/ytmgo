@@ -1,0 +1,15 @@
+{
+  "time": "2026-11-04T14:57:16.091205+00:00",
+  "bytes": 199144,
+  "mtime_ns": 1793803753253443667,
+  "unchanged_from_before_restart": true,
+  "processes": [
+    {
+      "pid": 87235,
+      "ppid": 1,
+      "uid": 501,
+      "state": "S",
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/cache-core-e2e-20261104/ytmGO.app/Contents/MacOS/ytmGO"
+    }
+  ]
+}

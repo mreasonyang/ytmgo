@@ -1,0 +1,10 @@
+{
+  "installed": "/Applications/ytmgo.app",
+  "backup": "/Users/easonyang/Documents/projects/ytmgo/build/lyrics-default-e2e-20261104/installed-before/ytmgo.app",
+  "binary_sha256": "cd91528fd113aeec09ffa522372a8f5c3bb7c168349e818c47dbfe874a2631c9",
+  "signature_valid": true,
+  "manifest_matches": true,
+  "file_count": 178,
+  "source_matches_before_build": true,
+  "notarized": false
+}

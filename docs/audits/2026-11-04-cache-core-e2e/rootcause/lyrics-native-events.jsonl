@@ -1,0 +1,10 @@
+{"button":-1,"event":"input","kind":8,"pressed_before":false,"time":"2026-11-04T15:46:46.811725Z","x":123.81641,"y":425.98828}
+{"button":-1,"event":"input","kind":8,"pressed_before":false,"time":"2026-11-04T15:46:46.828262Z","x":120.04297,"y":424.1289}
+{"button":-1,"event":"input","kind":8,"pressed_before":false,"time":"2026-11-04T15:46:46.844936Z","x":106.390625,"y":416.60156}
+{"button":-1,"event":"input","kind":8,"pressed_before":false,"time":"2026-11-04T15:46:46.861583Z","x":83.35547,"y":403.9922}
+{"button":-1,"event":"input","kind":8,"pressed_before":false,"time":"2026-11-04T15:46:46.878247Z","x":49.660156,"y":388.5078}
+{"button":-1,"event":"input","kind":8,"pressed_before":false,"time":"2026-11-04T15:46:57.718326Z","x":268,"y":326.73438}
+{"button":0,"event":"input","kind":6,"pressed_before":false,"time":"2026-11-04T15:46:57.718773Z","x":268,"y":326.73438}
+{"button":0,"event":"input","kind":8,"pressed_before":true,"time":"2026-11-04T15:46:57.728987Z","x":268,"y":151.73438}
+{"button":0,"event":"input","kind":7,"pressed_before":true,"time":"2026-11-04T15:46:57.729379Z","x":268,"y":151.73438}
+{"can_seek":true,"event":"release","focused":false,"moved":true,"selected":12,"time":"2026-11-04T15:46:57.72961Z"}

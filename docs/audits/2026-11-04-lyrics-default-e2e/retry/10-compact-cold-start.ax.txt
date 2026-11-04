@@ -1,0 +1,92 @@
+Window: "ytmgo", App: ytmgo.
+0 standard window ytmgo, Secondary Actions: Raise
+	1 button (disabled) Back
+	2 text field (settable) Description: Search, Placeholder: What do you want to play?
+	3 button Settings
+	4 menu button Account · YouTube Music Premium, Help: YouTube Music Premium
+	5 scroll area Content
+		6 heading Late night listening
+		7 button Liked Music
+		8 button New Release Mix
+		9 button Ultimate Wedding Playlist
+		10 button Dreamkid
+		11 button Best
+		12 button Antidote
+		13 button Favorite Songs
+		14 button Mindhunter (Soundtrack Inspired by the TV Show)
+		15 heading Listen again
+		16 scroll area
+			17 button Demon Samurai · ONI
+			18 button Liked Music · Auto playlist
+			19 button New Release Mix · Cloudy June, Sasha Alex Sloan, Hit-Boy, The Chainsmokers
+			20 button The Weeknd - Hong Kong Ft. Faye Wong (Live in Hong Kong) · Weeknd Everyday
+			21 button Sex & Drugs · Temper City
+			22 button kill ur boyf vibes / women supreme · Rosalyn “Sera” Shard
+			23 button Vibe · Michael Porcayo
+			24 button 你从未离去 (抖音DJ版) - 于佰万『我不再迷茫 思念是唯一的行囊，满天的星光 有一颗是你的愿望。』♪ || 年度最佳抖音歌曲 | 抖音最火歌曲音 | 抖音 | TikTok ♪ · Fantastic Music Station
+			25 button Ultimate Wedding Playlist
+			26 button Random Access Memories · Daft Punk
+			27 button 花魁 - Oiran · ONI
+			28 button Murder Me · Diggy Graves
+			29 button The Fatal Flaw · Paris Paloma
+			30 button 在墜落時 · 汉堡黄
+			31 button Baby, Don't Cry 人魚的眼淚 · EXO
+			32 button Follow Me · Alec Benjamin
+			33 button Midnight Drive in Tokyo · Beat Flickers
+			34 button DOTB ROCK · Diggy Graves
+			35 button PROPHET LIKE ME · Deadfolk Prophet
+			36 button Over and Over / Tokyo Paradise City · Beat Flickers
+		37 heading New releases
+		38 scroll area
+			39 button KNUCK · MUSHVENOM
+			40 button CLUBSOS VOL. 1 · 5 Seconds of Summer
+			41 button And The Crowd Goes Mild · Sasha Alex Sloan
+			42 button 打翻了整夜的香甜 · 陳忻玥
+			43 button CEMETERY (from the Ryuu series "Granite Waves" by Tezeze) · Call Me Karizma, Gloomy Culture
+			44 button 一幀而已 · ZML
+			45 button Bedroom Confessional (xtras) · Ellise
+			46 button Mabushii · Skinny Brown
+			47 button Horror Story of the Week · Xana
+			48 button MISS ME · keshi
+		49 heading Covers and remixes
+		50 scroll area
+			51 button I Took a Pill in Ibiza - Mike Posner // ( Slowed to Perfection ) · Vinay Sunanta
+			52 button 灵魂洗涤！女生翻唱超火藏风歌曲《难解》，一开口感觉今年都风调雨顺了~ · 咻咻满
+			53 button SOLO LEVELING OST - DARK ARIA - ELECTRONIC ROCK/HEAVY DUBSTEP REMIX ENGLISH VERSION · SOMX1NE
+			54 button This Is What You Came For 80s remix · 25June Music
+			55 button Call of Silence（Remix） · Clear Sky
+			56 button Floating (Genom Världar - English Version) · Cinek
+			57 button 其實，歌詞都需要破地獄！《Lemon》真.粵語版！ · 不是詞神
+			58 button Cheriimoya - Living Life, In The Night (Zusebi Remix) (feat. Sierra Kidd) · Zusebi
+			59 button Die For You (Remix) · The Weeknd, Ariana Grande
+			60 button Stay with me (phonk remix) · 23Heaven
+			61 button Legends Never Die (ft. Against The Current) | Worlds 2017 - League of Legends · League of Legends
+			62 button Mind Games (with Chris Grey) (Remix) · Sickick, Chris Grey
+			63 button Ariana Grande - bye [Altare Remix] · Altare
+			64 button Edward Maya & Vika Jigulina - Stereo Love (Zusebi Remix) [TikTok] · Zusebi
+			65 button Fontanel (Sammy Remix) · Eartheater
+			66 button 衛蘭Janice Vidal - 傾城 Cover · Janice Vidal
+			67 button Everything is romantic (feat. Caroline Polachek) · Charli xcx
+			68 button Am I Wrong - Nico & Vinz (Siqu Remix) · Siqu
+			69 button Can't Get You Out Of My Head · AnnenMayKantereit, Parcels
+	70 button Open Now Playing
+	71 button Like
+	72 button Play
+	73 container Main navigation
+		74 button Home
+		75 button Search
+		76 button Explore
+		77 button Library
+	78 close button
+	79 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	80 minimize button
+	81 text ytmgo
+82 menu bar
+	83 ytmgo
+	84 File
+	85 Edit
+	86 Playback
+	87 View
+	88 Window
+	89 Account
+	90 Help

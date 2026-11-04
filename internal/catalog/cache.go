@@ -53,7 +53,7 @@ func (m *responseCache[T]) remove(key string) {
 	}
 }
 
-func memoized[T any](c *Client, ctx context.Context, m *responseCache[T], key string, ttl time.Duration, budget int, size func(T) int, load func(context.Context) (T, error)) (T, error) {
+func memoized[T any](c *Client, ctx context.Context, m *responseCache[T], key string, ttl time.Duration, budget int, size func(T) int, load func(context.Context) (T, error), cacheable ...func(T) bool) (T, error) {
 	var zero T
 	ctx, scope, err := c.operation(ctx)
 	if err != nil {
@@ -115,7 +115,11 @@ func memoized[T any](c *Client, ctx context.Context, m *responseCache[T], key st
 			}
 			if m.flights[key] == f {
 				delete(m.flights, key)
-				if err == nil || errors.Is(err, ErrNoLyrics) {
+				retain := err == nil || errors.Is(err, ErrNoLyrics)
+				for _, accept := range cacheable {
+					retain = retain && accept(value)
+				}
+				if retain {
 					weight, lifetime := size(value)+len(key)+128, ttl
 					if err != nil {
 						lifetime = 30 * time.Second

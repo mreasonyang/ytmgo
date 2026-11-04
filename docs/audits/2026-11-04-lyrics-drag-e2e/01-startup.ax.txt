@@ -1,0 +1,128 @@
+The following is a diff from the previous accessibility tree for Window: "ytmGO" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+Removed element IDs: 8-10, 13-45, 66
++	76 menu button Account · YouTube Music Premium, Help: YouTube Music Premium
++	77 button Playlists
++	78 button Albums
++	79 button Artists
++	80 scroll area Your playlists
++		81 button Liked Music · Auto playlist, Help: Liked Music
++		82 button New Release Mix · Mix, Help: New Release Mix
++		83 button Ultimate Wedding Playlist
++		84 button Dreamkid
++		85 button Best
++		86 button Antidote · Derik Fein, Help: Antidote
++		87 button Favorite Songs
++		88 button Mindhunter (Soundtrack Inspired by the TV Show) · Fandom, Help: Mindhunter (Soundtrack Inspired by the TV Show)
++		89 button UK R&B Hits 2024 · YouTube Music, Help: UK R&B Hits 2024
++		90 button Discover Mix · Mix, Help: Discover Mix
++		91 button ALT CTRL
++		92 button At the Airport
++		93 button Blues Replay
++		94 button Eminem: Next Steps
++		95 button ESL Pro League - Official Soundtrack
++		96 button Favorite Songs
++		97 button Feeling Good
++		98 button Gentle
++		99 button Hollywood Undead Essentials
++		100 button LINKIN PARK Essentials
++		101 button My Shazam Tracks
++		102 button OG
++		103 button Party Starters
++		104 button Powerful
++		105 button Replay 2018
++	106 scroll area Content
++		107 heading Good afternoon
++		108 button Liked Music
++		109 button New Release Mix
++		110 button Ultimate Wedding Playlist
++		111 button Dreamkid
++		112 button Best
++		113 button Antidote
++		114 button Favorite Songs
++		115 button Mindhunter (Soundtrack Inspired by the TV Show)
++		116 heading Listen again
++		117 scroll area
++			118 button Demon Samurai · ONI
++			119 button New Release Mix · VOILÀ, Dominic Fike, Sasha Alex Sloan, girl in red
++			120 button Liked Music · Auto playlist
++			121 button The Weeknd - HONG KONG (After Hours Til Dawn) [No Crowd] · 𝐊 𝐢 𝐧 𝐅 𝐌
++			122 button The Weeknd - Hong Kong Ft. Faye Wong (Live in Hong Kong) · Weeknd Everyday
++			123 button Vibe · Michael Porcayo
++			124 button 你从未离去 (抖音DJ版) - 于佰万『我不再迷茫 思念是唯一的行囊，满天的星光 有一颗是你的愿望。』♪ || 年度最佳抖音歌曲 | 抖音最火歌曲音 | 抖音 | TikTok ♪ · Fantastic Music Station
++			125 button Ultimate Wedding Playlist
++			126 button The Urban Wanderer · Forrest Rose
++			127 button The Fatal Flaw · Paris Paloma
++			128 button Ellie My Love · SOUTHERN ALL STARS
++			129 button 711 · Xana
++			130 button DOTB ROCK · Diggy Graves
++			131 button Murder Me · Diggy Graves
++			132 button Over and Over / Tokyo Paradise City · Beat Flickers
++			133 button 在墜落時 · 汉堡黄
++			134 button Midnight Drive in Tokyo · Beat Flickers
++			135 button Marijuana Girl Vol.2 · Remixology_Lab
++			136 button Baby, Don't Cry 人魚的眼淚 · EXO
++			137 button Empty · Sasha Alex Sloan
++		138 heading New releases
++		139 scroll area
++			140 button Get Ready (From "Snoopy Presents: 12 Days of Snoopy") · John Legend, Peanuts
++			141 button BLUE · girl in red
++			142 button Beautiful Damage · NØLIVE
++			143 button CEMETERY (from the Ryuu series "Granite Waves" by Tezeze) · Call Me Karizma, Gloomy Culture
++			144 button CLUBSOS VOL. 1 · 5 Seconds of Summer
++			145 button KNUCK · MUSHVENOM
++			146 button TRICK OR TREAT SMELL MY WEED · DeShawn Williams
++			147 button 打翻了整夜的香甜 · 陳忻玥
++			148 button Bedroom Confessional (xtras) · Ellise
++			149 button Horror Story of the Week · Xana
++		150 heading Covers and remixes
++		151 scroll area
++			152 button NewJeans (뉴진스) , Kendrick Lamar - OMG x LOVE remix · Befreee
++			153 button This Is What You Came For 80s remix · 25June Music
++			154 button Heat Waves (Japanese Version) · Lime
++			155 button I Took a Pill in Ibiza - Mike Posner // ( Slowed to Perfection ) · Vinay Sunanta
++			156 button Worth It · Corbin
++			157 button 《懸溺+空心》Mix懸空串烧改编LIVE(Cover by K.D)Sa vào nguy hiểm+Trống rỗng【我主張剋制不了就放任x熱愛曾是唯一的信仰】動態歌詞Pinyin Lyrics · K.D
++			158 button PARTY 4 U x NEVER BE LIKE YOU (ALTÉGO MIX) · ALTÉGO
++			159 button Tokyo Drift - Teriyaki Boyz (PedroDJDaddy Remix) (Bass Boosted) · Trap Woofer
++			160 button Call of Silence（Remix） · Clear Sky
++			161 button Outside (David Laid - slowed to perfection) · Luke Muzzic
++			162 button WIZZ (COBRAH REMIX) · COUCOU CHLOE
++			163 button STAY (Japanese Version) · ShiroNeko
++			164 button Cheriimoya - Living Life, In The Night (Zusebi Remix) (feat. Sierra Kidd) · Zusebi
++			165 button Mood (Remix Version) · DPR IAN
++			166 button Watson (feat. Oslo Green) · Petite Meller
++			167 button WANTCHU (HTOWN REMIX) · keshi
++			168 button Steelix – Lay it down [Nu Funk] · Grizzly Music
++			169 button ERIIC - No lie (male cover) · ERIIC
++		170 heading From the community
++		171 scroll area
++			172 button Memandu tgh malam · Bwaa
++			173 button ㄹ · 김우빈
++			174 button Tell me you have attachment issues without telling me you have attachment issues. · Gillian
++			175 button Raps · Vanta.Gaming
++			176 button Nice beat songs · 𝔾𝕀ℝ𝕃 𝕊ℚ𝕌𝔸𝔻 ♡
++			177 button 우울리듬 · 김명석
++			178 button 成熟味歌單 · HaHa Lin
++			179 button IDGAF PLAYLIST · Savannah Scales
++			180 button Stockhomsy · Educational
++			181 button Mr Nice Guy · ShaGgyWill
++		182 heading The Weeknd
++		183 scroll area
++			184 button Don Toliver
++			185 button Chill Drives · Saksham Gaur
++			186 button Tarriq
++			187 button Majid Jordan
++			188 button Presenting Drake · Drake, 21 Savage, DJ Khaled, Future
++			189 button R’N’B · Ildar Khabibullin
++			190 button Shutupnlove · Makey
++			191 button Presenting The Weeknd · The Weeknd, Ariana Grande, Gesaffelstein, Kendrick Lamar
++			192 button Alone at Prom · Tory Lanez
++			193 button Fresh hip hop · SAKHILE DLAME
++		194 heading Fresh finds, old favorites
++		195 scroll area
++			196 button Archive Mix · Ricchi E Poveri, One Direction, Katy Perry, MOTHICA
++			197 button New Release Mix · VOILÀ, Dominic Fike, Sasha Alex Sloan, girl in red
++			198 button Liked Music · Auto playlist
++			199 button Discover Mix · Ethan Horahn, RAAHIIM, 徐佳莹, Bestlife
++			200 button Replay Mix · Temper City, Christina Perri, Alec Benjamin
++	201 text ytmGO

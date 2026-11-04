@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -127,6 +128,24 @@ type HTTPError struct {
 	Stage      string
 	StatusCode int
 	Redirect   string
+}
+
+// TransportError discards the dependency error entirely: net/http errors may
+// embed credential-bearing URLs. Only a fixed category and API stage survive.
+type TransportError struct{ Stage, Category string }
+
+func (e *TransportError) Error() string { return e.Category }
+func (e *TransportError) Unwrap() error { return ErrUnavailable }
+
+func transportFailure(stage string, err error) error {
+	category := "catalog_connection_failed"
+	var ne net.Error
+	if errors.Is(err, context.DeadlineExceeded) || errors.As(err, &ne) && ne.Timeout() {
+		category = "catalog_network_timeout"
+	} else if errors.Is(err, io.ErrUnexpectedEOF) {
+		category = "catalog_response_truncated"
+	}
+	return &TransportError{Stage: stage, Category: category}
 }
 
 func (e *HTTPError) Error() string {
@@ -570,7 +589,7 @@ func (c *Client) request(req *http.Request, stage string, limit int64) ([]byte, 
 		if req.Context().Err() != nil {
 			return nil, req.Context().Err()
 		}
-		return nil, ErrUnavailable // net/http errors can contain credentials and signed URLs.
+		return nil, transportFailure(stage, err)
 	}
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
@@ -588,7 +607,7 @@ func (c *Client) request(req *http.Request, stage string, limit int64) ([]byte, 
 		if req.Context().Err() != nil {
 			return nil, req.Context().Err()
 		}
-		return nil, ErrUnavailable
+		return nil, transportFailure(stage, err)
 	}
 	if int64(len(data)) > limit {
 		return nil, ErrResponseTooLarge

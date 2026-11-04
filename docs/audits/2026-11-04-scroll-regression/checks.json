@@ -1,0 +1,53 @@
+[
+  {
+    "stage": "focused_scroll",
+    "exit_code": 0,
+    "passed": true,
+    "elapsed_seconds": 2.6,
+    "counts": {
+      "pass": 13
+    },
+    "failures": []
+  },
+  {
+    "stage": "go_race",
+    "exit_code": 0,
+    "passed": true,
+    "elapsed_seconds": 124.82,
+    "counts": {
+      "pass": 1007,
+      "skip": 20
+    },
+    "failures": []
+  },
+  {
+    "stage": "go_vet",
+    "exit_code": 0,
+    "passed": true,
+    "elapsed_seconds": 2.3
+  },
+  {
+    "stage": "translations",
+    "exit_code": 0,
+    "passed": true,
+    "elapsed_seconds": 0.18
+  },
+  {
+    "stage": "runtime_manifest",
+    "exit_code": 0,
+    "passed": true,
+    "elapsed_seconds": 0.11
+  },
+  {
+    "stage": "runtime_protocol",
+    "exit_code": 0,
+    "passed": true,
+    "elapsed_seconds": 0.04
+  },
+  {
+    "stage": "login_verify",
+    "exit_code": 0,
+    "passed": true,
+    "elapsed_seconds": 0.06
+  }
+]

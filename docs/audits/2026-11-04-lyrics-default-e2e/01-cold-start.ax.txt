@@ -1,0 +1,131 @@
+The following is a diff from the previous accessibility tree for Window: "ytmgo" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+Removed element IDs: 8-10, 13-16, 37
++	47 menu button Account · YouTube Music Premium, Help: YouTube Music Premium
++	48 button Playlists
++	49 button Albums
++	50 button Artists
++	51 scroll area Your playlists
++		52 button Liked Music · Auto playlist, Help: Liked Music
++		53 button New Release Mix · Mix, Help: New Release Mix
++		54 button Ultimate Wedding Playlist
++		55 button Dreamkid
++		56 button Best
++		57 button Antidote · Derik Fein, Help: Antidote
++		58 button Favorite Songs
++		59 button Mindhunter (Soundtrack Inspired by the TV Show) · Fandom, Help: Mindhunter (Soundtrack Inspired by the TV Show)
++		60 button UK R&B Hits 2024 · YouTube Music, Help: UK R&B Hits 2024
++		61 button Discover Mix · Mix, Help: Discover Mix
++		62 button ALT CTRL
++		63 button At the Airport
++		64 button Blues Replay
++		65 button Eminem: Next Steps
++		66 button ESL Pro League - Official Soundtrack
++		67 button Favorite Songs
++		68 button Feeling Good
++		69 button Gentle
++		70 button Hollywood Undead Essentials
++		71 button LINKIN PARK Essentials
++		72 button My Shazam Tracks
++		73 button OG
++		74 button Party Starters
++		75 button Powerful
++		76 button Replay 2018
++	77 scroll area Content
++		78 heading Late night listening
++		79 button Liked Music
++		80 button New Release Mix
++		81 button Ultimate Wedding Playlist
++		82 button Dreamkid
++		83 button Best
++		84 button Antidote
++		85 button Favorite Songs
++		86 button Mindhunter (Soundtrack Inspired by the TV Show)
++		87 heading Listen again
++		88 scroll area
++			89 button Demon Samurai · ONI
++			90 button New Release Mix · Cloudy June, Sasha Alex Sloan, Hit-Boy, The Chainsmokers
++			91 button The Weeknd - Hong Kong Ft. Faye Wong (Live in Hong Kong) · Weeknd Everyday
++			92 button Sex & Drugs · Temper City
++			93 button kill ur boyf vibes / women supreme · Rosalyn “Sera” Shard
++			94 button Vibe · Michael Porcayo
++			95 button 你从未离去 (抖音DJ版) - 于佰万『我不再迷茫 思念是唯一的行囊，满天的星光 有一颗是你的愿望。』♪ || 年度最佳抖音歌曲 | 抖音最火歌曲音 | 抖音 | TikTok ♪ · Fantastic Music Station
++			96 button Ultimate Wedding Playlist
++			97 button Random Access Memories · Daft Punk
++			98 button PROPHET LIKE ME · Deadfolk Prophet
++			99 button Murder Me · Diggy Graves
++			100 button 花魁 - Oiran · ONI
++			101 button The Fatal Flaw · Paris Paloma
++			102 button 在墜落時 · 汉堡黄
++			103 button Follow Me · Alec Benjamin
++			104 button Baby, Don't Cry 人魚的眼淚 · EXO
++			105 button DOTB ROCK · Diggy Graves
++			106 button Midnight Drive in Tokyo · Beat Flickers
++			107 button Roots of Wings · Forrest Rose
++			108 button Over and Over / Tokyo Paradise City · Beat Flickers
++		109 heading New releases
++		110 scroll area
++			111 button KNUCK · MUSHVENOM
++			112 button CLUBSOS VOL. 1 · 5 Seconds of Summer
++			113 button And The Crowd Goes Mild · Sasha Alex Sloan
++			114 button 打翻了整夜的香甜 · 陳忻玥
++			115 button CEMETERY (from the Ryuu series "Granite Waves" by Tezeze) · Call Me Karizma, Gloomy Culture
++			116 button Mabushii · Skinny Brown
++			117 button Horror Story of the Week · Xana
++			118 button 一幀而已 · ZML
++			119 button MISS ME · keshi
++			120 button Beautiful Damage · NØLIVE
++		121 heading Covers and remixes
++		122 scroll area
++			123 button 灵魂洗涤！女生翻唱超火藏风歌曲《难解》，一开口感觉今年都风调雨顺了~ · 咻咻满
++			124 button I Took a Pill in Ibiza - Mike Posner // ( Slowed to Perfection ) · Vinay Sunanta
++			125 button SOLO LEVELING OST - DARK ARIA - ELECTRONIC ROCK/HEAVY DUBSTEP REMIX ENGLISH VERSION · SOMX1NE
++			126 button suki (Slowed + Reverb) · takko
++			127 button This Is What You Came For 80s remix · 25June Music
++			128 button Floating (Genom Världar - English Version) · Cinek
++			129 button Cheriimoya - Living Life, In The Night (Zusebi Remix) (feat. Sierra Kidd) · Zusebi
++			130 button Stay with me (phonk remix) · 23Heaven
++			131 button Mind Games (with Chris Grey) (Remix) · Sickick, Chris Grey
++			132 button Edward Maya & Vika Jigulina - Stereo Love (Zusebi Remix) [TikTok] · Zusebi
++			133 button Ariana Grande - bye [Altare Remix] · Altare
++			134 button Die For You (Remix) · The Weeknd, Ariana Grande
++			135 button Fontanel (Sammy Remix) · Eartheater
++			136 button Suzume - すずめ (Kaiiris Remix) · Kaiiris
++			137 button Can't Get You Out Of My Head · AnnenMayKantereit, Parcels
++			138 button Kesha - your love is my drug (8-bit slow and reverb) · Slow and reverb guy
++		139 heading From the community
++		140 scroll area
++			141 button Memandu tgh malam · Bwaa
++			142 button ㄹ · 김우빈
++			143 button Tell me you have attachment issues without telling me you have attachment issues. · Gillian
++			144 button 우울리듬 · 김명석
++			145 button who's a heretic now · Hazel 🦢
++			146 button NO CREDIT CHECKS FOR YOU · Thomas Thompson
++			147 button Nice beat songs · 𝔾𝕀ℝ𝕃 𝕊ℚ𝕌𝔸𝔻 ♡
++			148 button 成熟味歌單 · HaHa Lin
++			149 button Stockhomsy · Educational
++			150 button im.tired... · Arianna Rivers
++		151 heading The Weeknd
++		152 scroll area
++			153 button '10s R&B Chill · Frank Ocean, Miguel, H.E.R., Jhené Aiko
++			154 button Don Toliver
++			155 button Chill Drives · Saksham Gaur
++			156 button Presenting The Weeknd · The Weeknd, Ariana Grande, Gesaffelstein, Lily Rose Depp
++			157 button Car Playlist 😵‍💫 · Sam Ritchie
++			158 button Presenting Drake · Drake, 21 Savage, DJ Khaled, Future
++			159 button Majid Jordan
++			160 button Fresh hip hop · SAKHILE DLAME
++			161 button Presenting Khalid · Khalid, Marshmello, Kane Brown, benny blanco
++			162 button Travis Scott Circus Maximus Tour Setlist · Travis Scott, Lil Uzi Vert
++		163 heading Easy Evenings
++		164 scroll area
++			165 button Mellow Indie · Lizzy McAlpine, Michael Kiwanuka, Beck, Not For Radio
++			166 button Chilled Hip-Hop · A$AP Rocky, Cordae, Kid Cudi, Russ
++			167 button Take It Easy Indie · The National, Novo Amor, Cigarettes After Sex, Hozier
++			168 button Pop Certified · Ariana Grande, Olivia Rodrigo, Sabrina Carpenter, Bruno Mars
++			169 button Chill EDM Hits · Kygo, The Chainsmokers, Martin Garrix, Lost Frequencies
++			170 button Indian R&B · Clifr, Meba Ofilia, RANJ, Kayan
++			171 button Relaxing Evening · Billie Eilish, Taylor Swift, Phoebe Bridgers, D'Angelo
++			172 button Shea Butter Groove · Moonchild, Rapsody, Masego, Gabriel Jacoby
++			173 button Acoustic Soul · Jorja Smith, Lianne La Havas, Beyoncé, Infinity Song
++			174 button Biggest R&B Hits · Chris Brown, Tyla, SZA, Coco Jones
++	175 text ytmgo

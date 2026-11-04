@@ -1,0 +1,9 @@
+{
+  "head": "d92e39fb5543619d1a1a5864e976fa308b8e2db9",
+  "before_source_sha256": {
+    "internal/player/video.go": "62fe4da4de04e7daa83ba92ea7b25408cb79fdffa417f7eadbbe5b75702af2d7",
+    "internal/player/video_startup_test.go": "b0da04ce300cb42d0241401254b488da755b4cef86f960b99311f2c1b2f05665",
+    "internal/player/video_startup_trace_live_test.go": "c02fd0afebee1e7e03cf3a9757a5d9b126e14551d4008a5e077b14c3f7dea56c"
+  },
+  "installed_sha256": "485d6a62848b1541dcbc5d95657795f2da333591d387304c64d7e73684b3a3fe"
+}

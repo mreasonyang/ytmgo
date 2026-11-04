@@ -1,0 +1,46 @@
+[
+  {
+    "requested_encoding": "identity",
+    "status": 200,
+    "header_ms": 1790,
+    "total_ms": 20002,
+    "wire_bytes": 782765,
+    "decoded_bytes": 782765,
+    "gzip": false,
+    "cause": "deadline",
+    "proof_page_parsed": false
+  },
+  {
+    "requested_encoding": "gzip",
+    "status": 200,
+    "header_ms": 4622,
+    "total_ms": 12655,
+    "wire_bytes": 271824,
+    "decoded_bytes": 957916,
+    "gzip": true,
+    "cause": "none",
+    "proof_page_parsed": true
+  },
+  {
+    "requested_encoding": "gzip",
+    "status": 200,
+    "header_ms": 525,
+    "total_ms": 6288,
+    "wire_bytes": 265139,
+    "decoded_bytes": 913930,
+    "gzip": true,
+    "cause": "none",
+    "proof_page_parsed": true
+  },
+  {
+    "requested_encoding": "identity",
+    "status": 200,
+    "header_ms": 508,
+    "total_ms": 20001,
+    "wire_bytes": 930089,
+    "decoded_bytes": 930089,
+    "gzip": false,
+    "cause": "deadline",
+    "proof_page_parsed": false
+  }
+]

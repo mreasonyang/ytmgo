@@ -60,3 +60,21 @@ func TestExplicitLoginRequirementSurvivesIntoPlayerState(t *testing.T) {
 		t.Fatal("explicit service sign-in requirement was reduced to a generic playback failure")
 	}
 }
+
+func TestMediaFailureMetadataIsBounded(t *testing.T) {
+	for _, status := range []int{0, 403, 416, 503, 600} {
+		err := &streaming.Failure{Category: "audio_server_error", Stage: "media_stream", HTTPStatus: status, Redirect: "synthetic-private", MIME: "synthetic-private"}
+		want := FailureDetails{Stage: "media_stream"}
+		if status >= 100 && status <= 599 {
+			want.HTTPStatus = status
+		}
+		if DiagnosticDetails(err) != want {
+			t.Fatal("media status missing or private metadata retained")
+		}
+		d := &pcmDecoder{}
+		d.failure.Store(&decoderFailure{category: "audio_server_error", details: DiagnosticDetails(err)})
+		if d.errorCategory() != "audio_server_error" || d.errorDetails() != want {
+			t.Fatal("decoder lost media failure metadata")
+		}
+	}
+}

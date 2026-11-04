@@ -1,0 +1,163 @@
+Window: "ytmgo", App: ytmgo.
+0 standard window ytmgo, Secondary Actions: Raise
+	1 button ytmgo Home
+	2 button Back
+	3 button (disabled) Forward
+	4 button Home
+	5 text field (settable) Description: Search, Value: Try Pink, Placeholder: What do you want to play?
+	6 button Explore
+	7 button Settings
+	8 menu button Account · YouTube Music Premium, Help: YouTube Music Premium
+	9 button Library
+	10 button Collapse sidebar
+	11 button Playlists
+	12 button Albums
+	13 button Artists
+	14 scroll area Your playlists
+		15 button Liked Music · Auto playlist, Help: Liked Music
+		16 button New Release Mix · Mix, Help: New Release Mix
+		17 button Ultimate Wedding Playlist
+		18 button Dreamkid
+		19 button Best
+		20 button Antidote · Derik Fein, Help: Antidote
+		21 button Favorite Songs
+		22 button Mindhunter (Soundtrack Inspired by the TV Show) · Fandom, Help: Mindhunter (Soundtrack Inspired by the TV Show)
+		23 button UK R&B Hits 2024 · YouTube Music, Help: UK R&B Hits 2024
+		24 button Discover Mix · Mix, Help: Discover Mix
+		25 button ALT CTRL
+		26 button At the Airport
+		27 button Blues Replay
+		28 button Eminem: Next Steps
+		29 button ESL Pro League - Official Soundtrack
+		30 button Favorite Songs
+		31 button Feeling Good
+		32 button Gentle
+		33 button Hollywood Undead Essentials
+		34 button LINKIN PARK Essentials
+		35 button My Shazam Tracks
+		36 button OG
+		37 button Party Starters
+		38 button Powerful
+		39 button Replay 2018
+	40 scroll area Content
+		41 heading Try Pink
+		42 button Try · Video · P!nk
+		43 button Try (The Truth About Love - Live From Los Angeles) · Video · P!NK
+		44 button 「Nightcore」 Try - P!nk ♡ (Lyrics) · Video · P!nk
+		45 button Pink - Try (COVER by Alec Chambers) on Spotify & Apple · Video · Alec Chambers
+		46 button P!nk · Artist · 162M monthly audience
+		47 button Love Song · Song · P!NK
+		48 button Try · Song · P!NK
+		49 button TRY (DRILL) · Song · EGNXMUSIC
+		50 button Try (Spanish) · Song · Nelly Furtado
+		51 button Try · Song · Alec Chambers
+		52 button Try (Official Video) · Video · P!nk
+		53 button Try · Video · P!nk
+		54 button P!nk - Try (Lyrics) · Video · Fans Music
+		55 button Try (Pink Tribute) · Album · Pop Tracks
+		56 button Try (Originally Performed By Pink) [Karaoke Version] · Album · 2010s Karaoke Band
+		57 button Try (Instrumental Karaoke) [Originally Performed by Pink] · Album · Sing Like The Famous!
+		58 button Paul Eckert · Artist · 147K monthly audience
+		59 button Try Pink · Playlist · lia081981
+		60 button Pink Greatest Hits · Playlist · Jamie Bavage
+		61 button PINK LIVE FROM LOS ANGELES · Playlist · MIR gar
+		62 button Nalini Menezes · Artist · @nalalini
+		63 button Paul H · Artist · @paul7684
+		64 button Anacleto Junior Gurilão · Artist · @JrGurilao
+		65 button Yapping And Trying British Snacks - Pink Wednesdays Podcast Ep.16 · Episode · Jul 16, 2025
+		66 button We Try Pink Sauce!!! · Episode · Oct 1, 2023
+		67 button We Ate EVERYTHING At The Washington DC Wharf! (ft. @peaks100) · Episode · May 27
+		68 button '70s Lite Hits · Playlist · YouTube Music
+		69 button '00s R&B Chill · Playlist · YouTube Music
+		70 button Presenting Michael Jackson · Playlist · YouTube Music
+		71 button Crime Stories with Nancy Grace · Podcast · Nancy Grace
+		72 button My Bible Collection & Bible Reviews · Podcast · Becoming Her by Faith
+		73 button Get Glazed with Ashlee Glazer · Podcast · Ashlee Glazer
+	74 text (settable) Now Playing
+	75 button Immersive mode · Now Playing
+	76 button Close panel
+	77 button Cover
+	78 button Video
+	79 text (settable) Description: Try, Value: Try P!NK
+	80 button Like
+	81 button Queue · Now Playing
+	82 button Lyrics · Now Playing
+	83 button Following playback
+	84 scroll area Lyrics · Content
+		85 text (settable) ♪
+		86 text (settable) Ever wonder 'bout what he's doin'?
+		87 text (settable) How it all turned to lies?
+		88 text (settable) Sometimes I think that it's better
+		89 text (settable) To never ask why
+		90 text (settable) ♪
+		91 text (settable) Where there is desire, there is gonna be a flame
+		92 text (settable) Where there is a flame, someone's bound to get burned
+		93 text (settable) But just because it burns doesn't mean you're gonna die
+		94 text (settable) You've gotta get up and try, try, try
+		95 text (settable) Gotta get up and try, try, try
+		96 text (settable) Gotta get up and try, try, try
+		97 text (settable) Hey, hey-hey
+		98 text (settable) Funny how the heart can be deceiving
+		99 text (settable) More than just a couple times
+		100 text (settable) Why do we fall in love so easy
+		101 text (settable) Even when it's not right
+		102 text (settable) ♪
+		103 text (settable) Hey, no
+		104 text (settable) Where there is desire, there is gonna be a flame
+		105 text (settable) Where there is a flame, someone's bound to get burned
+		106 text (settable) But just because it burns doesn't mean you're gonna die
+		107 text (settable) You've gotta get up and try, try, try
+		108 text (settable) Gotta get up and try, try, try
+		109 text (settable) You've gotta get up and try, try, try
+		110 text (settable) ♪
+		111 text (settable) Ever worry that it might be ruined
+		112 text (settable) And does it make you wanna cry?
+		113 text (settable) When you're out there doing what you're doing
+		114 text (settable) Are you just getting by?
+		115 text (settable) Tell me, are you just getting by, by, by?
+		116 text (settable) Where there is desire, there is gonna be a flame
+		117 text (settable) Where there is a flame, someone's bound to get burned
+		118 text (settable) But just because it burns doesn't mean you're gonna die
+		119 text (settable) You've gotta get up and try, try, try
+		120 text (settable) Gotta get up and try, try, try
+		121 text (settable) You've gotta get up and try, try, try
+		122 text (settable) Gotta get up and try, try, try
+		123 text (settable) Gotta get up and try, try, try
+		124 text (settable) You've gotta get up and try, try, try
+		125 text (settable) Gotta get up and try, try, try
+		126 text (settable) ♪
+		127 text (settable) You've gotta get up and try, try, try
+		128 text (settable) Gotta get up and try, try, try
+		129 text (settable) Source: Musixmatch
+	130 container Player controls
+		131 button Open Now Playing
+		132 button Like
+		133 button Shuffle queue
+		134 button Previous
+		135 button Play
+		136 button Next
+		137 button Repeat: off
+		138 text (settable) 0:15
+		139 slider (settable, float) Description: Playback position, Value: 15.535666666
+		140 text (settable) 4:07
+		141 button Lyrics
+		142 button Queue
+		143 button Mute
+		144 slider (settable, float) Description: Volume, Value: 0.7
+		145 menu button More actions
+		146 button Immersive mode
+	147 close button
+	148 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	149 minimize button
+	150 text ytmgo
+151 menu bar
+	152 ytmgo
+	153 File
+	154 Edit
+	155 Playback
+	156 View
+	157 Window
+	158 Account
+	159 Help
+
+The focused UI element is 84 scroll area Lyrics · Content

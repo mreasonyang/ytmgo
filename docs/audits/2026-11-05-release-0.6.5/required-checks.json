@@ -1,0 +1,12 @@
+[
+  {
+    "check": "make_check",
+    "exit_code": 0,
+    "elapsed_seconds": 76.455
+  },
+  {
+    "check": "release_packaging_tests",
+    "exit_code": 0,
+    "elapsed_seconds": 8.998
+  }
+]

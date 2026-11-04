@@ -2,11 +2,11 @@
 
 [English](README.md) · **简体中文**
 
-**ytmGO** 是基于 **MyGo 0.7.1 原生 UI** 构建的 YouTube Music 桌面客户端（当前版本基线 **0.6.4**）。应用对外品牌显示名统一为 **ytmGO**；仓库名、发行文件前缀、Bundle ID（`si.kyun.ytmgo`）、内部辅助进程标识以及本地用户数据目录保留技术标识 `ytmgo`。
+**ytmGO** 是基于 **MyGo 0.7.1 原生 UI** 构建的 YouTube Music 桌面客户端（当前版本基线 **0.6.5**）。应用对外品牌显示名统一为 **ytmGO**；仓库名、发行文件前缀、Bundle ID（`si.kyun.ytmgo`）、内部辅助进程标识以及本地用户数据目录保留技术标识 `ytmgo`。
 
 音乐主界面与播放控件完全由 Go 通过 MyGo `ui.View` 原生绘制，不包含内嵌网页音乐页面、HTML/CSS/JS 界面桥接、Electron 或 Node.js 运行时。曲库访问、账号状态核验、媒体格式选择与有界流式传输由 Go 直接处理；音频由 MyGo 输出到系统音频设备，视频仅在打开视频视图时由独立原生解码器按需渲染。
 
-> **0.6.4 正式版：** [发布说明与下载](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.4)，将 macOS 最低版本降至 **13 Ventura**，新增原生 **Intel** 安装包，同时提供 Apple Silicon 包。Homebrew 会按架构选择安装包。[兼容性与发布验收](docs/audits/2026-11-04-macos-compat-0.6.4/README.md)。Windows x64、Linux x64 安装方式见下文。
+> **0.6.5 正式版：** [发布说明与下载](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.5)，视频默认 **720p**，支持选择并记住清晰度，同时修复媒体恢复、视频冷启动和同步歌词降级缓存问题。支持 **macOS 13 Ventura 及以上**，提供 **Apple Silicon 和 Intel** 原生安装包。Homebrew 会按架构选择安装包；Windows x64、Linux x64 安装方式见下文。
 
 ---
 
@@ -29,7 +29,7 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 
 ### macOS 正式安装包
 
-1. 下载已签名并公证的 [Apple Silicon DMG](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-0.6.4-arm64-notarized.dmg) 或 [Intel DMG](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-0.6.4-amd64-notarized.dmg)，系统要求 **macOS 13+**。
+1. 下载已签名并公证的 [Apple Silicon DMG](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-0.6.5-arm64-notarized.dmg) 或 [Intel DMG](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-0.6.5-amd64-notarized.dmg)，系统要求 **macOS 13+**。
 2. 将应用从 DMG 拖入可写的 `/Applications` 目录后再运行（直接在只读 DMG 卷内运行无法完成原地自我替换更新）。
 3. 安装到可写目录后，应用会在启动后最早 10 秒自动检查更新（之后每日检查一次），也可随时通过菜单 **ytmGO → 检查更新（Check for Updates…）** 手动触发。
 4. 原生更新窗口支持立即安装、稍后提醒、跳过此版本以及可选的自动下载；下载完成后点击重启即可原地替换 App bundle，并保留已保存的加密账号会话、曲库快照和个性化设置。
@@ -39,10 +39,10 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 
 | 平台 | 下载 | 要求 |
 | --- | --- | --- |
-| Windows x64 | [安装器 EXE](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-setup-0.6.4-amd64.exe) · [便携 ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-0.6.4-windows-amd64.zip) | 需要 WebView2 Runtime；安装器尚未进行 Authenticode 签名 |
-| Linux x64 | [DEB](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo_0.6.4_amd64.deb) · [解压包](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-0.6.4-linux-amd64.tar.gz) | Ubuntu 24.04 或兼容系统，需要 GTK 3、WebKitGTK 4.1 2.50.2+ 和 Secret Service |
+| Windows x64 | [安装器 EXE](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-setup-0.6.5-amd64.exe) · [便携 ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-0.6.5-windows-amd64.zip) | 需要 WebView2 Runtime；安装器尚未进行 Authenticode 签名 |
+| Linux x64 | [DEB](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo_0.6.5_amd64.deb) · [解压包](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-0.6.5-linux-amd64.tar.gz) | Ubuntu 24.04 或兼容系统，需要 GTK 3、WebKitGTK 4.1 2.50.2+ 和 Secret Service |
 
-DEB 使用 `sudo apt install ./ytmgo_0.6.4_amd64.deb` 安装，再从应用菜单启动。便携包需完整解压，将 `runtime`、`login`、`legal` 等资源目录保留在可执行文件旁。两个平台的应用内更新归档均带 Ed25519 签名。[详细安装与发布说明](docs/DESKTOP_RELEASES.md)
+DEB 使用 `sudo apt install ./ytmgo_0.6.5_amd64.deb` 安装，再从应用菜单启动。便携包需完整解压，将 `runtime`、`login`、`legal` 等资源目录保留在可执行文件旁。两个平台的应用内更新归档均带 Ed25519 签名。[详细安装与发布说明](docs/DESKTOP_RELEASES.md)
 
 ---
 
@@ -67,7 +67,7 @@ DEB 使用 `sudo apt install ./ytmgo_0.6.4_amd64.deb` 安装，再从应用菜�
 - **同步歌词跟随与手动阅读：** 当曲目提供同步歌词时间轴时，当前演唱句会高亮并在歌词视口内自动居中跟随，且不会拉动外层面板滚动。使用滚轮、触控板、键盘或滚动条手动浏览歌词时，自动切换为手动阅读状态，并在歌词区域下方显示 **跟随播放（Follow playback）** 按钮；点击该按钮（或按 `Tab` + `Return`）即可回到当前播放句并恢复自动跟随。无同步时间轴的曲目展示纯文本歌词或无歌词提示。
 - **拖动歌词跳转进度：** 对于带同步时间轴的歌词，在歌词区域按住鼠标纵向拖动可预览目标歌词句（选中句以强调色高亮，配合中心参考线及右上角 `<时间> · 松开跳转` 提示）；松开指针后立即跳转到该句起始时间并恢复跟随，同时保持原有的播放或暂停状态。单击歌词、横向拖动、按 `Escape` 或窗口失焦会取消拖动，不会误触发跳转。
 - **放大歌词区域布局：** 在正在播放面板的 **歌词** 标签右侧（非沉浸模式且非视频模式下），点击放大按钮可缩小封面尺寸、为歌词留出更多纵向空间，再次点击恢复原封面大小；该布局偏好保存在 `lyrics-layout` 中，重启后自动保留。
-- **封面 / 视频按需切换：** 在正在播放面板或沉浸模式中可显式切换 **封面（Cover）** 与 **视频（Video）**。视频由独立原生解码器按需解码渲染（最高 **480p / 24fps**，按音频时钟同步并保持原始画幅比例）；隐藏或最小化窗口、关闭播放视图或切回封面会立即释放视频解码器，音频播放不受影响。
+- **封面 / 视频按需切换：** 在正在播放面板或沉浸模式中可显式切换 **封面（Cover）** 与 **视频（Video）**。视频由独立原生解码器按需解码渲染（默认 **720p**，可在视频切换按钮旁或设置中选择 **144p–1080p**；以 24fps 渲染，按音频时钟同步并保持原始画幅比例）。上次选择会立即保存，切歌及重启后继续沿用；切换时仅按当前音频进度重新加载视频，源不提供所选清晰度时优先使用较低清晰度。隐藏或最小化窗口、关闭播放视图或切回封面会立即释放视频解码器，音频播放不受影响。
 
 ### 响应式布局、多语言与快捷键
 

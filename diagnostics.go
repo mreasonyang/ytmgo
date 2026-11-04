@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"time"
 
+	"ytmgo/internal/catalog"
 	"ytmgo/internal/player"
 )
 
@@ -41,7 +44,7 @@ func recordPlaybackDiagnostic(directory, component, category string, details ...
 		HTTPStatus                         int    `json:"HTTPStatus,omitempty"`
 		Redirect                           string `json:"Redirect,omitempty"`
 		MIME                               string `json:"MIME,omitempty"`
-	}{time.Now().UTC().Format(time.RFC3339), version, component, category,
+	}{time.Now().UTC().Format(time.RFC3339), applicationVersion(), component, category,
 		metadata.Stage, metadata.BootstrapStep, metadata.HTTPStatus, metadata.Redirect, metadata.MIME})
 	if os.MkdirAll(directory, 0700) == nil {
 		_ = os.WriteFile(filepath.Join(directory, component+"-status.json"), data, 0600)
@@ -61,9 +64,54 @@ func recordAccountDiagnostic(directory, category string) {
 		category = "session_failed"
 	}
 	data, _ := json.Marshal(struct{ Time, Version, Component, Category string }{
-		time.Now().UTC().Format(time.RFC3339), version, "account", category,
+		time.Now().UTC().Format(time.RFC3339), applicationVersion(), "account", category,
 	})
 	if os.MkdirAll(directory, 0700) == nil {
 		_ = os.WriteFile(filepath.Join(directory, "account-status.json"), data, 0600)
+	}
+}
+
+func recordCatalogDiagnostic(directory string, err error, elapsed time.Duration) {
+	if directory == "" || errors.Is(err, context.Canceled) || errors.Is(err, catalog.ErrSessionChanged) {
+		return
+	}
+	category, stage, status := "ready", "", 0
+	if err != nil {
+		category = "catalog_unavailable"
+		var transport *catalog.TransportError
+		var httpError *catalog.HTTPError
+		switch {
+		case errors.Is(err, context.DeadlineExceeded):
+			category = "catalog_network_timeout"
+		case errors.As(err, &transport):
+			stage = transport.Stage
+			switch transport.Category {
+			case "catalog_network_timeout", "catalog_connection_failed", "catalog_response_truncated":
+				category = transport.Category
+			}
+		case errors.As(err, &httpError):
+			stage = httpError.Stage
+			if httpError.StatusCode >= 100 && httpError.StatusCode <= 599 {
+				status = httpError.StatusCode
+				category = "catalog_http_error"
+			}
+		case errors.Is(err, catalog.ErrInvalidResponse):
+			category = "catalog_invalid_response"
+		case errors.Is(err, catalog.ErrResponseTooLarge):
+			category = "catalog_response_limit"
+		}
+	}
+	switch stage {
+	case "search", "browse", "next":
+	default:
+		stage = ""
+	}
+	data, _ := json.Marshal(struct {
+		Time, Version, Component, Category, Stage string
+		HTTPStatus                                int
+		ElapsedMS                                 int64
+	}{time.Now().UTC().Format(time.RFC3339), applicationVersion(), "catalog", category, stage, status, max(0, elapsed.Milliseconds())})
+	if os.MkdirAll(directory, 0700) == nil {
+		_ = os.WriteFile(filepath.Join(directory, "catalog-status.json"), data, 0600)
 	}
 }

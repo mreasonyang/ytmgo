@@ -20,6 +20,18 @@ const channels = 2
 const firstPCMTimeout = 30 * time.Second
 const pcmDurationTolerance = time.Second / 2
 
+// Compatibility relays get a watchdog longer than their upstream retry budget.
+// Native Go leases own bounded header/read retries and cancellation themselves;
+// a second FFmpeg watchdog must not interrupt their recovery or backpressure.
+const decoderReadTimeout = 90 * time.Second
+
+func mediaReadTimeout(info media) time.Duration {
+	if info.source != nil {
+		return 0
+	}
+	return decoderReadTimeout
+}
+
 type pcmDecoder struct {
 	reader      io.ReadCloser
 	input       io.Reader
@@ -30,8 +42,15 @@ type pcmDecoder struct {
 	length      int64
 	readFrames  int64
 	checkLength bool
+	diagnostic  *decoderDiagnostics
+	failure     atomic.Pointer[decoderFailure]
 	buf         [16 << 10]byte
 	eof, failed atomic.Bool
+}
+
+type decoderFailure struct {
+	category string
+	details  FailureDetails
 }
 
 // decoderDiagnostics retains only a short parsing tail while the process runs.
@@ -92,7 +111,7 @@ func startDecoder(ctx context.Context, executable string, info media, at time.Du
 		return nil, err
 	}
 	cmd := childCommand(life, executable, "-hide_banner", "-loglevel", "error", "-nostdin",
-		"-ss", fmt.Sprintf("%.6f", at.Seconds()), "-rw_timeout", "10000000",
+		"-ss", fmt.Sprintf("%.6f", at.Seconds()), "-rw_timeout", fmt.Sprint(mediaReadTimeout(info).Microseconds()),
 		"-protocol_whitelist", "pipe,file,http,tcp,concatf", "-i", "concatf:pipe:0",
 		"-vn", "-sn", "-dn", "-threads", "1", "-ac", "2", "-ar", "48000", "-f", "f32le", "pipe:1")
 	diagnostic := &decoderDiagnostics{}
@@ -120,7 +139,7 @@ func startDecoder(ctx context.Context, executable string, info media, at time.Du
 	wr.Close()
 	done := make(chan error, 1)
 	go func() { done <- cmd.Wait(); close(done) }()
-	d := &pcmDecoder{reader: rd, input: rd, cancel: cancel, wait: done, bridge: bridge, length: int64((info.Duration - at).Seconds() * sampleRate), checkLength: true}
+	d := &pcmDecoder{reader: rd, input: rd, cancel: cancel, wait: done, bridge: bridge, diagnostic: diagnostic, length: int64((info.Duration - at).Seconds() * sampleRate), checkLength: true}
 	stop := context.AfterFunc(ready, func() { d.Close() })
 	defer stop()
 	// Require actual PCM except when a successful decoder has already reached
@@ -169,6 +188,9 @@ func (d *pcmDecoder) SetPosition(frame int64) error {
 	return errors.New("decoder_requires_reopen")
 }
 func (d *pcmDecoder) Read(dst []float32) (int, error) {
+	if d.eof.Load() {
+		return 0, io.EOF
+	}
 	count := min(len(dst)-len(dst)%channels, len(d.buf)/4)
 	if count == 0 {
 		return 0, nil
@@ -180,24 +202,53 @@ func (d *pcmDecoder) Read(dst []float32) (int, error) {
 		dst[i] = math.Float32frombits(binary.LittleEndian.Uint32(d.buf[i*4:]))
 	}
 	if err != nil {
-		d.eof.Store(true)
+		category := ""
+		details := FailureDetails{}
 		if err != io.EOF && err != io.ErrUnexpectedEOF {
-			d.failed.Store(true)
+			category = "audio_stream_failed"
 		}
 		if result := <-d.wait; result != nil {
-			d.failed.Store(true)
+			category = "audio_stream_failed"
+			if d.diagnostic != nil {
+				category = d.diagnostic.result().Error()
+			}
 		}
 		// FFmpeg can exit successfully when a CDN truncates the stream. Require
 		// the advertised PCM duration (allowing codec padding), not only exit 0.
 		if d.checkLength && d.readFrames+int64(pcmDurationTolerance.Seconds()*sampleRate) < d.length {
+			if category == "" || category == "audio_stream_failed" {
+				category = "audio_stream_truncated"
+			}
+		}
+		if d.bridge != nil {
+			if bridgeErr := d.bridge.Err(); bridgeErr != nil {
+				category = safeError(bridgeErr)
+				details = DiagnosticDetails(bridgeErr)
+			}
+		}
+		if category != "" {
+			d.failure.Store(&decoderFailure{category: category, details: details})
 			d.failed.Store(true)
 		}
-		if d.bridge != nil && d.bridge.Err() != nil {
-			d.failed.Store(true)
-		}
+		// Publish EOF last: Snapshot must see the final failure classification.
+		d.eof.Store(true)
 		return n / 4, io.EOF
 	}
 	return n / 4, nil
+}
+
+func (d *pcmDecoder) errorCategory() string {
+	if category := d.failure.Load(); category != nil {
+		return category.category
+	}
+	return "audio_stream_failed"
+}
+
+func (d *pcmDecoder) errorDetails() FailureDetails {
+	if failure := d.failure.Load(); failure != nil {
+		return failure.details.Sanitized()
+	}
+	return FailureDetails{}
 }
 func (d *pcmDecoder) Close() error {
 	d.closeOnce.Do(func() {

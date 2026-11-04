@@ -1,0 +1,26 @@
+{
+  "time": "2026-11-04T15:02:27.161500+00:00",
+  "processes": [
+    {
+      "pid": 87235,
+      "ppid": 1,
+      "uid": 501,
+      "state": "S",
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/cache-core-e2e-20261104/ytmGO.app/Contents/MacOS/ytmGO"
+    },
+    {
+      "pid": 87659,
+      "ppid": 87235,
+      "uid": 501,
+      "state": "S",
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/cache-core-e2e-20261104/ytmGO.app/Contents/Resources/runtime/ffmpeg"
+    },
+    {
+      "pid": 88016,
+      "ppid": 87235,
+      "uid": 501,
+      "state": "S",
+      "executable": "/Users/easonyang/Documents/projects/ytmgo/build/cache-core-e2e-20261104/ytmGO.app/Contents/Resources/runtime/ffmpeg"
+    }
+  ]
+}

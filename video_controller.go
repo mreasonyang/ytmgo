@@ -5,7 +5,32 @@ import (
 	"time"
 
 	"github.com/egoist/mygo/ui"
+	"ytmgo/internal/videoquality"
 )
+
+func (a *desktop) setVideoQuality(quality int) {
+	if a.changeVideoQuality(quality) {
+		a.model.VideoError = a.tr("nativeVideoUnavailable")
+	}
+	a.invalidate()
+}
+
+// Report a rejected video restart separately from localization, as
+// syncVideoSession does, so this transition also runs without a native window.
+func (a *desktop) changeVideoQuality(quality int) bool {
+	if !videoquality.Valid(quality) || quality == videoquality.Normalize(a.model.VideoQuality) {
+		return false
+	}
+	if err := videoquality.Save(a.videoQualityPath, quality); err != nil {
+		a.model.VideoQualityError = "nativeVideoQualitySaveError"
+		return false
+	}
+	a.model.VideoQuality = quality
+	a.model.VideoQualityError = ""
+	// Force the same track through video resolution again. The audio player
+	// keeps its current lease, clock, volume and playing/paused state.
+	return a.syncVideoSession(true)
+}
 
 func (a *desktop) setVideo(value bool) {
 	retry := value && a.model.VideoError != ""
@@ -54,7 +79,7 @@ func (a *desktop) syncVideoSession(retry bool) bool {
 		return false
 	}
 	a.model.VideoLoading = true
-	err := a.video.Start(a.ctx, wanted, func() time.Duration { return a.player.Snapshot().Position }, func() bool { return a.player.Snapshot().Playing })
+	err := a.video.StartWithQuality(a.ctx, wanted, a.model.VideoQuality, func() time.Duration { return a.player.Snapshot().Position }, func() bool { return a.player.Snapshot().Playing })
 	if err != nil {
 		a.videoActive.Store(false)
 		a.model.VideoLoading = false
@@ -80,6 +105,7 @@ func (a *desktop) pollVideo() {
 			generation := a.videoGeneration.Load()
 			frame, number := a.video.Frame()
 			loading, errText := a.video.Loading(), a.video.Error()
+			details := a.video.ErrorDetails()
 			if number == previousNumber && loading == previousLoading && errText == previousError {
 				continue
 			}
@@ -92,7 +118,7 @@ func (a *desktop) pollVideo() {
 				}
 				message := ""
 				if errText != "" {
-					recordPlaybackDiagnostic(a.diagnosticPath, "video", errText)
+					recordPlaybackDiagnostic(a.diagnosticPath, "video", errText, details)
 					message = a.tr("nativeVideoUnavailable")
 				}
 				a.applyVideoFrame(generation, frame, number, loading, message)

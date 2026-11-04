@@ -66,6 +66,10 @@ func (r *Resolver) requestWithHeaders(ctx context.Context, method, raw string, b
 		budget = 60 * time.Second
 	} else if stage == "bootstrap" && step == "player_identifier" {
 		budget = 5 * time.Second
+	} else if stage == "proof_init" && method == "GET" && raw == "https://www.youtube.com/" {
+		// Proof initialization needs the complete HTML document, which is much
+		// larger than an API reply even when the server negotiates gzip.
+		budget = 60 * time.Second
 	}
 	ctx, cancel := context.WithTimeout(ctx, budget)
 	defer cancel()
@@ -81,12 +85,9 @@ func (r *Resolver) requestWithHeaders(ctx context.Context, method, raw string, b
 	if stage == "proof_init" {
 		req.Header.Set("User-Agent", proofUserAgent)
 	}
-	playerScript := req.URL.Host == "www.youtube.com" && strings.HasPrefix(req.URL.Path, "/s/player/")
-	if playerScript {
-		req.Header.Set("Accept-Encoding", "gzip")
-	} else {
-		req.Header.Set("Accept-Encoding", "identity")
-	}
+	// Decode explicitly so both wire and expanded response sizes stay bounded.
+	// This includes the large proof HTML page, not only the player script.
+	req.Header.Set("Accept-Encoding", "gzip")
 	if req.Header.Get("Accept") == "" {
 		req.Header.Set("Accept", "*/*")
 	}
@@ -140,13 +141,16 @@ func (r *Resolver) requestWithHeaders(ctx context.Context, method, raw string, b
 	if res.ContentLength > maxResponse {
 		return nil, failure("resolver_response_limit", stage)
 	}
-	// Cap both the network transfer and the script passed to the JS runtime.
+	// Cap both the network transfer and the expanded response.
 	wire := &io.LimitedReader{R: res.Body, N: maxResponse + 1}
 	var data []byte
-	if playerScript && strings.EqualFold(res.Header.Get("Content-Encoding"), "gzip") {
-		data, err = readGzipScript(wire)
-	} else {
+	switch strings.ToLower(strings.TrimSpace(res.Header.Get("Content-Encoding"))) {
+	case "gzip":
+		data, err = readGzipResponse(wire)
+	case "", "identity":
 		data, err = io.ReadAll(wire)
+	default:
+		return nil, failure("resolver_http_error", stage)
 	}
 	if wire.N == 0 || len(data) > maxResponse {
 		return nil, failure("resolver_response_limit", stage)
@@ -166,7 +170,7 @@ func (r *Resolver) requestWithHeaders(ctx context.Context, method, raw string, b
 	return data, nil
 }
 
-func readGzipScript(wire io.Reader) ([]byte, error) {
+func readGzipResponse(wire io.Reader) ([]byte, error) {
 	r, err := gzip.NewReader(wire)
 	if err != nil {
 		return nil, err

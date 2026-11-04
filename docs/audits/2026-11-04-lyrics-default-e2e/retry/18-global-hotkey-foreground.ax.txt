@@ -1,0 +1,84 @@
+Window: "ytmgo", App: ytmgo.
+0 standard window ytmgo, Secondary Actions: Raise
+	1 button Exit immersive mode
+	2 text (settable) Now Playing
+	3 button Settings
+	4 scroll area
+		5 button Cover
+		6 button Video
+		7 text (settable) People Help the People
+		8 text (settable) Birdy
+		9 button Lyrics · Now Playing
+		10 button Queue · Now Playing
+		11 scroll area Lyrics · Content
+			12 text (settable) ♪
+			13 text (settable) God knows what is hiding in those weak and drunken hearts
+			14 text (settable) Guess he kissed the girls and made them cry
+			15 text (settable) Those hard-faced Queens of misadventure
+			16 text (settable) God knows what is hiding in those weak and sunken lies
+			17 text (settable) Fiery throngs of muted angels
+			18 text (settable) Giving love but getting nothin' back, oh
+			19 text (settable) People, help the people
+			20 text (settable) And if you're homesick, give me your hand and I'll hold it
+			21 text (settable) People, help the people
+			22 text (settable) And nothing will drag you down
+			23 text (settable) Oh, and if I had a brain
+			24 text (settable) Oh, and if I had a brain
+			25 text (settable) I'd be cold as a stone and rich as the fool
+			26 text (settable) That turned all those good hearts away
+			27 text (settable) God knows what is hiding in this world of little consequence
+			28 text (settable) Behind the tears, inside the lies
+			29 text (settable) A thousand slowly dying sunsets
+			30 text (settable) God knows what is hiding in those weak and drunken hearts
+			31 text (settable) Guess the loneliness came knocking
+			32 text (settable) No one needs to be alone or singin'
+			33 text (settable) People, help the people
+			34 text (settable) And if you're homesick, give me your hand and I'll hold it
+			35 text (settable) People, help the people
+			36 text (settable) Nothing will drag you down
+			37 text (settable) Oh, and if I had a brain
+			38 text (settable) Oh, and if I had a brain
+			39 text (settable) I'd be cold as a stone and rich as the fool
+			40 text (settable) That turned all those good hearts away
+			41 text (settable) ♪
+			42 text (settable) Na, na, na-na-na-na, ooh, ooh
+			43 text (settable) Na, na, na-na-na, ooh, ooh
+			44 text (settable) People, help the people
+			45 text (settable) And if you're homesick, give me your hand and I'll hold it
+			46 text (settable) People, help the people
+			47 text (settable) Nothing will drag you down
+			48 text (settable) Oh, and if I had a brain
+			49 text (settable) Oh, and if I had a brain
+			50 text (settable) I'd be cold as a stone and rich as the fool
+			51 text (settable) That turned all those good hearts away
+			52 text (settable) Source: Musixmatch
+	53 text (settable) 3:36
+	54 slider (settable, float) Description: Playback position, Value: 216.586396223
+	55 text (settable) 4:16
+	56 button Shuffle queue
+	57 button Previous
+	58 button Play
+	59 button Next
+	60 button Repeat: off
+	61 button Like
+	62 button Mute
+	63 slider (settable, float) Description: Volume, Value: 0.7
+	64 menu button More actions
+	65 container Main navigation
+		66 button Home
+		67 button Search
+		68 button Explore
+		69 button Library
+	70 close button
+	71 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	72 minimize button
+	73 text ytmgo
+74 menu bar
+	75 ytmgo
+	76 File
+	77 Edit
+	78 Playback
+	79 View
+	80 Window
+	81 Account
+	82 Help

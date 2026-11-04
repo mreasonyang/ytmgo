@@ -1,0 +1,20 @@
+{
+  "check": "proof-lifecycle-test",
+  "packages": [
+    {
+      "Package": "ytmgo/internal/streaming",
+      "Action": "fail",
+      "Elapsed": 20.922
+    }
+  ],
+  "counts": {
+    "pass": 0,
+    "fail": 1,
+    "skip": 0
+  },
+  "categories": [],
+  "locations": [
+    "e2e_proof_live_test.go:93"
+  ],
+  "metrics": []
+}

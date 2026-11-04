@@ -1,0 +1,8 @@
+{
+  "Time": "2026-11-04T16:16:06Z",
+  "Version": "0.6.4",
+  "Component": "audio",
+  "Category": "audio_server_error",
+  "Stage": "media_stream",
+  "HTTPStatus": 302
+}

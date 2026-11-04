@@ -1,0 +1,7 @@
+{
+  "queue_identical": true,
+  "position_identical": true,
+  "index_identical": true,
+  "volume_identical": true,
+  "processes_after_exit": []
+}

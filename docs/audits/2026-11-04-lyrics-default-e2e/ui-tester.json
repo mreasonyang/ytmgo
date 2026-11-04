@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "exit_code": 0,
+  "counts": {
+    "pass": 20
+  },
+  "failures": [],
+  "elapsed_seconds": 3.04,
+  "snapshot_count": 10
+}

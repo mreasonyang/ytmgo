@@ -1,0 +1,32 @@
+{
+  "artifact_id": 12954645580,
+  "artifact_name": "ytmgo-macos-arm64-notarized-14",
+  "checksums": [
+    {
+      "name": "ytmgo-0.5.0-arm64-notarized.zip",
+      "sha256": "277de77c3cea89c60da4b96560904c7c113855311612a2eb4e8c9d968c9b017a",
+      "matches": true
+    },
+    {
+      "name": "ytmgo-0.5.0-arm64-notarized.dmg",
+      "sha256": "dac996b53e1425ba4e9d7f090917bcd7f097f5ef1c23428fcffb801ee69c3873",
+      "matches": true
+    },
+    {
+      "name": "build.json",
+      "sha256": "71ed11a3cd0c240aed544f5d2e6f3fd60b1ee5cb111069e01830e68e4659f222",
+      "matches": true
+    },
+    {
+      "name": "ytmgo-0.5.0-darwin-arm64.tar.gz",
+      "sha256": "1d34cc70c8a2706a4cf456bb4cc033b09f4a9ee61424fa18923562844adc8055",
+      "matches": true
+    },
+    {
+      "name": "update-darwin-arm64.json",
+      "sha256": "dd6cc03c6621de363ab2947f8d7783b85ff870045281d61aba95c7067e5ee4b6",
+      "matches": true
+    }
+  ],
+  "unpacked_app": "/Users/easonyang/Documents/projects/ytmgo/build/diagnostics/github-package-e2e-20261030/unpacked/ytmgo.app"
+}

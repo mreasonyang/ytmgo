@@ -1,0 +1,14 @@
+{
+  "category": "pass",
+  "official_video_matched": true,
+  "startup_ms": 6574,
+  "Samples": 120,
+  "MovingSamples": 119,
+  "frames_advanced": 142,
+  "maximum_pixel_difference": 0.2755718954248366,
+  "ResolutionCategory": "",
+  "ResolutionStage": "",
+  "VideoError": "",
+  "Width": 1280,
+  "Height": 720
+}

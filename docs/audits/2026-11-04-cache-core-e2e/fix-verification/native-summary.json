@@ -1,0 +1,67 @@
+{
+  "samples": 79,
+  "failed_samples": 0,
+  "first_track_metadata_ms": 369641,
+  "maximum_first_track_position_ms": 365186,
+  "automatic_next_transitions": [
+    {
+      "before": {
+        "Version": "0.6.4",
+        "Time": "2026-11-04T16:26:19.090861Z",
+        "Sequence": 70,
+        "ElapsedMS": 362912,
+        "PositionMS": 365186,
+        "DurationMS": 369641,
+        "Playing": true,
+        "Loading": false,
+        "Ended": false,
+        "Failed": false,
+        "TestAppPID": 7828,
+        "DecoderPIDs": [
+          7860,
+          7870
+        ],
+        "AudioCategory": "ready",
+        "AudioHTTPStatus": 0
+      },
+      "after": {
+        "Version": "0.6.4",
+        "Time": "2026-11-04T16:26:29.591112Z",
+        "Sequence": 72,
+        "ElapsedMS": 373412,
+        "PositionMS": 5901,
+        "DurationMS": 369681,
+        "Playing": true,
+        "Loading": false,
+        "Ended": false,
+        "Failed": false,
+        "TestAppPID": 7828,
+        "DecoderPIDs": [
+          7870,
+          9202
+        ],
+        "AudioCategory": "ready",
+        "AudioHTTPStatus": 0
+      }
+    }
+  ],
+  "last": {
+    "Version": "0.6.4",
+    "Time": "2026-11-04T16:27:58.840697Z",
+    "Sequence": 89,
+    "ElapsedMS": 462662,
+    "PositionMS": 95149,
+    "DurationMS": 369681,
+    "Playing": true,
+    "Loading": false,
+    "Ended": false,
+    "Failed": false,
+    "TestAppPID": 7828,
+    "DecoderPIDs": [
+      7870,
+      9202
+    ],
+    "AudioCategory": "ready",
+    "AudioHTTPStatus": 0
+  }
+}

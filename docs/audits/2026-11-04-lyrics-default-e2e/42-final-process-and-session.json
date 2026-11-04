@@ -1,0 +1,739 @@
+{
+  "version": 1,
+  "index": 8,
+  "positionNs": 162466666666,
+  "volume": 0.7,
+  "unmutedVolume": 0.7,
+  "queue": [
+    {
+      "id": "sKzoEwQaF7Y",
+      "title": "Free Fallin' (Live at the Nokia Theatre, Los Angeles, CA - December 2007)",
+      "artist": "John Mayer",
+      "album": "Where the Light Is: John Mayer Live In Los Angeles",
+      "duration": 264000000000,
+      "kind": "song"
+    },
+    {
+      "id": "6bobs0izirc",
+      "title": "Dancing On My Own (Acoustic)",
+      "artist": "Calum Scott",
+      "album": "Dancing On My Own (Acoustic)",
+      "duration": 254000000000,
+      "kind": "song"
+    },
+    {
+      "id": "kfmoZJKitjw",
+      "title": "Somewhere Only We Know",
+      "artist": "Lily Allen",
+      "album": "Sheezus (Deluxe Edition)",
+      "duration": 209000000000,
+      "kind": "song"
+    },
+    {
+      "id": "evv1uEUS5VU",
+      "title": "Wicked Game",
+      "artist": "Gemma Hayes",
+      "album": "Wicked Game",
+      "duration": 246000000000,
+      "kind": "song"
+    },
+    {
+      "id": "OXrA-66bdiY",
+      "title": "Shape of You (Acoustic)",
+      "artist": "Ed Sheeran",
+      "album": "Shape of You (Acoustic)",
+      "duration": 224000000000,
+      "kind": "song"
+    },
+    {
+      "id": "M5MkEv9VY3c",
+      "title": "Read All About It, Pt. III",
+      "artist": "Emeli Sand\u00e9",
+      "album": "Our Version Of Events (Special Edition)",
+      "duration": 284000000000,
+      "kind": "song"
+    },
+    {
+      "id": "q2jSq1r4HmQ",
+      "title": "Mercy (Acoustic)",
+      "artist": "Shawn Mendes",
+      "album": "Illuminate (Deluxe)",
+      "duration": 220000000000,
+      "kind": "song"
+    },
+    {
+      "id": "NSGxM9bs3uY",
+      "title": "It Ain't Me, Babe",
+      "artist": "Timoth\u00e9e Chalamet, Monica Barbaro",
+      "album": "A Complete Unknown (Original Motion Picture Soundtrack)",
+      "duration": 218000000000,
+      "kind": "song"
+    },
+    {
+      "id": "fOymevxe1pI",
+      "title": "Can't Help Falling In Love",
+      "artist": "Kina Grannis",
+      "album": "Crazy Rich Asians (Original Motion Picture Soundtrack)",
+      "duration": 201941000000,
+      "kind": "song"
+    },
+    {
+      "id": "DxEXXCqURHM",
+      "title": "People Help the People",
+      "artist": "Birdy",
+      "album": "Birdy (Deluxe Version)",
+      "duration": 257000000000,
+      "kind": "song"
+    },
+    {
+      "id": "zkePMAuEDaQ",
+      "title": "Chandelier (Piano Version)",
+      "artist": "Sia",
+      "album": "1000 Forms Of Fear (Deluxe Version)",
+      "duration": 242000000000,
+      "kind": "song"
+    },
+    {
+      "id": "JxMZPdZLehs",
+      "title": "Crazy In Love (Remix)",
+      "artist": "Beyonc\u00e9",
+      "album": "Crazy In Love (Remix)",
+      "duration": 227000000000,
+      "kind": "song"
+    },
+    {
+      "id": "csGoVMysHz0",
+      "title": "The Scientist",
+      "artist": "Corinne Bailey Rae",
+      "album": "Fifty Shades Darker (Original Motion Picture Soundtrack)",
+      "duration": 197000000000,
+      "kind": "song"
+    },
+    {
+      "id": "bcetqI8zPFw",
+      "title": "Your Song (Bonus Track)",
+      "artist": "Ellie Goulding",
+      "album": "Bright Lights (Lights Re-pack / Bonus Version)",
+      "duration": 192000000000,
+      "kind": "song"
+    },
+    {
+      "id": "NEGiu95X93M",
+      "title": "Impossible (Acoustic)",
+      "artist": "James Arthur",
+      "album": "James Arthur (Deluxe)",
+      "duration": 251000000000,
+      "kind": "song"
+    },
+    {
+      "id": "jS_7k-2hfZ0",
+      "title": "Slipping Through My Fingers",
+      "artist": "Declan McKenna",
+      "album": "Slipping Through My Fingers",
+      "duration": 264000000000,
+      "kind": "song"
+    },
+    {
+      "id": "YVZZFZCq-Cw",
+      "title": "Latch (Acoustic)",
+      "artist": "Sam Smith",
+      "album": "In The Lonely Hour (Drowning Shadows Edition)",
+      "duration": 224000000000,
+      "kind": "song"
+    },
+    {
+      "id": "vL0eJxqHVZU",
+      "title": "Love Me Like You Do (Acoustic)",
+      "artist": "Ellie Goulding",
+      "album": "Simplemente Ac\u00fastico",
+      "duration": 255000000000,
+      "kind": "song"
+    },
+    {
+      "id": "NPRmJwSOsLY",
+      "title": "Grenade (Acoustic)",
+      "artist": "Bruno Mars",
+      "album": "The Grenade Sessions",
+      "duration": 250000000000,
+      "kind": "song"
+    },
+    {
+      "id": "NT653U-UMSw",
+      "title": "The One That Got Away (Acoustic)",
+      "artist": "Katy Perry",
+      "album": "Teenage Dream: The Complete Confection",
+      "duration": 260000000000,
+      "kind": "song"
+    },
+    {
+      "id": "evNYtPFGqgI",
+      "title": "She Will Be Loved (Acoustic)",
+      "artist": "Maroon 5",
+      "album": "1.22.03. (Acoustic)",
+      "duration": 277000000000,
+      "kind": "song"
+    },
+    {
+      "id": "OBqga1e4Beo",
+      "title": "Never Tear Us Apart",
+      "artist": "Paloma Faith",
+      "album": "Fall to Grace (Expanded Edition)",
+      "duration": 185000000000,
+      "kind": "song"
+    },
+    {
+      "id": "PfCMyH3AUnQ",
+      "title": "That Funny Feeling",
+      "artist": "Phoebe Bridgers",
+      "album": "That Funny Feeling",
+      "duration": 401000000000,
+      "kind": "song"
+    },
+    {
+      "id": "mLtHfEK-ykk",
+      "title": "Wings (Acoustic)",
+      "artist": "Birdy",
+      "album": "Beautiful Lies (Deluxe)",
+      "duration": 222000000000,
+      "kind": "song"
+    },
+    {
+      "id": "WUxEHxqQn34",
+      "title": "Wherever You Will Go",
+      "artist": "Charlene Soraia",
+      "album": "Wherever You Will Go",
+      "duration": 198000000000,
+      "kind": "song"
+    },
+    {
+      "id": "ri0lIFhOn-U",
+      "title": "Candle In The Wind (2018 Version)",
+      "artist": "Ed Sheeran",
+      "album": "Revamp: The Songs Of Elton John & Bernie Taupin",
+      "duration": 199000000000,
+      "kind": "song"
+    },
+    {
+      "id": "YnwQN9h0uOQ",
+      "title": "XO",
+      "artist": "John Mayer",
+      "album": "XO",
+      "duration": 214000000000,
+      "kind": "song"
+    },
+    {
+      "id": "jXMRlSteSHA",
+      "title": "just like heaven",
+      "artist": "The Lumineers",
+      "album": "just like heaven",
+      "duration": 205000000000,
+      "kind": "song"
+    },
+    {
+      "id": "UhKGLG8IT_I",
+      "title": "Better Days (Acoustic)",
+      "artist": "Dermot Kennedy",
+      "album": "Better Days",
+      "duration": 187000000000,
+      "kind": "song"
+    },
+    {
+      "id": "soWOs3NOm0w",
+      "title": "What Is Love",
+      "artist": "Jaymes Young",
+      "album": "What Is Love",
+      "duration": 209000000000,
+      "kind": "song"
+    },
+    {
+      "id": "x9y2CjDv__4",
+      "title": "here comes the sun",
+      "artist": "christina perri",
+      "album": "songs for rosie",
+      "duration": 168000000000,
+      "kind": "song"
+    },
+    {
+      "id": "RV_J1K6bhm0",
+      "title": "Thursday (Acoustic)",
+      "artist": "Jess Glynne",
+      "album": "Thursday (Acoustic)",
+      "duration": 242000000000,
+      "kind": "song"
+    },
+    {
+      "id": "EvbwjbFbaj4",
+      "title": "Time After Time",
+      "artist": "Iron & Wine",
+      "album": "Time After Time",
+      "duration": 171000000000,
+      "kind": "song"
+    },
+    {
+      "id": "Uubvo7fw9rY",
+      "title": "Unchained Melody",
+      "artist": "Lykke Li",
+      "album": "Unchained Melody",
+      "duration": 156000000000,
+      "kind": "song"
+    },
+    {
+      "id": "4ApJUGyUN40",
+      "title": "The Power of Love",
+      "artist": "Gabrielle Aplin",
+      "album": "English Rain",
+      "duration": 246000000000,
+      "kind": "song"
+    },
+    {
+      "id": "7Paca0GJUQY",
+      "title": "Wake Me Up",
+      "artist": "Madilyn Bailey",
+      "album": "The Covers, Vol. 6",
+      "duration": 212000000000,
+      "kind": "song"
+    },
+    {
+      "id": "yUipyHTeujo",
+      "title": "Don't You Worry Child (Acoustic Version) (feat. John Martin)",
+      "artist": "Swedish House Mafia",
+      "album": "Don't You Worry Child",
+      "duration": 258000000000,
+      "kind": "song"
+    },
+    {
+      "id": "_E1jM7RRbSQ",
+      "title": "My Love (Acoustic)",
+      "artist": "Jess Glynne",
+      "album": "I Cry When I Laugh",
+      "duration": 183000000000,
+      "kind": "song"
+    },
+    {
+      "id": "28MoridNVNo",
+      "title": "when the party\u2019s over",
+      "artist": "James Blake",
+      "album": "Covers",
+      "duration": 194000000000,
+      "kind": "song"
+    },
+    {
+      "id": "b0epPZEL22w",
+      "title": "Stay with Me",
+      "artist": "Jasmine Thompson",
+      "album": "Take Cover",
+      "duration": 196000000000,
+      "kind": "song"
+    },
+    {
+      "id": "nPKoBOCtK1U",
+      "title": "Higher Love",
+      "artist": "James Vincent McMorrow",
+      "album": "Early In The Morning",
+      "duration": 216000000000,
+      "kind": "song"
+    },
+    {
+      "id": "gerKQYakHu0",
+      "title": "Diamonds",
+      "artist": "Josef Salvat",
+      "album": "In Your Prime - EP",
+      "duration": 248000000000,
+      "kind": "song"
+    },
+    {
+      "id": "4ChkbrU7l_E",
+      "title": "I Still Haven't Found What I'm Looking For",
+      "artist": "Sarah Jarosz",
+      "album": "I Still Haven't Found What I'm Looking For / My Future",
+      "duration": 213000000000,
+      "kind": "song"
+    },
+    {
+      "id": "BwJHMAew5dM",
+      "title": "King (Acoustic)",
+      "artist": "Olly Alexander (Years & Years)",
+      "album": "Communion (Deluxe)",
+      "duration": 244000000000,
+      "kind": "song"
+    },
+    {
+      "id": "EYRn6vuMxA8",
+      "title": "Be (Acoustic)",
+      "artist": "Hozier",
+      "album": "Wasteland, Baby! (Special Edition)",
+      "duration": 236000000000,
+      "kind": "song"
+    },
+    {
+      "id": "Won6tWv2-1k",
+      "title": "If I Lose Myself (Acoustic)",
+      "artist": "OneRepublic",
+      "album": "Native",
+      "duration": 231000000000,
+      "kind": "song"
+    },
+    {
+      "id": "zYDeas7nSOY",
+      "title": "Halo",
+      "artist": "Jasmine Thompson",
+      "album": "Halo",
+      "duration": 245000000000,
+      "kind": "song"
+    },
+    {
+      "id": "6Gi5wkfyR6k",
+      "title": "Princess of China (Acoustic)",
+      "artist": "Coldplay, Rihanna",
+      "album": "Princess of China",
+      "duration": 207000000000,
+      "kind": "song"
+    },
+    {
+      "id": "P1E0ykVedeY",
+      "title": "Story of My Life",
+      "artist": "Boyce Avenue",
+      "album": "Cover Sessions, Vol. 3",
+      "duration": 248000000000,
+      "kind": "song"
+    },
+    {
+      "id": "gJBxmOX_Gyc",
+      "title": "Rather Be",
+      "artist": "Marc Scibilia",
+      "album": "Rather Be",
+      "duration": 256000000000,
+      "kind": "song"
+    },
+    {
+      "id": "a-8r4CzvMGE",
+      "title": "Shake It Out (Acoustic)",
+      "artist": "Florence + The Machine",
+      "album": "Ceremonials (Deluxe Edition)",
+      "duration": 253000000000,
+      "kind": "song"
+    },
+    {
+      "id": "GZz3QwqgG1g",
+      "title": "Nothing Compares 2 U",
+      "artist": "Freedom Fry",
+      "album": "Nothing Compares 2 U",
+      "duration": 215000000000,
+      "kind": "song"
+    },
+    {
+      "id": "yYHfBWOzzUw",
+      "title": "I'm on Fire",
+      "artist": "The Staves",
+      "album": "If I Was (Deluxe Edition)",
+      "duration": 193000000000,
+      "kind": "song"
+    },
+    {
+      "id": "DY2xLDiDar8",
+      "title": "What Is Love",
+      "artist": "Kiesza",
+      "album": "Sound Of A Woman",
+      "duration": 189000000000,
+      "kind": "song"
+    },
+    {
+      "id": "dMxQ8lXvFgs",
+      "title": "Real Love (From the John Lewis Christmas Advert 2014)",
+      "artist": "Tom Odell",
+      "album": "Spending All My Christmas with You",
+      "duration": 139000000000,
+      "kind": "song"
+    },
+    {
+      "id": "b9naR9He1j4",
+      "title": "Just Can't Get Enough",
+      "artist": "Megan Wyler",
+      "album": "Just Can't Get Enough",
+      "duration": 220000000000,
+      "kind": "song"
+    },
+    {
+      "id": "5omQ00fGahc",
+      "title": "Dark Horse (Acoustic Cover) feat. Jaclyn Davies (feat. Jaclyn Davies)",
+      "artist": "Megan Davies",
+      "album": "Dark Horse (Acoustic Cover) feat. Jaclyn Davies",
+      "duration": 229000000000,
+      "kind": "song"
+    },
+    {
+      "id": "MSmMON3HI8I",
+      "title": "Lego House (Acoustic)",
+      "artist": "Ed Sheeran",
+      "album": "Lego House",
+      "duration": 187000000000,
+      "kind": "song"
+    },
+    {
+      "id": "DpejDSoT7Zw",
+      "title": "Lush Life (Acoustic Version)",
+      "artist": "Zara Larsson",
+      "album": "Lush Life (Acoustic Version)",
+      "duration": 203000000000,
+      "kind": "song"
+    },
+    {
+      "id": "CxJvDSGLdLc",
+      "title": "Creep",
+      "artist": "Arlo Parks",
+      "album": "Creep",
+      "duration": 278000000000,
+      "kind": "song"
+    },
+    {
+      "id": "0u-7-xN9UsY",
+      "title": "Mr. Brightside",
+      "artist": "Run River North",
+      "album": "Superstition",
+      "duration": 272000000000,
+      "kind": "song"
+    },
+    {
+      "id": "bJ9PuhV0H3M",
+      "title": "What About Us (P!nk Cover)",
+      "artist": "Skinny Living",
+      "album": "Live and Acoustic",
+      "duration": 243000000000,
+      "kind": "song"
+    },
+    {
+      "id": "MAF0L2tcJ24",
+      "title": "Set Fire to the Rain (Live)",
+      "artist": "Michael Schulte",
+      "album": "Acoustic Cover, Vol. 2",
+      "duration": 192000000000,
+      "kind": "song"
+    },
+    {
+      "id": "6BrSgG3F9IA",
+      "title": "The A Team (Acoustic)",
+      "artist": "Ed Sheeran",
+      "album": "The A Team",
+      "duration": 242000000000,
+      "kind": "song"
+    },
+    {
+      "id": "VRPnQbFIJEw",
+      "title": "Everybody Hurts",
+      "artist": "Jasmine Thompson",
+      "album": "Another Bundle of Tantrums",
+      "duration": 168000000000,
+      "kind": "song"
+    },
+    {
+      "id": "-ksqHtWfh2w",
+      "title": "Save Tonight",
+      "artist": "Tom Speight, Lydia Clowes",
+      "album": "Save Tonight",
+      "duration": 271000000000,
+      "kind": "song"
+    },
+    {
+      "id": "-gAQn2YWmUY",
+      "title": "Lean On",
+      "artist": "Lennon & Maisy",
+      "album": "Lean On",
+      "duration": 155000000000,
+      "kind": "song"
+    },
+    {
+      "id": "yqWWAQQpH9A",
+      "title": "The Way I Are (Acoustic)",
+      "artist": "Leo Stannard, Carmody",
+      "album": "The Way I Are (Acoustic)",
+      "duration": 168000000000,
+      "kind": "song"
+    },
+    {
+      "id": "z3ID4uger-s",
+      "title": "No Surprises",
+      "artist": "Jeremiah Fraites, Gregory Alan Isakov",
+      "album": "No Surprises",
+      "duration": 258000000000,
+      "kind": "song"
+    },
+    {
+      "id": "VkEjl0qdoIw",
+      "title": "Fast Car (feat. Tall Heights)",
+      "artist": "Ryan Montbleau",
+      "album": "All or Nothing / Fast Car",
+      "duration": 273000000000,
+      "kind": "song"
+    },
+    {
+      "id": "xWTg0zpm6i0",
+      "title": "Dancing In The Dark",
+      "artist": "Ruth Moody",
+      "album": "These Wilder Things",
+      "duration": 259000000000,
+      "kind": "song"
+    },
+    {
+      "id": "sea6RyFrLCA",
+      "title": "Ain't Nobody (Acoustic Version)",
+      "artist": "Myriam Abel",
+      "album": "Qui Je Suis",
+      "duration": 216000000000,
+      "kind": "song"
+    },
+    {
+      "id": "OIL1nYKzqXQ",
+      "title": "The Only Exception",
+      "artist": "Katelyn Tarver",
+      "album": "The Only Exception",
+      "duration": 263000000000,
+      "kind": "song"
+    },
+    {
+      "id": "cvZX7Ie2iLE",
+      "title": "Show Me Love",
+      "artist": "Mali-Koa",
+      "album": "Show Me Love",
+      "duration": 204000000000,
+      "kind": "song"
+    },
+    {
+      "id": "Q2sGcWO4TIA",
+      "title": "Pure Morning",
+      "artist": "Benjamin Francis Leftwich",
+      "album": "Pure Morning",
+      "duration": 197000000000,
+      "kind": "song"
+    },
+    {
+      "id": "5Dl7Di1dXZU",
+      "title": "Shallow",
+      "artist": "The Hound + The Fox",
+      "album": "Shallow",
+      "duration": 222000000000,
+      "kind": "song"
+    },
+    {
+      "id": "OB_qKMt4DO0",
+      "title": "Bad Blood (Piano Version / Live From Unit 24, London, United Kingdom / 2012)",
+      "artist": "Bastille",
+      "album": "Bad Blood (The Extended Cut)",
+      "duration": 209000000000,
+      "kind": "song"
+    },
+    {
+      "id": "AJDVOizfu24",
+      "title": "Linger",
+      "artist": "Freedom Fry",
+      "album": "Linger",
+      "duration": 202000000000,
+      "kind": "song"
+    },
+    {
+      "id": "asB6Ut1Yq30",
+      "title": "Here For You (Stripped Session) (feat. Laura Welsh)",
+      "artist": "Gorgon City",
+      "album": "Sirens (Deluxe)",
+      "duration": 226000000000,
+      "kind": "song"
+    },
+    {
+      "id": "7Al9VzRpZPU",
+      "title": "Don't Dream It's Over",
+      "artist": "Ainslie Wills",
+      "album": "Don't Dream It's Over",
+      "duration": 233000000000,
+      "kind": "song"
+    },
+    {
+      "id": "bPHhK6tMJWw",
+      "title": "Still The One",
+      "artist": "Andrew Galucki",
+      "album": "Still The One",
+      "duration": 212000000000,
+      "kind": "song"
+    },
+    {
+      "id": "YKzZc2nNbA4",
+      "title": "Last Request (Dreams Version)",
+      "artist": "Amber Leigh Irish",
+      "album": "Last Request (Dreams Version)",
+      "duration": 195000000000,
+      "kind": "song"
+    },
+    {
+      "id": "nfgQz4EpACY",
+      "title": "I Need a Dollar",
+      "artist": "Karizma Duo",
+      "album": "The Coffee Shop Collection - Cappuccino",
+      "duration": 267000000000,
+      "kind": "song"
+    },
+    {
+      "id": "v24wy5Kbyvo",
+      "title": "Youth (Acoustic)",
+      "artist": "Foxes",
+      "album": "Pure... Acoustic",
+      "duration": 176000000000,
+      "kind": "song"
+    },
+    {
+      "id": "AbvT2WbfrZQ",
+      "title": "Like a Rolling Stone",
+      "artist": "Phosphorescent",
+      "album": "The Full Moon Project",
+      "duration": 410000000000,
+      "kind": "song"
+    },
+    {
+      "id": "dfBtglLe6Ow",
+      "title": "The Only Way Is Up",
+      "artist": "SKYE",
+      "album": "The Only Way Is Up",
+      "duration": 340000000000,
+      "kind": "song"
+    },
+    {
+      "id": "WAMXWcfqYio",
+      "title": "Maps",
+      "artist": "Colin & Caroline",
+      "album": "Maps",
+      "duration": 202000000000,
+      "kind": "song"
+    },
+    {
+      "id": "iAtBqKi_xzM",
+      "title": "She's Always A Woman",
+      "artist": "Fyfe Dangerfield",
+      "album": "She's Always A Woman",
+      "duration": 199000000000,
+      "kind": "song"
+    },
+    {
+      "id": "98F1cGuopTc",
+      "title": "Use Somebody",
+      "artist": "Karizma Duo",
+      "album": "Playlist for a Broken Heart",
+      "duration": 198000000000,
+      "kind": "song"
+    },
+    {
+      "id": "AiqBwH54-_g",
+      "title": "Ordinary People",
+      "artist": "Karizma Duo",
+      "album": "Cover Versions Album",
+      "duration": 241000000000,
+      "kind": "song"
+    }
+  ],
+  "time": "2026-11-03T18:25:23.968792+00:00",
+  "processes": [
+    {
+      "pid": 64780,
+      "ppid": 1,
+      "uid": 501,
+      "state": "S",
+      "executable": "/Applications/ytmgo.app/Contents/MacOS/ytmgo"
+    }
+  ]
+}

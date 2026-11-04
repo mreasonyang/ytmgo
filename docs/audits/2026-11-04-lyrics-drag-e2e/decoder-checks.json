@@ -1,0 +1,147 @@
+{
+  "command": [
+    "go",
+    "test",
+    "-race",
+    "-json",
+    "-count=1",
+    "-run",
+    "^(TestFFmpegSeekUsesRecordingTimeline|TestFFmpegTailSeekUsesRangesAndMatchesPCM|TestEmptySeekPreservesPauseAndReachesNaturalEnd|TestFFmpegActualSeek|TestFFmpegEndedRestartLocal)$",
+    "./internal/player"
+  ],
+  "passed": true,
+  "elapsed_seconds": 14.285,
+  "cases": [
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline/aac/at_0ms",
+      "action": "pass",
+      "elapsed": 0.39
+    },
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline/aac/at_125ms",
+      "action": "pass",
+      "elapsed": 0.42
+    },
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline/aac/at_7125ms",
+      "action": "pass",
+      "elapsed": 0.34
+    },
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline/aac/at_30000ms",
+      "action": "pass",
+      "elapsed": 0.19
+    },
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline/aac/at_47125ms",
+      "action": "pass",
+      "elapsed": 0.02
+    },
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline/aac",
+      "action": "pass",
+      "elapsed": 1.98
+    },
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline/fragmented_aac/at_0ms",
+      "action": "pass",
+      "elapsed": 0.42
+    },
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline/fragmented_aac/at_125ms",
+      "action": "pass",
+      "elapsed": 0.42
+    },
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline/fragmented_aac/at_7125ms",
+      "action": "pass",
+      "elapsed": 0.34
+    },
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline/fragmented_aac/at_30000ms",
+      "action": "pass",
+      "elapsed": 0.17
+    },
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline/fragmented_aac/at_47125ms",
+      "action": "pass",
+      "elapsed": 0.03
+    },
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline/fragmented_aac",
+      "action": "pass",
+      "elapsed": 1.93
+    },
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline/opus/at_0ms",
+      "action": "pass",
+      "elapsed": 0.46
+    },
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline/opus/at_125ms",
+      "action": "pass",
+      "elapsed": 0.45
+    },
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline/opus/at_7125ms",
+      "action": "pass",
+      "elapsed": 0.38
+    },
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline/opus/at_30000ms",
+      "action": "pass",
+      "elapsed": 0.25
+    },
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline/opus/at_47125ms",
+      "action": "pass",
+      "elapsed": 0.03
+    },
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline/opus",
+      "action": "pass",
+      "elapsed": 1.84
+    },
+    {
+      "test": "TestFFmpegSeekUsesRecordingTimeline",
+      "action": "pass",
+      "elapsed": 5.74
+    },
+    {
+      "test": "TestFFmpegTailSeekUsesRangesAndMatchesPCM/at_47125ms",
+      "action": "pass",
+      "elapsed": 0.02
+    },
+    {
+      "test": "TestFFmpegTailSeekUsesRangesAndMatchesPCM/at_47750ms",
+      "action": "pass",
+      "elapsed": 0.02
+    },
+    {
+      "test": "TestFFmpegTailSeekUsesRangesAndMatchesPCM/at_47999ms",
+      "action": "pass",
+      "elapsed": 0.02
+    },
+    {
+      "test": "TestFFmpegTailSeekUsesRangesAndMatchesPCM",
+      "action": "pass",
+      "elapsed": 0.54
+    },
+    {
+      "test": "TestEmptySeekPreservesPauseAndReachesNaturalEnd",
+      "action": "pass",
+      "elapsed": 0.07
+    },
+    {
+      "test": "TestFFmpegActualSeek",
+      "action": "pass",
+      "elapsed": 0.03
+    },
+    {
+      "test": "TestFFmpegEndedRestartLocal",
+      "action": "pass",
+      "elapsed": 4.67
+    }
+  ],
+  "installed_decoder": "/Applications/ytmGO.app/Contents/Resources/runtime/ffmpeg"
+}

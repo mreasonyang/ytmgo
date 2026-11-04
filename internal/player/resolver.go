@@ -60,12 +60,12 @@ func (r *resolver) Resolve(ctx context.Context, id string) (media, error) {
 	}
 	return media{source: result.Lease, Duration: result.Duration, release: result.Lease.Close}, nil
 }
-func (r *resolver) ResolveVideo(ctx context.Context, id string) (videoMedia, error) {
-	result, err := r.native.Resolve(ctx, id, "video")
+func (r *resolver) ResolveVideo(ctx context.Context, id string, quality int) (videoMedia, error) {
+	result, err := r.native.ResolveVideo(ctx, id, quality)
 	if err != nil {
 		return videoMedia{}, nativeFailure(err)
 	}
-	width, height := videoDimensions(result.Width, result.Height)
+	width, height := videoDimensions(result.Width, result.Height, quality)
 	return videoMedia{media: media{source: result.Lease, Duration: result.Duration, release: result.Lease.Close}, width: width, height: height}, nil
 }
 func (r *resolver) Close() { r.native.Close() }

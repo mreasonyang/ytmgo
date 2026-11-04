@@ -1,0 +1,18 @@
+{
+  "check": "rootcause-search",
+  "packages": [
+    {
+      "Package": "ytmgo/internal/catalog",
+      "Action": "pass",
+      "Elapsed": 6.216
+    }
+  ],
+  "counts": {
+    "pass": 1,
+    "fail": 0,
+    "skip": 0
+  },
+  "categories": [],
+  "locations": [],
+  "metrics": []
+}

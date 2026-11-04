@@ -558,7 +558,7 @@ func (p *Player) Snapshot() State {
 		if !p.state.Playing && p.wantPlay && s.decoder.eof.Load() {
 			p.state.Ended = !s.decoder.failed.Load()
 			if s.decoder.failed.Load() {
-				p.state.Error, p.state.ErrorDetails = "audio_stream_failed", FailureDetails{}
+				p.state.Error, p.state.ErrorDetails = s.decoder.errorCategory(), s.decoder.errorDetails()
 			}
 		}
 		outputError := p.outputError

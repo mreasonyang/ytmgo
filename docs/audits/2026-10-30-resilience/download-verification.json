@@ -1,0 +1,29 @@
+{
+  "checksums": [
+    {
+      "name": "ytmgo-0.5.3-arm64-notarized.zip",
+      "sha256": "2fde19068fe8be8923e73b9a7d542d63d3b9f6af52ff27c61f2e6b78c361c830",
+      "matches": true
+    },
+    {
+      "name": "ytmgo-0.5.3-arm64-notarized.dmg",
+      "sha256": "0bb4378a070e41537288bba040b8c8acebbe96ab0293757fb1e700fd89979f5f",
+      "matches": true
+    },
+    {
+      "name": "build.json",
+      "sha256": "03683e0bf18e0adf86c6e9b041dd9e39d237d2c13b9fe0ddec8b5da13e7b2381",
+      "matches": true
+    },
+    {
+      "name": "ytmgo-0.5.3-darwin-arm64.tar.gz",
+      "sha256": "97dc2844b40f2be2bd865a20c024db2ee2236f5b0fd4e7e54f6e791e5880b59d",
+      "matches": true
+    },
+    {
+      "name": "update-darwin-arm64.json",
+      "sha256": "1256edb1de66b67ce3b4566015106ac60dc46b65c28f3e01d9ea805280f04283",
+      "matches": true
+    }
+  ]
+}

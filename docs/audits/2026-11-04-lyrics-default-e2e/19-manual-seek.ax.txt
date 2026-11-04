@@ -1,0 +1,4 @@
+The following is a diff from the previous accessibility tree for Window: "ytmgo" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+~		135 button (disabled) Loading…
+~		138 text (settable) 2:56
+~		139 slider (disabled, settable, float) Description: Playback position, Value: 176.281486805

@@ -170,6 +170,13 @@ func nativeSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, w
 			},
 			func() {
 				nativeSettingRow(c, p, narrow, "globe", a.Tr("shellLanguage"), a.Tr("nativeSettingsLanguageHint"), func() { nativeLanguageControl(c, m, a, p, narrow) })
+			},
+			func() {
+				detail := a.Tr("nativeVideoQualityHint")
+				if m.VideoQualityError != "" {
+					detail = a.Tr(m.VideoQualityError)
+				}
+				nativeSettingRow(c, p, narrow, "monitor", a.Tr("nativeVideoQuality"), detail, func() { nativeVideoQualityControl(c, m, a, p, 200, 36) })
 			})
 		keyboard := nativeSettingsGroup(c, p, a.Tr("nativeSettingsKeyboard"), 64,
 			func() { nativeShortcutSettings(c, m, a, p, narrow) },

@@ -1,0 +1,61 @@
+Window: "ytmGO", App: ytmGO.
+0 standard window ytmGO, Secondary Actions: Raise
+	1 container Now Playing
+		2 text (settable) Now Playing
+		3 button Immersive mode · Now Playing
+		4 button Close panel
+		5 scroll area
+			6 button Cover
+			7 button Video
+			8 text (settable) Try
+			9 text (settable) GENER8ION, Adèle Castillon
+			10 button Like
+			11 button Previous
+			12 button Play
+			13 button Next
+			14 text (settable) 0:55
+			15 slider (settable, float) Description: Playback position, Value: 55.03
+			16 text (settable) 2:59
+			17 button Unmute
+			18 slider (settable, float) Description: Volume, Value: 0
+			19 button Lyrics · Now Playing
+			20 button Queue · Now Playing
+			21 button Restore cover size
+			22 scroll area Description: Lyrics · Content, Help: Drag lyrics to seek on release
+				23 text (settable) ♪
+				24 text (settable) Writing your name
+				25 text (settable) Just in case I would forget
+				26 text (settable) Au cas où tu retournerais
+				27 text (settable) To me
+				28 text (settable) Dans la nuit
+				29 text (settable) I look for you in my dreams
+				30 text (settable) The sight of you is disturbing
+				31 text (settable) I'm not coming
+				32 text (settable) But I try
+				33 text (settable) I try
+				34 text (settable) I try
+				35 text (settable) I try
+				36 text (settable) But I try
+				37 text (settable) ♪
+				38 text (settable) But I try
+				39 text (settable) I try
+				40 text (settable) I try
+				41 text (settable) I try
+				42 text (settable) But I try
+				43 text (settable) Source: LyricFind
+	44 help tag Drag lyrics to seek on release
+	45 close button
+	46 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	47 minimize button
+	48 text ytmGO
+49 menu bar
+	50 ytmGO
+	51 File
+	52 Edit
+	53 Playback
+	54 View
+	55 Window
+	56 Account
+	57 Help
+
+The focused UI element is 22 scroll area Description: Lyrics · Content, Help: Drag lyrics to seek on release

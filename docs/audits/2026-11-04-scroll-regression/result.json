@@ -1,0 +1,10 @@
+{
+  "cold_restart_exact_position": true,
+  "cold_restart_paused": true,
+  "original_position_restored": true,
+  "original_queue_all_titles_visible": true,
+  "premium_restored": true,
+  "original_volume_restored": true,
+  "incidental_input_retained_follow": true,
+  "checks_passed": true
+}

@@ -4,3 +4,7 @@ scripts/runtime/licenses/* whitespace=-blank-at-eol
 
 # Upstream notices are checksum-pinned to their original bytes.
 /scripts/licensing/upstream/** -text
+
+# Audit patches and native AX snapshots are evidence; preserve their exact bytes.
+docs/audits/**/*.patch -text whitespace=-blank-at-eol,-space-before-tab
+docs/audits/**/*.ax.txt -text whitespace=-blank-at-eol

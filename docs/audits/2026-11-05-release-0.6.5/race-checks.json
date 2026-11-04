@@ -1,0 +1,14 @@
+[
+  {
+    "check": "go_race",
+    "exit_code": 0,
+    "elapsed_seconds": 164.074,
+    "test_cases": {
+      "pass": 1273,
+      "fail": 0,
+      "skip": 36
+    },
+    "failed_tests": [],
+    "build_failures": []
+  }
+]

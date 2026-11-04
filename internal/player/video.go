@@ -12,11 +12,14 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"ytmgo/internal/videoquality"
 )
 
 const videoFrameInterval = time.Second / 24
 
 var errVideoReadiness = errors.New("audio_network_timeout")
+var errVideoResolutionTimeout = errors.New("video_resolution_timeout")
 
 type videoCatchUpError struct{ lag time.Duration }
 
@@ -26,18 +29,23 @@ func (*videoCatchUpError) Error() string { return "video_catch_up" }
 // bounded time. Slow but progressing decoding may need a fresh audio position;
 // retries are limited until several seconds of healthy presentation recover.
 type videoPlaybackPolicy struct {
-	startupTimeout time.Duration
-	stallTimeout   time.Duration
-	catchupLag     time.Duration
-	catchupGrace   time.Duration
-	maximumLead    time.Duration
-	healthyPeriod  time.Duration
-	maxCatchups    int
+	resolutionTimeout time.Duration
+	startupTimeout    time.Duration
+	stallTimeout      time.Duration
+	catchupLag        time.Duration
+	catchupGrace      time.Duration
+	maximumLead       time.Duration
+	healthyPeriod     time.Duration
+	maxCatchups       int
 }
 
 func (p videoPlaybackPolicy) defaults() videoPlaybackPolicy {
+	if p.resolutionTimeout <= 0 {
+		// Match the resolver's operation budget, including shared-resolver wait.
+		p.resolutionTimeout = 90 * time.Second
+	}
 	if p.startupTimeout <= 0 {
-		p.startupTimeout = 20 * time.Second
+		p.startupTimeout = firstPCMTimeout
 	}
 	if p.stallTimeout <= 0 {
 		p.stallTimeout = 10 * time.Second
@@ -74,13 +82,14 @@ type Video struct {
 	mu                   sync.RWMutex
 	lifecycle            sync.Mutex
 	ops                  sync.WaitGroup
-	resolve              func(context.Context, string) (videoMedia, error)
+	resolve              func(context.Context, string, int) (videoMedia, error)
 	open                 func(context.Context, videoMedia, time.Duration) (*videoDecoder, error)
 	cancel               context.CancelFunc
 	closed, loading      bool
 	generation, sequence uint64
 	frame                image.Image
 	error                string
+	errorDetails         FailureDetails
 	policy               videoPlaybackPolicy
 }
 
@@ -99,6 +108,12 @@ func NewVideo(p *Player) (*Video, error) {
 // to call from a worker and return the current audio position and playing state.
 // The supplied context owns this video session until Stop, Close, or replacement.
 func (v *Video) Start(ctx context.Context, id string, position func() time.Duration, playing func() bool) error {
+	return v.StartWithQuality(ctx, id, videoquality.Default, position, playing)
+}
+
+// StartWithQuality replaces the video session using the selected resolution.
+// Audio keeps its own clock and output throughout a quality change.
+func (v *Video) StartWithQuality(ctx context.Context, id string, quality int, position func() time.Duration, playing func() bool) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -120,6 +135,7 @@ func (v *Video) Start(ctx context.Context, id string, position func() time.Durat
 	generation := v.generation
 	life, cancel := context.WithCancel(ctx)
 	v.cancel, v.loading, v.error, v.frame = cancel, true, "", nil
+	v.errorDetails = FailureDetails{}
 	v.sequence++
 	v.mu.Unlock()
 	if previous != nil {
@@ -129,7 +145,7 @@ func (v *Video) Start(ctx context.Context, id string, position func() time.Durat
 	v.ops.Add(1)
 	go func() {
 		defer v.ops.Done()
-		v.run(life, generation, id, position, playing)
+		v.run(life, generation, id, videoquality.Normalize(quality), position, playing)
 	}()
 	return nil
 }
@@ -141,6 +157,11 @@ func (v *Video) Frame() (image.Image, uint64) {
 }
 
 func (v *Video) Error() string { v.mu.RLock(); defer v.mu.RUnlock(); return v.error }
+func (v *Video) ErrorDetails() FailureDetails {
+	v.mu.RLock()
+	defer v.mu.RUnlock()
+	return v.errorDetails.Sanitized()
+}
 func (v *Video) Loading() bool { v.mu.RLock(); defer v.mu.RUnlock(); return v.loading }
 
 func (v *Video) Stop()  { v.stop(false) }
@@ -156,6 +177,7 @@ func (v *Video) stop(close bool) {
 	v.generation++
 	cancel := v.cancel
 	v.cancel, v.frame, v.loading, v.error = nil, nil, false, ""
+	v.errorDetails = FailureDetails{}
 	v.sequence++
 	v.mu.Unlock()
 	if cancel != nil {
@@ -164,7 +186,7 @@ func (v *Video) stop(close bool) {
 	v.ops.Wait()
 }
 
-func (v *Video) run(ctx context.Context, generation uint64, id string, position func() time.Duration, playing func() bool) {
+func (v *Video) run(ctx context.Context, generation uint64, id string, quality int, position func() time.Duration, playing func() bool) {
 	defer func() {
 		v.mu.Lock()
 		if generation == v.generation {
@@ -175,25 +197,32 @@ func (v *Video) run(ctx context.Context, generation uint64, id string, position 
 	policy := v.policy.defaults()
 	life, cancel := context.WithCancelCause(ctx)
 	defer cancel(nil)
-	// This timer includes resolution and every catch-up attempt until the very
-	// first displayed frame. Stopping the timer preserves the session context:
-	// a successful video must not be canceled when its startup budget expires.
-	startup := time.AfterFunc(policy.startupTimeout, func() { cancel(errVideoReadiness) })
-	defer startup.Stop()
-	info, err := v.resolve(life, id)
+	// Cold initialization may legitimately use the resolver's network budget.
+	// It must not consume the separate decoder/first-frame readiness budget.
+	resolveCtx, finishResolve := context.WithTimeoutCause(life, policy.resolutionTimeout, errVideoResolutionTimeout)
+	info, err := v.resolve(resolveCtx, id, quality)
+	resolveCause := context.Cause(resolveCtx)
+	if err == nil && resolveCtx.Err() != nil {
+		err = resolveCtx.Err()
+	}
+	finishResolve()
+	if info.release != nil {
+		defer info.release()
+	}
 	if err != nil {
 		if ctx.Err() == nil {
-			if errors.Is(context.Cause(life), errVideoReadiness) {
-				v.fail(generation, videoErrorCategory(errVideoReadiness))
+			if errors.Is(resolveCause, errVideoResolutionTimeout) {
+				v.fail(generation, "video_network_timeout", FailureDetails{Stage: "video_resolution"})
 			} else {
-				v.fail(generation, "video_resolution_failed")
+				v.fail(generation, videoResolutionErrorCategory(err), videoFailureDetails(err, "video_resolution"))
 			}
 		}
 		return
 	}
-	if info.release != nil {
-		defer info.release()
-	}
+	// One deadline covers opening and every catch-up until the first displayed
+	// frame. Retries cannot restart it, and healthy playback stops the timer.
+	startup := time.AfterFunc(policy.startupTimeout, func() { cancel(errVideoReadiness) })
+	defer startup.Stop()
 	catchups := 0
 	var lead time.Duration
 	displayed := false
@@ -238,14 +267,14 @@ func (v *Video) run(ctx context.Context, generation uint64, id string, position 
 			return
 		}
 		if errors.Is(cause, errVideoReadiness) {
-			v.fail(generation, videoErrorCategory(errVideoReadiness))
+			v.fail(generation, videoErrorCategory(errVideoReadiness), FailureDetails{Stage: videoFailurePhase(displayed)})
 			return
 		}
 		var catchup *videoCatchUpError
 		if errors.As(err, &catchup) {
 			catchups++
 			if catchups > policy.maxCatchups {
-				v.fail(generation, videoErrorCategory(errVideoReadiness))
+				v.fail(generation, videoErrorCategory(errVideoReadiness), FailureDetails{Stage: videoFailurePhase(displayed)})
 				return
 			}
 			// Reopening at "now" repeats the startup delay against a moving
@@ -256,7 +285,7 @@ func (v *Video) run(ctx context.Context, generation uint64, id string, position 
 			continue
 		}
 		if err != nil {
-			v.fail(generation, videoErrorCategory(err))
+			v.fail(generation, videoErrorCategory(err), videoFailureDetails(err, videoFailurePhase(displayed)))
 			return
 		}
 		if !restart {
@@ -268,7 +297,7 @@ func (v *Video) run(ctx context.Context, generation uint64, id string, position 
 		healthySince, lastFrame = time.Time{}, time.Time{}
 	}
 	if ctx.Err() == nil && errors.Is(context.Cause(life), errVideoReadiness) {
-		v.fail(generation, videoErrorCategory(errVideoReadiness))
+		v.fail(generation, videoErrorCategory(errVideoReadiness), FailureDetails{Stage: videoFailurePhase(displayed)})
 	}
 }
 
@@ -389,6 +418,7 @@ func (v *Video) present(ctx context.Context, generation uint64, decoder *videoDe
 				v.mu.Lock()
 				if generation == v.generation && !v.closed {
 					v.frame, v.loading, v.error = pending.image, false, ""
+					v.errorDetails = FailureDetails{}
 					v.sequence++
 				}
 				v.mu.Unlock()
@@ -419,11 +449,46 @@ func (v *Video) present(ctx context.Context, generation uint64, decoder *videoDe
 	}
 }
 
-func (v *Video) fail(generation uint64, category string) {
+func (v *Video) fail(generation uint64, category string, details ...FailureDetails) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 	if generation == v.generation && !v.closed {
 		v.error, v.loading = category, false
+		v.errorDetails = FailureDetails{}
+		if len(details) == 1 {
+			v.errorDetails = details[0].Sanitized()
+		}
+	}
+}
+
+func videoFailurePhase(displayed bool) string {
+	if displayed {
+		return "video_playback"
+	}
+	return "video_first_frame"
+}
+
+func videoFailureDetails(err error, phase string) FailureDetails {
+	if details := DiagnosticDetails(err); details.Stage != "" {
+		return details
+	}
+	return (FailureDetails{Stage: phase}).Sanitized()
+}
+
+func videoResolutionErrorCategory(err error) string {
+	if errors.Is(err, context.DeadlineExceeded) {
+		return "video_network_timeout"
+	}
+	category := safeError(err)
+	switch category {
+	case "audio_access_denied", "audio_rate_limited", "audio_server_error", "audio_network_timeout", "audio_connection_failed":
+		return videoErrorCategory(err)
+	case "login_required", "proof_failed", "proof_expired", "proof_request_rejected", "bootstrap_cache_miss",
+		"bootstrap_redirect", "bootstrap_network_failed", "bootstrap_network_timeout", "bootstrap_tls_failed",
+		"unexpected_request_host", "unexpected_authentication", "unexpected_client", "resolver_http_error", "init_failed", "resolver_response_limit", "cache_limit":
+		return category
+	default:
+		return "video_resolution_failed"
 	}
 }
 
@@ -442,12 +507,16 @@ func parseVideoMedia(data []byte) (videoMedia, error) {
 	if !validHeaderValue(agent) || !validHeaderValue(referer) {
 		return videoMedia{}, errors.New("invalid_media_response")
 	}
-	width, height := videoDimensions(result.Width, result.Height)
+	width, height := videoDimensions(result.Width, result.Height, videoquality.Default)
 	return videoMedia{media: media{URL: result.URL, Duration: time.Duration(result.Duration * float64(time.Second)), UserAgent: agent, Referer: referer}, width: width, height: height}, nil
 }
 
-func videoDimensions(width, height int) (int, int) {
-	scale := math.Min(1, math.Min(854/float64(width), 480/float64(height)))
+func videoDimensions(width, height, quality int) (int, int) {
+	quality = videoquality.Normalize(quality)
+	// Bound raw-frame storage to the selected resolution while preserving the
+	// source aspect ratio. Smaller sources are never enlarged by the decoder.
+	maxWidth := (quality*16 + 8) / 9
+	scale := math.Min(1, math.Min(float64(maxWidth)/float64(width), float64(quality)/float64(height)))
 	return max(2, int(float64(width)*scale)/2*2), max(2, int(float64(height)*scale)/2*2)
 }
 
@@ -482,7 +551,7 @@ func startVideoDecoder(ctx context.Context, executable string, info videoMedia, 
 	// concat input from its beginning. Preserve negative keyframe preroll
 	// timestamps through decoding, then trim at output time: input-side
 	// -ss 0 discards reordered H.264 frames and can lose the tail entirely.
-	manifest := fmt.Sprintf("ffconcat version 1.0\nfile '%s'\ninpoint %.6f\nduration %.6f\noption rw_timeout 10000000\n", bridge.URL, at.Seconds(), max(info.Duration-at, 0).Seconds())
+	manifest := fmt.Sprintf("ffconcat version 1.0\nfile '%s'\ninpoint %.6f\nduration %.6f\noption rw_timeout %d\n", bridge.URL, at.Seconds(), max(info.Duration-at, 0).Seconds(), mediaReadTimeout(info.media).Microseconds())
 	// Trim before fps quantization: otherwise a slightly negative preroll
 	// timestamp can round to zero and leak the preceding frame into output.
 	filter := fmt.Sprintf("trim=start=0,scale=%d:%d:flags=fast_bilinear,fps=24,format=rgba", info.width, info.height)

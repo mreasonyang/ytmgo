@@ -211,8 +211,26 @@ func TestTransportFailuresAreSanitized(t *testing.T) {
 		return nil, errors.New("synthetic-secret-bearing-transport-error")
 	})}})
 	_, err := client.Home(context.Background())
-	if err != ErrUnavailable {
+	var failure *TransportError
+	if !errors.Is(err, ErrUnavailable) || !errors.As(err, &failure) || failure.Category != "catalog_connection_failed" || failure.Stage != "browse" || strings.Contains(err.Error(), "synthetic") {
 		t.Fatal("transport details escaped the catalog error boundary")
+	}
+}
+
+func TestTransportFailureCategories(t *testing.T) {
+	for _, tc := range []struct {
+		err      error
+		category string
+	}{
+		{context.DeadlineExceeded, "catalog_network_timeout"},
+		{io.ErrUnexpectedEOF, "catalog_response_truncated"},
+		{errors.New("synthetic-private-detail"), "catalog_connection_failed"},
+	} {
+		err := transportFailure("search", tc.err)
+		var failure *TransportError
+		if !errors.Is(err, ErrUnavailable) || !errors.As(err, &failure) || failure.Stage != "search" || failure.Category != tc.category || strings.Contains(err.Error(), "synthetic") {
+			t.Fatal("transport error did not retain only its safe classification")
+		}
 	}
 }
 

@@ -1,0 +1,14 @@
+[
+  {
+    "check": "hd_and_recovery_decoder",
+    "exit_code": 0,
+    "elapsed_seconds": 14.725,
+    "test_cases": {
+      "pass": 7,
+      "fail": 0,
+      "skip": 0
+    },
+    "failed_tests": [],
+    "build_failures": []
+  }
+]

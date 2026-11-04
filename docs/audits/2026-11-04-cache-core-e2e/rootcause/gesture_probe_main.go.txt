@@ -1,0 +1,83 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"time"
+
+	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/ui"
+)
+
+const tracePath = "/Users/easonyang/Documents/projects/ytmgo/docs/audits/2026-11-04-cache-core-e2e/rootcause/gesture-events.jsonl"
+
+func emit(v any) {
+	b, _ := json.Marshal(v)
+	f, e := os.OpenFile(tracePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	if e == nil {
+		_, _ = f.Write(append(b, '\n'))
+		f.Close()
+	}
+}
+func main() {
+	mygo.App.SetName("ytmGO Gesture Probe")
+	var down, moves, up int
+	var reportedUp int
+	var pressed bool
+	var lastFocus bool
+	var lastRect ui.Rect
+	mygo.App.OnWindowAllClosed(func() { mygo.App.Quit() })
+	mygo.App.WhenReady(func() {
+		w := mygo.NewWindow(mygo.WindowOptions{Title: "ytmGO Gesture Probe", Width: 1000, Height: 700, Content: ui.View(func(c *ui.Context) {
+			ui.Column(c).Fill().Padding(30).Gap(20).Children(func() {
+				ui.Text(c, "Pointer event diagnosis").FontSize(28)
+				ui.Text(c, fmt.Sprintf("Down %d  Move %d  Up %d", down, moves, up)).FontSize(22)
+				target := ui.Box(c.Key("gesture-target")).Grow(1).MinHeight(360).Focusable().Label("Gesture target").Background(ui.RGBA(38, 64, 89, 1))
+				target.HandleInput(func(e ui.InputEvent) bool {
+					kind := ""
+					switch e.Kind {
+					case ui.InputPointerDown:
+						kind = "down"
+						down++
+						pressed = true
+					case ui.InputPointerMove:
+						if pressed {
+							kind = "move"
+							moves++
+						}
+					case ui.InputPointerUp:
+						kind = "up"
+						up++
+						pressed = false
+					}
+					if kind != "" {
+						emit(map[string]any{"event": kind, "time": time.Now().UTC().Format(time.RFC3339Nano), "button": e.Button, "x": e.X, "y": e.Y})
+						return true
+					}
+					return false
+				})
+				target.Children(func() { ui.Text(c, "Drag inside this blue region").FontSize(24).TextColor(ui.RGBA(255, 255, 255, 1)) })
+				r := target.LayoutBounds()
+				focused := target.Focused()
+				if up > reportedUp {
+					emit(map[string]any{"event": "release_frame", "time": time.Now().UTC().Format(time.RFC3339Nano), "focused": focused, "down": down, "moves": moves, "up": up, "would_commit_seek": focused && moves > 0})
+					reportedUp = up
+				}
+				if r != lastRect || focused != lastFocus {
+					emit(map[string]any{"event": "layout", "x": r.X, "y": r.Y, "w": r.W, "h": r.H, "focused": focused})
+					lastRect, lastFocus = r, focused
+				}
+			})
+		})})
+		w.OnFocus(func() {
+			emit(map[string]string{"event": "window_focus", "time": time.Now().UTC().Format(time.RFC3339Nano)})
+		})
+		w.OnBlur(func() {
+			emit(map[string]string{"event": "window_blur", "time": time.Now().UTC().Format(time.RFC3339Nano)})
+		})
+	})
+	if mygo.App.Run() != nil {
+		os.Exit(1)
+	}
+}

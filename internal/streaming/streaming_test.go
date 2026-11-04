@@ -135,19 +135,19 @@ func TestFormatSelectionAndURLBoundaries(t *testing.T) {
 	drm := item(`audio/webm; codecs="opus"`, 512)
 	drm["drmFamilies"] = []any{"x"}
 	data := map[string]any{"streamingData": map[string]any{"adaptiveFormats": []any{a, drm, b}}}
-	f, err := chooseFormat(data, "audio")
+	f, err := chooseFormat(data, "audio", 720)
 	if err != nil || f.contentType != "audio/webm" || f.duration != 3*time.Second {
 		t.Fatal("audio selection changed")
 	}
 	v := item(`video/mp4; codecs="avc1.4d401e"`, 100)
 	v["width"], v["height"] = float64(854), float64(480)
 	data["streamingData"].(map[string]any)["adaptiveFormats"] = []any{v}
-	f, err = chooseFormat(data, "video")
+	f, err = chooseFormat(data, "video", 720)
 	if err != nil || f.height != 480 {
 		t.Fatal("video selection changed")
 	}
-	v["height"] = float64(720)
-	if _, err = chooseFormat(data, "video"); err == nil {
+	v["height"] = float64(8193)
+	if _, err = chooseFormat(data, "video", 720); err == nil {
 		t.Fatal("video size limit lost")
 	}
 	for _, raw := range []string{"https://googlevideo.com/x", "https://r.googlevideo.com:443/x", "https://x@r.googlevideo.com/x", "https://r.googlevideo.com/x#x", "https://r.googlevideo.com/x?n=enhanced_except_x", "https://r.googlevideo.com/x?sabr=1", "https://r.googlevideo.com/x'"} {
@@ -271,9 +271,13 @@ func TestRangeAndBoundedDirectTransport(t *testing.T) {
 	}
 }
 func TestTruncatedStreamClosesAndReportsFixedFailure(t *testing.T) {
-	r := testResolver(t, func(*http.Request) (*http.Response, error) {
+	var calls atomic.Int32
+	r := testResolver(t, func(req *http.Request) (*http.Response, error) {
+		calls.Add(1)
+		var start, end int64
+		_, _ = fmt.Sscanf(req.URL.Query().Get("range"), "%d-%d", &start, &end)
 		res := response("x")
-		res.ContentLength = 10
+		res.ContentLength = end - start + 1
 		return res, nil
 	})
 	remote, _ := url.Parse("https://r.googlevideo.com/x?expire=" + fmt.Sprint(time.Now().Add(time.Hour).Unix()))
@@ -285,7 +289,7 @@ func TestTruncatedStreamClosesAndReportsFixedFailure(t *testing.T) {
 		_, err = io.ReadAll(res.Body)
 		res.Body.Close()
 	}
-	if err == nil || lease.Err() == nil || lease.Err().Error() != "audio_stream_truncated" {
+	if err == nil || lease.Err() == nil || lease.Err().Error() != "audio_stream_truncated" || calls.Load() != 3 {
 		t.Fatal("truncation became success")
 	}
 }
@@ -339,7 +343,7 @@ func TestResponseLimitDoesNotReturnPartialData(t *testing.T) {
 	}
 }
 
-func TestPlayerScriptGzip(t *testing.T) {
+func TestResolverGzipResponses(t *testing.T) {
 	const script = "function play(){}"
 	compress := func(text string, level int) []byte {
 		t.Helper()
@@ -365,26 +369,34 @@ func TestPlayerScriptGzip(t *testing.T) {
 		{"compressed", "gzip", "", compressed},
 		{"uncompressed", "", "", []byte(script)},
 		{"truncated", "gzip", "resolver_http_error", compressed[:len(compressed)-1]},
+		{"unsupported encoding", "br", "resolver_http_error", compressed},
 		{"expanded limit", "gzip", "resolver_response_limit", compress(large, gzip.BestSpeed)},
 		{"wire limit", "gzip", "resolver_response_limit", compress(large[:maxResponse], gzip.NoCompression)},
 	} {
-		t.Run(tc.name, func(t *testing.T) {
-			r := testResolver(t, func(req *http.Request) (*http.Response, error) {
-				if req.Header.Get("Accept-Encoding") != "gzip" {
-					t.Fatal("public player script did not negotiate gzip")
+		for _, target := range []struct{ name, method, url, stage, step string }{
+			{"player", "GET", "https://www.youtube.com/s/player/fixture/base.js", "bootstrap", "player_script"},
+			{"html", "GET", "https://www.youtube.com/", "proof_init", ""},
+			{"interpreter", "GET", "https://www.google.com/js/th/fixture.js", "proof_init", ""},
+			{"api", "POST", "https://music.youtube.com/youtubei/v1/player", "player_request", ""},
+		} {
+			t.Run(target.name+"/"+tc.name, func(t *testing.T) {
+				r := testResolver(t, func(req *http.Request) (*http.Response, error) {
+					if req.Header.Get("Accept-Encoding") != "gzip" {
+						t.Fatal("resolver did not negotiate gzip")
+					}
+					return &http.Response{StatusCode: 200, Header: http.Header{"Content-Encoding": {tc.encoding}},
+						Body: io.NopCloser(bytes.NewReader(tc.body)), ContentLength: -1}, nil
+				})
+				data, err := r.request(context.Background(), target.method, target.url, nil, nil, target.stage, target.step)
+				if tc.failure == "" {
+					if err != nil || string(data) != script {
+						t.Fatal("resolver did not return the original response")
+					}
+				} else if err == nil || err.Error() != tc.failure || data != nil {
+					t.Fatal("invalid response was not rejected with the expected category")
 				}
-				return &http.Response{StatusCode: 200, Header: http.Header{"Content-Encoding": {tc.encoding}},
-					Body: io.NopCloser(bytes.NewReader(tc.body)), ContentLength: -1}, nil
 			})
-			data, err := r.request(context.Background(), "GET", "https://www.youtube.com/s/player/fixture/base.js", nil, nil, "bootstrap", "player_script")
-			if tc.failure == "" {
-				if err != nil || string(data) != script {
-					t.Fatal("player did not receive the original script")
-				}
-			} else if err == nil || err.Error() != tc.failure || data != nil {
-				t.Fatal("invalid script was not rejected with the expected category")
-			}
-		})
+		}
 	}
 }
 
@@ -397,8 +409,8 @@ func TestProofAndPlayerAgentContractsRemainSeparate(t *testing.T) {
 		if req.Header.Get("User-Agent") != expected {
 			t.Error("request agent contract changed")
 		}
-		if req.Header.Get("Accept-Encoding") != "identity" {
-			t.Error("non-script request unexpectedly negotiated compression")
+		if req.Header.Get("Accept-Encoding") != "gzip" {
+			t.Error("resolver response did not negotiate bounded compression")
 		}
 		return response("fixture"), nil
 	})

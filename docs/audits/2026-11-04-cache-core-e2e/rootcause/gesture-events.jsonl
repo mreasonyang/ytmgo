@@ -1,0 +1,16 @@
+{"event":"window_focus"}
+{"event":"layout","focused":false,"h":509.11328,"w":940,"x":30,"y":128.88672}
+{"event":"window_blur"}
+{"event":"window_focus"}
+{"event":"window_blur"}
+{"button":0,"event":"down","time":"2026-11-04T15:35:45.581123Z","x":470,"y":339.11328}
+{"button":0,"event":"move","time":"2026-11-04T15:35:45.59192Z","x":470,"y":139.11328}
+{"button":0,"event":"up","time":"2026-11-04T15:35:45.592496Z","x":470,"y":139.11328}
+{"event":"window_focus"}
+{"event":"window_blur"}
+{"event":"layout","focused":false,"h":509.11328,"w":940,"x":30,"y":128.88672}
+{"button":0,"event":"down","time":"2026-11-04T15:39:05.420579Z","x":470,"y":339.11328}
+{"event":"layout","focused":true,"h":509.11328,"w":940,"x":30,"y":128.88672}
+{"button":0,"event":"move","time":"2026-11-04T15:39:05.437905Z","x":470,"y":139.11328}
+{"button":0,"event":"up","time":"2026-11-04T15:39:05.438377Z","x":470,"y":139.11328}
+{"down":1,"event":"release_frame","focused":true,"moves":1,"time":"2026-11-04T15:39:05.452776Z","up":1,"would_commit_seek":true}

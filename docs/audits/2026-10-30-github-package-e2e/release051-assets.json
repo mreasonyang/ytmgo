@@ -1,0 +1,43 @@
+{
+  "assets": [
+    {
+      "name": "build.json",
+      "size": 314,
+      "digest": "sha256:d78c3f0446ed3b9679f6512be690a0eb0dabc5acb5018f91b4256d4fb417737a",
+      "url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.5.1/build.json"
+    },
+    {
+      "name": "SHA256SUMS",
+      "size": 462,
+      "digest": "sha256:7eaa7bc52e46d2e56fa7c99baa452d00bf5ad690532b931939918dcf76a733a5",
+      "url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.5.1/SHA256SUMS"
+    },
+    {
+      "name": "update-darwin-arm64.json",
+      "size": 374,
+      "digest": "sha256:fcd2c27ad525cc54f3a3e2d0481e7d44255fdb4faa5ecbce448d252f39f9bdcd",
+      "url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.5.1/update-darwin-arm64.json"
+    },
+    {
+      "name": "ytmgo-0.5.1-arm64-notarized.dmg",
+      "size": 69491628,
+      "digest": "sha256:9dcadfef7bc16bcce3360a4a1792a488b5822b3cb835ffaa01f4162906b34dac",
+      "url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.5.1/ytmgo-0.5.1-arm64-notarized.dmg"
+    },
+    {
+      "name": "ytmgo-0.5.1-arm64-notarized.zip",
+      "size": 64377759,
+      "digest": "sha256:f253c2c0fbd06fae114307532efe3098bfce7e5da3e4d21eb7f0b959a64ecf1f",
+      "url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.5.1/ytmgo-0.5.1-arm64-notarized.zip"
+    },
+    {
+      "name": "ytmgo-0.5.1-darwin-arm64.tar.gz",
+      "size": 62922094,
+      "digest": "sha256:74fc5eb06ce1902876affa5ffbf09707ba2951f58798b4998e1c977e7f8ec799",
+      "url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.5.1/ytmgo-0.5.1-darwin-arm64.tar.gz"
+    }
+  ],
+  "publishedAt": "2026-10-30T04:57:38Z",
+  "tagName": "v0.5.1",
+  "url": "https://github.com/mreasonyang/ytmgo/releases/tag/v0.5.1"
+}

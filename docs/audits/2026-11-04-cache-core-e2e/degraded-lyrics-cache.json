@@ -1,0 +1,9 @@
+{
+  "forced_refresh_lines": 1,
+  "forced_refresh_success": true,
+  "initial_lines": 0,
+  "initial_success": true,
+  "repeat_lines_after_recovery": 0,
+  "repeat_requests": 0,
+  "repeat_success": true
+}

@@ -25,9 +25,22 @@ func TestNativeVideoMovingClockLive(t *testing.T) {
 		t.Fatal("video_runtime_unavailable")
 	}
 	defer v.Close()
+	resolve := v.resolve
+	v.resolve = func(ctx context.Context, id string, quality int) (videoMedia, error) {
+		info, err := resolve(ctx, id, quality)
+		if err != nil {
+			category := safeError(err)
+			if err.Error() == "no_video_format" {
+				category = "no_video_format"
+			}
+			t.Logf("video_resolution_category=%s stage=%s", category, safeErrorStage(err))
+		}
+		return info, err
+	}
 	for _, at := range []time.Duration{73*time.Second + 125*time.Millisecond, 117*time.Second + 625*time.Millisecond} {
 		t.Run(at.String(), func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
+			policy := v.policy.defaults()
+			ctx, cancel := context.WithTimeout(context.Background(), policy.resolutionTimeout+policy.startupTimeout+5*time.Second)
 			defer cancel()
 			start := time.Now()
 			if err := v.Start(ctx, "52fNscjkST4", func() time.Duration { return at + time.Since(start) }, func() bool { return true }); err != nil {
@@ -125,7 +138,8 @@ func TestNativeVideoDuringAnonymousAudioLive(t *testing.T) {
 				t.Fatal("anonymous_audio_resume_failed")
 			}
 			awaitAudio(t, at)
-			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			policy := v.policy.defaults()
+			ctx, cancel := context.WithTimeout(context.Background(), policy.resolutionTimeout+policy.startupTimeout+5*time.Second)
 			defer cancel()
 			started := time.Now()
 			startPosition := p.Snapshot().Position

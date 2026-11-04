@@ -1,0 +1,79 @@
+Window: "ytmgo", App: ytmgo.
+0 standard window ytmgo, Secondary Actions: Raise
+	1 container Now Playing
+		2 text (settable) Now Playing
+		3 button Immersive mode · Now Playing
+		4 button Close panel
+		5 scroll area
+			6 button Cover
+			7 button Video
+			8 text (settable) People Help the People
+			9 text (settable) Birdy
+			10 button Like
+			11 button Previous
+			12 button Play
+			13 button Next
+			14 text (settable) 0:09
+			15 slider (settable, float) Description: Playback position, Value: 9.306333333
+			16 text (settable) 4:16
+			17 button Mute
+			18 slider (settable, float) Description: Volume, Value: 0.7
+			19 button Lyrics · Now Playing
+			20 button Queue · Now Playing
+			21 scroll area Lyrics · Content
+				22 text (settable) ♪
+				23 text (settable) God knows what is hiding in those weak and drunken hearts
+				24 text (settable) Guess he kissed the girls and made them cry
+				25 text (settable) Those hard-faced Queens of misadventure
+				26 text (settable) God knows what is hiding in those weak and sunken lies
+				27 text (settable) Fiery throngs of muted angels
+				28 text (settable) Giving love but getting nothin' back, oh
+				29 text (settable) People, help the people
+				30 text (settable) And if you're homesick, give me your hand and I'll hold it
+				31 text (settable) People, help the people
+				32 text (settable) And nothing will drag you down
+				33 text (settable) Oh, and if I had a brain
+				34 text (settable) Oh, and if I had a brain
+				35 text (settable) I'd be cold as a stone and rich as the fool
+				36 text (settable) That turned all those good hearts away
+				37 text (settable) God knows what is hiding in this world of little consequence
+				38 text (settable) Behind the tears, inside the lies
+				39 text (settable) A thousand slowly dying sunsets
+				40 text (settable) God knows what is hiding in those weak and drunken hearts
+				41 text (settable) Guess the loneliness came knocking
+				42 text (settable) No one needs to be alone or singin'
+				43 text (settable) People, help the people
+				44 text (settable) And if you're homesick, give me your hand and I'll hold it
+				45 text (settable) People, help the people
+				46 text (settable) Nothing will drag you down
+				47 text (settable) Oh, and if I had a brain
+				48 text (settable) Oh, and if I had a brain
+				49 text (settable) I'd be cold as a stone and rich as the fool
+				50 text (settable) That turned all those good hearts away
+				51 text (settable) ♪
+				52 text (settable) Na, na, na-na-na-na, ooh, ooh
+				53 text (settable) Na, na, na-na-na, ooh, ooh
+				54 text (settable) People, help the people
+				55 text (settable) And if you're homesick, give me your hand and I'll hold it
+				56 text (settable) People, help the people
+				57 text (settable) Nothing will drag you down
+				58 text (settable) Oh, and if I had a brain
+				59 text (settable) Oh, and if I had a brain
+				60 text (settable) I'd be cold as a stone and rich as the fool
+				61 text (settable) That turned all those good hearts away
+				62 text (settable) Source: Musixmatch
+	63 close button
+	64 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	65 minimize button
+	66 text ytmgo
+67 menu bar
+	68 ytmgo
+	69 File
+	70 Edit
+	71 Playback
+	72 View
+	73 Window
+	74 Account
+	75 Help
+
+The focused UI element is 3 button Immersive mode · Now Playing

@@ -1,0 +1,46 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/ui"
+	"os"
+	"time"
+	"ytmgo/internal/catalog"
+	"ytmgo/locales"
+)
+
+func lyricProbeLog(row map[string]any) {
+	row["time"] = time.Now().UTC().Format(time.RFC3339Nano)
+	b, _ := json.Marshal(row)
+	f, e := os.OpenFile("/Users/easonyang/Documents/projects/ytmgo/docs/audits/2026-11-04-cache-core-e2e/rootcause/lyrics-native-events.jsonl", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	if e == nil {
+		_, _ = f.Write(append(b, '\n'))
+		f.Close()
+	}
+}
+func main() {
+	mygo.App.SetName("ytmGO Lyrics Probe")
+	m := &UIModel{Panel: true, PanelTab: "lyrics", Position: 41, Duration: 150, LyricsAvailable: true, LyricsExpanded: true, Language: "en", Current: catalog.Item{ID: "abcdefghijk", Title: "Synthetic gestures"}}
+	for i := 0; i < 30; i++ {
+		m.LyricLines = append(m.LyricLines, catalog.LyricLine{Text: fmt.Sprintf("Synthetic cue %02d", i), Start: time.Duration(i*5) * time.Second, End: time.Duration(i*5+4) * time.Second})
+	}
+	a := ViewActions{Tr: func(k string) string { return locales.Catalog.Format("en", k, nil) }}
+	a.TrArgs = func(k string, args map[string]any) string { return locales.Catalog.Format("en", k, args) }
+	a.Seek = func(at float64) { m.Position = at; lyricProbeLog(map[string]any{"event": "seek", "at": at}) }
+	a.LyricsClock = func() (float64, bool) { return m.Position, false }
+	a.SetLyricsExpanded = func(v bool) { m.LyricsExpanded = v }
+	mygo.App.OnWindowAllClosed(func() { mygo.App.Quit() })
+	mygo.App.WhenReady(func() {
+		mygo.NewWindow(mygo.WindowOptions{Title: "ytmGO Lyrics Probe", Width: 600, Height: 700, Content: ui.View(func(c *ui.Context) {
+			ui.Column(c).Fill().Padding(20).Gap(12).Children(func() {
+				ui.Text(c, fmt.Sprintf("Position %.2f", m.Position)).FontSize(24)
+				nativePanelCard(c, m, a, palette(true)).Grow(1)
+			})
+		})})
+	})
+	if mygo.App.Run() != nil {
+		os.Exit(1)
+	}
+}

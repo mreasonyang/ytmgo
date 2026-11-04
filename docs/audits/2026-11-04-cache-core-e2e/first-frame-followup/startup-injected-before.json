@@ -1,0 +1,82 @@
+[
+  {
+    "Case": 1,
+    "InjectedResolveDelayMS": 18000,
+    "PolicyMS": 20000,
+    "TotalMS": 20008,
+    "ResolveMS": 20000,
+    "PresentedMS": 0,
+    "ResolveCategory": "playback_failed",
+    "ResolveStage": "",
+    "ResolveCause": "startup_deadline",
+    "VideoError": "video_network_timeout",
+    "Presented": false,
+    "Decoders": null
+  },
+  {
+    "Case": 2,
+    "InjectedResolveDelayMS": 18000,
+    "PolicyMS": 60000,
+    "TotalMS": 23698,
+    "ResolveMS": 22748,
+    "PresentedMS": 23496,
+    "ResolveCategory": "",
+    "ResolveStage": "",
+    "ResolveCause": "",
+    "VideoError": "",
+    "Presented": true,
+    "Decoders": [
+      {
+        "OpenedMS": 22748,
+        "OpenDurationMS": 7,
+        "FirstReadMS": 22757,
+        "FirstBytesMS": 23468,
+        "CompleteFrameMS": 23469,
+        "Bytes": 44271360,
+        "Cause": "",
+        "BridgeCategory": "",
+        "HTTPStatus": 0
+      }
+    ]
+  },
+  {
+    "Case": 3,
+    "InjectedResolveDelayMS": 18000,
+    "PolicyMS": 60000,
+    "TotalMS": 23352,
+    "ResolveMS": 22053,
+    "PresentedMS": 23145,
+    "ResolveCategory": "",
+    "ResolveStage": "",
+    "ResolveCause": "",
+    "VideoError": "",
+    "Presented": true,
+    "Decoders": [
+      {
+        "OpenedMS": 22054,
+        "OpenDurationMS": 4,
+        "FirstReadMS": 22060,
+        "FirstBytesMS": 23105,
+        "CompleteFrameMS": 23106,
+        "Bytes": 57388800,
+        "Cause": "",
+        "BridgeCategory": "",
+        "HTTPStatus": 0
+      }
+    ]
+  },
+  {
+    "Case": 4,
+    "InjectedResolveDelayMS": 18000,
+    "PolicyMS": 20000,
+    "TotalMS": 20009,
+    "ResolveMS": 20000,
+    "PresentedMS": 0,
+    "ResolveCategory": "playback_failed",
+    "ResolveStage": "",
+    "ResolveCause": "startup_deadline",
+    "VideoError": "video_network_timeout",
+    "Presented": false,
+    "Decoders": null
+  }
+]

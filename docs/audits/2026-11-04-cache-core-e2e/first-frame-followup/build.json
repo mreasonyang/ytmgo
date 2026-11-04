@@ -1,0 +1,9 @@
+{
+  "build_exit_code": 0,
+  "signature_verified": true,
+  "license_exit_code": 0,
+  "notarized": false,
+  "app": "/Users/easonyang/Documents/projects/ytmgo/build/first-frame-followup-20261105/package/darwin-arm64/ytmGO.app",
+  "executable_sha256": "e6ba6bfe602e8600dcf822ce3379a0f28b50dfd104e0fd28ab5123ee05b85a66",
+  "elapsed_seconds": 5.622
+}

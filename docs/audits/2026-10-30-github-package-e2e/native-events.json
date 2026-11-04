@@ -1,0 +1,242 @@
+[
+  {
+    "time": "2026-10-30T04:39:44.200Z",
+    "name": "real_login",
+    "account": "premium",
+    "library_initial": 24,
+    "library_after_pagination": 45,
+    "login_cancel_preserved_main": true
+  },
+  {
+    "time": "2026-10-30T04:40:07.807Z",
+    "name": "premium_playback_started",
+    "position_seconds": 8.322666666
+  },
+  {
+    "time": "2026-10-30T04:40:43.706Z",
+    "name": "sustained_playback_and_pause",
+    "position_seconds": 51.130333333,
+    "observation": "clock advanced from 8.32 to 51.13 before pause"
+  },
+  {
+    "time": "2026-10-30T04:41:40.602Z",
+    "name": "paused_mid_seek",
+    "target_seconds": 99.420011851,
+    "remained_paused": true
+  },
+  {
+    "time": "2026-10-30T04:41:54.601Z",
+    "name": "keyboard_seek_and_mute",
+    "keyboard_target_seconds": 101.4084,
+    "muted_volume": 0,
+    "restored_volume": 0.3
+  },
+  {
+    "time": "2026-10-30T04:42:31.433Z",
+    "name": "premium_tail_seek_1",
+    "target_seconds": 195.750641942,
+    "duration_seconds": 198.8388,
+    "remained_paused": true,
+    "error": false
+  },
+  {
+    "time": "2026-10-30T04:42:49.438Z",
+    "name": "natural_queue_transition",
+    "next_track_started": true,
+    "next_position_seconds": 7.661333333
+  },
+  {
+    "time": "2026-10-30T04:44:05.907Z",
+    "name": "native_video_visible",
+    "window_width_dip": 757,
+    "position_seconds": 39.970666666,
+    "queue_artwork_visible": true
+  },
+  {
+    "time": "2026-10-30T04:45:15.703Z",
+    "name": "video_advanced_and_short_scroll",
+    "position_before_seconds": 39.970666666,
+    "position_after_seconds": 112.418666666,
+    "frames_visibly_changed": true,
+    "short_window_dip": [
+      757,
+      641
+    ],
+    "artist_and_queue_reachable": true
+  },
+  {
+    "time": "2026-10-30T04:46:00.649Z",
+    "name": "locale_theme_live_switch",
+    "locales": [
+      "en",
+      "ja",
+      "zh-Hans",
+      "zh-Hant"
+    ],
+    "themes": [
+      "dark",
+      "light"
+    ],
+    "playback_survived": true,
+    "settings_short_scroll": true,
+    "modal_tab_focus": true
+  },
+  {
+    "time": "2026-10-30T04:46:48.198Z",
+    "name": "short_album_detail",
+    "window_dip": [
+      757,
+      641
+    ],
+    "complete_track_rows_in_initial_viewport": 0,
+    "artist_line_in_header": false
+  },
+  {
+    "time": "2026-10-30T04:47:03.669Z",
+    "name": "search_accessibility_gap",
+    "visible_types": [
+      "Artist",
+      "Song",
+      "Playlist",
+      "Album"
+    ],
+    "accessible_samples": [
+      "Ryuichi Sakamoto · 6.48M monthly audience",
+      "Merry Christmas Mr. Lawrence",
+      "Presenting Ryuichi Sakamoto · YouTube Music",
+      "Opus · Ryuichi Sakamoto"
+    ],
+    "types_missing_from_accessible_names": true
+  },
+  {
+    "time": "2026-10-30T04:48:28.894Z",
+    "name": "premium_tail_seek_2",
+    "target_seconds": 217.664790451,
+    "remained_paused": true,
+    "error": false
+  },
+  {
+    "time": "2026-10-30T04:49:03.443Z",
+    "name": "repeat_one_at_eof",
+    "same_track_restarted": true,
+    "restarted_position_seconds": 18.285333333
+  },
+  {
+    "time": "2026-10-30T04:51:11.580Z",
+    "name": "cloud_like_added",
+    "initial_liked": false,
+    "liked_state_visible": true
+  },
+  {
+    "time": "2026-10-30T04:51:29.443Z",
+    "name": "cloud_like_roundtrip",
+    "initial_liked": false,
+    "liked_state_visible": true,
+    "restored_liked": false
+  },
+  {
+    "time": "2026-10-30T04:52:24.524Z",
+    "name": "live_lyrics",
+    "samples_with_plain_text": 3,
+    "synchronized_timelines_observed": 0,
+    "plain_scroll_pass": true
+  },
+  {
+    "time": "2026-10-30T04:53:44.780Z",
+    "name": "decoder_failure_recovery",
+    "error_category": "audio_stream_failed",
+    "retry_actions_visible": 2,
+    "retry_recovered": true,
+    "recovered_position_seconds": 23.437333333,
+    "retry_restarted_track": true
+  },
+  {
+    "time": "2026-10-30T04:55:12.183Z",
+    "name": "hidden_window_playback",
+    "position_before_seconds": 23.437333333,
+    "position_after_seconds": 107.085333333,
+    "main_retained": true
+  },
+  {
+    "time": "2026-10-30T04:57:58.917Z",
+    "name": "preferences_restored",
+    "language": "zh-Hant",
+    "appearance": "dark",
+    "volume": 0.7,
+    "paused": true
+  },
+  {
+    "time": "2026-10-30T04:59:53.200Z",
+    "name": "normal_restart",
+    "premium_restored_without_login": true,
+    "autoplay": false,
+    "volume": 0.7,
+    "language": "zh-Hant",
+    "appearance": "dark"
+  },
+  {
+    "time": "2026-10-30T05:00:32.404Z",
+    "name": "global_shortcut_ux",
+    "fixed_binding": "Cmd+Shift+Space",
+    "customization_entry": false,
+    "listed_in_shortcut_help": false,
+    "synthetic_activation": false,
+    "physical_activation_verified": false
+  },
+  {
+    "time": "2026-10-30T05:01:11.597Z",
+    "name": "normal_restart_playback",
+    "premium": true,
+    "position_seconds": 27.832,
+    "login_repeated": false
+  },
+  {
+    "time": "2026-10-30T05:01:34.381Z",
+    "name": "public_update_offered",
+    "from": "0.5.0",
+    "to": "0.5.1",
+    "automatic_prompt": true,
+    "manual_check": true,
+    "automatic_install_checkbox": false
+  },
+  {
+    "time": "2026-10-30T05:02:56.300Z",
+    "name": "public_update_staged",
+    "version": "0.5.1",
+    "restart_ready": true
+  },
+  {
+    "time": "2026-10-30T05:03:49.983Z",
+    "name": "signed_in_sidebar_copy",
+    "version": "0.5.1",
+    "account": "premium",
+    "sidebar_text": "建立你的音樂庫 登入後查看你的 YouTube Music 音樂庫。",
+    "observed_after_restore": true
+  },
+  {
+    "time": "2026-10-30T05:05:52.670Z",
+    "name": "public_051_playback_video",
+    "account": "premium",
+    "position_seconds": 29.24,
+    "video_frame_visible": true,
+    "restored_without_login": true
+  },
+  {
+    "time": "2026-10-30T05:06:37.745Z",
+    "name": "public_051_login_cancel",
+    "premium_retained": true,
+    "playback_continued": true,
+    "position_after_seconds": 71.586666666,
+    "credentials_entered": false
+  },
+  {
+    "time": "2026-10-30T05:08:01.881Z",
+    "name": "final_public_051_state",
+    "premium": true,
+    "library_loaded": true,
+    "autoplay": false,
+    "language": "zh-Hant",
+    "appearance": "dark",
+    "volume": 0.7
+  }
+]

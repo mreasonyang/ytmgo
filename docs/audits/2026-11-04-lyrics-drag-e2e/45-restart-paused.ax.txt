@@ -1,0 +1,77 @@
+Window: "ytmGO", App: ytmGO.
+0 standard window ytmGO, Secondary Actions: Raise
+	1 button ytmGO Home
+	2 button (disabled) Back
+	3 button (disabled) Forward
+	4 button Home
+	5 text field (settable) Description: Search, Placeholder: What do you want to play?
+	6 button Explore
+	7 button Settings
+	8 container Restoring your account…
+		9 progress indicator
+		10 text (settable) Restoring your account…
+	11 button Library
+	12 button Collapse sidebar
+	13 text (settable) Showing your saved library.
+	14 button Playlists
+	15 button Albums
+	16 button Artists
+	17 scroll area Your playlists
+		18 button (disabled) Liked Music · Auto playlist, Help: Liked Music
+		19 button (disabled) New Release Mix · Mix, Help: New Release Mix
+		20 button (disabled) Ultimate Wedding Playlist
+		21 button (disabled) Dreamkid
+		22 button (disabled) Best
+		23 button (disabled) Antidote · Derik Fein, Help: Antidote
+		24 button (disabled) Favorite Songs
+		25 button (disabled) Mindhunter (Soundtrack Inspired by the TV Show) · Fandom, Help: Mindhunter (Soundtrack Inspired by the TV Show)
+		26 button (disabled) UK R&B Hits 2024 · YouTube Music, Help: UK R&B Hits 2024
+		27 button (disabled) Discover Mix · Mix, Help: Discover Mix
+		28 button (disabled) ALT CTRL
+		29 button (disabled) At the Airport
+		30 button (disabled) Blues Replay
+		31 button (disabled) Eminem: Next Steps
+		32 button (disabled) ESL Pro League - Official Soundtrack
+		33 button (disabled) Favorite Songs
+		34 button (disabled) Feeling Good
+		35 button (disabled) Gentle
+		36 button (disabled) Hollywood Undead Essentials
+		37 button (disabled) LINKIN PARK Essentials
+		38 button (disabled) My Shazam Tracks
+		39 button (disabled) OG
+		40 button (disabled) Party Starters
+		41 button (disabled) Powerful
+		42 button (disabled) Replay 2018
+	43 scroll area Content
+		44 progress indicator Loading…
+		45 text (settable) Loading…
+	46 container Player controls
+		47 button Open Now Playing
+		48 button Like
+		49 button Shuffle queue
+		50 button Previous
+		51 button Play
+		52 button Next
+		53 button Repeat: off
+		54 text (settable) 1:04
+		55 slider (settable, float) Description: Playback position, Value: 64.2
+		56 text (settable) 2:59
+		57 button Lyrics
+		58 button Queue
+		59 button Unmute
+		60 slider (settable, float) Description: Volume, Value: 0
+		61 menu button More actions
+		62 button Immersive mode
+	63 close button
+	64 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	65 minimize button
+	66 text ytmGO
+67 menu bar
+	68 ytmGO
+	69 File
+	70 Edit
+	71 Playback
+	72 View
+	73 Window
+	74 Account
+	75 Help

@@ -16,11 +16,13 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"ytmgo/internal/videoquality"
 )
 
 func testVideo() *Video {
 	v := &Video{}
-	v.resolve = func(context.Context, string) (videoMedia, error) {
+	v.resolve = func(context.Context, string, int) (videoMedia, error) {
 		return videoMedia{media: media{Duration: time.Minute}, width: 4, height: 2}, nil
 	}
 	v.open = func(context.Context, videoMedia, time.Duration) (*videoDecoder, error) {
@@ -50,10 +52,59 @@ func waitVideo(t *testing.T, condition func() bool) {
 }
 
 func TestVideoDimensionsBoundMemory(t *testing.T) {
-	for _, dimensions := range [][2]int{{3840, 2160}, {1920, 1080}, {640, 480}, {1080, 1920}, {64, 36}} {
-		width, height := videoDimensions(dimensions[0], dimensions[1])
-		if width < 2 || height < 2 || width > 854 || height > 480 || width%2 != 0 || height%2 != 0 {
-			t.Fatal("output dimensions exceed video memory bound")
+	for _, quality := range videoquality.Options() {
+		for _, dimensions := range [][2]int{{3840, 2160}, {1920, 1080}, {640, 480}, {1080, 1920}, {64, 36}} {
+			width, height := videoDimensions(dimensions[0], dimensions[1], quality)
+			if width < 2 || height < 2 || width > (quality*16+8)/9 || height > quality || width%2 != 0 || height%2 != 0 {
+				t.Fatal("output dimensions exceed the selected resolution")
+			}
+		}
+	}
+}
+
+func TestVideoDimensionsAllowHDWithoutUpscaling(t *testing.T) {
+	for _, test := range []struct{ width, height, quality, wantWidth, wantHeight int }{
+		{1920, 1080, 0, 1280, 720},
+		{1920, 1080, 720, 1280, 720},
+		{1920, 1080, 1080, 1920, 1080},
+		{1920, 1080, 360, 640, 360},
+		{640, 360, 1080, 640, 360},
+		{720, 720, 720, 720, 720},
+		{1080, 1920, 720, 404, 720},
+	} {
+		width, height := videoDimensions(test.width, test.height, test.quality)
+		if width != test.wantWidth || height != test.wantHeight {
+			t.Fatalf("source %dx%d at %dp: got %dx%d, want %dx%d", test.width, test.height, test.quality, width, height, test.wantWidth, test.wantHeight)
+		}
+	}
+}
+
+func TestVideoQualityReplacesSameTrackResolution(t *testing.T) {
+	v := testVideo()
+	defer v.Close()
+	requested := make(chan int, 1)
+	v.resolve = func(ctx context.Context, _ string, quality int) (videoMedia, error) {
+		requested <- quality
+		return videoMedia{media: media{Duration: time.Minute}, width: 4, height: 2}, nil
+	}
+	position := func() time.Duration { return 13 * time.Second }
+	playing := func() bool { return false }
+	for i, quality := range []int{720, 1080, 360} {
+		var err error
+		if i == 0 {
+			err = v.Start(context.Background(), "aaaaaaaaaaa", position, playing)
+		} else {
+			err = v.StartWithQuality(context.Background(), "aaaaaaaaaaa", quality, position, playing)
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		waitVideo(t, func() bool { return !v.Loading() })
+		if got := <-requested; got != quality {
+			t.Fatalf("requested %dp, got %dp", quality, got)
+		}
+		if frame, _ := v.Frame(); frame == nil || v.Error() != "" {
+			t.Fatal("quality switch did not replace the paused frame")
 		}
 	}
 }
@@ -167,7 +218,7 @@ func TestVideoPauseSeekAndRelease(t *testing.T) {
 func TestVideoCloseCancelsResolutionAndRejectsRestart(t *testing.T) {
 	v := testVideo()
 	started := make(chan struct{})
-	v.resolve = func(ctx context.Context, id string) (videoMedia, error) {
+	v.resolve = func(ctx context.Context, id string, quality int) (videoMedia, error) {
 		close(started)
 		<-ctx.Done()
 		return videoMedia{}, ctx.Err()
@@ -188,7 +239,7 @@ func TestVideoCloseCancelsResolutionAndRejectsRestart(t *testing.T) {
 func TestVideoDependencyErrorRemainsPrivate(t *testing.T) {
 	v := testVideo()
 	defer v.Close()
-	v.resolve = func(context.Context, string) (videoMedia, error) {
+	v.resolve = func(context.Context, string, int) (videoMedia, error) {
 		return videoMedia{}, errors.New("synthetic-private-upstream-error")
 	}
 	if err := v.Start(context.Background(), "aaaaaaaaaaa", func() time.Duration { return 0 }, func() bool { return true }); err != nil {

@@ -1,0 +1,10 @@
+{
+  "time": "2026-11-04T15:48:39.731459+00:00",
+  "stopped_probe_pids": [
+    98131,
+    96871
+  ],
+  "formal_app_touched": false,
+  "probe_has_no_account": true,
+  "runtime_implementation_changed": false
+}

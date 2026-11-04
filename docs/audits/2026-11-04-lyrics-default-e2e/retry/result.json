@@ -1,0 +1,42 @@
+{
+  "compact_lyrics_native_e2e": "PASS",
+  "complete_app_acceptance": false,
+  "installed_manifest_unchanged": true,
+  "binary_sha256": "cd91528fd113aeec09ffa522372a8f5c3bb7c168349e818c47dbfe874a2631c9",
+  "native_compact_size": [
+    757,
+    641
+  ],
+  "native_short_size": [
+    961,
+    641
+  ],
+  "outer_cover_mean_pixel_difference": 0.0,
+  "outer_stability_playback_seconds": [
+    177.501396223,
+    203.058729557
+  ],
+  "audio_incident": {
+    "category": "audio_stream_failed",
+    "recovered_by_retry": true,
+    "root_cause": "unresolved"
+  },
+  "global_shortcut": "configured, synthetic foreground retry did not toggle; physical input unverified",
+  "current_source_drift_from_initial_build": [
+    "acceptance_probe_test.go",
+    "internal/player/player.go",
+    "internal/player/player_test.go",
+    "native_settings.go"
+  ],
+  "original_playback_restored": true,
+  "original_queue_count": 90,
+  "final_processes": [
+    {
+      "pid": 69621,
+      "ppid": 1,
+      "uid": 501,
+      "state": "S",
+      "executable": "/Applications/ytmgo.app/Contents/MacOS/ytmgo"
+    }
+  ]
+}

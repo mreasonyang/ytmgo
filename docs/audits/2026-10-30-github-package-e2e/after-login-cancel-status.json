@@ -1,0 +1,11 @@
+{
+  "account": {
+    "category": "session_failed"
+  },
+  "audio": {
+    "category": "ready"
+  },
+  "video": {
+    "category": "ready"
+  }
+}

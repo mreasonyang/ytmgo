@@ -1,0 +1,2 @@
+{"check": "public_catalog", "exit_code": 1, "status": "fail", "seconds": 6.057, "metrics": []}
+{"check": "public_player_js", "exit_code": 1, "status": "fail", "seconds": 5.567, "metrics": []}

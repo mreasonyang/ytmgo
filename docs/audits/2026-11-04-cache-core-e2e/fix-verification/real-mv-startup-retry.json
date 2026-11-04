@@ -1,0 +1,9 @@
+{
+  "category": "first_frame_failed",
+  "official_video_matched": true,
+  "startup_ms": 0,
+  "Samples": 0,
+  "MovingSamples": 0,
+  "frames_advanced": 0,
+  "maximum_pixel_difference": 0
+}

@@ -1,6 +1,8 @@
 /build/
 /.mygo/
 /dist/
+/outputs/
+/docs/audits/**/memory/metrics
 /.DS_Store
 /ytmgo
 *.log

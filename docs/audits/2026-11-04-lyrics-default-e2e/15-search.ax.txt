@@ -1,0 +1,9 @@
+The following is a diff from the previous accessibility tree for Window: "ytmgo" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+Removed element IDs: 41-138
+~	6 text field (settable) Description: Search, Value: ry Pink, Placeholder: What do you want to play?
++	169 scroll area Content
++		170 progress indicator Loading…
++		171 text (settable) Loading…
+~		147 text (settable) 2:11
+~		148 slider (settable, float) Description: Playback position, Value: 131.506333333
+The focused UI element is 6 text field (settable) Description: Search, Value: ry Pink, Placeholder: What do you want to play?

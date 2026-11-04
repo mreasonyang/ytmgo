@@ -1,0 +1,28 @@
+{
+  "signature": true,
+  "gatekeeper": true,
+  "stapled_ticket": true,
+  "version": "0.5.1",
+  "commit": "52790e0161c534f391eb620bf956bc60649b1df0",
+  "team": "2V4TX79LUZ",
+  "main_sha256": "2214521b90dc4b3b3f5b645df0636fe23e331e9ea0a6d2ad8c088689cd0d5c15",
+  "checksums": [
+    {
+      "name": "ytmgo-0.5.1-arm64-notarized.zip",
+      "sha256": "f253c2c0fbd06fae114307532efe3098bfce7e5da3e4d21eb7f0b959a64ecf1f",
+      "matches": true
+    },
+    {
+      "name": "build.json",
+      "sha256": "d78c3f0446ed3b9679f6512be690a0eb0dabc5acb5018f91b4256d4fb417737a",
+      "matches": true
+    },
+    {
+      "name": "update-darwin-arm64.json",
+      "sha256": "fcd2c27ad525cc54f3a3e2d0481e7d44255fdb4faa5ecbce448d252f39f9bdcd",
+      "matches": true
+    }
+  ],
+  "runtime_script_match": true,
+  "github_asset_digest_matches": true
+}

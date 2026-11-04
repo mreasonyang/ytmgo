@@ -64,3 +64,15 @@ track identifiers, titles, account data, URLs, raw errors, argv or environments.
 Twelve race test/subtest passes cover opt-in, schema, cadence, stopped heartbeats,
 permissions, temporary-file cleanup, expiry and symlink refusal.
 The request will be removed and the app restarted after acceptance.
+
+## Final local source regression
+
+The final source, including the expiring probe, passed the full race run in
+135.957 seconds: **869 named test/subtest passes, zero failures, 22 opt-in skips**.
+See [final race receipt](go-final-full-race.json). The earlier full run remains
+retained as implementation history, rather than substituting for this final run.
+Bundled FFmpeg fixtures separately passed six named tests/subtests.
+
+A fresh pre-install check recognized `zh-Hans`, dark mode, volume 0.7 and
+`Shift+Super+Space`. This follow-up preserves the fresh pre-install settings;
+the carried-forward `zh-Hant` note describes an earlier state.

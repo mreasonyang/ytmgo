@@ -1,0 +1,216 @@
+{
+  "updated": "2026-11-04T08:55:05.018647+00:00",
+  "checks": [
+    {
+      "name": "go-race",
+      "command": [
+        "go",
+        "test",
+        "-race",
+        "-json",
+        "-count=1",
+        "./..."
+      ],
+      "passed": true,
+      "exit_code": 0,
+      "elapsed_seconds": 181.243,
+      "counts": {
+        "pass": 1120,
+        "skip": 28,
+        "fail": 0
+      },
+      "packages": [
+        {
+          "package": "ytmgo/cmd/icon",
+          "action": "skip",
+          "elapsed": 0
+        },
+        {
+          "package": "ytmgo/cmd/login-icon",
+          "action": "skip",
+          "elapsed": 0
+        },
+        {
+          "package": "ytmgo/internal/preference",
+          "action": "skip",
+          "elapsed": 0
+        },
+        {
+          "package": "ytmgo/locales",
+          "action": "skip",
+          "elapsed": 0
+        },
+        {
+          "package": "ytmgo/outputs/e2e-20261103/faultproxy",
+          "action": "skip",
+          "elapsed": 0
+        },
+        {
+          "package": "ytmgo/internal/language",
+          "action": "pass",
+          "elapsed": 1.343
+        },
+        {
+          "package": "ytmgo/internal/netproxy",
+          "action": "pass",
+          "elapsed": 1.376
+        },
+        {
+          "package": "ytmgo/cmd/update-package",
+          "action": "pass",
+          "elapsed": 1.405
+        },
+        {
+          "package": "ytmgo/internal/appearance",
+          "action": "pass",
+          "elapsed": 1.54
+        },
+        {
+          "package": "ytmgo/internal/librarysnapshot",
+          "action": "pass",
+          "elapsed": 1.5979999999999999
+        },
+        {
+          "package": "ytmgo/internal/accountsession",
+          "action": "pass",
+          "elapsed": 1.6099999999999999
+        },
+        {
+          "package": "ytmgo/internal/catalog",
+          "action": "pass",
+          "elapsed": 1.725
+        },
+        {
+          "package": "ytmgo/internal/player",
+          "action": "pass",
+          "elapsed": 18.431
+        },
+        {
+          "package": "ytmgo/internal/streaming",
+          "action": "pass",
+          "elapsed": 23.932
+        },
+        {
+          "package": "ytmgo/internal/accountlogin",
+          "action": "pass",
+          "elapsed": 44.622
+        },
+        {
+          "package": "ytmgo",
+          "action": "pass",
+          "elapsed": 177.986
+        }
+      ]
+    },
+    {
+      "name": "go-vet",
+      "command": [
+        "go",
+        "vet",
+        "./..."
+      ],
+      "passed": true,
+      "exit_code": 0,
+      "elapsed_seconds": 1.902
+    },
+    {
+      "name": "i18n",
+      "command": [
+        "go",
+        "tool",
+        "mygo",
+        "i18n",
+        "check"
+      ],
+      "passed": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.158
+    },
+    {
+      "name": "runtime-manifest",
+      "command": [
+        "python3",
+        "scripts/runtime/test_runtime_manifest.py"
+      ],
+      "passed": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.135
+    },
+    {
+      "name": "runtime-protocol",
+      "command": [
+        "python3",
+        "scripts/runtime/test_protocol_version.py"
+      ],
+      "passed": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.043
+    },
+    {
+      "name": "runtime-tests",
+      "command": [
+        "python3",
+        "scripts/runtime/run_tests.py"
+      ],
+      "passed": true,
+      "exit_code": 0,
+      "elapsed_seconds": 33.917
+    },
+    {
+      "name": "login-tests",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts/login",
+        "-p",
+        "test_*.py"
+      ],
+      "passed": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.365
+    },
+    {
+      "name": "license-tests",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts/licensing",
+        "-p",
+        "test_*.py"
+      ],
+      "passed": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.075
+    },
+    {
+      "name": "diff-check",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "passed": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.015
+    },
+    {
+      "name": "installed-signature",
+      "command": [
+        "codesign",
+        "--verify",
+        "--deep",
+        "--strict",
+        "/Applications/ytmGO.app"
+      ],
+      "passed": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.056
+    }
+  ]
+}

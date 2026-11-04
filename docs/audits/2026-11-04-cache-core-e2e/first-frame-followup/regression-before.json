@@ -1,0 +1,7 @@
+{
+  "test": "TestVideoColdResolutionDoesNotConsumeFirstFrameBudget",
+  "exit_code": 1,
+  "elapsed_virtual_ms": 20010,
+  "resolve_cancelled": true,
+  "decoder_opened": false
+}

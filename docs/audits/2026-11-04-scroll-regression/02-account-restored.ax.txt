@@ -1,0 +1,162 @@
+Window: "ytmgo", App: ytmgo.
+0 standard window ytmgo, Secondary Actions: Raise
+	1 button ytmgo Home
+	2 button (disabled) Back
+	3 button (disabled) Forward
+	4 button Home
+	5 text field (settable) Description: Search, Placeholder: What do you want to play?
+	6 button Explore
+	7 button Settings
+	8 menu button Account · YouTube Music Premium, Help: YouTube Music Premium
+	9 button Library
+	10 button Collapse sidebar
+	11 button Playlists
+	12 button Albums
+	13 button Artists
+	14 scroll area Your playlists
+		15 button Liked Music · Auto playlist, Help: Liked Music
+		16 button New Release Mix · Mix, Help: New Release Mix
+		17 button Ultimate Wedding Playlist
+		18 button Dreamkid
+		19 button Best
+		20 button Antidote · Derik Fein, Help: Antidote
+		21 button Favorite Songs
+		22 button Mindhunter (Soundtrack Inspired by the TV Show) · Fandom, Help: Mindhunter (Soundtrack Inspired by the TV Show)
+		23 button UK R&B Hits 2024 · YouTube Music, Help: UK R&B Hits 2024
+		24 button Discover Mix · Mix, Help: Discover Mix
+		25 button ALT CTRL
+		26 button At the Airport
+		27 button Blues Replay
+		28 button Eminem: Next Steps
+		29 button ESL Pro League - Official Soundtrack
+		30 button Favorite Songs
+		31 button Feeling Good
+		32 button Gentle
+		33 button Hollywood Undead Essentials
+		34 button LINKIN PARK Essentials
+		35 button My Shazam Tracks
+		36 button OG
+		37 button Party Starters
+		38 button Powerful
+		39 button Replay 2018
+	40 scroll area Content
+		41 heading Late night listening
+		42 button Liked Music
+		43 button New Release Mix
+		44 button Ultimate Wedding Playlist
+		45 button Dreamkid
+		46 button Best
+		47 button Antidote
+		48 button Favorite Songs
+		49 button Mindhunter (Soundtrack Inspired by the TV Show)
+		50 heading Listen again
+		51 scroll area
+			52 button New Release Mix · Navjaxx, David Lee, daniel.mp3, NOYA
+			53 button Demon Samurai · ONI
+			54 button Marijuana Girl Vol.2 · Remixology_Lab
+			55 button The Weeknd - Hong Kong Ft. Faye Wong (Live in Hong Kong) · Weeknd Everyday
+			56 button Genre Blurring · Aaron Frazer, Genesis Owusu, Masego, Quadeca
+			57 button Cypress Hill Remixes That Hit Different 2026 · Remixology_Lab
+			58 button kill ur boyf vibes / women supreme · Rosalyn “Sera” Shard
+			59 button Liked Music · Auto playlist
+			60 button Vibe · Michael Porcayo
+			61 button Ultimate Wedding Playlist
+			62 button Random Access Memories · Daft Punk
+			63 button Sex & Drugs · Temper City
+			64 button 你从未离去 (抖音DJ版) - 于佰万『我不再迷茫 思念是唯一的行囊，满天的星光 有一颗是你的愿望。』♪ || 年度最佳抖音歌曲 | 抖音最火歌曲音 | 抖音 | TikTok ♪ · Fantastic Music Station
+			65 button PROPHET LIKE ME · Deadfolk Prophet
+			66 button DOTB ROCK · Diggy Graves
+			67 button 711 · Xana
+			68 button TOKYO PARADISE CITY · Beat Flickers
+			69 button Over and Over / Tokyo Paradise City · Beat Flickers
+			70 button TOKYO ESCAPE · Beat Flickers
+		71 heading New releases
+		72 scroll area
+			73 button KNUCK · MUSHVENOM
+			74 button Chptr. 1 · JAY B
+			75 button Drown · Unroyal
+			76 button Muse · John Legend
+			77 button Sick Of Myself · Sara Beth
+			78 button And The Crowd Goes Mild · Sasha Alex Sloan
+			79 button The One And Only · Alina Isla
+			80 button For My Future Self · 9m88
+			81 button 打翻了整夜的香甜 · 陳忻玥
+			82 button CLUBSOS VOL. 1 · 5 Seconds of Summer
+		83 heading Shows for you
+		84 scroll area
+			85 button 公开视频 · 政经鲁社长
+			86 button 翻转电台FlipRadio · FearNation 世界苦茶
+			87 button 大飞说科技 · Best Partners TV
+			88 button W 神秘檔案 · Wally Magazine
+			89 button 下一章閱讀｜經濟學人 Podcast · 下一章閱讀
+			90 button 二竹圍之聲-第二季 · 義竹數位機會中心
+			91 button 曾寶儀的人生藏寶圖 · 曾寶儀的人生藏寶圖
+			92 button US-CHINA DAILY PODCAST · 中環十一少 Mr.11
+			93 button The WAN Show (Legacy) · Linus Tech Tips
+			94 button WSJ Exclusive Interviews · The Wall Street Journal
+			95 button 【Podcast迷走大學】所有集數 · 迷走大學
+			96 button RAW by BLAST Podcasts · BLAST Premier
+			97 button 习近平的家族故事 · 政经鲁社长
+			98 button TVB Straight Talk/清心直說 · TVB NEWS Official 無綫新聞
+			99 button Podcast - Capital Market & Geopolitics · 中環十一少 Mr.11
+			100 button BLAST Push To Talk | Scrawny and Launders · BLAST Premier
+		101 heading Fresh finds, old favorites
+		102 scroll area
+			103 button Archive Mix · Ricchi E Poveri, One Direction, Katy Perry, MOTHICA
+			104 button New Release Mix · Navjaxx, David Lee, daniel.mp3, NOYA
+			105 button Liked Music · Auto playlist
+			106 button Discover Mix · My Song, Pino, The Romantic Playlist, Thundercat
+			107 button Replay Mix · Temper City, Christina Perri, Ashe, Black Omen Media
+		108 heading Forgotten favorites
+		109 scroll area
+			110 button 90后一定有听过的华语流行歌曲（ 王力宏，周杰伦 ， 吴克群 ，FIR...） · KenGuo Channel 啃果 Channel
+			111 button Tell me you have attachment issues without telling me you have attachment issues. · Gillian
+			112 button Cigarettes on Patio · Matt Kelly
+			113 button 零零七 · 潘瑋柏
+			114 button lulu Willow · Kendra Ripley
+			115 button Wicked playlist · Krystel Compaisance
+			116 button 《数字人生》#林子祥#胡夏 — 两人合唱粤语经典 几乎听不到换气声！太厉害了 · Music Wonderland 音樂奇境
+			117 button Hollanov · LadyKnightEllen
+			118 button The Flame · Cheap Trick
+			119 button Man, that hits the spot · Búvármacska
+		120 heading Musical Multiverse
+		121 scroll area
+			122 button K-Pop x Pop Collaboration · Jung Kook, TOMORROW X TOGETHER, Babylon, i-dle
+			123 button I Don't Usually Like Country, But... · Morgan Wallen, Shaboozey, Jessie Murph, Jelly Roll
+			124 button Yee EDM 2026 · VAVO, Diplo, MC4D, Marshmello
+			125 button Hits Remixed · David Guetta, Taylor Swift, Teddy Swims, Natasha Bedingfield
+			126 button Pop R&B Jams · Ariana Grande, Justin Bieber, The Kid LAROI, Khalid
+			127 button Pop Meets Country · Kelsea Ballerini, Jessie Murph, Shaboozey, Kane Brown
+			128 button Pop Tadka · Diljit Dosanjh, Vishal Mishra, Jonita Gandhi, Ed Sheeran
+			129 button POP with DROPS · Charli XCX, Jason Derulo, Madison Beer, Taylor Swift
+			130 button Bollywood Indie · Savera, OAFF, Prateek Kuhad, Mismatched - Cast
+	131 container Player controls
+		132 button Open Now Playing
+		133 button Like
+		134 button Shuffle queue
+		135 button Previous
+		136 button Play
+		137 button Next
+		138 button Repeat: off
+		139 text (settable) 0:24
+		140 slider (settable, float) Description: Playback position, Value: 24.476999999
+		141 text (settable) 6:23
+		142 button Lyrics
+		143 button Queue
+		144 button Mute
+		145 slider (settable, float) Description: Volume, Value: 0.7
+		146 menu button More actions
+		147 button Immersive mode
+	148 close button
+	149 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	150 minimize button
+	151 text ytmgo
+152 menu bar
+	153 ytmgo
+	154 File
+	155 Edit
+	156 Playback
+	157 View
+	158 Window
+	159 Account
+	160 Help

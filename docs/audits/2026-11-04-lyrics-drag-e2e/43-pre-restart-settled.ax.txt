@@ -1,0 +1,128 @@
+Window: "ytmGO", App: ytmGO.
+0 standard window ytmGO, Secondary Actions: Raise
+	1 button ytmGO Home
+	2 button Back
+	3 button (disabled) Forward
+	4 button Home
+	5 text field (settable) Description: Search, Value: Try GENER8ION, Placeholder: What do you want to play?
+	6 button Explore
+	7 button Settings
+	8 menu button Account · YouTube Music Premium, Help: YouTube Music Premium
+	9 button Library
+	10 button Collapse sidebar
+	11 button Playlists
+	12 button Albums
+	13 button Artists
+	14 scroll area Your playlists
+		15 button Liked Music · Auto playlist, Help: Liked Music
+		16 button New Release Mix · Mix, Help: New Release Mix
+		17 button Ultimate Wedding Playlist
+		18 button Dreamkid
+		19 button Best
+		20 button Antidote · Derik Fein, Help: Antidote
+		21 button Favorite Songs
+		22 button Mindhunter (Soundtrack Inspired by the TV Show) · Fandom, Help: Mindhunter (Soundtrack Inspired by the TV Show)
+		23 button UK R&B Hits 2024 · YouTube Music, Help: UK R&B Hits 2024
+		24 button Discover Mix · Mix, Help: Discover Mix
+		25 button ALT CTRL
+		26 button At the Airport
+		27 button Blues Replay
+		28 button Eminem: Next Steps
+		29 button ESL Pro League - Official Soundtrack
+		30 button Favorite Songs
+		31 button Feeling Good
+		32 button Gentle
+		33 button Hollywood Undead Essentials
+		34 button LINKIN PARK Essentials
+		35 button My Shazam Tracks
+		36 button OG
+		37 button Party Starters
+		38 button Powerful
+		39 button Replay 2018
+	40 scroll area Content
+		41 heading Try GENER8ION
+		42 button Try · Song · GENER8ION, Adèle Castillon
+		43 button GENER8ION · Artist · 47.6M monthly audience
+		44 button GENER8ION, Adèle Castillon - Try (Lyrics) · Video · Luna Liebling
+		45 button Neo Surf (Official) · Video · GENER8ION, 070 Shake
+		46 button Try · Album · GENER8ION, Adèle Castillon
+		47 button GENER8ION feat. Yung Lean Perform "STORM" | 2026 VMAs · Video · MTV
+		48 button Try · Song · Cosmic Gate, Jaren
+		49 button Try as I might · Song · Non-Ionizing Radiation
+		50 button Try Try Try · Song · YOUNGTONES
+		51 button Try It · Song · XGRG
+		52 button Try No More · Song · Glitterin
+		53 button Love & Tears · Album · GENER8ION
+		54 button a écouter · Playlist · Adrien AUFFRET
+		55 button HARD TECHNO REMIXES OF POPULAR SONGS [WEEKLY UPDATED / FREE DOWNLOAD] · Playlist · LOST IN RAVE - Channel
+		56 button me · Playlist · khushi chauhan
+		57 button The_WolfOfMen · Artist · @the_wolfofmen
+		58 button 마르꿀 Markl Fischer · Artist · @kangtm123
+		59 button F Random Editor · Artist · @FRandomEditor
+		60 button Tom Cruise checks up on worker doomscrolling in viral video · Episode · Sep 30
+		61 button CUBS POSTCAST: Pete Crow-Armstrong is ON FIRE and the Chicago Cubs beat the Mets 9-6 · Episode · Jun 23
+		62 button The Bonfire #238 (10-17-2017) · Episode · Oct 18, 2017
+	63 text (settable) Now Playing
+	64 button Immersive mode · Now Playing
+	65 button Close panel
+	66 button Cover
+	67 button Video
+	68 text (settable) Description: Try, Value: Try GENER8ION, Adèle Castillon
+	69 button Like
+	70 button Lyrics · Now Playing
+	71 button Queue · Now Playing
+	72 button Restore cover size
+	73 scroll area Description: Lyrics · Content, Help: Drag lyrics to seek on release
+		74 text (settable) ♪
+		75 text (settable) Writing your name
+		76 text (settable) Just in case I would forget
+		77 text (settable) Au cas où tu retournerais
+		78 text (settable) To me
+		79 text (settable) Dans la nuit
+		80 text (settable) I look for you in my dreams
+		81 text (settable) The sight of you is disturbing
+		82 text (settable) I'm not coming
+		83 text (settable) But I try
+		84 text (settable) I try
+		85 text (settable) I try
+		86 text (settable) I try
+		87 text (settable) But I try
+		88 text (settable) ♪
+		89 text (settable) But I try
+		90 text (settable) I try
+		91 text (settable) I try
+		92 text (settable) I try
+		93 text (settable) But I try
+		94 text (settable) Source: LyricFind
+	95 container Player controls
+		96 button Open Now Playing
+		97 button Like
+		98 button Shuffle queue
+		99 button Previous
+		100 button Play
+		101 button Next
+		102 button Repeat: off
+		103 text (settable) 1:04
+		104 slider (settable, float) Description: Playback position, Value: 64.2
+		105 text (settable) 2:59
+		106 button Lyrics
+		107 button Queue
+		108 button Unmute
+		109 slider (settable, float) Description: Volume, Value: 0
+		110 menu button More actions
+		111 button Immersive mode
+	112 close button
+	113 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	114 minimize button
+	115 text ytmGO
+116 menu bar
+	117 ytmGO
+	118 File
+	119 Edit
+	120 Playback
+	121 View
+	122 Window
+	123 Account
+	124 Help
+
+The focused UI element is 73 scroll area Description: Lyrics · Content, Help: Drag lyrics to seek on release

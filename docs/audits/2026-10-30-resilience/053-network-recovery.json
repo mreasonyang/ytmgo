@@ -1,0 +1,13 @@
+{
+  "version": "0.5.3",
+  "root_pid": 61425,
+  "wifi_off_confirmed": true,
+  "fresh_tls_failed_during_outage": true,
+  "fresh_tls_still_failed_after_39_seconds": true,
+  "watchdog_restored_wifi": true,
+  "fresh_tls_after_restore_http_status": 200,
+  "audio_offline_position_seconds": 17.6135,
+  "audio_manual_retry_recovered_position_seconds": 18.872,
+  "catalog": "The search was submitted while Wi-Fi was off and returned results after restoration; no catalog retry or catalog failure UI was observed in this version.",
+  "diagnostic_note": "audio-status.json retains the outage category after recovery; healthy native and numeric checkpoints establish current recovery."
+}

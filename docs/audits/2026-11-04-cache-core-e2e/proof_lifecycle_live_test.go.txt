@@ -1,0 +1,121 @@
+package streaming
+
+import (
+	"context"
+	"encoding/json"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+)
+
+type e2eProofBody struct {
+	io.ReadCloser
+	bytes  *int64
+	failed *bool
+}
+
+func (b e2eProofBody) Read(p []byte) (int, error) {
+	n, err := b.ReadCloser.Read(p)
+	*b.bytes += int64(n)
+	if err != nil && err != io.EOF {
+		*b.failed = true
+	}
+	return n, err
+}
+
+// Public-only lifecycle acceptance. Store endpoint classes and numeric results;
+// never retain request/response contents, URLs, headers or proof/session values.
+func TestE2EPublicProofLifecycle(t *testing.T) {
+	if os.Getenv("YTMGO_TEST_PUBLIC_PROOF_LIFECYCLE") != "1" {
+		t.Skip("explicit live proof acceptance not selected")
+	}
+	type requestMetric struct {
+		Endpoint      string `json:"endpoint"`
+		Status        int    `json:"status"`
+		Milliseconds  int64  `json:"milliseconds"`
+		Failed        bool   `json:"failed"`
+		Public        bool   `json:"public"`
+		Bytes         int64  `json:"bytes"`
+		ReadFailed    bool   `json:"read_failed"`
+		ContentLength int64  `json:"content_length"`
+	}
+	type result struct {
+		Phase     string          `json:"phase"`
+		Passed    bool            `json:"passed"`
+		Category  string          `json:"category,omitempty"`
+		Stage     string          `json:"stage,omitempty"`
+		Requests  []requestMetric `json:"requests"`
+		Persisted bool            `json:"persisted"`
+	}
+	dir := t.TempDir()
+	var metrics []*requestMetric
+	base := transportClient(nil).Transport
+	client := &http.Client{Transport: roundTrip(func(req *http.Request) (*http.Response, error) {
+		endpoint := "other"
+		switch {
+		case req.URL.Host == "www.youtube.com" && req.URL.Path == "/":
+			endpoint = "proof_home"
+		case req.URL.Host == "www.google.com":
+			endpoint = "proof_interpreter"
+		case req.URL.Host == "jnn-pa.googleapis.com":
+			endpoint = "integrity"
+		}
+		began := time.Now()
+		response, err := base.RoundTrip(req)
+		row := &requestMetric{Endpoint: endpoint, Milliseconds: time.Since(began).Milliseconds(), Failed: err != nil}
+		if response != nil {
+			row.Status = response.StatusCode
+			row.Public = strings.Contains(response.Header.Get("Cache-Control"), "public")
+			row.ContentLength = response.ContentLength
+			response.Body = e2eProofBody{response.Body, &row.Bytes, &row.ReadFailed}
+		}
+		metrics = append(metrics, row)
+		return response, err
+	})}
+	var results []result
+	defer func() {
+		data, _ := json.MarshalIndent(results, "", "  ")
+		if path := os.Getenv("YTMGO_LIVE_EVIDENCE"); path != "" {
+			_ = os.WriteFile(path, append(data, '\n'), 0600)
+		}
+	}()
+	var r *Resolver
+	for _, phase := range []string{"cold", "reset", "restart"} {
+		if phase != "reset" {
+			if r != nil {
+				r.Close()
+			}
+			var err error
+			r, err = New(Options{Command: nativeCommand(t), Client: client, PlayerCacheDir: dir})
+			if err != nil {
+				t.Fatal("resolver_setup_failed")
+			}
+		} else {
+			r.resetHosts()
+		}
+		metrics = nil
+		ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+		err := r.warmProof(ctx)
+		cancel()
+		row := result{Phase: phase, Passed: err == nil}
+		for _, metric := range metrics {
+			row.Requests = append(row.Requests, *metric)
+		}
+		_, statErr := os.Stat(filepath.Join(dir, "proof-interpreter.json"))
+		row.Persisted = statErr == nil
+		if f, ok := err.(*Failure); ok {
+			row.Category = f.Category
+			row.Stage = f.Stage
+		}
+		results = append(results, row)
+		if err != nil {
+			r.Close()
+			t.Fatal("public_proof_lifecycle_failed")
+		}
+	}
+	r.Close()
+}

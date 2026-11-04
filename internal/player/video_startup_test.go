@@ -3,6 +3,7 @@ package player
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"sync"
 	"sync/atomic"
@@ -97,22 +98,23 @@ func TestVideoDelayedFirstFrameRejoinsMovingClock(t *testing.T) {
 
 func fastVideoPolicy() videoPlaybackPolicy {
 	return videoPlaybackPolicy{
-		startupTimeout: 600 * time.Millisecond,
-		stallTimeout:   150 * time.Millisecond,
-		catchupLag:     100 * time.Millisecond,
-		catchupGrace:   60 * time.Millisecond,
-		healthyPeriod:  100 * time.Millisecond,
-		maxCatchups:    2,
+		resolutionTimeout: 600 * time.Millisecond,
+		startupTimeout:    600 * time.Millisecond,
+		stallTimeout:      150 * time.Millisecond,
+		catchupLag:        100 * time.Millisecond,
+		catchupGrace:      60 * time.Millisecond,
+		healthyPeriod:     100 * time.Millisecond,
+		maxCatchups:       2,
 	}
 }
 
-func TestVideoStartupDeadlineIncludesResolution(t *testing.T) {
+func TestVideoResolutionHasOwnDeadline(t *testing.T) {
 	v := testVideo()
 	defer v.Close()
 	v.policy = fastVideoPolicy()
-	v.policy.startupTimeout = 80 * time.Millisecond
+	v.policy.resolutionTimeout = 80 * time.Millisecond
 	var canceled atomic.Bool
-	v.resolve = func(ctx context.Context, _ string) (videoMedia, error) {
+	v.resolve = func(ctx context.Context, _ string, _ int) (videoMedia, error) {
 		<-ctx.Done()
 		canceled.Store(true)
 		return videoMedia{}, ctx.Err()
@@ -121,8 +123,107 @@ func TestVideoStartupDeadlineIncludesResolution(t *testing.T) {
 		t.Fatal(err)
 	}
 	waitVideo(t, func() bool { return !v.Loading() })
-	if v.Error() != "video_network_timeout" || !canceled.Load() {
-		t.Fatal("resolution escaped the whole-startup deadline")
+	if v.Error() != "video_network_timeout" || v.ErrorDetails().Stage != "video_resolution" || !canceled.Load() {
+		t.Fatal("resolution escaped its deadline or lost its stage")
+	}
+}
+
+func TestVideoColdResolutionDoesNotConsumeFirstFrameBudget(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		v := testVideo()
+		defer v.Close()
+		var opened, canceled atomic.Bool
+		v.resolve = func(ctx context.Context, _ string, _ int) (videoMedia, error) {
+			select {
+			case <-time.After(25 * time.Second):
+				return videoMedia{media: media{Duration: 3 * time.Minute}, width: 4, height: 2}, nil
+			case <-ctx.Done():
+				canceled.Store(true)
+				return videoMedia{}, ctx.Err()
+			}
+		}
+		v.open = func(context.Context, videoMedia, time.Duration) (*videoDecoder, error) {
+			opened.Store(true)
+			d, _ := pacedVideoDecoder(500*time.Millisecond, 0, -1)
+			return d, nil
+		}
+		started := time.Now()
+		if v.Start(context.Background(), "aaaaaaaaaaa", func() time.Duration { return 73 * time.Second }, func() bool { return false }) != nil {
+			t.Fatal("video start failed")
+		}
+		for v.Loading() && time.Since(started) < 2*time.Minute {
+			time.Sleep(10 * time.Millisecond)
+		}
+		frame, _ := v.Frame()
+		if frame == nil || v.Error() != "" || canceled.Load() || !opened.Load() {
+			t.Fatalf("valid cold resolution consumed readiness budget: canceled=%t opened=%t elapsed=%v", canceled.Load(), opened.Load(), time.Since(started))
+		}
+	})
+}
+
+func TestVideoFirstFrameDeadlineRemainsBoundedAfterColdResolution(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		v := testVideo()
+		defer v.Close()
+		v.policy.resolutionTimeout = 30 * time.Second
+		v.policy.startupTimeout = 80 * time.Millisecond
+		v.resolve = func(ctx context.Context, _ string, _ int) (videoMedia, error) {
+			select {
+			case <-time.After(25 * time.Second):
+				return videoMedia{media: media{Duration: 3 * time.Minute}, width: 4, height: 2}, nil
+			case <-ctx.Done():
+				return videoMedia{}, ctx.Err()
+			}
+		}
+		var stream *pacedVideoStream
+		v.open = func(context.Context, videoMedia, time.Duration) (*videoDecoder, error) {
+			d, s := pacedVideoDecoder(0, 0, 0)
+			stream = s
+			return d, nil
+		}
+		start := time.Now()
+		if v.Start(context.Background(), "aaaaaaaaaaa", func() time.Duration { return 73 * time.Second }, func() bool { return false }) != nil {
+			t.Fatal("video start failed")
+		}
+		for v.Loading() && time.Since(start) < time.Minute {
+			time.Sleep(10 * time.Millisecond)
+		}
+		if v.Error() != "video_network_timeout" || v.ErrorDetails().Stage != "video_first_frame" || stream == nil || !stream.closed.Load() || time.Since(start) > 25100*time.Millisecond {
+			t.Fatal("first-frame deadline was lost after cold resolution")
+		}
+	})
+}
+
+func TestVideoResolutionFailureMetadataSurvivesAndRetryClearsIt(t *testing.T) {
+	want := FailureDetails{Stage: "bootstrap", BootstrapStep: "session_data", HTTPStatus: 302, Redirect: "google_challenge", MIME: "html"}
+	v := testVideo()
+	defer v.Close()
+	v.resolve = func(context.Context, string, int) (videoMedia, error) {
+		return videoMedia{}, resolverFailureError("bootstrap_redirect", want)
+	}
+	if v.Start(context.Background(), "aaaaaaaaaaa", func() time.Duration { return 0 }, func() bool { return false }) != nil {
+		t.Fatal("video start failed")
+	}
+	waitVideo(t, func() bool { return !v.Loading() })
+	if v.Error() != "bootstrap_redirect" || v.ErrorDetails() != want {
+		t.Fatal("video resolution lost its safe upstream cause")
+	}
+	v.resolve = func(context.Context, string, int) (videoMedia, error) {
+		return videoMedia{media: media{Duration: time.Minute}, width: 4, height: 2}, nil
+	}
+	if v.Start(context.Background(), "aaaaaaaaaaa", func() time.Duration { return 0 }, func() bool { return false }) != nil {
+		t.Fatal("video restart failed")
+	}
+	waitVideo(t, func() bool { frame, _ := v.Frame(); return frame != nil })
+	if v.Error() != "" || v.ErrorDetails() != (FailureDetails{}) {
+		t.Fatal("successful retry retained an old diagnostic")
+	}
+	v.Stop()
+	if v.ErrorDetails() != (FailureDetails{}) {
+		t.Fatal("stop retained an old video diagnostic")
+	}
+	if videoResolutionErrorCategory(errors.New("synthetic-private-upstream-detail")) != "video_resolution_failed" || videoFailureDetails(errors.New("synthetic-private"), "video_first_frame").Stage != "video_first_frame" {
+		t.Fatal("raw dependency detail escaped video classification")
 	}
 }
 
@@ -553,7 +654,7 @@ func TestVideoLeadRecoveryClampsToFinalFrame(t *testing.T) {
 	v.policy.startupTimeout = time.Second
 	v.policy.stallTimeout = 500 * time.Millisecond
 	const duration = 2 * time.Second
-	v.resolve = func(context.Context, string) (videoMedia, error) {
+	v.resolve = func(context.Context, string, int) (videoMedia, error) {
 		return videoMedia{media: media{Duration: duration}, width: 4, height: 2}, nil
 	}
 	var opens, target atomic.Int64

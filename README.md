@@ -2,11 +2,11 @@
 
 **English** · [简体中文](README.zh-CN.md)
 
-**ytmGO** is a native desktop client for YouTube Music (version baseline **0.6.4**). The user-facing brand is **ytmGO**, while the repository, release artifact prefix, bundle identifier (`si.kyun.ytmgo`), helper identifiers, and local data directories retain the technical name `ytmgo`.
+**ytmGO** is a native desktop client for YouTube Music (version baseline **0.6.5**). The user-facing brand is **ytmGO**, while the repository, release artifact prefix, bundle identifier (`si.kyun.ytmgo`), helper identifiers, and local data directories retain the technical name `ytmgo`.
 
 The music interface is drawn natively in Go with **MyGo 0.7.1** (`ui.View`)—there is no embedded web music page, HTML/CSS/JS UI bridge, Electron runtime, or bundled Node.js. Go handles YouTube Music catalogue requests, session verification, format selection, and bounded media streaming; MyGo outputs decoded audio to the system audio device, and an on-demand native decoder renders video only while a video view is visible.
 
-> **Release 0.6.4:** [Release notes and downloads](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.4) lower the macOS minimum to **13 Ventura** and add native **Intel** packages alongside Apple Silicon. Homebrew selects the correct architecture. [Compatibility and release verification](docs/audits/2026-11-04-macos-compat-0.6.4/README.md). Windows x64 and Linux x64 packages are also available below.
+> **Release 0.6.5:** [Release notes and downloads](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.5) add saved video quality selection with a **720p default**, plus streaming, video-startup and timed-lyrics recovery fixes. macOS supports **13 Ventura or newer**, on **Apple Silicon and Intel**. Homebrew selects the correct architecture. Windows x64 and Linux x64 packages are also available below.
 
 ---
 
@@ -29,7 +29,7 @@ The app also supports in-app updates. Quit ytmGO before switching installation m
 
 ### macOS Prebuilt Release
 
-1. Download the signed and notarized [Apple Silicon DMG](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-0.6.4-arm64-notarized.dmg) or [Intel DMG](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-0.6.4-amd64-notarized.dmg) (requires **macOS 13+**).
+1. Download the signed and notarized [Apple Silicon DMG](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-0.6.5-arm64-notarized.dmg) or [Intel DMG](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-0.6.5-amd64-notarized.dmg) (requires **macOS 13+**).
 2. Drag the app into a writable `/Applications` directory before launching (running directly from a read-only mounted DMG prevents in-place updates).
 3. When installed in a writable location, ytmGO checks for updates automatically (earliest 10 seconds after launch, then once per day) and manually via **ytmGO → Check for Updates…**.
 4. The native update window supports **Install Update**, **Later**, **Skip**, and optional automatic downloads, relaunching to replace the app bundle in place while keeping your encrypted account session, library snapshot, and preferences.
@@ -39,10 +39,10 @@ The app also supports in-app updates. Quit ytmGO before switching installation m
 
 | Platform | Downloads | Requirements |
 | --- | --- | --- |
-| Windows x64 | [Setup EXE](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-setup-0.6.4-amd64.exe) · [Portable ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-0.6.4-windows-amd64.zip) | WebView2 Runtime; installer is not Authenticode signed |
-| Linux x64 | [DEB](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo_0.6.4_amd64.deb) · [tar.gz](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-0.6.4-linux-amd64.tar.gz) | Ubuntu 24.04 or compatible GTK 3/WebKitGTK 4.1 2.50.2+ and Secret Service |
+| Windows x64 | [Setup EXE](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-setup-0.6.5-amd64.exe) · [Portable ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-0.6.5-windows-amd64.zip) | WebView2 Runtime; installer is not Authenticode signed |
+| Linux x64 | [DEB](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo_0.6.5_amd64.deb) · [tar.gz](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-0.6.5-linux-amd64.tar.gz) | Ubuntu 24.04 or compatible GTK 3/WebKitGTK 4.1 2.50.2+ and Secret Service |
 
-For the DEB, run `sudo apt install ./ytmgo_0.6.4_amd64.deb`, then launch ytmGO from the applications menu. Extract portable archives completely and keep the `runtime`, `login`, `legal` and other resources beside the executable. Both platforms have Ed25519-signed in-app update archives. See [installation and release details](docs/DESKTOP_RELEASES.md).
+For the DEB, run `sudo apt install ./ytmgo_0.6.5_amd64.deb`, then launch ytmGO from the applications menu. Extract portable archives completely and keep the `runtime`, `login`, `legal` and other resources beside the executable. Both platforms have Ed25519-signed in-app update archives. See [installation and release details](docs/DESKTOP_RELEASES.md).
 
 ---
 
@@ -67,7 +67,7 @@ For the DEB, run `sudo apt install ./ytmgo_0.6.4_amd64.deb`, then launch ytmGO f
 - **Live Follow & Manual Reading:** When synchronized lyrics are available, the current cue is highlighted and kept centered inside the lyrics viewport without moving the outer panel. Scrolling with a mouse wheel, trackpad, keyboard, or scrollbar switches to manual reading and reveals a **Follow playback** button below the lyrics viewport; clicking it (or pressing `Tab` then `Return`) returns to live following. Tracks without synchronized timing display plain lyrics or an unavailable notice.
 - **Drag Lyrics to Seek:** On tracks with synchronized lyrics, drag vertically inside the lyrics area to preview target cues (highlighting the selected line against a center guide with a `<time> · Release to seek` badge). Releasing the pointer seeks to that cue's start timestamp and resumes live following while preserving play or pause state. Single clicks, horizontal movement, pressing `Escape`, or losing focus cancels the gesture without seeking.
 - **Expandable Lyrics Layout:** On the **Lyrics** tab (outside Immersive Mode and Video mode), click the expand button beside the **Lyrics / Queue** chips to shrink the cover art and give more vertical height to lyrics. Click again to restore the cover size; this choice is saved in `lyrics-layout` across restarts.
-- **On-Demand Video:** Switch between **Cover** and **Video** in Now Playing or Immersive Mode. Video is decoded on demand by a dedicated native decoder (up to **480p / 24fps**, synchronized to the audio clock, preserving aspect ratio). Hiding or minimizing the window, closing Now Playing/Immersive Mode, or switching back to **Cover** immediately releases the video decoder while audio continues uninterrupted.
+- **On-Demand Video:** Switch between **Cover** and **Video** in Now Playing or Immersive Mode. Video is decoded on demand by a dedicated native decoder (**720p by default**, with **144p–1080p** selectable beside the Video switch or in Settings; rendered at 24fps, synchronized to the audio clock, preserving aspect ratio). Your last choice is saved immediately and retained across track changes and app restarts; changing it restarts only video at the current audio position. If the selected resolution is unavailable, a lower source resolution is used when available. Hiding or minimizing the window, closing Now Playing/Immersive Mode, or switching back to **Cover** immediately releases the video decoder while audio continues uninterrupted.
 
 ### Responsive Layout, Localization & Shortcuts
 

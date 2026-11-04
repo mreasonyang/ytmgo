@@ -1,0 +1,9 @@
+The following is a diff from the previous accessibility tree for Window: "ytmgo" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+~	143 text (settable) Description: People Help the People, Value: People Help the People Birdy
+~	144 button Like
+~		173 button Like
+~		176 button Play
+~		179 text (settable) 0:00
+~		180 slider (settable, float) Description: Playback position, Value: 0
+~		181 text (settable) 4:17
+The focused UI element is 180 slider (settable, float) Description: Playback position, Value: 0

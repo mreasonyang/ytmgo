@@ -1,0 +1,10 @@
+{
+  "time": "2026-10-30T14:52:46.168808+00:00",
+  "offline_elapsed": 39.006,
+  "internet": {
+    "reachable": false,
+    "elapsed": 0.009,
+    "probe": "fresh_tls_http",
+    "error_number": 8
+  }
+}

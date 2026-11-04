@@ -1,0 +1,25 @@
+{
+  "time": "2026-11-04T22:56:46+08:00",
+  "elapsed": 477.238,
+  "expected_pids": [
+    78917,
+    78923,
+    78926,
+    78927
+  ],
+  "metadata_pids": [],
+  "observed_pids": [],
+  "metadata_missing_pids": [
+    78917,
+    78923,
+    78926,
+    78927
+  ],
+  "metadata_missing_count": 4,
+  "metrics_missing_pids": [],
+  "metrics_errors": [],
+  "coverage_complete": false,
+  "processes": [],
+  "footprint": 0,
+  "phase": "first_playback"
+}

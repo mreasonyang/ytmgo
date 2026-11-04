@@ -1,0 +1,138 @@
+Window: "ytmgo", App: ytmgo.
+0 standard window ytmgo, Secondary Actions: Raise
+	1 container Now Playing
+		2 text (settable) Now Playing
+		3 button Immersive mode · Now Playing
+		4 button Close panel
+		5 scroll area
+			6 button Cover
+			7 button Video
+			8 text (settable) little black dress
+			9 text (settable) Cloudy June
+			10 button Like
+			11 button Previous
+			12 button Pause
+			13 button Next
+			14 text (settable) 0:04
+			15 slider (settable, float) Description: Playback position, Value: 4.76
+			16 text (settable) 2:33
+			17 button Mute
+			18 slider (settable, float) Description: Volume, Value: 0.7
+			19 button Queue · Now Playing
+			20 button Lyrics · Now Playing
+			21 scroll area
+				22 button little black dress · Cloudy June
+				23 button 2018 · Sasha Alex Sloan
+				24 button POLITICKIN' · Hit-Boy
+				25 button Baby · The Chainsmokers
+				26 button SPOTLIGHT / INNER CHILD · Dominic Fike, Tay-K
+				27 button How I See Her · Darkness Slow
+				28 button In Your Eyes · Haute & Freddy
+				29 button Gooood · ADOY
+				30 button 打翻了整夜的香甜 · 陳忻玥
+				31 button You Know Me Too Well · germinie
+				32 button wishing star · mindfreakk!
+				33 button Dystopia (Neo Remix ver.) · Beat Flickers NEO, Beat Flickers
+				34 button NEVER GOING BACK (feat. SOYEON & MIYEON) · K/DA, League of Legends, i-dle
+				35 button outside time · heyden, oddfish
+				36 button Long Way Home · Dept, VH (Vast & Hazy)
+				37 button Undercovers Lover · VOILÀ
+				38 button Different Sides · GRAHAM
+				39 button Close my eyes · Lous and The Yakuza, Suki Waterhouse
+				40 button November Sky · Art Music
+				41 button Tina Tuesday · Megan Thee Stallion
+				42 button Pray · R. City, Ayra Starr
+				43 button I Got You · Jigoooo Radio
+				44 button Intrusive, Toxic · Jack Harris
+				45 button The Calm · Wiz Khalifa
+				46 button delusional for you · sammy rash
+				47 button SOFTER · Jessie Reyez
+				48 button The Last Page · Tessa Violet
+				49 button MISS ME · keshi
+				50 button IMITATE · PEGGY
+				51 button Waste My Tears (Orchestral Version) · James Arthur
+				52 button Smoking Kills · Loote
+				53 button 修羅ノ涯 · Hinomu
+				54 button It's Only Love · Queens of the Stone Age
+				55 button Silk · Steve Selecta
+				56 button Overthinker · CHVRCHES
+				57 button Ya Feel Me · TØPHÉ
+				58 button I Will Stay · Ruby Darkrose
+				59 button 옅은 그림자 · MIRINAE
+				60 button Heavy Metal · DeathbyRomy
+				61 button My Favorite Prey · Morally Grey Music
+				62 button In Love With Myself · Petite Meller, Kalman Chodakiewitz, Eli Shiffman
+				63 button Your Side · PolynesianEverything
+				64 button Am I Even Real? · Ex:Re
+				65 button LoveLess · Ellise
+				66 button pineapple mall · corn wave
+				67 button Kiss My Grits · Buckshot Belle
+				68 button Back to the Beginning · Mali
+				69 button Goodbye (Slowed) · Meyo
+				70 button Maliyona · MD Dj, Rino Aqua
+				71 button breaks open · Dove Cameron
+				72 button Period · iri
+				73 button Do I love you? · Regina Song, rhyu
+				74 button CEMETERY (from the Ryuu series "Granite Waves" by Tezeze) · Call Me Karizma, Gloomy Culture
+				75 button Stay · Zavyre
+				76 button to the moon :) · MINNIE
+				77 button I said · VΞXIS
+				78 button Looks Can Kill · IVE
+				79 button Is You Cool · Derky
+				80 button Besito · Alicia Lov
+				81 button Here You Come, There You Go · Gracie Abrams
+				82 button TRAP HOUZE · DJ DIRTY J
+				83 button Sick Of Myself · Sara Beth
+				84 button Anomaly · Schur
+				85 button Make It Clear · Bassline Club Vibes
+				86 button 冷冷的风吹｜R&B每日新歌｜完整版 · 程野Chengye
+				87 button Never Forget You (Festival Mix) · Matt Pridgyn, Chad Walt, BlackCode
+				88 button Whopa Whopa · GANGSTER ON WHEELS
+				89 button Teenage Nights · Austin George
+				90 button Masterpiece · LNGSHOT
+				91 button Never Let Go · In Color
+				92 button Hey little me · STILLFORMS
+				93 button 听的人还记得 · 陈默之
+				94 button ANIMAL HEART · CLAYM
+				95 button The Way Out · Paul Woida
+				96 button Miami · Club Winners
+				97 button 何必总是太匆忙 · 陶宏杰
+				98 button Stay · Pinn HateBerry
+				99 button 迷幻 · Daze_13
+				100 button petal (instrumental) · Ariana Grande
+				101 button Lay · RY X
+				102 button I'm Scared I’ll Never Sleep Again (CLUBSOS VOL. 1) · 5 Seconds of Summer
+				103 button We Opened the Box of Ornaments · BrownHouse
+				104 button Dead Inside · Blanco Billy
+				105 button Pusher [From GTAVI: Original Score] · Justice, Grand Theft Auto VI, Gesaffelstein
+				106 button Applause · Luke Muzzic
+				107 button LET THERE BE LIGHT · Polyphia
+				108 button 삐그덕 (seesaw) (feat. 아이유(IU)) · Crush
+				109 button BRINDANDO · Demeter, Giorgio Noir
+				110 button You're Gone · JAKK RINSE
+				111 button 自由的你 - Free to Be You · G.E.M.
+				112 button moya moya · kuhaku-ningen
+				113 button By Your Side · Maxomar
+				114 button Is This What You Wanted? · Rugged Outlaw Country
+				115 button It's You · VALORANT
+				116 button Can't Resist · RHYXA
+				117 button 迟来的海啸 · 李佳薇
+				118 button The One And Only · Alina Isla
+				119 button High On You · Bassline Club Vibes
+				120 button Missing You · Hereafter Us
+				121 button Make It (feat. Kili) · Shankz
+	122 close button
+	123 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	124 minimize button
+	125 text ytmgo
+126 menu bar
+	127 ytmgo
+	128 File
+	129 Edit
+	130 Playback
+	131 View
+	132 Window
+	133 Account
+	134 Help
+
+The focused UI element is 5 scroll area

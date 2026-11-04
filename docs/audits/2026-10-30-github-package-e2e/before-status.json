@@ -1,0 +1,20 @@
+{
+  "account": {
+    "Time": "2026-10-30T04:23:09Z",
+    "Version": "0.5.0",
+    "Component": "account",
+    "Category": "restore_slow"
+  },
+  "audio": {
+    "Time": "2026-10-30T04:22:56Z",
+    "Version": "0.5.0",
+    "Component": "audio",
+    "Category": "ready"
+  },
+  "video": {
+    "Time": "2026-10-30T04:22:56Z",
+    "Version": "0.5.0",
+    "Component": "video",
+    "Category": "ready"
+  }
+}

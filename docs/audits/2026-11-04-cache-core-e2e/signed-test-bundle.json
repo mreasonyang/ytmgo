@@ -1,0 +1,7 @@
+{
+  "signature_verified": true,
+  "resigning_only_no_rebuild": true,
+  "notarized": false,
+  "bundle": "/Users/easonyang/Documents/projects/ytmgo/build/cache-core-e2e-20261104/ytmGO.app",
+  "binary_sha256": "29951e3c248f607800c3e5fbef919231052fd0724f66b5dc1b6e90713b76544f"
+}

@@ -1,0 +1,21 @@
+[
+  {
+    "phase": "cold",
+    "passed": false,
+    "category": "resolver_http_error",
+    "stage": "proof_init",
+    "requests": [
+      {
+        "endpoint": "proof_home",
+        "status": 200,
+        "milliseconds": 4368,
+        "failed": false,
+        "public": false,
+        "bytes": 739916,
+        "read_failed": true,
+        "content_length": -1
+      }
+    ],
+    "persisted": false
+  }
+]

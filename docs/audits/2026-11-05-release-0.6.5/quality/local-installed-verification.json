@@ -1,0 +1,14 @@
+{
+  "version": "0.6.4",
+  "developer_id_signed": true,
+  "matches_installed_signing_requirement": true,
+  "installed_executable_matches_candidate": true,
+  "settings_version_verified": "0.6.4",
+  "settings_video_quality_verified": 720,
+  "account_premium_restored": true,
+  "appearance_preserved": "dark",
+  "language_preserved": "en",
+  "volume_preserved": true,
+  "paused_position_preserved_seconds": 12.65,
+  "scope": "Local 0.6.4 candidate with the video-quality changes; not the public 0.6.5 artifact."
+}

@@ -1,0 +1,20 @@
+{
+  "version": "0.5.3",
+  "root_pid": 61425,
+  "actual_sleep_seconds": 48,
+  "wake_at_utc": "2026-10-30T14:58:35Z",
+  "first_sample_playing_after_wake_utc": "2026-10-30T14:58:44.376487Z",
+  "bookmark_seconds": 212.13,
+  "early_post_wake_sample_seconds": 215.415,
+  "sustained_native_checkpoint": {
+    "time_relation": "more than 90 seconds after wake",
+    "playing": true,
+    "title": "BB",
+    "position_seconds": 25.858666666,
+    "retry_buttons": 0,
+    "premium": true
+  },
+  "automatic_queue_advance_observed": true,
+  "audible_auto_resume_user_confirmed": true,
+  "result": "PASS"
+}

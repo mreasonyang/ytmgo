@@ -1,0 +1,127 @@
+Window: "ytmgo", App: ytmgo.
+0 standard window ytmgo, Secondary Actions: Raise
+	1 button ytmgo Home
+	2 button Back
+	3 button (disabled) Forward
+	4 button Home
+	5 text field (settable) Description: Search, Value: Daft Punk Contact, Placeholder: What do you want to play?
+	6 button Explore
+	7 button Settings
+	8 menu button Account · YouTube Music Premium, Help: YouTube Music Premium
+	9 button Library
+	10 button Collapse sidebar
+	11 button Playlists
+	12 button Albums
+	13 button Artists
+	14 scroll area Your playlists
+		15 button Liked Music · Auto playlist, Help: Liked Music
+		16 button New Release Mix · Mix, Help: New Release Mix
+		17 button Ultimate Wedding Playlist
+		18 button Dreamkid
+		19 button Best
+		20 button Antidote · Derik Fein, Help: Antidote
+		21 button Favorite Songs
+		22 button Mindhunter (Soundtrack Inspired by the TV Show) · Fandom, Help: Mindhunter (Soundtrack Inspired by the TV Show)
+		23 button UK R&B Hits 2024 · YouTube Music, Help: UK R&B Hits 2024
+		24 button Discover Mix · Mix, Help: Discover Mix
+		25 button ALT CTRL
+		26 button At the Airport
+		27 button Blues Replay
+		28 button Eminem: Next Steps
+		29 button ESL Pro League - Official Soundtrack
+		30 button Favorite Songs
+		31 button Feeling Good
+		32 button Gentle
+		33 button Hollywood Undead Essentials
+		34 button LINKIN PARK Essentials
+		35 button My Shazam Tracks
+		36 button OG
+		37 button Party Starters
+		38 button Powerful
+		39 button Replay 2018
+	40 scroll area Content
+		41 heading Daft Punk Contact
+		42 button Contact · Song · Daft Punk
+		43 button Contact / We Are Human / Daft Funk Live in Amsterdam 2025 #daftpunk #tribute #contact #livemusic · Video · Daft Funk Live
+		44 button Daft Punk - Contact (Apollo 11 Extended Version) · Video · derkaiser1
+		45 button Daft Punk · Artist · 68.2M monthly audience
+		46 button Contact · Video · Daft Punk
+		47 button Contact (Official Audio) · Video · Daft Punk
+		48 button Aerodynamite · Song · Daft Punk
+		49 button I Feel It Coming (feat. Daft Punk) · Song · The Weeknd
+		50 button Voyager · Song · Daft Punk
+		51 button Starboy (feat. Daft Punk) · Song · The Weeknd
+		52 button One More Time / Aerodynamic · Song · Daft Punk
+		53 button Daft Punk - Contact · Video · I'm Human After All
+		54 button Random Access Memories · Album · Daft Punk
+		55 button Discovery · Album · Daft Punk
+		56 button Giorgio Moroder · Artist · 1.34M monthly audience
+		57 button Thomas Bangalter · Artist · 70.9K monthly audience
+		58 button Alive 2007 · Album · Daft Punk
+		59 button Daft Punk. Mejores Canciones · Playlist · Planeta Musik
+		60 button Daft Punk · Playlist · Ariel Escalante
+		61 button Daft punk · Playlist · Jose Ayala
+		62 button Claue Daft · Artist · @claudiedaft5112
+		63 button Santos Martínez · Artist · @SantosMartínez
+		64 button Angie · Artist · @Angieween
+		65 button Daft Punk’s Sampling-Driven Sound Design on Discovery · Episode · Sep 23
+		66 button Let's Talk About Daft Punk - NEW WORLD, OLD NEWS PODCAST · Episode · Mar 7, 2021
+		67 button THE RHYTHM SECTION - Daft Punk 1993-2021 · Episode · Mar 12, 2021
+		68 button 90s Sing-Alongs · Playlist · YouTube Music
+		69 button Dance Party Hits · Playlist · YouTube Music
+		70 button Podcast Episodes - Season 1 · Podcast · Offstage
+		71 button Indie Disco · Playlist · YouTube Music
+		72 button Music Not Diving full episodes · Podcast · Music Not Diving with Scuba
+		73 button Dropout Court Podcast Series · Podcast · Dropout Court Podcast
+	74 text (settable) Now Playing
+	75 button Immersive mode · Now Playing
+	76 button Close panel
+	77 button Cover
+	78 button Video
+	79 text (settable) Description: Contact, Value: Contact Daft Punk
+	80 button Like
+	81 button Lyrics · Now Playing
+	82 button Queue · Now Playing
+	83 scroll area Lyrics · Content
+		84 text (settable) ♪
+		85 text (settable) Hey, Bob, I'm looking at what Jack was talking about, and, uh
+		86 text (settable) It's definitely not a particle that's nearby
+		87 text (settable) It is a bright object, and it's obviously rotating because it's flashing
+		88 text (settable) It's way out in the distance
+		89 text (settable) Certainly rotating in a very rhythmic fashion because the flashes come around almost on time
+		90 text (settable) As we look back at the Earth it's up at about 11 o'clock
+		91 text (settable) About, uh, well, maybe ten or 12 diameters- diameters, uh
+		92 text (settable) I don't know whether that does you any good, but there's something out there
+		93 text (settable) Source: Musixmatch
+	94 container Player controls
+		95 button Open Now Playing
+		96 button Like
+		97 button Shuffle queue
+		98 button Previous
+		99 button Pause
+		100 button Next
+		101 button Repeat: off
+		102 text (settable) 0:10
+		103 slider (settable, float) Description: Playback position, Value: 10.850666666
+		104 text (settable) 6:23
+		105 button Lyrics
+		106 button Queue
+		107 button Mute
+		108 slider (settable, float) Description: Volume, Value: 0.7
+		109 menu button More actions
+		110 button Immersive mode
+	111 close button
+	112 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	113 minimize button
+	114 text ytmgo
+115 menu bar
+	116 ytmgo
+	117 File
+	118 Edit
+	119 Playback
+	120 View
+	121 Window
+	122 Account
+	123 Help
+
+The focused UI element is 5 text field (settable) Description: Search, Value: Daft Punk Contact, Placeholder: What do you want to play?

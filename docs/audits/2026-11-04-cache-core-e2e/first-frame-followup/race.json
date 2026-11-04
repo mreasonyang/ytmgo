@@ -1,0 +1,92 @@
+{
+  "exit_code": 0,
+  "tests": {
+    "pass": 1260,
+    "fail": 0,
+    "skip": 23
+  },
+  "packages": {
+    "ytmgo/build/cache-failure-rootcause-20261104/gesture": {
+      "action": "skip",
+      "elapsed": 0
+    },
+    "ytmgo/build/lyrics-drag-e2e-20261104/cues": {
+      "action": "skip",
+      "elapsed": 0
+    },
+    "ytmgo/cmd/icon": {
+      "action": "skip",
+      "elapsed": 0
+    },
+    "ytmgo/cmd/login-icon": {
+      "action": "skip",
+      "elapsed": 0
+    },
+    "ytmgo/internal/httpfreshness": {
+      "action": "skip",
+      "elapsed": 0
+    },
+    "ytmgo/internal/preference": {
+      "action": "skip",
+      "elapsed": 0
+    },
+    "ytmgo/internal/appearance": {
+      "action": "pass",
+      "elapsed": 1.318
+    },
+    "ytmgo/locales": {
+      "action": "skip",
+      "elapsed": 0
+    },
+    "ytmgo/outputs/e2e-20261103/faultproxy": {
+      "action": "skip",
+      "elapsed": 0
+    },
+    "ytmgo/internal/language": {
+      "action": "pass",
+      "elapsed": 1.319
+    },
+    "ytmgo/cmd/sign-desktop-update": {
+      "action": "pass",
+      "elapsed": 1.3519999999999999
+    },
+    "ytmgo/internal/netproxy": {
+      "action": "pass",
+      "elapsed": 1.3519999999999999
+    },
+    "ytmgo/internal/librarysnapshot": {
+      "action": "pass",
+      "elapsed": 1.3679999999999999
+    },
+    "ytmgo/cmd/update-package": {
+      "action": "pass",
+      "elapsed": 1.451
+    },
+    "ytmgo/internal/catalog": {
+      "action": "pass",
+      "elapsed": 1.517
+    },
+    "ytmgo/internal/accountsession": {
+      "action": "pass",
+      "elapsed": 1.597
+    },
+    "ytmgo/internal/streaming": {
+      "action": "pass",
+      "elapsed": 33.098
+    },
+    "ytmgo/internal/player": {
+      "action": "pass",
+      "elapsed": 35.643
+    },
+    "ytmgo/internal/accountlogin": {
+      "action": "pass",
+      "elapsed": 44.418
+    },
+    "ytmgo": {
+      "action": "pass",
+      "elapsed": 132.251
+    }
+  },
+  "failed_tests": [],
+  "elapsed_seconds": 136.493
+}

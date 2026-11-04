@@ -1,0 +1,168 @@
+Window: "ytmgo", App: ytmgo.
+0 standard window ytmgo, Secondary Actions: Raise
+	1 button ytmgo Home
+	2 button (disabled) Back
+	3 button (disabled) Forward
+	4 button Home
+	5 text field (settable) Description: Search, Placeholder: What do you want to play?
+	6 button Explore
+	7 button Settings
+	8 menu button Account · YouTube Music Premium, Help: YouTube Music Premium
+	9 button Library
+	10 button Collapse sidebar
+	11 button Playlists
+	12 button Albums
+	13 button Artists
+	14 scroll area Your playlists
+		15 button Liked Music · Auto playlist, Help: Liked Music
+		16 button New Release Mix · Mix, Help: New Release Mix
+		17 button Ultimate Wedding Playlist
+		18 button Dreamkid
+		19 button Best
+		20 button Antidote · Derik Fein, Help: Antidote
+		21 button Favorite Songs
+		22 button Mindhunter (Soundtrack Inspired by the TV Show) · Fandom, Help: Mindhunter (Soundtrack Inspired by the TV Show)
+		23 button UK R&B Hits 2024 · YouTube Music, Help: UK R&B Hits 2024
+		24 button Discover Mix · Mix, Help: Discover Mix
+		25 button ALT CTRL
+		26 button At the Airport
+		27 button Blues Replay
+		28 button Eminem: Next Steps
+		29 button ESL Pro League - Official Soundtrack
+		30 button Favorite Songs
+		31 button Feeling Good
+		32 button Gentle
+		33 button Hollywood Undead Essentials
+		34 button LINKIN PARK Essentials
+		35 button My Shazam Tracks
+		36 button OG
+		37 button Party Starters
+		38 button Powerful
+		39 button Replay 2018
+	40 scroll area Content
+		41 heading Late night listening
+		42 button Liked Music
+		43 button New Release Mix
+		44 button Ultimate Wedding Playlist
+		45 button Dreamkid
+		46 button Best
+		47 button Antidote
+		48 button Favorite Songs
+		49 button Mindhunter (Soundtrack Inspired by the TV Show)
+		50 heading Listen again
+		51 scroll area
+			52 button Demon Samurai · ONI
+			53 button Liked Music · Auto playlist
+			54 button New Release Mix · Cloudy June, Sasha Alex Sloan, Hit-Boy, The Chainsmokers
+			55 button The Weeknd - Hong Kong Ft. Faye Wong (Live in Hong Kong) · Weeknd Everyday
+			56 button Sex & Drugs · Temper City
+			57 button kill ur boyf vibes / women supreme · Rosalyn “Sera” Shard
+			58 button Vibe · Michael Porcayo
+			59 button 你从未离去 (抖音DJ版) - 于佰万『我不再迷茫 思念是唯一的行囊，满天的星光 有一颗是你的愿望。』♪ || 年度最佳抖音歌曲 | 抖音最火歌曲音 | 抖音 | TikTok ♪ · Fantastic Music Station
+			60 button Ultimate Wedding Playlist
+			61 button Random Access Memories · Daft Punk
+			62 button 花魁 - Oiran · ONI
+			63 button Murder Me · Diggy Graves
+			64 button The Fatal Flaw · Paris Paloma
+			65 button 在墜落時 · 汉堡黄
+			66 button Baby, Don't Cry 人魚的眼淚 · EXO
+			67 button Follow Me · Alec Benjamin
+			68 button Midnight Drive in Tokyo · Beat Flickers
+			69 button DOTB ROCK · Diggy Graves
+			70 button PROPHET LIKE ME · Deadfolk Prophet
+			71 button Over and Over / Tokyo Paradise City · Beat Flickers
+		72 heading New releases
+		73 scroll area
+			74 button KNUCK · MUSHVENOM
+			75 button CLUBSOS VOL. 1 · 5 Seconds of Summer
+			76 button And The Crowd Goes Mild · Sasha Alex Sloan
+			77 button 打翻了整夜的香甜 · 陳忻玥
+			78 button CEMETERY (from the Ryuu series "Granite Waves" by Tezeze) · Call Me Karizma, Gloomy Culture
+			79 button 一幀而已 · ZML
+			80 button Bedroom Confessional (xtras) · Ellise
+			81 button Mabushii · Skinny Brown
+			82 button Horror Story of the Week · Xana
+			83 button MISS ME · keshi
+		84 heading Covers and remixes
+		85 scroll area
+			86 button I Took a Pill in Ibiza - Mike Posner // ( Slowed to Perfection ) · Vinay Sunanta
+			87 button 灵魂洗涤！女生翻唱超火藏风歌曲《难解》，一开口感觉今年都风调雨顺了~ · 咻咻满
+			88 button SOLO LEVELING OST - DARK ARIA - ELECTRONIC ROCK/HEAVY DUBSTEP REMIX ENGLISH VERSION · SOMX1NE
+			89 button This Is What You Came For 80s remix · 25June Music
+			90 button Call of Silence（Remix） · Clear Sky
+			91 button Floating (Genom Världar - English Version) · Cinek
+			92 button 其實，歌詞都需要破地獄！《Lemon》真.粵語版！ · 不是詞神
+			93 button Cheriimoya - Living Life, In The Night (Zusebi Remix) (feat. Sierra Kidd) · Zusebi
+			94 button Die For You (Remix) · The Weeknd, Ariana Grande
+			95 button Stay with me (phonk remix) · 23Heaven
+			96 button Legends Never Die (ft. Against The Current) | Worlds 2017 - League of Legends · League of Legends
+			97 button Mind Games (with Chris Grey) (Remix) · Sickick, Chris Grey
+			98 button Ariana Grande - bye [Altare Remix] · Altare
+			99 button Edward Maya & Vika Jigulina - Stereo Love (Zusebi Remix) [TikTok] · Zusebi
+			100 button Fontanel (Sammy Remix) · Eartheater
+			101 button 衛蘭Janice Vidal - 傾城 Cover · Janice Vidal
+			102 button Everything is romantic (feat. Caroline Polachek) · Charli xcx
+			103 button Am I Wrong - Nico & Vinz (Siqu Remix) · Siqu
+			104 button Can't Get You Out Of My Head · AnnenMayKantereit, Parcels
+		105 heading From the community
+		106 scroll area
+			107 button Memandu tgh malam · Bwaa
+			108 button ㄹ · 김우빈
+			109 button Tell me you have attachment issues without telling me you have attachment issues. · Gillian
+			110 button 우울리듬 · 김명석
+			111 button NO CREDIT CHECKS FOR YOU · Thomas Thompson
+			112 button who's a heretic now · Hazel 🦢
+			113 button Nice beat songs · 𝔾𝕀ℝ𝕃 𝕊ℚ𝕌𝔸𝔻 ♡
+			114 button Chinese song · 鄭大貓
+			115 button im.tired... · Arianna Rivers
+			116 button love · Romario Rodriguez
+		117 heading The Weeknd
+		118 scroll area
+			119 button '10s R&B Chill · Frank Ocean, Miguel, H.E.R., Kehlani
+			120 button Don Toliver
+			121 button Chill Drives · Saksham Gaur
+			122 button Presenting The Weeknd · The Weeknd, Ariana Grande, Gesaffelstein, Anitta
+			123 button Presenting Drake · Drake, 21 Savage, DJ Khaled, Rick Ross
+			124 button R’N’B · Ildar Khabibullin
+			125 button Majid Jordan
+			126 button Fresh hip hop · SAKHILE DLAME
+			127 button Travis Scott Circus Maximus Tour Setlist · Travis Scott, Lil Uzi Vert
+			128 button Khalid
+		129 heading Fresh finds, old favorites
+		130 scroll area
+			131 button Archive Mix · Ricchi E Poveri, One Direction, Katy Perry, MOTHICA
+			132 button New Release Mix · Cloudy June, Sasha Alex Sloan, Hit-Boy, The Chainsmokers
+			133 button Liked Music · Auto playlist
+			134 button Discover Mix · My Song, Pino, The Romantic Playlist, Thundercat
+			135 button Replay Mix · Temper City, Christina Perri, Ashe, Black Omen Media
+	136 container Player controls
+		137 button Open Now Playing
+		138 button Like
+		139 button Shuffle queue
+		140 button Previous
+		141 button Play
+		142 button Next
+		143 button Repeat: off
+		144 text (settable) 3:36
+		145 slider (settable, float) Description: Playback position, Value: 216.586396223
+		146 text (settable) 4:16
+		147 button Lyrics
+		148 button Queue
+		149 button Mute
+		150 slider (settable, float) Description: Volume, Value: 0.7
+		151 menu button More actions
+		152 button Immersive mode
+	153 help tag Best
+	154 close button
+	155 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	156 minimize button
+	157 text ytmgo
+158 menu bar
+	159 ytmgo
+	160 File
+	161 Edit
+	162 Playback
+	163 View
+	164 Window
+	165 Account
+	166 Help

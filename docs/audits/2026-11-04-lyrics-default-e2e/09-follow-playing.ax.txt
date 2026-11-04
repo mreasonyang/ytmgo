@@ -1,0 +1,204 @@
+Window: "ytmgo", App: ytmgo.
+0 standard window ytmgo, Secondary Actions: Raise
+	1 button ytmgo Home
+	2 button (disabled) Back
+	3 button (disabled) Forward
+	4 button Home
+	5 text field (settable) Description: Search, Placeholder: What do you want to play?
+	6 button Explore
+	7 button Settings
+	8 menu button Account · YouTube Music Premium, Help: YouTube Music Premium
+	9 button Library
+	10 button Collapse sidebar
+	11 button Playlists
+	12 button Albums
+	13 button Artists
+	14 scroll area Your playlists
+		15 button Liked Music · Auto playlist, Help: Liked Music
+		16 button New Release Mix · Mix, Help: New Release Mix
+		17 button Ultimate Wedding Playlist
+		18 button Dreamkid
+		19 button Best
+		20 button Antidote · Derik Fein, Help: Antidote
+		21 button Favorite Songs
+		22 button Mindhunter (Soundtrack Inspired by the TV Show) · Fandom, Help: Mindhunter (Soundtrack Inspired by the TV Show)
+		23 button UK R&B Hits 2024 · YouTube Music, Help: UK R&B Hits 2024
+		24 button Discover Mix · Mix, Help: Discover Mix
+		25 button ALT CTRL
+		26 button At the Airport
+		27 button Blues Replay
+		28 button Eminem: Next Steps
+		29 button ESL Pro League - Official Soundtrack
+		30 button Favorite Songs
+		31 button Feeling Good
+		32 button Gentle
+		33 button Hollywood Undead Essentials
+		34 button LINKIN PARK Essentials
+		35 button My Shazam Tracks
+		36 button OG
+		37 button Party Starters
+		38 button Powerful
+		39 button Replay 2018
+	40 scroll area Content
+		41 heading Late night listening
+		42 button Liked Music
+		43 button New Release Mix
+		44 button Ultimate Wedding Playlist
+		45 button Dreamkid
+		46 button Best
+		47 button Antidote
+		48 button Favorite Songs
+		49 button Mindhunter (Soundtrack Inspired by the TV Show)
+		50 heading Listen again
+		51 scroll area
+			52 button Demon Samurai · ONI
+			53 button New Release Mix · Cloudy June, Sasha Alex Sloan, Hit-Boy, The Chainsmokers
+			54 button The Weeknd - Hong Kong Ft. Faye Wong (Live in Hong Kong) · Weeknd Everyday
+			55 button Sex & Drugs · Temper City
+			56 button kill ur boyf vibes / women supreme · Rosalyn “Sera” Shard
+			57 button Vibe · Michael Porcayo
+			58 button 你从未离去 (抖音DJ版) - 于佰万『我不再迷茫 思念是唯一的行囊，满天的星光 有一颗是你的愿望。』♪ || 年度最佳抖音歌曲 | 抖音最火歌曲音 | 抖音 | TikTok ♪ · Fantastic Music Station
+			59 button Ultimate Wedding Playlist
+			60 button Random Access Memories · Daft Punk
+			61 button PROPHET LIKE ME · Deadfolk Prophet
+			62 button Murder Me · Diggy Graves
+			63 button 花魁 - Oiran · ONI
+			64 button The Fatal Flaw · Paris Paloma
+			65 button 在墜落時 · 汉堡黄
+			66 button Follow Me · Alec Benjamin
+			67 button Baby, Don't Cry 人魚的眼淚 · EXO
+			68 button DOTB ROCK · Diggy Graves
+			69 button Midnight Drive in Tokyo · Beat Flickers
+			70 button Roots of Wings · Forrest Rose
+			71 button Over and Over / Tokyo Paradise City · Beat Flickers
+		72 heading New releases
+		73 scroll area
+			74 button KNUCK · MUSHVENOM
+			75 button CLUBSOS VOL. 1 · 5 Seconds of Summer
+			76 button And The Crowd Goes Mild · Sasha Alex Sloan
+			77 button 打翻了整夜的香甜 · 陳忻玥
+			78 button CEMETERY (from the Ryuu series "Granite Waves" by Tezeze) · Call Me Karizma, Gloomy Culture
+			79 button Mabushii · Skinny Brown
+			80 button Horror Story of the Week · Xana
+			81 button 一幀而已 · ZML
+			82 button MISS ME · keshi
+			83 button Beautiful Damage · NØLIVE
+		84 heading Covers and remixes
+		85 scroll area
+			86 button 灵魂洗涤！女生翻唱超火藏风歌曲《难解》，一开口感觉今年都风调雨顺了~ · 咻咻满
+			87 button I Took a Pill in Ibiza - Mike Posner // ( Slowed to Perfection ) · Vinay Sunanta
+			88 button SOLO LEVELING OST - DARK ARIA - ELECTRONIC ROCK/HEAVY DUBSTEP REMIX ENGLISH VERSION · SOMX1NE
+			89 button suki (Slowed + Reverb) · takko
+			90 button This Is What You Came For 80s remix · 25June Music
+			91 button Floating (Genom Världar - English Version) · Cinek
+			92 button Cheriimoya - Living Life, In The Night (Zusebi Remix) (feat. Sierra Kidd) · Zusebi
+			93 button Stay with me (phonk remix) · 23Heaven
+			94 button Mind Games (with Chris Grey) (Remix) · Sickick, Chris Grey
+			95 button Edward Maya & Vika Jigulina - Stereo Love (Zusebi Remix) [TikTok] · Zusebi
+			96 button Ariana Grande - bye [Altare Remix] · Altare
+			97 button Die For You (Remix) · The Weeknd, Ariana Grande
+			98 button Fontanel (Sammy Remix) · Eartheater
+			99 button Suzume - すずめ (Kaiiris Remix) · Kaiiris
+			100 button Can't Get You Out Of My Head · AnnenMayKantereit, Parcels
+			101 button Kesha - your love is my drug (8-bit slow and reverb) · Slow and reverb guy
+		102 heading From the community
+		103 scroll area
+			104 button Memandu tgh malam · Bwaa
+			105 button ㄹ · 김우빈
+			106 button Tell me you have attachment issues without telling me you have attachment issues. · Gillian
+			107 button 우울리듬 · 김명석
+			108 button who's a heretic now · Hazel 🦢
+			109 button NO CREDIT CHECKS FOR YOU · Thomas Thompson
+			110 button Nice beat songs · 𝔾𝕀ℝ𝕃 𝕊ℚ𝕌𝔸𝔻 ♡
+			111 button 成熟味歌單 · HaHa Lin
+			112 button Stockhomsy · Educational
+			113 button im.tired... · Arianna Rivers
+		114 heading The Weeknd
+		115 scroll area
+			116 button '10s R&B Chill · Frank Ocean, Miguel, H.E.R., Jhené Aiko
+			117 button Don Toliver
+			118 button Chill Drives · Saksham Gaur
+			119 button Presenting The Weeknd · The Weeknd, Ariana Grande, Gesaffelstein, Lily Rose Depp
+			120 button Car Playlist 😵‍💫 · Sam Ritchie
+			121 button Presenting Drake · Drake, 21 Savage, DJ Khaled, Future
+			122 button Majid Jordan
+			123 button Fresh hip hop · SAKHILE DLAME
+			124 button Presenting Khalid · Khalid, Marshmello, Kane Brown, benny blanco
+			125 button Travis Scott Circus Maximus Tour Setlist · Travis Scott, Lil Uzi Vert
+		126 heading Easy Evenings
+		127 scroll area
+			128 button Mellow Indie · Lizzy McAlpine, Michael Kiwanuka, Beck, Not For Radio
+			129 button Chilled Hip-Hop · A$AP Rocky, Cordae, Kid Cudi, Russ
+			130 button Take It Easy Indie · The National, Novo Amor, Cigarettes After Sex, Hozier
+			131 button Pop Certified · Ariana Grande, Olivia Rodrigo, Sabrina Carpenter, Bruno Mars
+			132 button Chill EDM Hits · Kygo, The Chainsmokers, Martin Garrix, Lost Frequencies
+			133 button Indian R&B · Clifr, Meba Ofilia, RANJ, Kayan
+			134 button Relaxing Evening · Billie Eilish, Taylor Swift, Phoebe Bridgers, D'Angelo
+			135 button Shea Butter Groove · Moonchild, Rapsody, Masego, Gabriel Jacoby
+			136 button Acoustic Soul · Jorja Smith, Lianne La Havas, Beyoncé, Infinity Song
+			137 button Biggest R&B Hits · Chris Brown, Tyla, SZA, Coco Jones
+	138 text (settable) Now Playing
+	139 button Immersive mode · Now Playing
+	140 button Close panel
+	141 button Cover
+	142 button Video
+	143 text (settable) Description: Can't Help Falling In Love, Value: Can't Help Falling In Love Kina Grannis
+	144 button Remove like
+	145 button Lyrics · Now Playing
+	146 button Queue · Now Playing
+	147 scroll area Lyrics · Content
+		148 text (settable) ♪
+		149 text (settable) Wise men say
+		150 text (settable) Only fools rush in
+		151 text (settable) But I can't help falling in love with you
+		152 text (settable) Shall I stay?
+		153 text (settable) Would it be a sin?
+		154 text (settable) If I can't help falling in love with you
+		155 text (settable) Like a river flows
+		156 text (settable) Surely to the sea
+		157 text (settable) Darling, so it goes
+		158 text (settable) Some things are meant to be
+		159 text (settable) So take my hand
+		160 text (settable) Take my whole life, too
+		161 text (settable) For I can't help falling in love with you
+		162 text (settable) Like a river flows
+		163 text (settable) Surely to the sea
+		164 text (settable) Darling, so it goes
+		165 text (settable) Some things are meant to be
+		166 text (settable) So take my hand
+		167 text (settable) Take my whole life, too
+		168 text (settable) For I can't help falling in love with you
+		169 text (settable) For I can't help falling in love with you
+		170 text (settable) Source: Musixmatch
+	171 container Player controls
+		172 button Open Now Playing
+		173 button Remove like
+		174 button Shuffle queue
+		175 button Previous
+		176 button Pause
+		177 button Next
+		178 button Repeat: off
+		179 text (settable) 0:12
+		180 slider (settable, float) Description: Playback position, Value: 12.252985929
+		181 text (settable) 3:21
+		182 button Lyrics
+		183 button Queue
+		184 button Mute
+		185 slider (settable, float) Description: Volume, Value: 0.7
+		186 menu button More actions
+		187 button Immersive mode
+	188 close button
+	189 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	190 minimize button
+	191 text ytmgo
+192 menu bar
+	193 ytmgo
+	194 File
+	195 Edit
+	196 Playback
+	197 View
+	198 Window
+	199 Account
+	200 Help
+
+The focused UI element is 147 scroll area Lyrics · Content

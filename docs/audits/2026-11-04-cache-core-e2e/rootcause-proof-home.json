@@ -1,0 +1,18 @@
+{
+  "check": "rootcause-proof-home",
+  "packages": [
+    {
+      "Package": "ytmgo/internal/streaming",
+      "Action": "pass",
+      "Elapsed": 60.058
+    }
+  ],
+  "counts": {
+    "pass": 1,
+    "fail": 0,
+    "skip": 0
+  },
+  "categories": [],
+  "locations": [],
+  "metrics": []
+}

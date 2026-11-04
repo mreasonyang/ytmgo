@@ -1,0 +1,16 @@
+{
+  "exit_code": 0,
+  "tests": {
+    "pass": 1,
+    "fail": 0,
+    "skip": 0
+  },
+  "packages": {
+    "ytmgo/internal/catalog": {
+      "action": "pass",
+      "elapsed": 3.482
+    }
+  },
+  "failed_tests": [],
+  "elapsed_seconds": 4.082
+}

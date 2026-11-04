@@ -3085,6 +3085,36 @@ func (msgs Messages) NativeShortcutUnavailable() string {
 	return Catalog.Format(msgs.locale, "nativeShortcutUnavailable", nil)
 }
 
+// NativeVideoQuality says "Video quality"
+// in the language the app shows.
+func NativeVideoQuality() string { return In(i18n.Locale()).NativeVideoQuality() }
+
+// NativeVideoQuality says "Video quality"
+// in the language of msgs.
+func (msgs Messages) NativeVideoQuality() string {
+	return Catalog.Format(msgs.locale, "nativeVideoQuality", nil)
+}
+
+// NativeVideoQualityHint says "Default: 720p. Remembers your choice across restarts."
+// in the language the app shows.
+func NativeVideoQualityHint() string { return In(i18n.Locale()).NativeVideoQualityHint() }
+
+// NativeVideoQualityHint says "Default: 720p. Remembers your choice across restarts."
+// in the language of msgs.
+func (msgs Messages) NativeVideoQualityHint() string {
+	return Catalog.Format(msgs.locale, "nativeVideoQualityHint", nil)
+}
+
+// NativeVideoQualitySaveError says "Could not save video quality. Your previous setting is unchanged."
+// in the language the app shows.
+func NativeVideoQualitySaveError() string { return In(i18n.Locale()).NativeVideoQualitySaveError() }
+
+// NativeVideoQualitySaveError says "Could not save video quality. Your previous setting is unchanged."
+// in the language of msgs.
+func (msgs Messages) NativeVideoQualitySaveError() string {
+	return Catalog.Format(msgs.locale, "nativeVideoQualitySaveError", nil)
+}
+
 // NativeSettingsGeneral says "General"
 // in the language the app shows.
 func NativeSettingsGeneral() string { return In(i18n.Locale()).NativeSettingsGeneral() }

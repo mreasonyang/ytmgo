@@ -1,0 +1,92 @@
+{
+  "exit_code": 0,
+  "tests": {
+    "pass": 1241,
+    "fail": 0,
+    "skip": 21
+  },
+  "packages": {
+    "ytmgo/build/cache-failure-rootcause-20261104/gesture": {
+      "action": "skip",
+      "elapsed": 0
+    },
+    "ytmgo/build/lyrics-drag-e2e-20261104/cues": {
+      "action": "skip",
+      "elapsed": 0
+    },
+    "ytmgo/cmd/icon": {
+      "action": "skip",
+      "elapsed": 0
+    },
+    "ytmgo/cmd/login-icon": {
+      "action": "skip",
+      "elapsed": 0
+    },
+    "ytmgo/internal/httpfreshness": {
+      "action": "skip",
+      "elapsed": 0
+    },
+    "ytmgo/internal/preference": {
+      "action": "skip",
+      "elapsed": 0
+    },
+    "ytmgo/internal/appearance": {
+      "action": "pass",
+      "elapsed": 1.31
+    },
+    "ytmgo/locales": {
+      "action": "skip",
+      "elapsed": 0
+    },
+    "ytmgo/outputs/e2e-20261103/faultproxy": {
+      "action": "skip",
+      "elapsed": 0
+    },
+    "ytmgo/internal/librarysnapshot": {
+      "action": "pass",
+      "elapsed": 1.405
+    },
+    "ytmgo/internal/language": {
+      "action": "pass",
+      "elapsed": 1.414
+    },
+    "ytmgo/cmd/update-package": {
+      "action": "pass",
+      "elapsed": 1.425
+    },
+    "ytmgo/cmd/sign-desktop-update": {
+      "action": "pass",
+      "elapsed": 1.434
+    },
+    "ytmgo/internal/netproxy": {
+      "action": "pass",
+      "elapsed": 1.456
+    },
+    "ytmgo/internal/catalog": {
+      "action": "pass",
+      "elapsed": 1.657
+    },
+    "ytmgo/internal/accountsession": {
+      "action": "pass",
+      "elapsed": 1.717
+    },
+    "ytmgo/internal/streaming": {
+      "action": "pass",
+      "elapsed": 33.385
+    },
+    "ytmgo/internal/player": {
+      "action": "pass",
+      "elapsed": 36.072
+    },
+    "ytmgo/internal/accountlogin": {
+      "action": "pass",
+      "elapsed": 44.577
+    },
+    "ytmgo": {
+      "action": "pass",
+      "elapsed": 139.957
+    }
+  },
+  "failed_tests": [],
+  "elapsed_seconds": 144.479
+}

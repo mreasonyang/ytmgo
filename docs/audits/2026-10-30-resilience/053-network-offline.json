@@ -1,0 +1,16 @@
+{
+  "time": "2026-10-30T14:52:09.460469+00:00",
+  "power": {
+    "exit": 0,
+    "confirmed_on": false,
+    "confirmed_off": true
+  },
+  "internet": {
+    "reachable": false,
+    "elapsed": 2.31,
+    "probe": "fresh_tls_http",
+    "error_number": null
+  },
+  "restorer_pid": 63870,
+  "interface": "en0"
+}

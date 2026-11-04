@@ -1,0 +1,8 @@
+{"check": "native_runtime", "exit_code": 0, "status": "pass", "seconds": 31.199, "components": [{"native_runtime_test_count": 1}, {"native_runtime_component": "rust", "status": "running"}, {"native_runtime_component": "rust", "status": "pass", "exit_code": 0, "failed_tests": []}, {"native_runtime_component": "go", "status": "running"}, {"native_runtime_component": "go", "status": "pass", "exit_code": 0, "failed_tests": []}]}
+{"check": "login", "exit_code": 0, "status": "pass", "seconds": 0.493, "tests": 10}
+{"check": "release", "exit_code": 0, "status": "pass", "seconds": 11.135, "tests": 38}
+{"check": "licensing", "exit_code": 0, "status": "pass", "seconds": 0.12, "tests": 7}
+{"check": "safe_metrics", "exit_code": 0, "status": "pass", "seconds": 0.059, "tests": 24}
+{"check": "vet", "exit_code": 0, "status": "pass", "seconds": 3.362}
+{"check": "i18n", "exit_code": 0, "status": "pass", "seconds": 0.175}
+{"check": "resources", "exit_code": 1, "status": "fail", "seconds": 0.055}

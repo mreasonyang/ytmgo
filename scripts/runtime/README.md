@@ -45,6 +45,27 @@ leases and four active media requests covers current audio, next-track prefetch,
 on-demand video and transitions. Audio ranges are 64 KiB, video ranges 512 KiB;
 forwarding uses 32 KiB with backpressure and no whole-track cache.
 
+Public protocol responses negotiate gzip with separate 16 MiB limits on wire
+and expanded bytes. The complete proof HTML document gets a 60-second budget;
+caller cancellation still wins. Media leases allow 20 seconds per upstream
+read and recover a broken body at most twice per range, requesting only bytes
+not already delivered. Native leases own these finite retry budgets, so FFmpeg
+does not impose a competing loopback read timeout. Audio startup retains its
+30-second first-PCM deadline, and seek/account changes/shutdown cancel stalled
+work immediately. Compatibility relays retain a 90-second read watchdog.
+Media ranges may follow at most three CDN redirects, validating every target
+against the original HTTPS `*.googlevideo.com` media boundary and preserving
+the requested bytes. Account/protocol redirects remain disabled; authentication
+headers and media URLs are never forwarded to FFmpeg.
+
+Video gives resolution (including cold proof initialization and resolver queue
+wait) its own 90-second budget. Only after resolution completes does a separate
+30-second first-frame deadline begin; it covers decoder opening and all initial
+catch-up attempts together. Displaying the first frame stops that deadline.
+Later playback stalls retain the existing 10-second bound. Video failures keep
+safe upstream details or a fixed `video_resolution`, `video_first_frame`, or
+`video_playback` stage so the failure phase is observable without raw logs.
+
 ## Build
 
 Install Go, Rust/Cargo, Python 3 and native C build tools. Linux also requires

@@ -40,6 +40,8 @@ type UIModel struct {
 	VideoFrame                                                  ui.ImageSource
 	PlaybackError                                               string
 	VideoError                                                  string
+	VideoQuality                                                int
+	VideoQualityError                                           string
 	ErrorScope                                                  errorScope
 	AccountRestore                                              string
 	AccountAvatar                                               string
@@ -99,6 +101,7 @@ type ViewActions struct {
 	Appearance, Language                                func(string)
 	Artwork                                             func(string, int, artworkPriority) ui.ImageSource
 	Video                                               func(bool)
+	SetVideoQuality                                     func(int)
 	SetLyricsExpanded                                   func(bool)
 	RetryPlayback                                       func()
 	LoadMore                                            func()
@@ -2010,6 +2013,8 @@ type nativePresentationKey struct {
 	errorScope                         errorScope
 	libraryLoaded, shortcutRecording   bool
 	shortcut, shortcutError            string
+	videoQuality                       int
+	videoQualityError                  string
 }
 
 func nativePresentation(m *UIModel) nativePresentationKey {
@@ -2018,6 +2023,7 @@ func nativePresentation(m *UIModel) nativePresentationKey {
 		flags:  [21]bool{m.Loading, m.Playing, m.Muted, m.Liked, m.Shuffle, m.Panel, m.Immersive, m.Settings, m.Shortcuts, m.SidebarCollapsed, m.SignedIn, m.CanBack, m.CanForward, m.FocusSearch, m.Video, m.VideoLoading, m.PlaybackLoading, m.MusicPremium, m.LibraryCached, m.LibraryRefreshing, m.LyricsExpanded},
 		values: [4]float64{m.Volume, m.Position, m.Duration, 0}, repeat: m.Repeat, queueLength: len(m.Queue), libraryLength: len(m.LibraryItems),
 		errorScope: m.ErrorScope, libraryLoaded: m.LibraryLoaded, shortcutRecording: m.ShortcutRecording, shortcut: m.GlobalShortcut, shortcutError: m.ShortcutError,
+		videoQuality: m.VideoQuality, videoQualityError: m.VideoQualityError,
 	}
 }
 
@@ -2149,7 +2155,7 @@ func nativeKeyboard(c *ui.Context, m *UIModel, a ViewActions) {
 }
 
 func nativeMediaSwitch(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
-	ui.Row(c).Shrink(0).Gap(8).AlignSelf(ui.Center).Children(func() {
+	ui.Row(c).Shrink(0).Gap(8).Wrap().AlignItems(ui.Center).AlignSelf(ui.Center).Children(func() {
 		for _, option := range []struct {
 			video bool
 			key   string
@@ -2158,6 +2164,9 @@ func nativeMediaSwitch(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 			if b.Clicked() {
 				a.Video(option.video)
 			}
+		}
+		if m.Video {
+			nativeVideoQualityControl(c, m, a, p, 108, 32)
 		}
 	})
 }

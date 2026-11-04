@@ -1,0 +1,18 @@
+{
+  "check": "rootcause-audio-stall",
+  "packages": [
+    {
+      "Package": "ytmgo/internal/player",
+      "Action": "pass",
+      "Elapsed": 13.368
+    }
+  ],
+  "counts": {
+    "pass": 1,
+    "fail": 0,
+    "skip": 0
+  },
+  "categories": [],
+  "locations": [],
+  "metrics": []
+}

@@ -1,0 +1,50 @@
+Window: "ytmGO", App: ytmGO.
+0 standard window ytmGO, Secondary Actions: Raise
+	1 button Back
+	2 text field (settable) Description: Search, Value: Try GENER8ION, Placeholder: What do you want to play?
+	3 button Settings
+	4 menu button Account · YouTube Music Premium, Help: YouTube Music Premium
+	5 scroll area Content
+		6 heading Try GENER8ION
+		7 button Try · Song · GENER8ION, Adèle Castillon
+		8 button GENER8ION · Artist · 47.6M monthly audience
+		9 button GENER8ION, Adèle Castillon - Try (Lyrics) · Video · Luna Liebling
+		10 button Neo Surf (Official) · Video · GENER8ION, 070 Shake
+		11 button Try · Album · GENER8ION, Adèle Castillon
+		12 button GENER8ION feat. Yung Lean Perform "STORM" | 2026 VMAs · Video · MTV
+		13 button Try · Song · Cosmic Gate, Jaren
+		14 button Try as I might · Song · Non-Ionizing Radiation
+		15 button Try Try Try · Song · YOUNGTONES
+		16 button Try It · Song · XGRG
+		17 button Try No More · Song · Glitterin
+		18 button Love & Tears · Album · GENER8ION
+		19 button a écouter · Playlist · Adrien AUFFRET
+		20 button HARD TECHNO REMIXES OF POPULAR SONGS [WEEKLY UPDATED / FREE DOWNLOAD] · Playlist · LOST IN RAVE - Channel
+		21 button me · Playlist · khushi chauhan
+		22 button The_WolfOfMen · Artist · @the_wolfofmen
+		23 button 마르꿀 Markl Fischer · Artist · @kangtm123
+		24 button F Random Editor · Artist · @FRandomEditor
+		25 button Tom Cruise checks up on worker doomscrolling in viral video · Episode · Sep 30
+		26 button CUBS POSTCAST: Pete Crow-Armstrong is ON FIRE and the Chicago Cubs beat the Mets 9-6 · Episode · Jun 23
+		27 button The Bonfire #238 (10-17-2017) · Episode · Oct 18, 2017
+	28 button Open Now Playing
+	29 button Like
+	30 button Play
+	31 container Main navigation
+		32 button Home
+		33 button Search
+		34 button Explore
+		35 button Library
+	36 close button
+	37 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	38 minimize button
+	39 text ytmGO
+40 menu bar
+	41 ytmGO
+	42 File
+	43 Edit
+	44 Playback
+	45 View
+	46 Window
+	47 Account
+	48 Help

@@ -1,0 +1,21 @@
+{
+  "exit_code": 1,
+  "tests": {
+    "pass": 0,
+    "fail": 4,
+    "skip": 0
+  },
+  "packages": {
+    "ytmgo/internal/player": {
+      "action": "fail",
+      "elapsed": 20.997
+    }
+  },
+  "failed_tests": [
+    "ytmgo/internal/player:TestNativeVideoMovingClockLive/1m13.125s",
+    "ytmgo/internal/player:TestNativeVideoMovingClockLive/1m57.625s",
+    "ytmgo/internal/player:TestNativeVideoMovingClockLive",
+    "ytmgo/internal/player:TestNativeVideoDuringAnonymousAudioLive"
+  ],
+  "elapsed_seconds": 22.989
+}

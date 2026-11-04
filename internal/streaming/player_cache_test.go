@@ -413,3 +413,26 @@ func TestPublicPlayerCacheRestart(t *testing.T) {
 	}
 	t.Logf("public player cache: cold=%s restart=%s code_bytes=%d restart_network_requests=0 restart_extractions=0", cold.Round(time.Millisecond), time.Since(began).Round(time.Millisecond), len(restarted.seed.Code))
 }
+
+func TestProofHTMLBudgetAndCancellation(t *testing.T) {
+	r := testResolver(t, func(req *http.Request) (*http.Response, error) {
+		deadline, ok := req.Context().Deadline()
+		if !ok || time.Until(deadline) > 60*time.Second || time.Until(deadline) < 59*time.Second {
+			t.Fatal("proof HTML did not get a complete-document budget")
+		}
+		return response("fixture"), nil
+	})
+	if _, err := r.request(context.Background(), "GET", "https://www.youtube.com/", nil, nil, "proof_init", ""); err != nil {
+		t.Fatal("proof HTML request failed")
+	}
+	r = testResolver(t, func(req *http.Request) (*http.Response, error) {
+		res := response("")
+		res.Body = &cancelledBody{ctx: req.Context()}
+		return res, nil
+	})
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
+	defer cancel()
+	if data, err := r.request(ctx, "GET", "https://www.youtube.com/", nil, nil, "proof_init", ""); !errors.Is(err, context.DeadlineExceeded) || len(data) != 0 {
+		t.Fatal("HTML download ignored cancellation or returned a partial response")
+	}
+}

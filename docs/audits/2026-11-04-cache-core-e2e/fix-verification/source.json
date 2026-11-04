@@ -1,0 +1,32 @@
+{
+  "base_commit": "d92e39fb5543619d1a1a5864e976fa308b8e2db9",
+  "tracked_patch_sha256": "786ebd9f241b987f643fd1d31dcd644b14870f51af83081a8db70978a9cadea0",
+  "source_sha256": {
+    "acceptance_probe.go": "306b73a37bd7887d4dd264963369f95d184ea04a0412bf21ef15a238026ca570",
+    "controller.go": "0dbbe5dd3d5844d3f8a2a8c43acb7def8bae691f4fce8e6ffcef69dc19ae657d",
+    "diagnostics.go": "2ae1e45bb9d246f1232e767211d426689a58cc8b7cdd255d34864c27c28662da",
+    "diagnostics_test.go": "79a961d69ee71ec68f3586ed75fd6987a60aeac2c6e9e7fe1b9cedfee585066c",
+    "internal/catalog/cache.go": "b95c1355ab25b4eab0399526e27f0d7bf688809e544971917a00240f9b3cfd4c",
+    "internal/catalog/client.go": "0995e71ac38bcf2c68700c117a5133552151255599ad7d26d854619209995033",
+    "internal/catalog/client_test.go": "ab3c8c0dc9bc41ec0c01a304343f729d62adc636f8e6f54e1fd43db421806df3",
+    "internal/catalog/lyrics.go": "73b7089d3c4a6238a9049d4b386848a60c20278e195f14bf463e1b3f602ab94f",
+    "internal/catalog/lyrics_test.go": "10a25c826c2f359118f881e6842646be97b6e3bdc4999fb45660d74567b47e62",
+    "internal/player/decoder.go": "49067f646070c8ffb929e236ade1c4da85c3928adf57384e7be4fb14e384b72f",
+    "internal/player/decoder_recovery_test.go": "d9a44bed9c1d33b8e8f8c61f445b1edbb605feff03defab8dcba70001cd19500",
+    "internal/player/player.go": "0b26e038ff44853cf367f84e3cb42ca7062b41eb126121ae17398a4f7e2b1c14",
+    "internal/player/video.go": "62fe4da4de04e7daa83ba92ea7b25408cb79fdffa417f7eadbbe5b75702af2d7",
+    "internal/streaming/lease.go": "10ef1a0c7abb8b10fdf10cbb52318ea62d7e07f6e227cf73f59494a02bcc3d60",
+    "internal/streaming/lease_recovery_test.go": "927afdd00d9b15a45c6eb4180f72c221eb03172539e50578eb3ce5d864896438",
+    "internal/streaming/network.go": "bddf694c45fbf0a09463d948cba358e9a12667e5bf37dd9d461912e74e76750e",
+    "internal/streaming/network_live_test.go": "8a9b59ef4d6ca188ede1160f1a6758294ee2f10f3a3c25b03c47517ef97cc6b9",
+    "internal/streaming/player_cache_test.go": "60f02f8f8106fdd71368160e4adf66eddd69b46bcc337ab6b66b1a85126de543",
+    "internal/streaming/streaming_test.go": "3a040019f0d8deb03eaa73dd4e5047f1a92a072bc20e4408df145bc046b643e6",
+    "scripts/runtime/README.md": "f93131abeec863cb32a2d8f6d8d64bc1bd3c21deabac350560e05e108de3f055",
+    "internal/player/failure_details.go": "ee0cd78b7cccacb5b2763d28ff472db0533575a4162273543380ddf1a28a5959",
+    "internal/player/failure_details_test.go": "f05c320aa51b69eab178071f65e9d3c4dcaa34f2275e44516b204521bb6b008a",
+    "internal/player/video_moving_clock_live_test.go": "7f25a956897b95a61274d97f70e6a983cecf188011e1bfc867803c39a9fd62e8",
+    "internal/player/video_content_live_test.go": "a760d37313f8afc110a16d6060bc368107085e32432cc433fd5e16ccc9015592"
+  },
+  "final_head": "d92e39fb5543619d1a1a5864e976fa308b8e2db9",
+  "product_sources_changed_after_final_bundle": []
+}

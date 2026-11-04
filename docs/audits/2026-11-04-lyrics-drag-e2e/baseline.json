@@ -1,0 +1,16 @@
+{
+  "time": "2026-11-04T08:50:55.876619+00:00",
+  "git_head": "8c88037f797f327741b71ba746392eac884b0989",
+  "installed": "/Applications/ytmGO.app",
+  "source_sha256": {
+    "native_lyrics.go": "2c6f34890de7c22f0de333d5960bf5f605a30abf58df5e52ceb32f5d6774bbe4",
+    "native_lyrics_drag.go": "b6353f9fc97fd157b2a511a3b79465249e3b69bcf7417db979333cd2dcfbe5e5",
+    "native_lyrics_drag_test.go": "5d24bde97d6773c2713c6e95d9e3b94d43c1f3ea0b7b57f3381b2201f0103b07",
+    "locales/en.json": "259cff31f3a587726ee60e6a3317736f71d1d92d75a1dd3bc5187033e5ff8bcc",
+    "locales/zh-Hans.json": "3932cf8163ed64c93bec43e55e1e1fb139eacbe0460a569855be2b087bb3f5ad",
+    "locales/zh-Hant.json": "eabfa2c1349d26c01b3ac1f0989eb1a66e5cd22fe249688fc5e0b529049b712e",
+    "locales/ja.json": "727aa5af078b645779a591804abbea63ead2214b6bb560acbe4c1701803d8613",
+    "locales/catalog_gen.go": "e406dc6ae94e316dd808a5bd831f84035629aa901fb76f4e679e326b89b0dcc4"
+  },
+  "binary_sha256": "c8d8ea6746e346a065d02e7f854f7b4e9be052a5ee21b76fb4a8ce2d427e4ac3"
+}

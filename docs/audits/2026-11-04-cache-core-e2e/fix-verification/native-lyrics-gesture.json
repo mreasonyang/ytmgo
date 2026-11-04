@@ -1,0 +1,17 @@
+{
+  "previous_queue_selection_verified": true,
+  "timed_lyrics_available": true,
+  "drag_start_observed_seconds": 15.181333333,
+  "drag_release_target_seconds": 42.88,
+  "focused_lyrics_scroll_on_release": true,
+  "after_seek_native_state": {
+    "Version": "0.6.4",
+    "Time": "2026-11-04T16:30:25.841259Z",
+    "PositionMS": 93485,
+    "DurationMS": 369641,
+    "Playing": true,
+    "Loading": false,
+    "Failed": false
+  },
+  "automation_runtime_reset_before_probe": true
+}

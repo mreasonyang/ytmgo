@@ -1,0 +1,92 @@
+package player
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync/atomic"
+	"testing"
+	"time"
+)
+
+type rootcauseDelayedSource struct {
+	data     []byte
+	delay    time.Duration
+	canceled atomic.Bool
+}
+
+type rootcauseFlushHeader struct{ http.ResponseWriter }
+
+func (w rootcauseFlushHeader) WriteHeader(code int) {
+	w.ResponseWriter.WriteHeader(code)
+	if f, ok := w.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
+type rootcauseStallReader struct {
+	*bytes.Reader
+	ctx    context.Context
+	source *rootcauseDelayedSource
+	waited bool
+}
+
+func (r *rootcauseStallReader) Read(p []byte) (int, error) {
+	if !r.waited {
+		r.waited = true
+		timer := time.NewTimer(r.source.delay)
+		defer timer.Stop()
+		select {
+		case <-timer.C:
+		case <-r.ctx.Done():
+			r.source.canceled.Store(true)
+			return 0, r.ctx.Err()
+		}
+	}
+	return r.Reader.Read(p)
+}
+
+func (s *rootcauseDelayedSource) Err() error { return nil }
+func (s *rootcauseDelayedSource) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "audio/mp4")
+	http.ServeContent(rootcauseFlushHeader{w}, r, "fixture.m4a", time.Time{}, &rootcauseStallReader{Reader: bytes.NewReader(s.data), ctx: r.Context(), source: s})
+}
+
+func TestRootCauseLocalStreamStallBudget(t *testing.T) {
+	dir := os.Getenv("YTMGO_RUNTIME_DIR")
+	if dir == "" {
+		t.Skip("explicit runtime not selected")
+	}
+	data, e := os.ReadFile("testdata/seek.m4a")
+	if e != nil {
+		t.Fatal("fixture_missing")
+	}
+	var rows []map[string]any
+	for _, delay := range []time.Duration{time.Second, 12 * time.Second} {
+		source := &rootcauseDelayedSource{data: data, delay: delay}
+		server := httptest.NewServer(source)
+		ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
+		began := time.Now()
+		d, err := startDecoder(ctx, filepath.Join(dir, "ffmpeg"), media{URL: server.URL + "/" + strings.Repeat("a", 64), Duration: 4 * time.Second}, 0)
+		elapsed := time.Since(began)
+		if d != nil {
+			d.Close()
+		}
+		cancel()
+		server.Close()
+		cause := "none"
+		if err != nil {
+			cause = safeError(err)
+		}
+		rows = append(rows, map[string]any{"simulated_upstream_stall_seconds": delay.Seconds(), "first_pcm_succeeded": err == nil, "elapsed_ms": elapsed.Milliseconds(), "category": cause, "downstream_canceled_before_source_resumed": source.canceled.Load()})
+	}
+	if path := os.Getenv("YTMGO_LIVE_EVIDENCE"); path != "" {
+		b, _ := json.MarshalIndent(rows, "", "  ")
+		_ = os.WriteFile(path, append(b, '\n'), 0600)
+	}
+}

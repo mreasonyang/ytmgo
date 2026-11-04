@@ -1,0 +1,31 @@
+{
+  "time": "2026-10-30T14:52:57.622198+00:00",
+  "internet_checks": [
+    {
+      "reachable": false,
+      "elapsed": 0.009,
+      "probe": "fresh_tls_http",
+      "error_number": 8
+    },
+    {
+      "reachable": false,
+      "elapsed": 0.007,
+      "probe": "fresh_tls_http",
+      "error_number": 8
+    },
+    {
+      "reachable": false,
+      "elapsed": 2.647,
+      "probe": "fresh_tls_http",
+      "error_number": null
+    },
+    {
+      "reachable": true,
+      "http_status": 200,
+      "elapsed": 1.511,
+      "probe": "fresh_tls_http"
+    }
+  ],
+  "internet_restored": true,
+  "interface": "en0"
+}

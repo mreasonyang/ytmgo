@@ -1,0 +1,36 @@
+The following is a diff from the previous accessibility tree for Window: "ytmgo" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+~	2 button Back
+~		162 heading Try Pink
+~		163 button Try · Video · P!nk
++		164 button Try (The Truth About Love - Live From Los Angeles) · Video · P!NK
++		165 button 「Nightcore」 Try - P!nk ♡ (Lyrics) · Video · P!nk
++		166 button Pink - Try (COVER by Alec Chambers) on Spotify & Apple · Video · Alec Chambers
++		167 button P!nk · Artist · 162M monthly audience
++		168 button Love Song · Song · P!NK
++		169 button Try · Song · P!NK
++		170 button TRY (DRILL) · Song · EGNXMUSIC
++		171 button Try (Spanish) · Song · Nelly Furtado
++		172 button Try · Song · Alec Chambers
++		173 button Try (Official Video) · Video · P!nk
++		174 button Try · Video · P!nk
++		175 button P!nk - Try (Lyrics) · Video · Fans Music
++		176 button Try (Pink Tribute) · Album · Pop Tracks
++		177 button Try (Originally Performed By Pink) [Karaoke Version] · Album · 2010s Karaoke Band
++		178 button Try (Instrumental Karaoke) [Originally Performed by Pink] · Album · Sing Like The Famous!
++		179 button Paul Eckert · Artist · 147K monthly audience
++		180 button Try Pink · Playlist · lia081981
++		181 button Pink Greatest Hits · Playlist · Jamie Bavage
++		182 button PINK LIVE FROM LOS ANGELES · Playlist · MIR gar
++		183 button Nalini Menezes · Artist · @nalalini
++		184 button Paul H · Artist · @paul7684
++		185 button Anacleto Junior Gurilão · Artist · @JrGurilao
++		186 button Yapping And Trying British Snacks - Pink Wednesdays Podcast Ep.16 · Episode · Jul 16, 2025
++		187 button We Try Pink Sauce!!! · Episode · Oct 1, 2023
++		188 button We Ate EVERYTHING At The Washington DC Wharf! (ft. @peaks100) · Episode · May 27
++		189 button '70s Lite Hits · Playlist · YouTube Music
++		190 button '00s R&B Chill · Playlist · YouTube Music
++		191 button Presenting Michael Jackson · Playlist · YouTube Music
++		192 button Crime Stories with Nancy Grace · Podcast · Nancy Grace
++		193 button My Bible Collection & Bible Reviews · Podcast · Becoming Her by Faith
++		194 button Get Glazed with Ashlee Glazer · Podcast · Ashlee Glazer
+The focused UI element is 5 text field (settable) Description: Search, Value: Try Pink, Placeholder: What do you want to play?

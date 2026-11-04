@@ -1,0 +1,102 @@
+[
+  {
+    "Case": 1,
+    "PolicyMS": 20000,
+    "TotalMS": 5799,
+    "ResolveMS": 4351,
+    "PresentedMS": 5593,
+    "ResolveCategory": "",
+    "ResolveStage": "",
+    "ResolveCause": "",
+    "VideoError": "",
+    "Presented": true,
+    "Decoders": [
+      {
+        "OpenedMS": 4351,
+        "OpenDurationMS": 2,
+        "FirstReadMS": 4354,
+        "FirstBytesMS": 5557,
+        "CompleteFrameMS": 5558,
+        "Bytes": 62307840,
+        "Cause": "",
+        "BridgeCategory": "",
+        "HTTPStatus": 0
+      }
+    ]
+  },
+  {
+    "Case": 2,
+    "PolicyMS": 60000,
+    "TotalMS": 4362,
+    "ResolveMS": 3409,
+    "PresentedMS": 4159,
+    "ResolveCategory": "",
+    "ResolveStage": "",
+    "ResolveCause": "",
+    "VideoError": "",
+    "Presented": true,
+    "Decoders": [
+      {
+        "OpenedMS": 3409,
+        "OpenDurationMS": 2,
+        "FirstReadMS": 3412,
+        "FirstBytesMS": 4133,
+        "CompleteFrameMS": 4134,
+        "Bytes": 44271360,
+        "Cause": "",
+        "BridgeCategory": "",
+        "HTTPStatus": 0
+      }
+    ]
+  },
+  {
+    "Case": 3,
+    "PolicyMS": 60000,
+    "TotalMS": 4873,
+    "ResolveMS": 3632,
+    "PresentedMS": 4669,
+    "ResolveCategory": "",
+    "ResolveStage": "",
+    "ResolveCause": "",
+    "VideoError": "",
+    "Presented": true,
+    "Decoders": [
+      {
+        "OpenedMS": 3632,
+        "OpenDurationMS": 2,
+        "FirstReadMS": 3635,
+        "FirstBytesMS": 4641,
+        "CompleteFrameMS": 4642,
+        "Bytes": 55749120,
+        "Cause": "",
+        "BridgeCategory": "",
+        "HTTPStatus": 0
+      }
+    ]
+  },
+  {
+    "Case": 4,
+    "PolicyMS": 20000,
+    "TotalMS": 5389,
+    "ResolveMS": 3987,
+    "PresentedMS": 5185,
+    "ResolveCategory": "",
+    "ResolveStage": "",
+    "ResolveCause": "",
+    "VideoError": "",
+    "Presented": true,
+    "Decoders": [
+      {
+        "OpenedMS": 3987,
+        "OpenDurationMS": 2,
+        "FirstReadMS": 3990,
+        "FirstBytesMS": 5154,
+        "CompleteFrameMS": 5157,
+        "Bytes": 60668160,
+        "Cause": "",
+        "BridgeCategory": "",
+        "HTTPStatus": 0
+      }
+    ]
+  }
+]

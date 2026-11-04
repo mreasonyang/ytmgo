@@ -1,0 +1,31 @@
+{
+  "app_pid": 7828,
+  "owned_decoder_pids": [
+    10190,
+    10390
+  ],
+  "acceptance-playback.json": {
+    "Version": "0.6.4",
+    "Time": "2026-11-04T16:31:13.090305Z",
+    "Sequence": 126,
+    "ElapsedMS": 656911,
+    "PositionMS": 140738,
+    "DurationMS": 369641,
+    "Playing": true,
+    "Loading": false,
+    "Ended": false,
+    "Failed": false
+  },
+  "account-status.json": {
+    "Time": "2026-11-04T16:30:19Z",
+    "Version": "0.6.4",
+    "Component": "account",
+    "Category": "premium"
+  },
+  "audio-status.json": {
+    "Time": "2026-11-04T16:20:16Z",
+    "Version": "0.6.4",
+    "Component": "audio",
+    "Category": "ready"
+  }
+}

@@ -401,3 +401,67 @@ func TestSignedInPlainLyricsRecoverOnlyPublicTimingForSameRecording(t *testing.T
 		})
 	}
 }
+
+func TestLyricsTimingCacheRecoversAfterTransientFailure(t *testing.T) {
+	const id = "abc123DEF_-"
+	for _, mode := range []string{"public_queue", "public_browse", "anonymous_mobile", "confirmed_plain"} {
+		t.Run(mode, func(t *testing.T) {
+			var recovered atomic.Bool
+			var requests atomic.Int32
+			client := fixtureClient(t, func(w http.ResponseWriter, req *http.Request) {
+				requests.Add(1)
+				var body object
+				if json.NewDecoder(req.Body).Decode(&body) != nil {
+					t.Error("invalid synthetic request")
+					return
+				}
+				signed := req.Header.Get("Authorization") != ""
+				mobile := textAt(body, "context", "client", "clientName") == "ANDROID_MUSIC"
+				if req.URL.Path == "/youtubei/v1/next" {
+					if !signed && mode == "public_queue" && !recovered.Load() {
+						w.WriteHeader(http.StatusServiceUnavailable)
+						return
+					}
+					_ = json.NewEncoder(w).Encode(queueResponse(true))
+					return
+				}
+				if signed || !mobile || mode == "confirmed_plain" {
+					_ = json.NewEncoder(w).Encode(plainLyricsFixture())
+					return
+				}
+				if !recovered.Load() {
+					w.WriteHeader(http.StatusServiceUnavailable)
+					return
+				}
+				_ = json.NewEncoder(w).Encode(timedLyricsFixture(timedLyricFixture("Synthetic timing", "0", "1000")))
+			})
+			if mode != "anonymous_mobile" {
+				if client.SetSession(syntheticCookies(), 0, "") != nil {
+					t.Fatal("synthetic session rejected")
+				}
+			}
+			first, err := client.LyricsWithTiming(context.Background(), id)
+			if err != nil || first.Text == "" || len(first.Lines) != 0 {
+				t.Fatal("temporary failure lost readable lyrics")
+			}
+			before := requests.Load()
+			recovered.Store(true)
+			second, err := client.LyricsWithTiming(context.Background(), id)
+			if mode == "confirmed_plain" {
+				if err != nil || second.Text != first.Text || len(second.Lines) != 0 || requests.Load() != before {
+					t.Fatal("confirmed plain lyrics were not reused")
+				}
+				return
+			}
+			if err != nil || len(second.Lines) != 1 || requests.Load() <= before {
+				t.Fatal("temporary timing failure was retained after recovery")
+			}
+			before = requests.Load()
+			second.Lines[0].Text = "caller mutation"
+			third, err := client.LyricsWithTiming(context.Background(), id)
+			if err != nil || len(third.Lines) != 1 || third.Lines[0].Text != "Synthetic timing" || requests.Load() != before {
+				t.Fatal("recovered timing was not privately cached")
+			}
+		})
+	}
+}

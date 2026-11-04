@@ -1,0 +1,7 @@
+{
+  "recognized_language": "zh-Hans",
+  "appearance": "dark",
+  "volume": 0.7,
+  "global_shortcut": "Shift+Super+Space",
+  "note": "Fresh language-file enum validation and native help/volume observation; supersedes the carried-forward zh-Hant restoration note for this follow-up."
+}

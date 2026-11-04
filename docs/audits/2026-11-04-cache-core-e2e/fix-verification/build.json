@@ -1,0 +1,10 @@
+{
+  "build_exit_code": 0,
+  "signature_verified": true,
+  "license_exit_code": 0,
+  "notarized": false,
+  "app": "/Users/easonyang/Documents/projects/ytmgo/build/cache-fix-verification-20261104/package/darwin-arm64/ytmGO.app",
+  "executable_sha256": "4edd719bda174e6a84ca37d1117211929f8c1a95b7ef80f17567a15315186e27",
+  "sign_seconds": 6.78,
+  "license_validation": "explicit packaged Resources directory"
+}

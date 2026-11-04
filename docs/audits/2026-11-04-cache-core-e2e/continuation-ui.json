@@ -1,0 +1,21 @@
+{
+  "source":"Native computer-use observations after the user unlocked the Mac",
+  "samples":[
+    {"time":"2026-11-04T15:14:21.586Z","event":"artist_loaded","artist":"Dreamkid","sections":["Top songs","Albums","Singles & EPs","Videos","Playlists by Dreamkid","Fans might also like"],"position_seconds":24.447333333},
+    {"time":"2026-11-04T15:16:19.813Z","event":"searched_try_plain_lyrics","position_seconds":25.493333333,"playing":false},
+    {"time":"2026-11-04T15:16:30.587Z","event":"plain_drag_no_seek","position_seconds":25.493333333,"playing":false},
+    {"time":"2026-11-04T15:18:19.316Z","event":"fixed_public_recording_timed_lyrics_loaded","recording_id":"Glt0RUX2Q2Q","position_seconds":3.234666666,"playing":true,"duration_seconds":179},
+    {"time":"2026-11-04T15:18:26.047Z","event":"before_timed_drag","position_seconds":9.76,"playing":false},
+    {"time":"2026-11-04T15:18:55.130Z","event":"after_timed_drag","position_seconds":9.76,"playing":false},
+    {"time":"2026-11-04T15:19:37.289Z","event":"after_focus_and_drag_retry","position_seconds":9.76,"playing":false},
+    {"time":"2026-11-04T15:20:30.728Z","event":"wheel_scroll","follow_button_visible":true,"position_seconds":9.76},
+    {"time":"2026-11-04T15:20:37.452Z","event":"follow_playback_clicked","follow_button_visible":false,"position_seconds":9.76},
+    {"time":"2026-11-04T15:20:37.995Z","event":"drag_after_restoring_follow","position_seconds":9.76,"playing":false},
+    {"time":"2026-11-04T15:21:05.439Z","event":"scaled_coordinate_drag_retry","position_seconds":9.76,"playing":false},
+    {"time":"2026-11-04T15:22:19.110Z","event":"formal_app_restored","version":"0.6.3","premium":true,"paused":true,"position_seconds":12.65,"volume":0.6591679453849792,"language":"en","appearance":"dark"}
+  ],
+  "timed_gesture_result":"No seek observed through multiple tool-driven drags; interaction/root cause not isolated, do not count as PASS",
+  "fixed_recording_scope":"Regular saved-playback metadata was seeded with a fixed public recording ID to remove search-result ambiguity; playback, real provider lyrics, scrolling and gestures used the native app. Seeded title/artist were not catalog-verified and are excluded from metadata-matching acceptance.",
+  "searched_try_recording":"Bk0PL3fmMdw; differs from the fixed recording, so its lack of timing is not evidence that timing disappeared from the same recording",
+  "formal_update_prompt":"0.6.4 update prompt was deferred using Remind Me Later; automatic installation remained unchecked; no update installed"
+}

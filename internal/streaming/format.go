@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"ytmgo/internal/videoquality"
 )
 
 type format struct {
@@ -39,7 +41,8 @@ func number(v any) float64 {
 func integer(n float64) bool {
 	return !math.IsNaN(n) && !math.IsInf(n, 0) && n == math.Trunc(n) && math.Abs(n) <= 9007199254740991
 }
-func chooseFormat(data map[string]any, kind string) (format, error) {
+func chooseFormat(data map[string]any, kind string, quality int) (format, error) {
+	quality = videoquality.Normalize(quality)
 	list, _ := valueAt(data, "streamingData", "adaptiveFormats").([]any)
 	supported := []map[string]any{}
 	candidates, clear := 0, 0
@@ -59,7 +62,7 @@ func chooseFormat(data map[string]any, kind string) (format, error) {
 		}
 		mime := textAt(f, "mimeType")
 		w, h := number(f["width"]), number(f["height"])
-		if kind == "audio" && audioCodec.MatchString(mime) || kind == "video" && videoCodec.MatchString(mime) && integer(w) && integer(h) && w > 0 && w <= 1920 && h > 0 && h <= 480 {
+		if kind == "audio" && audioCodec.MatchString(mime) || kind == "video" && videoCodec.MatchString(mime) && integer(w) && integer(h) && w >= 2 && w <= 8192 && h >= 2 && h <= 8192 {
 			supported = append(supported, f)
 		}
 	}
@@ -81,7 +84,16 @@ func chooseFormat(data map[string]any, kind string) (format, error) {
 	sort.SliceStable(supported, func(i, j int) bool {
 		a, b := supported[i], supported[j]
 		if kind == "video" && number(a["height"]) != number(b["height"]) {
-			return number(a["height"]) > number(b["height"])
+			ah, bh := number(a["height"]), number(b["height"])
+			// Prefer the best source at or below the user's choice. If every
+			// source is larger, decode the smallest and scale it to the choice.
+			if (ah <= float64(quality)) != (bh <= float64(quality)) {
+				return ah <= float64(quality)
+			}
+			if ah > float64(quality) {
+				return ah < bh
+			}
+			return ah > bh
 		}
 		return bitrate(a) > bitrate(b)
 	})

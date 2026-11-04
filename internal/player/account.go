@@ -157,10 +157,10 @@ func (p *Player) lockAccount(ctx context.Context) error {
 	}
 }
 
-func (p *Player) resolveVideo(ctx context.Context, id string) (videoMedia, error) {
+func (p *Player) resolveVideo(ctx context.Context, id string, quality int) (videoMedia, error) {
 	if err := p.lockAccount(ctx); err != nil {
 		return videoMedia{}, err
 	}
 	p.mu.Unlock()
-	return p.resolver.ResolveVideo(ctx, id)
+	return p.resolver.ResolveVideo(ctx, id, quality)
 }

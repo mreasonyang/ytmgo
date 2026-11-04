@@ -1,0 +1,52 @@
+package catalog
+
+import (
+	"context"
+	"encoding/json"
+	"net/http"
+	"os"
+	"sync/atomic"
+	"testing"
+)
+
+// Isolated synthetic server; never reads a real account or emits HTTP bodies.
+func TestE2EDegradedLyricsRecoverAfterTransientPublicFailure(t *testing.T) {
+	var requests atomic.Int32
+	var recovered atomic.Bool
+	c := fixtureClient(t, func(w http.ResponseWriter, r *http.Request) {
+		requests.Add(1)
+		if r.URL.Path == "/youtubei/v1/next" {
+			_ = json.NewEncoder(w).Encode(queueResponse(true))
+			return
+		}
+		if r.Header.Get("Authorization") != "" {
+			_ = json.NewEncoder(w).Encode(plainLyricsFixture())
+			return
+		}
+		if !recovered.Load() {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		_ = json.NewEncoder(w).Encode(timedLyricsFixture(timedLyricFixture("Synthetic timing", "0", "1000")))
+	})
+	if err := c.SetSession(syntheticCookies(), 0, ""); err != nil {
+		t.Fatal("synthetic_setup_failed")
+	}
+	first, firstErr := c.LyricsWithTiming(context.Background(), "abc123DEF_-")
+	before := requests.Load()
+	recovered.Store(true)
+	second, secondErr := c.LyricsWithTiming(context.Background(), "abc123DEF_-")
+	replayed := requests.Load() - before
+	fresh, freshErr := c.LyricsWithTiming(Refresh(context.Background()), "abc123DEF_-")
+	row := map[string]any{"initial_lines": len(first.Lines), "repeat_lines_after_recovery": len(second.Lines), "repeat_requests": replayed, "forced_refresh_lines": len(fresh.Lines), "initial_success": firstErr == nil, "repeat_success": secondErr == nil, "forced_refresh_success": freshErr == nil}
+	if path := os.Getenv("YTMGO_LIVE_EVIDENCE"); path != "" {
+		data, _ := json.MarshalIndent(row, "", "  ")
+		_ = os.WriteFile(path, append(data, '\n'), 0600)
+	}
+	if firstErr != nil || secondErr != nil || freshErr != nil || len(fresh.Lines) != 1 {
+		t.Fatal("synthetic_recovery_fixture_failed")
+	}
+	if len(second.Lines) == 0 && replayed == 0 {
+		t.Fatal("degraded_lyrics_cached_after_transient_public_failure")
+	}
+}

@@ -1,0 +1,6 @@
+{
+  "native_lyrics.go": "60c38e13f524a687c785031affd09800b50be04c677aa765c6420a48b8a1c326",
+  "native_views.go": "c7106c1f3689c3fe18596fc05fcbf0c80793c7e990a87d3060799d3ccc0aa454",
+  "native_lyrics_test.go": "d36115299eedb9ea663f26da00bb2b591e9471cff84737b90e912f29571e2ffd",
+  "native_views_test.go": "10633d0e2a6dcacf5eefbae221626f7533c6e5ccdbc7351b0f01c6381175bb1d"
+}

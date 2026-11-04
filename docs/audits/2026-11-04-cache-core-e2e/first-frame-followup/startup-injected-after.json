@@ -1,0 +1,138 @@
+[
+  {
+    "ResolutionBudgetMS": 90000,
+    "VideoDetails": {
+      "Stage": "",
+      "BootstrapStep": "",
+      "HTTPStatus": 0,
+      "Redirect": "",
+      "MIME": ""
+    },
+    "Case": 1,
+    "InjectedResolveDelayMS": 18000,
+    "PolicyMS": 20000,
+    "TotalMS": 24202,
+    "ResolveMS": 23298,
+    "PresentedMS": 24000,
+    "ResolveCategory": "",
+    "ResolveStage": "",
+    "ResolveCause": "",
+    "VideoError": "",
+    "Presented": true,
+    "Decoders": [
+      {
+        "OpenedMS": 23298,
+        "OpenDurationMS": 4,
+        "FirstReadMS": 23303,
+        "FirstBytesMS": 23981,
+        "CompleteFrameMS": 23984,
+        "Bytes": 40992000,
+        "Cause": "",
+        "BridgeCategory": "",
+        "HTTPStatus": 0
+      }
+    ]
+  },
+  {
+    "ResolutionBudgetMS": 90000,
+    "VideoDetails": {
+      "Stage": "",
+      "BootstrapStep": "",
+      "HTTPStatus": 0,
+      "Redirect": "",
+      "MIME": ""
+    },
+    "Case": 2,
+    "InjectedResolveDelayMS": 18000,
+    "PolicyMS": 60000,
+    "TotalMS": 23667,
+    "ResolveMS": 22439,
+    "PresentedMS": 23466,
+    "ResolveCategory": "",
+    "ResolveStage": "",
+    "ResolveCause": "",
+    "VideoError": "",
+    "Presented": true,
+    "Decoders": [
+      {
+        "OpenedMS": 22442,
+        "OpenDurationMS": 3,
+        "FirstReadMS": 22446,
+        "FirstBytesMS": 23439,
+        "CompleteFrameMS": 23440,
+        "Bytes": 54109440,
+        "Cause": "",
+        "BridgeCategory": "",
+        "HTTPStatus": 0
+      }
+    ]
+  },
+  {
+    "ResolutionBudgetMS": 90000,
+    "VideoDetails": {
+      "Stage": "",
+      "BootstrapStep": "",
+      "HTTPStatus": 0,
+      "Redirect": "",
+      "MIME": ""
+    },
+    "Case": 3,
+    "InjectedResolveDelayMS": 18000,
+    "PolicyMS": 60000,
+    "TotalMS": 23872,
+    "ResolveMS": 22375,
+    "PresentedMS": 23670,
+    "ResolveCategory": "",
+    "ResolveStage": "",
+    "ResolveCause": "",
+    "VideoError": "",
+    "Presented": true,
+    "Decoders": [
+      {
+        "OpenedMS": 22376,
+        "OpenDurationMS": 2,
+        "FirstReadMS": 22379,
+        "FirstBytesMS": 23633,
+        "CompleteFrameMS": 23633,
+        "Bytes": 65587200,
+        "Cause": "",
+        "BridgeCategory": "",
+        "HTTPStatus": 0
+      }
+    ]
+  },
+  {
+    "ResolutionBudgetMS": 90000,
+    "VideoDetails": {
+      "Stage": "",
+      "BootstrapStep": "",
+      "HTTPStatus": 0,
+      "Redirect": "",
+      "MIME": ""
+    },
+    "Case": 4,
+    "InjectedResolveDelayMS": 18000,
+    "PolicyMS": 20000,
+    "TotalMS": 22974,
+    "ResolveMS": 21518,
+    "PresentedMS": 22772,
+    "ResolveCategory": "",
+    "ResolveStage": "",
+    "ResolveCause": "",
+    "VideoError": "",
+    "Presented": true,
+    "Decoders": [
+      {
+        "OpenedMS": 21518,
+        "OpenDurationMS": 4,
+        "FirstReadMS": 21522,
+        "FirstBytesMS": 22733,
+        "CompleteFrameMS": 22735,
+        "Bytes": 63947520,
+        "Cause": "",
+        "BridgeCategory": "",
+        "HTTPStatus": 0
+      }
+    ]
+  }
+]

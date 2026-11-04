@@ -1,0 +1,29 @@
+{
+  "time": "2026-11-04T15:23:13.007291+00:00",
+  "terminated_test_pids": [
+    87235
+  ],
+  "remaining_test_processes": [],
+  "formal_bundle_replaced": false,
+  "state_files_restored": true,
+  "initial_ui_position_seconds": 12.65,
+  "initial_ui_volume": 0.6591679453849792,
+  "queue_length": 12,
+  "appearance": "dark",
+  "language": "en",
+  "acceptance_request_removed": true,
+  "formal_app_ui_relaunch_pending_unlock": false,
+  "formal_app_ui_verified": true,
+  "formal_version": "0.6.3",
+  "formal_binary_sha256": "485d6a62848b1541dcbc5d95657795f2da333591d387304c64d7e73684b3a3fe",
+  "formal_binary_unchanged": true,
+  "formal_processes": [
+    {
+      "pid": 92554,
+      "ppid": 1,
+      "uid": 501,
+      "state": "S",
+      "executable": "/Applications/ytmGO.app/Contents/MacOS/ytmGO"
+    }
+  ]
+}

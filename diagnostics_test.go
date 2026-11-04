@@ -1,14 +1,51 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
+	"ytmgo/internal/catalog"
 	"ytmgo/internal/player"
 )
+
+func TestCatalogDiagnosticsRetainOnlySafeFailureMetadata(t *testing.T) {
+	for _, tc := range []struct {
+		err             error
+		category, stage string
+		status          int
+	}{
+		{nil, "ready", "", 0},
+		{context.DeadlineExceeded, "catalog_network_timeout", "", 0},
+		{&catalog.TransportError{Stage: "search", Category: "catalog_connection_failed"}, "catalog_connection_failed", "search", 0},
+		{&catalog.HTTPError{Stage: "search", StatusCode: 429}, "catalog_http_error", "search", 429},
+		{&catalog.TransportError{Stage: "synthetic-private-stage", Category: "synthetic-private-error"}, "catalog_unavailable", "", 0},
+		{&catalog.HTTPError{Stage: "synthetic-private-stage", StatusCode: 600}, "catalog_unavailable", "", 0},
+		{errors.New("synthetic-private-error"), "catalog_unavailable", "", 0},
+	} {
+		dir := t.TempDir()
+		recordCatalogDiagnostic(dir, tc.err, 123*time.Millisecond)
+		data, err := os.ReadFile(filepath.Join(dir, "catalog-status.json"))
+		var row struct {
+			Category, Stage, Version string
+			HTTPStatus               int
+			ElapsedMS                int64
+		}
+		if err != nil || json.Unmarshal(data, &row) != nil || strings.Contains(string(data), "synthetic") || row.Category != tc.category || row.Stage != tc.stage || row.HTTPStatus != tc.status || row.ElapsedMS != 123 || row.Version != applicationVersion() {
+			t.Fatal("catalog diagnostic lost safe metadata or persisted an untrusted value")
+		}
+	}
+	dir := t.TempDir()
+	recordCatalogDiagnostic(dir, context.Canceled, 0)
+	if entries, err := os.ReadDir(dir); err != nil || len(entries) != 0 {
+		t.Fatal("canceled navigation replaced the useful diagnostic")
+	}
+}
 
 func TestPlaybackDiagnosticsExcludeUntrustedDetails(t *testing.T) {
 	dir := t.TempDir()
@@ -28,6 +65,21 @@ func TestPlaybackDiagnosticsExcludeUntrustedDetails(t *testing.T) {
 	entries, err := os.ReadDir(dir)
 	if err != nil || len(entries) != 1 {
 		t.Fatal("unexpected diagnostic output")
+	}
+}
+
+func TestVideoDiagnosticStagesExcludeUntrustedMetadata(t *testing.T) {
+	dir := t.TempDir()
+	for _, stage := range []string{"video_resolution", "video_first_frame", "video_playback"} {
+		recordPlaybackDiagnostic(dir, "video", "video_network_timeout", player.FailureDetails{Stage: stage, Redirect: "synthetic-private", MIME: "synthetic-private", HTTPStatus: 600})
+		data, err := os.ReadFile(filepath.Join(dir, "video-status.json"))
+		var row struct {
+			Stage, Category string
+			HTTPStatus      int
+		}
+		if err != nil || json.Unmarshal(data, &row) != nil || row.Stage != stage || row.Category != "video_network_timeout" || row.HTTPStatus != 0 || strings.Contains(string(data), "synthetic") {
+			t.Fatal("video stage missing or raw details retained")
+		}
 	}
 }
 

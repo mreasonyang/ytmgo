@@ -1,0 +1,33 @@
+{
+  "feature_status": "PASS",
+  "live_seek_targets_seconds": [
+    0,
+    51.43,
+    55.03,
+    59.45,
+    64.2,
+    89.89,
+    103,
+    155.48
+  ],
+  "go_test_counts": {
+    "pass": 1120,
+    "skip": 28,
+    "fail": 0
+  },
+  "decoder_cases": 26,
+  "native_screenshot_pixels": {
+    "04-retry": [
+      3024,
+      1804
+    ],
+    "27-system-compact": [
+      1514,
+      1282
+    ]
+  },
+  "source_and_installed_feature_match": true,
+  "original_playback_restored": true,
+  "network_incident": "bootstrap_network_timeout; Retry recovered; root cause not established",
+  "scope": "macOS installed feature acceptance; read README for automated-only and untested boundaries"
+}

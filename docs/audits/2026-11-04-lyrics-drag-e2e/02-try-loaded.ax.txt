@@ -1,0 +1,2 @@
+There has been no change in the accessibility tree for Window: "ytmGO".
+The focused UI element is 5 text field (settable) Description: Search, Value: Try GENER8ION, Placeholder: What do you want to play?

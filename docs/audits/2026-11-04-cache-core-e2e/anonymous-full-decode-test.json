@@ -1,0 +1,23 @@
+{
+  "check": "anonymous-full-decode-test",
+  "packages": [
+    {
+      "Package": "ytmgo/internal/player",
+      "Action": "fail",
+      "Elapsed": 23.578
+    }
+  ],
+  "counts": {
+    "pass": 0,
+    "fail": 1,
+    "skip": 0
+  },
+  "categories": [
+    "resolver_http_error"
+  ],
+  "locations": [
+    "full_decode_live_test.go:87",
+    "full_decode_live_test.go:89"
+  ],
+  "metrics": []
+}

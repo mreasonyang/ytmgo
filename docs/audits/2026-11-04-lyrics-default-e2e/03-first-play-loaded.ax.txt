@@ -1,0 +1,39 @@
+The following is a diff from the previous accessibility tree for Window: "ytmgo" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
++	175 text (settable) Now Playing
++	176 button Immersive mode · Now Playing
++	177 button Close panel
++	178 button Cover
++	179 button Video
++	180 text (settable) Description: Can't Help Falling In Love, Value: Can't Help Falling In Love Kina Grannis
++	181 button Remove like
++	182 button Lyrics · Now Playing
++	183 button Queue · Now Playing
++	184 scroll area Lyrics · Content
++		185 text (settable) ♪
++		186 text (settable) Wise men say
++		187 text (settable) Only fools rush in
++		188 text (settable) But I can't help falling in love with you
++		189 text (settable) Shall I stay?
++		190 text (settable) Would it be a sin?
++		191 text (settable) If I can't help falling in love with you
++		192 text (settable) Like a river flows
++		193 text (settable) Surely to the sea
++		194 text (settable) Darling, so it goes
++		195 text (settable) Some things are meant to be
++		196 text (settable) So take my hand
++		197 text (settable) Take my whole life, too
++		198 text (settable) For I can't help falling in love with you
++		199 text (settable) Like a river flows
++		200 text (settable) Surely to the sea
++		201 text (settable) Darling, so it goes
++		202 text (settable) Some things are meant to be
++		203 text (settable) So take my hand
++		204 text (settable) Take my whole life, too
++		205 text (settable) For I can't help falling in love with you
++		206 text (settable) For I can't help falling in love with you
++		207 text (settable) Source: Musixmatch
+~		19 button Remove like
+~		22 button Pause
+~		25 text (settable) 2:43
+~		26 slider (settable, float) Description: Playback position, Value: 163.621333332
++	208 text ytmgo

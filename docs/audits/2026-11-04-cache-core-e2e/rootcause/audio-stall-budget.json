@@ -1,0 +1,16 @@
+[
+  {
+    "category": "none",
+    "downstream_canceled_before_source_resumed": false,
+    "elapsed_ms": 2030,
+    "first_pcm_succeeded": true,
+    "simulated_upstream_stall_seconds": 1
+  },
+  {
+    "category": "audio_network_timeout",
+    "downstream_canceled_before_source_resumed": true,
+    "elapsed_ms": 10203,
+    "first_pcm_succeeded": false,
+    "simulated_upstream_stall_seconds": 12
+  }
+]

@@ -1,0 +1,9 @@
+{
+  "time": "2026-10-30T05:03:01.959867+00:00",
+  "matches_public_release_zip": true,
+  "version": "0.5.1",
+  "main_sha256": "2214521b90dc4b3b3f5b645df0636fe23e331e9ea0a6d2ad8c088689cd0d5c15",
+  "signature": true,
+  "gatekeeper": true,
+  "stapled_ticket": true
+}

@@ -1,0 +1,43 @@
+{
+  "time": "2026-10-30T04:38:57.188938+00:00",
+  "category": "premium",
+  "processes": [
+    {
+      "pid": 31296,
+      "executable": "/Applications/ytmgo.app/Contents/MacOS/ytmgo",
+      "ppid": 1,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 31301,
+      "executable": "/Applications/ytmgo.app/Contents/Resources/runtime/node",
+      "ppid": 31296,
+      "uid": 501,
+      "state": "S"
+    },
+    {
+      "pid": 31304,
+      "executable": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    },
+    {
+      "pid": 31308,
+      "executable": "/System/Library/Frameworks/AppKit.framework/Versions/C/XPCServices/ThemeWidgetControlViewService.xpc/Contents/MacOS/ThemeWidgetControlViewService",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    },
+    {
+      "pid": 31311,
+      "executable": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "ppid": 1,
+      "uid": 501,
+      "state": "Ss"
+    }
+  ],
+  "login_helper_present": false,
+  "scope": "root, responsibility-owned processes and descendants"
+}

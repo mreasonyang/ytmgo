@@ -1,0 +1,20 @@
+{
+  "check": "degraded-lyrics-cache-test",
+  "packages": [
+    {
+      "Package": "ytmgo/internal/catalog",
+      "Action": "fail",
+      "Elapsed": 1.748
+    }
+  ],
+  "counts": {
+    "pass": 0,
+    "fail": 1,
+    "skip": 0
+  },
+  "categories": [],
+  "locations": [
+    "e2e_degraded_lyrics_test.go:50"
+  ],
+  "metrics": []
+}

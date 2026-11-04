@@ -1,0 +1,9 @@
+{
+  "samples": 478,
+  "complete_samples": 476,
+  "elapsed_seconds": 477.238,
+  "minimum_mib": 157.07,
+  "median_mib": 321.07,
+  "maximum_mib": 514.49,
+  "scope": "mixed GUI activity; not controlled playback benchmark or leak acceptance"
+}

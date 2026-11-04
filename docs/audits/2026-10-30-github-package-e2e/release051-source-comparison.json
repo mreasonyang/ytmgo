@@ -1,0 +1,15 @@
+{
+  "from_commit": "58fd1c77cb1b2b181c4097e4c8fd7503c39049fa",
+  "to_commit": "52790e0161c534f391eb620bf956bc60649b1df0",
+  "changed_files": [
+    "README.md",
+    "VERIFICATION.md",
+    "main.go",
+    "mygo.json",
+    "native/account-login/README.md",
+    "native/account-login/src/app.rs",
+    "scripts/login/macos/Info.plist",
+    "scripts/login/prepare.py"
+  ],
+  "ui_player_catalog_account_runtime_source_unchanged": true
+}

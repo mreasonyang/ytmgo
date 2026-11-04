@@ -1,0 +1,88 @@
+Window: "ytmgo", App: ytmgo.
+0 standard window ytmgo, Secondary Actions: Raise
+	1 button Exit immersive mode
+	2 text (settable) Now Playing
+	3 button Settings
+	4 scroll area Content
+		5 button Cover
+		6 button Video
+		7 text (settable) Try
+		8 text (settable) P!NK
+	9 button Lyrics · Now Playing
+	10 button Queue · Now Playing
+	11 scroll area Lyrics · Content
+		12 text (settable) ♪
+		13 text (settable) Ever wonder 'bout what he's doin'?
+		14 text (settable) How it all turned to lies?
+		15 text (settable) Sometimes I think that it's better
+		16 text (settable) To never ask why
+		17 text (settable) ♪
+		18 text (settable) Where there is desire, there is gonna be a flame
+		19 text (settable) Where there is a flame, someone's bound to get burned
+		20 text (settable) But just because it burns doesn't mean you're gonna die
+		21 text (settable) You've gotta get up and try, try, try
+		22 text (settable) Gotta get up and try, try, try
+		23 text (settable) Gotta get up and try, try, try
+		24 text (settable) Hey, hey-hey
+		25 text (settable) Funny how the heart can be deceiving
+		26 text (settable) More than just a couple times
+		27 text (settable) Why do we fall in love so easy
+		28 text (settable) Even when it's not right
+		29 text (settable) ♪
+		30 text (settable) Hey, no
+		31 text (settable) Where there is desire, there is gonna be a flame
+		32 text (settable) Where there is a flame, someone's bound to get burned
+		33 text (settable) But just because it burns doesn't mean you're gonna die
+		34 text (settable) You've gotta get up and try, try, try
+		35 text (settable) Gotta get up and try, try, try
+		36 text (settable) You've gotta get up and try, try, try
+		37 text (settable) ♪
+		38 text (settable) Ever worry that it might be ruined
+		39 text (settable) And does it make you wanna cry?
+		40 text (settable) When you're out there doing what you're doing
+		41 text (settable) Are you just getting by?
+		42 text (settable) Tell me, are you just getting by, by, by?
+		43 text (settable) Where there is desire, there is gonna be a flame
+		44 text (settable) Where there is a flame, someone's bound to get burned
+		45 text (settable) But just because it burns doesn't mean you're gonna die
+		46 text (settable) You've gotta get up and try, try, try
+		47 text (settable) Gotta get up and try, try, try
+		48 text (settable) You've gotta get up and try, try, try
+		49 text (settable) Gotta get up and try, try, try
+		50 text (settable) Gotta get up and try, try, try
+		51 text (settable) You've gotta get up and try, try, try
+		52 text (settable) Gotta get up and try, try, try
+		53 text (settable) ♪
+		54 text (settable) You've gotta get up and try, try, try
+		55 text (settable) Gotta get up and try, try, try
+		56 text (settable) Source: Musixmatch
+	57 container Player controls
+		58 button Open Now Playing
+		59 button Like
+		60 button Shuffle queue
+		61 button Previous
+		62 button Play
+		63 button Next
+		64 button Repeat: off
+		65 text (settable) 2:56
+		66 slider (settable, float) Description: Playback position, Value: 176.281486805
+		67 text (settable) 4:07
+		68 button Lyrics
+		69 button Queue
+		70 button Mute
+		71 slider (settable, float) Description: Volume, Value: 0.7
+		72 menu button More actions
+		73 button Immersive mode
+	74 close button
+	75 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	76 minimize button
+	77 text ytmgo
+78 menu bar
+	79 ytmgo
+	80 File
+	81 Edit
+	82 Playback
+	83 View
+	84 Window
+	85 Account
+	86 Help

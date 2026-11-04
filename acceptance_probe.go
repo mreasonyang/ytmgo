@@ -40,7 +40,7 @@ func loadAcceptanceProbe(directory string, now time.Time) *acceptanceProbe {
 	var request acceptanceRequest
 	decoder := json.NewDecoder(io.LimitReader(f, 1024))
 	decoder.DisallowUnknownFields()
-	if decoder.Decode(&request) != nil || decoder.Decode(new(any)) != io.EOF || request.Version != version || !request.Until.After(now) || request.Until.Sub(now) > 4*time.Hour {
+	if decoder.Decode(&request) != nil || decoder.Decode(new(any)) != io.EOF || request.Version != applicationVersion() || !request.Until.After(now) || request.Until.Sub(now) > 4*time.Hour {
 		return nil
 	}
 	return &acceptanceProbe{directory: directory, started: now, until: request.Until}
@@ -60,7 +60,7 @@ func (p *acceptanceProbe) observe(now time.Time, state player.State) {
 		PositionMS, DurationMS int64
 		Playing, Loading       bool
 		Ended, Failed          bool
-	}{version, now.UTC(), p.sequence, now.Sub(p.started).Milliseconds(),
+	}{applicationVersion(), now.UTC(), p.sequence, now.Sub(p.started).Milliseconds(),
 		max(state.Position.Milliseconds(), 0), max(state.Duration.Milliseconds(), 0),
 		state.Playing, state.Loading, state.Ended, state.Error != ""})
 	if err != nil {

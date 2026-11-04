@@ -1,0 +1,17 @@
+{
+  "recorded_at": "2026-10-30T14:58:36.095251+00:00",
+  "before": {
+    "kern.sleeptime": 1793366616,
+    "kern.waketime": 1793366662
+  },
+  "after": {
+    "kern.sleeptime": 1793372267,
+    "kern.waketime": 1793372315
+  },
+  "sleep_command_exit": 0,
+  "sleep_time_changed": true,
+  "wake_time_changed": true,
+  "sleep_seconds": 48,
+  "only_own_event_cancel_attempted": true,
+  "cancel_exit": 1
+}

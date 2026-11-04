@@ -1,0 +1,61 @@
+Window: "ytmgo", App: ytmgo.
+0 standard window ytmgo, Secondary Actions: Raise
+	1 container Now Playing
+		2 text (settable) Now Playing
+		3 button Immersive mode · Now Playing
+		4 button Close panel
+		5 scroll area
+			6 button Cover
+			7 button Video
+			8 text (settable) Can't Help Falling In Love
+			9 text (settable) Kina Grannis
+			10 button Remove like
+			11 button Previous
+			12 button Pause
+			13 button Next
+			14 text (settable) 3:12
+			15 slider (settable, float) Description: Playback position, Value: 192.314791666
+			16 text (settable) 3:21
+			17 button Mute
+			18 slider (settable, float) Description: Volume, Value: 0.7
+			19 button Lyrics · Now Playing
+			20 button Queue · Now Playing
+			21 scroll area Lyrics · Content
+				22 text (settable) ♪
+				23 text (settable) Wise men say
+				24 text (settable) Only fools rush in
+				25 text (settable) But I can't help falling in love with you
+				26 text (settable) Shall I stay?
+				27 text (settable) Would it be a sin?
+				28 text (settable) If I can't help falling in love with you
+				29 text (settable) Like a river flows
+				30 text (settable) Surely to the sea
+				31 text (settable) Darling, so it goes
+				32 text (settable) Some things are meant to be
+				33 text (settable) So take my hand
+				34 text (settable) Take my whole life, too
+				35 text (settable) For I can't help falling in love with you
+				36 text (settable) Like a river flows
+				37 text (settable) Surely to the sea
+				38 text (settable) Darling, so it goes
+				39 text (settable) Some things are meant to be
+				40 text (settable) So take my hand
+				41 text (settable) Take my whole life, too
+				42 text (settable) For I can't help falling in love with you
+				43 text (settable) For I can't help falling in love with you
+				44 text (settable) Source: Musixmatch
+	45 close button
+	46 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	47 minimize button
+	48 text ytmgo
+49 menu bar
+	50 ytmgo
+	51 File
+	52 Edit
+	53 Playback
+	54 View
+	55 Window
+	56 Account
+	57 Help
+
+The focused UI element is 3 button Immersive mode · Now Playing

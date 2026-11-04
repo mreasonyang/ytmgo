@@ -84,6 +84,7 @@ func (a *desktop) loadPage(route, q string, record bool) {
 	a.invalidate()
 	go func() {
 		defer cancel()
+		started := time.Now()
 		var page catalog.Page
 		var err error
 		switch {
@@ -103,6 +104,7 @@ func (a *desktop) loadPage(route, q string, record bool) {
 			if generation != a.pageGeneration {
 				return
 			}
+			recordCatalogDiagnostic(a.diagnosticPath, err, time.Since(started))
 			a.model.Loading = false
 			if err != nil {
 				a.catalogFailure(err)

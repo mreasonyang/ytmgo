@@ -1,0 +1,9 @@
+{
+  "category": "pass",
+  "status": 200,
+  "gzip": true,
+  "wire_bytes": 272362,
+  "decoded_bytes": 960875,
+  "elapsed_ms": 2296,
+  "proof_page_parsed": true
+}

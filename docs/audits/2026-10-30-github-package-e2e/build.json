@@ -1,0 +1,11 @@
+{
+  "version": "0.5.0",
+  "architecture": "arm64",
+  "mode": "notarized",
+  "minimum_macos": "27.0",
+  "commit": "58fd1c77cb1b2b181c4097e4c8fd7503c39049fa",
+  "run_url": "https://github.com/mreasonyang/ytmgo/actions/runs/41002530405",
+  "developer_id_signed": true,
+  "notarized": true,
+  "signed_updates": true
+}

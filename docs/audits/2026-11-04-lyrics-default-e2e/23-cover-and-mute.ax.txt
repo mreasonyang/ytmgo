@@ -1,0 +1,93 @@
+The following is a diff from the previous accessibility tree for Window: "ytmgo" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+Removed element IDs: 1-74, 78
++	88 button ytmgo Home
++	89 button Back
++	90 button (disabled) Forward
++	91 button Home
++	92 text field (settable) Description: Search, Value: Try Pink, Placeholder: What do you want to play?
++	93 button Explore
++	94 button Settings
++	95 menu button Account · YouTube Music Premium, Help: YouTube Music Premium
++	96 button Library
++	97 button Collapse sidebar
++	98 button Playlists
++	99 button Albums
++	100 button Artists
++	101 scroll area Your playlists
++		102 button Liked Music · Auto playlist, Help: Liked Music
++		103 button New Release Mix · Mix, Help: New Release Mix
++		104 button Ultimate Wedding Playlist
++		105 button Dreamkid
++		106 button Best
++		107 button Antidote · Derik Fein, Help: Antidote
++		108 button Favorite Songs
++		109 button Mindhunter (Soundtrack Inspired by the TV Show) · Fandom, Help: Mindhunter (Soundtrack Inspired by the TV Show)
++		110 button UK R&B Hits 2024 · YouTube Music, Help: UK R&B Hits 2024
++		111 button Discover Mix · Mix, Help: Discover Mix
++		112 button ALT CTRL
++		113 button At the Airport
++		114 button Blues Replay
++		115 button Eminem: Next Steps
++		116 button ESL Pro League - Official Soundtrack
++		117 button Favorite Songs
++		118 button Feeling Good
++		119 button Gentle
++		120 button Hollywood Undead Essentials
++		121 button LINKIN PARK Essentials
++		122 button My Shazam Tracks
++		123 button OG
++		124 button Party Starters
++		125 button Powerful
++		126 button Replay 2018
++	127 scroll area Content
++		128 heading Try Pink
++		129 button Try · Video · P!nk
++		130 button Try (The Truth About Love - Live From Los Angeles) · Video · P!NK
++		131 button 「Nightcore」 Try - P!nk ♡ (Lyrics) · Video · P!nk
++		132 button Pink - Try (COVER by Alec Chambers) on Spotify & Apple · Video · Alec Chambers
++		133 button Try · Song · P!NK
++		134 button P!nk · Artist · 162M monthly audience
++		135 button Love Song · Song · P!NK
++		136 button TRY (DRILL) · Song · EGNXMUSIC
++		137 button Try (Spanish) · Song · Nelly Furtado
++		138 button Try · Song · Alec Chambers
++		139 button Try (Official Video) · Video · P!nk
++		140 button Try · Video · P!nk
++		141 button P!nk - Try (Lyrics) · Video · Fans Music
++		142 button Try (Pink Tribute) · Album · Pop Tracks
++		143 button Try (Originally Performed By Pink) [Karaoke Version] · Album · 2010s Karaoke Band
++		144 button Try (Instrumental Karaoke) [Originally Performed by Pink] · Album · Sing Like The Famous!
++		145 button Paul Eckert · Artist · 147K monthly audience
++		146 button Try Pink · Playlist · lia081981
++		147 button Pink Greatest Hits · Playlist · Jamie Bavage
++		148 button PINK LIVE FROM LOS ANGELES · Playlist · MIR gar
++		149 button Nalini Menezes · Artist · @nalalini
++		150 button Paul H · Artist · @paul7684
++		151 button Anacleto Junior Gurilão · Artist · @JrGurilao
++		152 button Yapping And Trying British Snacks - Pink Wednesdays Podcast Ep.16 · Episode · Jul 16, 2025
++		153 button We Try Pink Sauce!!! · Episode · Oct 1, 2023
++		154 button We Ate EVERYTHING At The Washington DC Wharf! (ft. @peaks100) · Episode · May 27
++		155 button '70s Lite Hits · Playlist · YouTube Music
++		156 button '00s R&B Chill · Playlist · YouTube Music
++		157 button 90s Sing-Alongs · Playlist · YouTube Music
++		158 button Crime Stories with Nancy Grace · Podcast · Nancy Grace
++		159 button My Bible Collection & Bible Reviews · Podcast · Becoming Her by Faith
++		160 button Get Glazed with Ashlee Glazer · Podcast · Ashlee Glazer
++	161 container Player controls
++		162 button Open Now Playing
++		163 button Like
++		164 button Shuffle queue
++		165 button Previous
++		166 button Pause
++		167 button Next
++		168 button Repeat: off
++		169 text (settable) 3:35
++		170 slider (settable, float) Description: Playback position, Value: 215.196153471
++		171 text (settable) 4:07
++		172 button Lyrics
++		173 button Queue
++		174 button Unmute
++		175 slider (settable, float) Description: Volume, Value: 0
++		176 menu button More actions
++		177 button Immersive mode
++	178 text ytmgo

@@ -1,0 +1,122 @@
+Window: "ytmgo", App: ytmgo.
+0 standard window ytmgo, Secondary Actions: Raise
+	1 button (disabled) Back
+	2 text field (settable) Description: Search, Placeholder: What do you want to play?
+	3 button Settings
+	4 menu button Account · YouTube Music Premium, Help: YouTube Music Premium
+	5 scroll area Content
+		6 heading Late night listening
+		7 button Liked Music
+		8 button New Release Mix
+		9 button Ultimate Wedding Playlist
+		10 button Dreamkid
+		11 button Best
+		12 button Antidote
+		13 button Favorite Songs
+		14 button Mindhunter (Soundtrack Inspired by the TV Show)
+		15 heading Listen again
+		16 scroll area
+			17 button Demon Samurai · ONI
+			18 button Liked Music · Auto playlist
+			19 button New Release Mix · Cloudy June, Sasha Alex Sloan, Hit-Boy, The Chainsmokers
+			20 button The Weeknd - Hong Kong Ft. Faye Wong (Live in Hong Kong) · Weeknd Everyday
+			21 button Sex & Drugs · Temper City
+			22 button kill ur boyf vibes / women supreme · Rosalyn “Sera” Shard
+			23 button Vibe · Michael Porcayo
+			24 button 你从未离去 (抖音DJ版) - 于佰万『我不再迷茫 思念是唯一的行囊，满天的星光 有一颗是你的愿望。』♪ || 年度最佳抖音歌曲 | 抖音最火歌曲音 | 抖音 | TikTok ♪ · Fantastic Music Station
+			25 button Ultimate Wedding Playlist
+			26 button PROPHET LIKE ME · Deadfolk Prophet
+			27 button Random Access Memories · Daft Punk
+			28 button 花魁 - Oiran · ONI
+			29 button Murder Me · Diggy Graves
+			30 button 在墜落時 · 汉堡黄
+			31 button The Fatal Flaw · Paris Paloma
+			32 button Over and Over / Tokyo Paradise City · Beat Flickers
+			33 button Baby, Don't Cry 人魚的眼淚 · EXO
+			34 button Follow Me · Alec Benjamin
+			35 button TOKYO PARADISE CITY · Beat Flickers
+			36 button Roots of Wings · Forrest Rose
+		37 heading New releases
+		38 scroll area
+			39 button KNUCK · MUSHVENOM
+			40 button CLUBSOS VOL. 1 · 5 Seconds of Summer
+			41 button 打翻了整夜的香甜 · 陳忻玥
+			42 button And The Crowd Goes Mild · Sasha Alex Sloan
+			43 button CEMETERY (from the Ryuu series "Granite Waves" by Tezeze) · Call Me Karizma, Gloomy Culture
+			44 button Mabushii · Skinny Brown
+			45 button MISS ME · keshi
+			46 button Horror Story of the Week · Xana
+			47 button Beautiful Damage · NØLIVE
+			48 button Bedroom Confessional (xtras) · Ellise
+		49 heading Covers and remixes
+		50 scroll area
+			51 button I Took a Pill in Ibiza - Mike Posner // ( Slowed to Perfection ) · Vinay Sunanta
+			52 button 灵魂洗涤！女生翻唱超火藏风歌曲《难解》，一开口感觉今年都风调雨顺了~ · 咻咻满
+			53 button Heat Waves (Japanese Version) · Lime
+			54 button 前奏超赞！That Girl (DJCHEN Remix)完整版 · 森藍音樂
+			55 button Floating (Genom Världar - English Version) · Cinek
+			56 button This Is What You Came For 80s remix · 25June Music
+			57 button Call of Silence（Remix） · Clear Sky
+			58 button Cheriimoya - Living Life, In The Night (Zusebi Remix) (feat. Sierra Kidd) · Zusebi
+			59 button 其實，歌詞都需要破地獄！《Lemon》真.粵語版！ · 不是詞神
+			60 button i'll be fine (honestav remix) · DIZZYISDEAD
+			61 button Lady Gaga, Bruno Mars - Die With A Smile (Extended Guitar Version - Theomatica Remix) · THEODYSSEY
+			62 button Mind Games (with Chris Grey) (Remix) · Sickick, Chris Grey
+			63 button Stay with me (phonk remix) · 23Heaven
+			64 button Ariana Grande - bye [Altare Remix] · Altare
+			65 button Legends Never Die (ft. Against The Current) | Worlds 2017 - League of Legends · League of Legends
+			66 button Fontanel (Sammy Remix) · Eartheater
+			67 button 衛蘭Janice Vidal - 傾城 Cover · Janice Vidal
+		68 heading From the community
+		69 scroll area
+			70 button Memandu tgh malam · Bwaa
+			71 button ㄹ · 김우빈
+			72 button 우울리듬 · 김명석
+			73 button NO CREDIT CHECKS FOR YOU · Thomas Thompson
+			74 button who's a heretic now · Hazel 🦢
+			75 button 成熟味歌單 · HaHa Lin
+			76 button Nice beat songs · 𝔾𝕀ℝ𝕃 𝕊ℚ𝕌𝔸𝔻 ♡
+			77 button Stockhomsy · Educational
+			78 button love · Romario Rodriguez
+			79 button está buena · david fer
+		80 heading The Weeknd
+		81 scroll area
+			82 button '10s R&B Chill · Frank Ocean, Miguel, H.E.R., John Legend
+			83 button Don Toliver
+			84 button Chill Drives · Saksham Gaur
+			85 button Presenting The Weeknd · The Weeknd, Ariana Grande, Gesaffelstein, Kendrick Lamar
+			86 button Presenting Drake · Drake, 21 Savage, DJ Khaled, Rick Ross
+			87 button Car Playlist 😵‍💫 · Sam Ritchie
+			88 button Majid Jordan
+			89 button Fresh hip hop · SAKHILE DLAME
+			90 button Travis Scott Circus Maximus Tour Setlist · Travis Scott, Lil Uzi Vert
+			91 button Bop · Ethan Almaria
+		92 heading Fresh finds, old favorites
+		93 scroll area
+			94 button Archive Mix · Ricchi E Poveri, One Direction, Katy Perry, MOTHICA
+			95 button Liked Music · Auto playlist
+			96 button New Release Mix · Cloudy June, Sasha Alex Sloan, Hit-Boy, The Chainsmokers
+			97 button Discover Mix · My Song, Pino, The Romantic Playlist, Thundercat
+			98 button Replay Mix · Temper City, Christina Perri, Ashe, Black Omen Media
+	99 button Open Now Playing
+	100 button Like
+	101 button Play
+	102 container Main navigation
+		103 button Home
+		104 button Search
+		105 button Explore
+		106 button Library
+	107 help tag Antidote
+	108 close button
+	109 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	110 minimize button
+	111 text ytmgo
+112 menu bar
+	113 ytmgo
+	114 File
+	115 Edit
+	116 Playback
+	117 View
+	118 Window
+	119 Account
+	120 Help

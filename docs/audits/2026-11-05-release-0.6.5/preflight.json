@@ -1,0 +1,44 @@
+{
+  "date": "2026-11-05",
+  "version": "0.6.5",
+  "baseline_commit": "d92e39fb5543619d1a1a5864e976fa308b8e2db9",
+  "scope": "All staged source, tests and curated/historical audit changes; local outputs and compiled diagnostic probes excluded.",
+  "checks": [
+    {
+      "check": "make_check",
+      "exit_code": 0,
+      "elapsed_seconds": 76.455
+    },
+    {
+      "check": "release_packaging_tests",
+      "exit_code": 0,
+      "elapsed_seconds": 8.998
+    },
+    {
+      "check": "go_race",
+      "exit_code": 0,
+      "elapsed_seconds": 164.074,
+      "test_cases": {
+        "pass": 1273,
+        "fail": 0,
+        "skip": 36
+      },
+      "failed_tests": [],
+      "build_failures": []
+    },
+    {
+      "check": "hd_and_recovery_decoder",
+      "exit_code": 0,
+      "elapsed_seconds": 14.725,
+      "test_cases": {
+        "pass": 7,
+        "fail": 0,
+        "skip": 0
+      },
+      "failed_tests": [],
+      "build_failures": []
+    }
+  ],
+  "all_checks_passed": true,
+  "public_release_acceptance": "Recorded separately by the release workflow and public verification receipts."
+}

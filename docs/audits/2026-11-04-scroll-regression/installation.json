@@ -1,0 +1,37 @@
+{
+  "steps": [
+    {
+      "stage": "verify_candidate",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "stage": "backup_installed",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "stage": "install",
+      "passed": false,
+      "exit_code": 1
+    },
+    {
+      "stage": "fresh_install_after_rename",
+      "passed": true
+    },
+    {
+      "stage": "verify_installed",
+      "passed": true
+    }
+  ],
+  "source": "/Users/easonyang/Documents/projects/ytmgo/build/scroll-regression-20261104/darwin-arm64/ytmgo.app",
+  "installed": "/Applications/ytmgo.app",
+  "backup": "/Users/easonyang/Documents/projects/ytmgo/build/scroll-regression-20261104/installed-before/ytmgo.app",
+  "source_sha256": "46ab8e05686c5c7c0eda7b4def2c2791c5dfb16eeb1815dd58cec6d7dc28845f",
+  "installed_sha256": "46ab8e05686c5c7c0eda7b4def2c2791c5dfb16eeb1815dd58cec6d7dc28845f",
+  "binary_equal": true,
+  "version": "0.6.2",
+  "previous_application": "/Users/easonyang/Documents/projects/ytmgo/build/scroll-regression-20261104/overlaid-before.app",
+  "notarized": false,
+  "kind": "local Developer ID signed acceptance build"
+}

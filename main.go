@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -63,6 +64,10 @@ type desktop struct {
 	preparedID                      string
 	likeCancel                      context.CancelFunc
 	libraryRequest                  *libraryRequest
+	librarySnapshotPath             string
+	libraryScope                    string
+	libraryPage                     *catalog.Page
+	libraryWrites                   sync.WaitGroup
 	pageGeneration, playGeneration  uint64
 	accountGeneration               uint64
 	accountState                    accountState
@@ -99,6 +104,7 @@ func main() {
 	a.diagnosticPath = filepath.Join(dataDir, "native-diagnostics")
 	a.acceptanceProbe = loadAcceptanceProbe(a.diagnosticPath, time.Now())
 	a.accountState.store = &accountsession.Store{Secrets: nativeAccountSecrets{}, Path: filepath.Join(dataDir, "account", "session.enc")}
+	a.librarySnapshotPath = filepath.Join(dataDir, "account", "library-snapshot.json")
 	recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 	recordPlaybackDiagnostic(a.diagnosticPath, "video", "ready")
 	a.model = UIModel{Route: "home", Appearance: a.prefs.Appearance(), Language: language.Load(a.languagePath), Volume: 0.7, Version: applicationVersion()}
@@ -128,6 +134,7 @@ func main() {
 		// Keep the parent alive until cancellation has reaped every login child.
 		// Its bounded kill timer cannot run after this process has exited.
 		a.accountState.loginWait.Wait()
+		a.libraryWrites.Wait()
 		mygo.GlobalShortcut.UnregisterAll()
 		mygo.NowPlaying.Clear()
 		if a.video != nil {

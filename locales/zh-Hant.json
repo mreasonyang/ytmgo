@@ -238,5 +238,9 @@
   "nativeSettingsShortcutsHint": "ytmgo 內可用的所有快速鍵。",
   "nativeSettingsViewAll": "查看全部",
   "nativeSettingsVersion": "版本 {version}",
-  "nativeAccountSignedOutHint": "登入後即可查看你的播放清單、專輯和喜歡的音樂。"
+  "nativeAccountSignedOutHint": "登入後即可查看你的播放清單、專輯和喜歡的音樂。",
+  "nativeLibraryUpdating": "正在更新音樂庫…",
+  "nativeLibrarySaved": "正在顯示上次儲存的音樂庫。",
+  "nativeLibrarySavedError": "更新失敗，正在顯示上次儲存的音樂庫。",
+  "nativeLibraryReconnectBody": "下方顯示上次儲存的音樂庫，重新連結帳號後即可更新。"
 }

@@ -785,5 +785,9 @@
   "nativeSettingsShortcutsHint": "Every shortcut that works inside ytmgo.",
   "nativeSettingsViewAll": "View all",
   "nativeSettingsVersion": "Version {version}",
-  "nativeAccountSignedOutHint": "Sign in to see your playlists, albums and liked music."
+  "nativeAccountSignedOutHint": "Sign in to see your playlists, albums and liked music.",
+  "nativeLibraryUpdating": "Updating your library…",
+  "nativeLibrarySaved": "Showing your saved library.",
+  "nativeLibrarySavedError": "Couldn’t update. Showing your saved library.",
+  "nativeLibraryReconnectBody": "Your saved library is available below. Reconnect your account to update it."
 }

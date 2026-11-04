@@ -18,6 +18,7 @@ type UIModel struct {
 	Current                                                     catalog.Item
 	LibraryItems                                                []catalog.Item
 	LibraryLoaded                                               bool
+	LibraryCached, LibraryRefreshing                            bool
 	LibraryErrorKey                                             string
 	GlobalShortcut, ShortcutError                               string
 	ShortcutRecording                                           bool
@@ -589,8 +590,11 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 			})
 		}
 		var items []catalog.Item
-		if m.SignedIn {
+		if m.SignedIn || m.LibraryCached {
 			items = m.LibraryItems
+		}
+		if full && m.Route != "library" {
+			nativeLibraryCacheStatus(c, m, a, p)
 		}
 		if len(items) == 0 {
 			switch {
@@ -651,6 +655,30 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 				nativeLibraryRow(c.Key(fmt.Sprintf("library-%d", i)), item, m, clipped, p, full)
 			}
 		})
+	})
+}
+
+func nativeLibraryCacheStatus(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
+	if !m.LibraryLoaded || (!m.LibraryCached && !m.LibraryRefreshing) {
+		return
+	}
+	key := "nativeLibraryUpdating"
+	if !m.SignedIn {
+		key = "nativeLibrarySaved"
+	}
+	if m.LibraryErrorKey != "" {
+		key = "nativeLibrarySavedError"
+	}
+	ui.Row(c).Shrink(0).Padding(6, 16).Gap(8).AlignItems(ui.Center).Children(func() {
+		if m.LibraryRefreshing {
+			ui.Spinner(c).Size(14, 14).Label(a.Tr(key))
+		}
+		ui.Text(c, a.Tr(key)).Grow(1).MinWidth(0).FontSize(12).TextColor(p.secondary).MaxLines(2)
+		if m.LibraryErrorKey != "" && m.SignedIn && a.RetryLibrary != nil {
+			if nativeIconButton(c, "refresh", a.Tr("buttonRetry"), p, false, 28).Clicked() {
+				a.RetryLibrary()
+			}
+		}
 	})
 }
 
@@ -732,6 +760,9 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 	open := item.BrowseID != "" && m.Route == "browse:"+item.BrowseID
 	playing := item.ID != "" && item.ID == m.Current.ID
 	b := ui.ButtonBase(c).Height(64).Padding(8).Gap(12).Radius(6).Justify(ui.Start).Label(nativeItemLabel(item)).Tooltip(item.Title)
+	if m.LibraryCached && !m.SignedIn {
+		b.Disabled(true)
+	}
 	if !full {
 		b.Padding(4).Justify(ui.Center)
 	}
@@ -853,6 +884,9 @@ func nativeContinuationFailed(m *UIModel) bool {
 }
 
 func nativePageBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool, contentWidth float32) {
+	if m.Route == "library" {
+		nativeLibraryCacheStatus(c, m, a, p)
+	}
 	if m.Loading && m.Page.Continuation == "" {
 		ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
 			ui.Spinner(c).Size(20, 20).Label(a.Tr("shellLoading"))
@@ -919,9 +953,12 @@ func nativePageError(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 // nativePageContent is what the page loaded: the library prompt, home
 // shortcuts, shelves and items.
 func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool, contentWidth float32) {
-	if m.Route == "library" && !m.SignedIn {
+	if m.Route == "library" && !m.SignedIn && (!m.LibraryCached || m.AccountRestore != accountRestoring) {
 		ui.Column(c).Padding(24).Gap(14).Radius(8).Background(p.raised).Children(func() {
 			title, body := nativeLibraryPromptText(m)
+			if m.LibraryCached {
+				body = "nativeLibraryReconnectBody"
+			}
 			ui.Text(c, a.Tr(title)).FontSize(24).FontWeight(800)
 			ui.Text(c, a.Tr(body)).TextColor(p.secondary)
 			if m.AccountRestore == accountRestoreSlow {
@@ -1252,6 +1289,9 @@ func nativeCardArt(compact bool) float32 {
 // with a play button rising over playable covers on hover.
 func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p nativePalette, size float32) {
 	b := ui.ButtonBase(c).Column().Width(size + 24).Shrink(0).Padding(12).Gap(8).Radius(8).AlignItems(ui.Stretch).Justify(ui.Start).Label(nativeResultLabel(item, m, a))
+	if m.Route == "library" && m.LibraryCached && !m.SignedIn {
+		b.Disabled(true)
+	}
 	hovered := b.Hovered()
 	if hovered {
 		b.Background(p.raised)
@@ -1327,6 +1367,9 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 		pad = 8
 	}
 	b := ui.ButtonBase(c).Height(56).PaddingX(pad).Gap(16).Radius(6).Justify(ui.Start).Label(nativeResultLabel(item, m, a))
+	if m.Route == "library" && m.LibraryCached && !m.SignedIn && mode != nativeTrackQueue {
+		b.Disabled(true)
+	}
 	hovered := b.Hovered()
 	if playing {
 		b.Selected(true).Background(p.hover)
@@ -1921,7 +1964,7 @@ func nativeSongShelf(items []catalog.Item) bool {
 // Request the next frame explicitly so it becomes visible without another input.
 type nativePresentationKey struct {
 	texts                              [15]string
-	flags                              [18]bool
+	flags                              [20]bool
 	values                             [4]float64
 	repeat, queueLength, libraryLength int
 	errorScope                         errorScope
@@ -1932,7 +1975,7 @@ type nativePresentationKey struct {
 func nativePresentation(m *UIModel) nativePresentationKey {
 	return nativePresentationKey{
 		texts:  [15]string{m.Route, m.Query, m.PanelTab, m.Appearance, m.Language, m.Current.ID, m.Current.Title, m.Page.Title, m.Error, m.Lyrics, m.Current.Artwork, m.VideoError, m.PlaybackError, m.AccountRestore, m.LibraryErrorKey},
-		flags:  [18]bool{m.Loading, m.Playing, m.Muted, m.Liked, m.Shuffle, m.Panel, m.Immersive, m.Settings, m.Shortcuts, m.SidebarCollapsed, m.SignedIn, m.CanBack, m.CanForward, m.FocusSearch, m.Video, m.VideoLoading, m.PlaybackLoading, m.MusicPremium},
+		flags:  [20]bool{m.Loading, m.Playing, m.Muted, m.Liked, m.Shuffle, m.Panel, m.Immersive, m.Settings, m.Shortcuts, m.SidebarCollapsed, m.SignedIn, m.CanBack, m.CanForward, m.FocusSearch, m.Video, m.VideoLoading, m.PlaybackLoading, m.MusicPremium, m.LibraryCached, m.LibraryRefreshing},
 		values: [4]float64{m.Volume, m.Position, m.Duration, 0}, repeat: m.Repeat, queueLength: len(m.Queue), libraryLength: len(m.LibraryItems),
 		errorScope: m.ErrorScope, libraryLoaded: m.LibraryLoaded, shortcutRecording: m.ShortcutRecording, shortcut: m.GlobalShortcut, shortcutError: m.ShortcutError,
 	}

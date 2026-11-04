@@ -11,6 +11,7 @@ import (
 	"ytmgo/internal/accountsession"
 	"ytmgo/internal/catalog"
 	"ytmgo/internal/language"
+	"ytmgo/internal/librarysnapshot"
 	"ytmgo/internal/player"
 	"ytmgo/locales"
 )
@@ -217,6 +218,15 @@ func (a *desktop) restoreAccount(interaction accountsession.Interaction) {
 	go func() {
 		s.work.Lock()
 		session, err := restoreAccountSession(s.store, interaction)
+		var saved *catalog.Page
+		scope := s.store.CacheScope()
+		if err == nil {
+			if page, ok := librarysnapshot.Load(a.librarySnapshotPath, scope); ok {
+				saved = &page
+			}
+		} else if errors.Is(err, accountsession.ErrNotFound) {
+			librarysnapshot.Remove(a.librarySnapshotPath)
+		}
 		s.work.Unlock()
 		a.post(func() {
 			accepted, flowErr := s.flow.finish(ctx, generation, a.accountGeneration, nil, func() error { return nil })
@@ -232,6 +242,8 @@ func (a *desktop) restoreAccount(interaction accountsession.Interaction) {
 			s.restored = true
 			if err == nil {
 				s.session = &session
+				a.libraryScope, a.libraryPage = scope, saved
+				a.restoreCachedLibrary()
 			} else {
 				a.model.AccountRestore = ""
 			}
@@ -281,6 +293,8 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 			err = s.store.Save(ctx, *session)
 			if err != nil {
 				errorKey = "nativeAccountStorageError"
+			} else {
+				librarysnapshot.Remove(a.librarySnapshotPath)
 			}
 		}
 		verified := err == nil
@@ -290,6 +304,7 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 			session = nil
 			credentials = catalog.SessionCredentials{}
 			storageErr = s.store.Delete(accountsession.NoPrompt)
+			librarysnapshot.Remove(a.librarySnapshotPath)
 			if storageErr != nil {
 				errorKey = "nativeAccountStorageError"
 			}
@@ -303,6 +318,7 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 			}
 		}
 		configured := err == nil
+		libraryScope := s.store.CacheScope()
 		if err == nil && storageErr != nil {
 			err = storageErr
 		}
@@ -340,7 +356,7 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 				} else if !status.LoggedIn {
 					a.catalog.ClearSession()
 				}
-				identityChanged = a.model.SignedIn != status.LoggedIn || newIdentity
+				identityChanged = a.model.SignedIn != status.LoggedIn || newIdentity || (!status.LoggedIn && a.model.LibraryCached)
 				a.model.SignedIn, a.model.MusicPremium = status.LoggedIn, status.MusicPremium
 				mygo.App.SetMenu(a.menu())
 				if identityChanged {
@@ -348,7 +364,12 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 						a.accountGeneration++
 					}
 					a.clearAccountContent()
+					if newIdentity || !status.LoggedIn {
+						a.forgetLibrarySnapshot()
+						a.libraryScope = libraryScope
+					}
 					if status.LoggedIn {
+						a.restoreCachedLibrary()
 						a.loadLibrary()
 					}
 				}
@@ -390,7 +411,11 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 				a.navigate("library")
 				a.show()
 			} else if identityChanged {
-				a.navigate("home")
+				if a.model.Route == "library" {
+					a.navigate("library")
+				} else {
+					a.navigate("home")
+				}
 			} else {
 				a.invalidate()
 			}
@@ -742,6 +767,7 @@ func (a *desktop) signOut() {
 			a.catalog.ClearSession()
 			a.model.SignedIn = false
 			a.model.MusicPremium = false
+			a.forgetLibrarySnapshot()
 			a.clearAccountContent()
 			a.clearAccountPlayback()
 			mygo.App.SetMenu(a.menu())
@@ -749,6 +775,7 @@ func (a *desktop) signOut() {
 			go func() {
 				s.work.Lock()
 				storageErr := s.store.Delete(accountsession.AllowPrompt)
+				librarysnapshot.Remove(a.librarySnapshotPath)
 				configureErr := a.player.SetAccount(ctx, player.AccountSession{Revision: revision})
 				s.work.Unlock()
 				a.post(func() {

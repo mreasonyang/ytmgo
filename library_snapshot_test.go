@@ -1,0 +1,174 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/egoist/mygo/ui"
+	"ytmgo/internal/accountsession"
+	"ytmgo/internal/catalog"
+	"ytmgo/internal/librarysnapshot"
+	"ytmgo/locales"
+)
+
+type snapshotSecrets struct{ key []byte }
+
+func (s *snapshotSecrets) Get(string, accountsession.Interaction) ([]byte, error) {
+	if s.key == nil {
+		return nil, accountsession.ErrNotFound
+	}
+	return append([]byte(nil), s.key...), nil
+}
+func (s *snapshotSecrets) Set(_ string, key []byte) error {
+	s.key = append([]byte(nil), key...)
+	return nil
+}
+func (s *snapshotSecrets) Delete(string, accountsession.Interaction) error {
+	s.key = nil
+	return nil
+}
+
+func TestLibrarySnapshotWritesCannotCrossSelectionOrLogout(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "account")
+	store := &accountsession.Store{Secrets: &snapshotSecrets{}, Path: filepath.Join(dir, "session.enc")}
+	secure, index := true, 1
+	session := accountsession.Session{AccountIndex: &index, Cookies: []accountsession.Cookie{{Name: "SAPISID", Value: "synthetic-only", Domain: ".youtube.com", Path: "/", Secure: &secure}}}
+	if store.PrepareLogin(context.Background()) != nil || store.Save(context.Background(), session) != nil {
+		t.Fatal("synthetic saved selection could not initialize")
+	}
+	page := func(title string) catalog.Page {
+		return catalog.Page{Items: []catalog.Item{{Title: title, BrowseID: "VLsaved", Kind: "playlist"}}}
+	}
+	a := &desktop{libraryScope: store.CacheScope(), librarySnapshotPath: filepath.Join(dir, "library.json")}
+	a.accountState.store = store
+	oldScope := a.libraryScope
+	if err := librarysnapshot.Save(a.librarySnapshotPath, oldScope, page("Original")); err != nil {
+		t.Fatal(err)
+	}
+	a.accountState.work.Lock()
+	a.saveLibrarySnapshot(page("Late old result"))
+	if err := store.Save(context.Background(), session); err != nil {
+		a.accountState.work.Unlock()
+		t.Fatal(err)
+	}
+	a.accountState.work.Unlock()
+	a.libraryWrites.Wait()
+	if saved, ok := librarysnapshot.Load(a.librarySnapshotPath, oldScope); !ok || saved.Items[0].Title != "Original" {
+		t.Fatal("late old-account worker replaced the snapshot")
+	}
+	a.libraryScope = store.CacheScope()
+	a.saveLibrarySnapshot(page("New selection"))
+	a.libraryWrites.Wait()
+	if saved, ok := librarysnapshot.Load(a.librarySnapshotPath, a.libraryScope); !ok || saved.Items[0].Title != "New selection" {
+		t.Fatal("new account could not save its own library")
+	}
+	// A fresh process restores both the encrypted selection and matching list.
+	restarted := &accountsession.Store{Secrets: store.Secrets, Path: store.Path}
+	if _, err := restarted.Load(accountsession.NoPrompt); err != nil {
+		t.Fatal(err)
+	}
+	if saved, ok := librarysnapshot.Load(a.librarySnapshotPath, restarted.CacheScope()); !ok || saved.Items[0].Title != "New selection" {
+		t.Fatal("independent account-store instance could not restore the library")
+	}
+	a.accountState.work.Lock()
+	a.saveLibrarySnapshot(page("Late signed-out result"))
+	if err := store.Delete(accountsession.NoPrompt); err != nil {
+		a.accountState.work.Unlock()
+		t.Fatal(err)
+	}
+	librarysnapshot.Remove(a.librarySnapshotPath)
+	a.accountState.work.Unlock()
+	a.libraryWrites.Wait()
+	if _, err := os.Lstat(a.librarySnapshotPath); !os.IsNotExist(err) {
+		t.Fatal("pending worker recreated a signed-out library")
+	}
+}
+
+func TestCachedLibraryRemainsVisibleWhileRefreshingAndAfterFailure(t *testing.T) {
+	page := catalog.Page{Items: []catalog.Item{{Title: "Saved playlist", BrowseID: "VLsaved", Kind: "playlist"}}}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	a := &desktop{ctx: ctx, libraryScope: "0123456789abcdef01234567", libraryPage: &page, historyIndex: -1, model: UIModel{Route: "home", AccountRestore: accountRestoring}}
+	a.restoreCachedLibrary()
+	if a.model.SignedIn || !a.model.LibraryLoaded || !a.model.LibraryCached {
+		t.Fatal("local display snapshot changed account verification")
+	}
+	if len(a.model.LibraryItems) != 1 {
+		t.Fatal("restored library is not immediately available to the view")
+	}
+	a.model.SignedIn = true
+	pending := &libraryRequest{cancel: cancel, scope: a.libraryScope}
+	a.libraryRequest = pending
+	a.model.LibraryRefreshing = true
+	if a.loadLibrary() != pending || len(a.model.LibraryItems) != 1 || !a.model.LibraryRefreshing {
+		t.Fatal("refresh blanked the restored library")
+	}
+	a.finishLibrary(pending, catalog.Page{}, catalog.ErrUnavailable)
+	if len(a.model.LibraryItems) != 1 || a.model.Error != "" || a.model.LibraryErrorKey == "" || a.model.LibraryRefreshing || !a.model.LibraryCached {
+		t.Fatal("network failure discarded the usable snapshot")
+	}
+	fresh := catalog.Page{Items: []catalog.Item{{Title: "Updated playlist", BrowseID: "VLupdated", Kind: "playlist"}}}
+	pending = &libraryRequest{cancel: cancel, pageGeneration: a.pageGeneration}
+	a.libraryRequest = pending
+	a.model.LibraryErrorKey = ""
+	a.finishLibrary(pending, fresh, nil)
+	if a.model.LibraryCached || a.model.LibraryItems[0].Title != "Updated playlist" || a.libraryPage.Items[0].Title != "Updated playlist" {
+		t.Fatal("fresh library did not replace the snapshot")
+	}
+	a.forgetLibrarySnapshot()
+	a.clearAccountContent()
+	if a.libraryPage != nil || a.libraryScope != "" || a.model.LibraryCached || len(a.model.LibraryItems) != 0 {
+		t.Fatal("account change retained restored library state")
+	}
+}
+
+func TestNativeSavedLibraryStatesAndInteraction(t *testing.T) {
+	for _, locale := range locales.Catalog.Languages() {
+		for _, width := range []int{1440, 420} {
+			for _, state := range []string{"restoring", "updating", "failed"} {
+				t.Run(fmt.Sprintf("%s-%d-%s", locale, width, state), func(t *testing.T) {
+					m, actions := nativeViewFixture()
+					m.Language, m.Route, m.AccountRestore = locale, "library", accountRestoring
+					m.LibraryLoaded, m.LibraryCached = true, true
+					m.LibraryItems = []catalog.Item{{Title: "Saved playlist", BrowseID: "VLsaved", Kind: "playlist"}}
+					m.Page = catalog.Page{Items: m.LibraryItems}
+					key := "nativeLibrarySaved"
+					opened := 0
+					actions.Open = func(catalog.Item) { opened++ }
+					if state != "restoring" {
+						m.SignedIn, m.AccountRestore = true, ""
+						m.LibraryRefreshing = state == "updating"
+						key = "nativeLibraryUpdating"
+					}
+					retried := 0
+					actions.RetryLibrary = func() { retried++ }
+					if state == "failed" {
+						m.LibraryErrorKey = "errorCatalogUnavailable"
+						key = "nativeLibrarySavedError"
+					}
+					tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, actions) }, width, 900)
+					if !tt.HasText("Saved playlist") || !tt.HasText(actions.Tr(key)) {
+						t.Fatalf("saved library state is missing: %v", tt.Texts())
+					}
+					if state == "restoring" {
+						_ = tt.Click(nativeResultLabel(m.LibraryItems[0], m, actions))
+						if opened != 0 {
+							t.Fatal("unverified snapshot opened a private collection")
+						}
+					}
+					if state == "failed" {
+						if err := tt.Click(actions.Tr("buttonRetry")); err != nil || retried != 1 {
+							t.Fatal("cached library failure has no working retry")
+						}
+					}
+					if locale == "en" || locale == "zh-Hans" {
+						nativeSnapshot(t, tt, fmt.Sprintf("library-snapshot-%s-%d-%s", locale, width, state))
+					}
+				})
+			}
+		}
+	}
+}

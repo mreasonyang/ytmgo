@@ -59,10 +59,15 @@ func (a *desktop) loadPage(route, q string, record bool) {
 	a.model.ErrorScope = ""
 	a.model.Page = catalog.Page{}
 	if route == "library" {
+		if a.model.LibraryLoaded && a.libraryPage != nil {
+			a.model.Page = a.cachedLibraryPage()
+			a.model.Loading = false
+			a.model.LibraryCached = true
+		}
 		if a.model.SignedIn {
 			request := a.loadLibrary()
 			request.pageGeneration, request.record = generation, record
-		} else {
+		} else if !a.model.LibraryCached {
 			a.model.Loading = false
 			a.model.Page = signedOutLibraryPage(a.tr)
 			a.pushHistory(record)
@@ -120,6 +125,7 @@ type libraryRequest struct {
 	cancel         context.CancelFunc
 	pageGeneration uint64
 	record         bool
+	scope          string
 }
 
 func (a *desktop) loadLibrary() *libraryRequest {
@@ -127,9 +133,9 @@ func (a *desktop) loadLibrary() *libraryRequest {
 		return a.libraryRequest
 	}
 	ctx, cancel := context.WithTimeout(a.ctx, 30*time.Second)
-	request := &libraryRequest{cancel: cancel}
+	request := &libraryRequest{cancel: cancel, scope: a.libraryScope}
 	a.libraryRequest = request
-	a.model.LibraryLoaded = false
+	a.model.LibraryRefreshing = true
 	a.model.LibraryErrorKey = ""
 	go func() {
 		defer cancel()
@@ -144,17 +150,30 @@ func (a *desktop) finishLibrary(request *libraryRequest, page catalog.Page, err 
 		return
 	}
 	a.libraryRequest = nil
+	a.model.LibraryRefreshing = false
 	if err == nil {
+		a.libraryPage = &page
 		a.model.LibraryItems = page.Items
 		a.model.LibraryLoaded = true
+		a.model.LibraryCached = false
+		if request.scope == a.libraryScope {
+			a.saveLibrarySnapshot(page)
+		}
 	} else {
 		a.model.LibraryErrorKey = catalogErrorKey(err)
+		if a.model.LibraryLoaded {
+			a.model.LibraryCached = true
+		}
 	}
 	if a.model.Route != "library" || request.pageGeneration != a.pageGeneration {
 		return
 	}
 	a.model.Loading = false
 	if err != nil {
+		if a.model.LibraryLoaded {
+			a.model.Page = a.cachedLibraryPage()
+			return
+		}
 		a.catalogFailure(err)
 		return
 	}
@@ -171,6 +190,7 @@ func (a *desktop) resetLibrary() {
 	a.model.LibraryItems = nil
 	a.model.LibraryLoaded = false
 	a.model.LibraryErrorKey = ""
+	a.model.LibraryCached, a.model.LibraryRefreshing = false, false
 }
 
 func (a *desktop) retryLibrary() {

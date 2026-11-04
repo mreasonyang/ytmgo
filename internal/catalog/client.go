@@ -85,6 +85,24 @@ func (it Item) PlaybackMetadata() Item {
 		Artwork: safeArtwork(it.Artwork), Duration: max(0, it.Duration), Kind: it.Kind}
 }
 
+// LibraryMetadata is the bounded display metadata that may survive a restart.
+// Rating state is refreshed on use rather than restored as authoritative.
+func (it Item) LibraryMetadata() Item {
+	if it.ID != "" && !videoIDPattern.MatchString(it.ID) || it.BrowseID != "" && !browseIDPattern.MatchString(it.BrowseID) || it.ID == "" && it.BrowseID == "" ||
+		len(it.Title) > 4096 || len(it.Artist) > 4096 || len(it.Album) > 4096 || len(it.BrowseParams) > 8192 || !browseParamsPattern.MatchString(it.BrowseParams) ||
+		it.Duration < 0 || it.Duration > 24*time.Hour {
+		return Item{}
+	}
+	switch it.Kind {
+	case "", "song", "video", "album", "artist", "playlist", "browse":
+	default:
+		return Item{}
+	}
+	it.Artwork = safeArtwork(it.Artwork)
+	it.Liked, it.LikeKnown = false, false
+	return it
+}
+
 type Shelf struct {
 	Title string `json:"title"`
 	Items []Item `json:"items"`

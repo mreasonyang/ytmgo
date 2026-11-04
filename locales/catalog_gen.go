@@ -3126,3 +3126,43 @@ func NativeAccountSignedOutHint() string { return In(i18n.Locale()).NativeAccoun
 func (msgs Messages) NativeAccountSignedOutHint() string {
 	return Catalog.Format(msgs.locale, "nativeAccountSignedOutHint", nil)
 }
+
+// NativeLibraryUpdating says "Updating your library…"
+// in the language the app shows.
+func NativeLibraryUpdating() string { return In(i18n.Locale()).NativeLibraryUpdating() }
+
+// NativeLibraryUpdating says "Updating your library…"
+// in the language of msgs.
+func (msgs Messages) NativeLibraryUpdating() string {
+	return Catalog.Format(msgs.locale, "nativeLibraryUpdating", nil)
+}
+
+// NativeLibrarySaved says "Showing your saved library."
+// in the language the app shows.
+func NativeLibrarySaved() string { return In(i18n.Locale()).NativeLibrarySaved() }
+
+// NativeLibrarySaved says "Showing your saved library."
+// in the language of msgs.
+func (msgs Messages) NativeLibrarySaved() string {
+	return Catalog.Format(msgs.locale, "nativeLibrarySaved", nil)
+}
+
+// NativeLibrarySavedError says "Couldn’t update. Showing your saved library."
+// in the language the app shows.
+func NativeLibrarySavedError() string { return In(i18n.Locale()).NativeLibrarySavedError() }
+
+// NativeLibrarySavedError says "Couldn’t update. Showing your saved library."
+// in the language of msgs.
+func (msgs Messages) NativeLibrarySavedError() string {
+	return Catalog.Format(msgs.locale, "nativeLibrarySavedError", nil)
+}
+
+// NativeLibraryReconnectBody says "Your saved library is available below. Reconnect your account to update it."
+// in the language the app shows.
+func NativeLibraryReconnectBody() string { return In(i18n.Locale()).NativeLibraryReconnectBody() }
+
+// NativeLibraryReconnectBody says "Your saved library is available below. Reconnect your account to update it."
+// in the language of msgs.
+func (msgs Messages) NativeLibraryReconnectBody() string {
+	return Catalog.Format(msgs.locale, "nativeLibraryReconnectBody", nil)
+}

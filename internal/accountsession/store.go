@@ -6,6 +6,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -51,9 +52,25 @@ const (
 // lock and serial account worker serialize access to this key and file. Store
 // must not be copied after use: its prepared key belongs to that worker.
 type Store struct {
-	Secrets Secrets
-	Path    string
-	key     []byte // Prepared before opening login; never serialized or logged.
+	Secrets    Secrets
+	Path       string
+	key        []byte // Prepared before opening login; never serialized or logged.
+	cacheScope string // Opaque public nonce of the last successfully loaded/saved ciphertext.
+}
+
+// CacheScope binds local display snapshots to this exact saved selection. It is
+// available only after successful Load/Save, survives process restarts, and
+// changes on every newly saved sign-in. It contains no cookie or account ID.
+// Like the rest of Store, access it only on the serial account worker.
+func (s *Store) CacheScope() string {
+	if s == nil {
+		return ""
+	}
+	return s.cacheScope
+}
+
+func sessionCacheScope(data []byte) string {
+	return hex.EncodeToString(data[len(sessionFileHeader) : len(sessionFileHeader)+12])
 }
 
 // POSIX mode bits protect the dedicated directory and ciphertext file. Windows
@@ -186,6 +203,7 @@ func (s *Store) PrepareLogin(ctx context.Context) error {
 func (s *Store) clearKey() {
 	clear(s.key)
 	s.key = nil
+	s.cacheScope = ""
 }
 
 // Save only encrypts and replaces the session file. Native secret operations
@@ -217,7 +235,11 @@ func (s *Store) Save(ctx context.Context, session Session) error {
 	data := append(header, aead.Seal(nil, nil, plain, header)...)
 	// Keep the persistent key even if the file commit fails. A retry reuses the
 	// same item, including after a process crash between key and file writes.
-	return writeSessionFile(ctx, s.Path, data)
+	if err := writeSessionFile(ctx, s.Path, data); err != nil {
+		return err
+	}
+	s.cacheScope = sessionCacheScope(data)
+	return nil
 }
 
 func safeSessionTarget(path string) bool {
@@ -288,6 +310,7 @@ func (s *Store) Load(interaction Interaction) (Session, error) {
 		return Session{}, ErrStorage
 	}
 	s.key = append([]byte(nil), key...)
+	s.cacheScope = sessionCacheScope(data)
 	return session, nil
 }
 

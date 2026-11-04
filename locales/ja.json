@@ -238,5 +238,9 @@
   "nativeSettingsShortcutsHint": "ytmgo 内で使えるショートカットの一覧です。",
   "nativeSettingsViewAll": "すべて表示",
   "nativeSettingsVersion": "バージョン {version}",
-  "nativeAccountSignedOutHint": "ログインすると、プレイリスト、アルバム、高く評価した曲を表示できます。"
+  "nativeAccountSignedOutHint": "ログインすると、プレイリスト、アルバム、高く評価した曲を表示できます。",
+  "nativeLibraryUpdating": "ライブラリを更新中…",
+  "nativeLibrarySaved": "前回保存したライブラリを表示しています。",
+  "nativeLibrarySavedError": "更新できませんでした。保存済みのライブラリを表示しています。",
+  "nativeLibraryReconnectBody": "前回保存したライブラリを表示しています。更新するにはアカウントに再接続してください。"
 }

@@ -12,6 +12,7 @@ on:
         type: choice
         options:
           - all
+          - xcode-27
           - macos-latest
           - windows-latest
           - ubuntu-24.04
@@ -28,7 +29,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.os != '' && inputs.os != 'all' && format('["{0}"]', inputs.os) || '["macos-latest","windows-latest","ubuntu-24.04"]') }}
+        # Match the ARM image that builds and accepts the signed macOS release.
+        os: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.os != '' && inputs.os != 'all' && format('["{0}"]', inputs.os) || '["xcode-27","windows-latest","ubuntu-24.04"]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     env:

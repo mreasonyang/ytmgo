@@ -1,0 +1,40 @@
+{
+  "status": "completed",
+  "conclusion": "success",
+  "headSha": "526374e877eab14a9ef68eb558a0168325926bef",
+  "url": "https://github.com/mreasonyang/ytmgo/actions/runs/41887976992",
+  "jobs": [
+    {
+      "databaseId": 126786109374,
+      "name": "package (windows-latest, windows-amd64)",
+      "status": "completed",
+      "conclusion": "success",
+      "current_steps": [],
+      "failed_steps": []
+    },
+    {
+      "databaseId": 126786112245,
+      "name": "package (ubuntu-24.04, linux-amd64)",
+      "status": "completed",
+      "conclusion": "success",
+      "current_steps": [],
+      "failed_steps": []
+    },
+    {
+      "databaseId": 126786170384,
+      "name": "resolve",
+      "status": "completed",
+      "conclusion": "success",
+      "current_steps": [],
+      "failed_steps": []
+    },
+    {
+      "databaseId": 126792984344,
+      "name": "publish",
+      "status": "completed",
+      "conclusion": "success",
+      "current_steps": [],
+      "failed_steps": []
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "release_source": "526374e877eab14a9ef68eb558a0168325926bef",
+  "ci_routing_commit": "6d38d94875c940bff1ef8c7685581ce5513c64f7",
+  "post_release_committed_paths": [
+    ".github/workflows/native-playback.yml",
+    "README.md",
+    "README.zh-CN.md"
+  ],
+  "application_source_unchanged": true,
+  "macos_latest_cancellations": {
+    "count": 2,
+    "steps_executed": 0,
+    "category": "hosted_arm_runner_capacity",
+    "observed_annotation": "The job was not acquired by Runner of type hosted even after multiple attempts"
+  },
+  "fallback_runtime_run": "https://github.com/mreasonyang/ytmgo/actions/runs/41888875948"
+}

@@ -1,0 +1,32 @@
+{
+  "version": "0.6.5",
+  "commit": "526374e877eab14a9ef68eb558a0168325926bef",
+  "architecture": "arm64",
+  "minimum_macos": "13.0",
+  "host_macos": "27.0.1",
+  "native_smoke": true,
+  "signed": true,
+  "archive_sha256": "73c3fb83a6a99523c38cd117c018ec74fa301c829a846f283490f6bf7d5a982a",
+  "binaries": [
+    {
+      "path": "Contents/Resources/login/ytmgo Account Login.app/Contents/MacOS/ytmgo-account-login",
+      "architecture": "arm64",
+      "minimum_macos": "13.0"
+    },
+    {
+      "path": "Contents/Resources/runtime/ffmpeg",
+      "architecture": "arm64",
+      "minimum_macos": "13.0"
+    },
+    {
+      "path": "Contents/Resources/runtime/ytmgo-playback-host",
+      "architecture": "arm64",
+      "minimum_macos": "13.0"
+    },
+    {
+      "path": "Contents/MacOS/ytmGO",
+      "architecture": "arm64",
+      "minimum_macos": "13.0"
+    }
+  ]
+}

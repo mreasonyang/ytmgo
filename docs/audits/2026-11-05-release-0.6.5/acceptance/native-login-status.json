@@ -1,0 +1,32 @@
+{
+  "status": "completed",
+  "conclusion": "success",
+  "headSha": "526374e877eab14a9ef68eb558a0168325926bef",
+  "url": "https://github.com/mreasonyang/ytmgo/actions/runs/41883025829",
+  "jobs": [
+    {
+      "databaseId": 126760108875,
+      "name": "Login helper on ubuntu-24.04",
+      "status": "completed",
+      "conclusion": "success",
+      "current_steps": [],
+      "failed_steps": []
+    },
+    {
+      "databaseId": 126760109672,
+      "name": "Login helper on windows-latest",
+      "status": "completed",
+      "conclusion": "success",
+      "current_steps": [],
+      "failed_steps": []
+    },
+    {
+      "databaseId": 126760109765,
+      "name": "Login helper on macos-latest",
+      "status": "completed",
+      "conclusion": "success",
+      "current_steps": [],
+      "failed_steps": []
+    }
+  ]
+}

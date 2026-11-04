@@ -1,0 +1,16 @@
+{
+  "version": "0.6.5",
+  "commit": "526374e877eab14a9ef68eb558a0168325926bef",
+  "platform": "linux-amd64",
+  "architecture": "amd64",
+  "native_build": true,
+  "os_code_signed": false,
+  "signed_updates": true,
+  "bundled_files": 765,
+  "native_smoke": true,
+  "packaging_tools_commit": "526374e877eab14a9ef68eb558a0168325926bef",
+  "license_notice_overlay": [],
+  "run_url": "https://github.com/mreasonyang/ytmgo/actions/runs/41887976992",
+  "installed_cli_version": "0.6.5",
+  "smoke_scope": "native installer, installed resources, startup in an empty account profile; no signed-in E2E"
+}

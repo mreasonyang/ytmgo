@@ -1,0 +1,16 @@
+{
+  "status": "completed",
+  "conclusion": "success",
+  "headSha": "6d38d94875c940bff1ef8c7685581ce5513c64f7",
+  "url": "https://github.com/mreasonyang/ytmgo/actions/runs/41888875948",
+  "jobs": [
+    {
+      "databaseId": 126780604582,
+      "name": "native (xcode-27)",
+      "status": "completed",
+      "conclusion": "success",
+      "current_steps": [],
+      "failed_steps": []
+    }
+  ]
+}

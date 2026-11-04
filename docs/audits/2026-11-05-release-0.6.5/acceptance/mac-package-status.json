@@ -1,0 +1,64 @@
+{
+  "status": "completed",
+  "conclusion": "success",
+  "headSha": "526374e877eab14a9ef68eb558a0168325926bef",
+  "url": "https://github.com/mreasonyang/ytmgo/actions/runs/41882731718",
+  "jobs": [
+    {
+      "databaseId": 126759122955,
+      "name": "source",
+      "status": "completed",
+      "conclusion": "success",
+      "current_steps": [],
+      "failed_steps": []
+    },
+    {
+      "databaseId": 126759326716,
+      "name": "Native build (amd64)",
+      "status": "completed",
+      "conclusion": "success",
+      "current_steps": [],
+      "failed_steps": []
+    },
+    {
+      "databaseId": 126759327047,
+      "name": "Native build (arm64)",
+      "status": "completed",
+      "conclusion": "success",
+      "current_steps": [],
+      "failed_steps": []
+    },
+    {
+      "databaseId": 126772542765,
+      "name": "package",
+      "status": "completed",
+      "conclusion": "success",
+      "current_steps": [],
+      "failed_steps": []
+    },
+    {
+      "databaseId": 126775375768,
+      "name": "Signed native startup (amd64)",
+      "status": "completed",
+      "conclusion": "success",
+      "current_steps": [],
+      "failed_steps": []
+    },
+    {
+      "databaseId": 126775375837,
+      "name": "Signed native startup (arm64)",
+      "status": "completed",
+      "conclusion": "success",
+      "current_steps": [],
+      "failed_steps": []
+    },
+    {
+      "databaseId": 126776804150,
+      "name": "publish",
+      "status": "completed",
+      "conclusion": "success",
+      "current_steps": [],
+      "failed_steps": []
+    }
+  ]
+}

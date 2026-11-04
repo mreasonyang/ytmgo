@@ -1,0 +1,42 @@
+{
+  "status": "completed",
+  "conclusion": "failure",
+  "headSha": "526374e877eab14a9ef68eb558a0168325926bef",
+  "url": "https://github.com/mreasonyang/ytmgo/actions/runs/41887976992",
+  "jobs": [
+    {
+      "databaseId": 126777459001,
+      "name": "resolve",
+      "status": "completed",
+      "conclusion": "success",
+      "current_steps": [],
+      "failed_steps": []
+    },
+    {
+      "databaseId": 126777724751,
+      "name": "package (ubuntu-24.04, linux-amd64)",
+      "status": "completed",
+      "conclusion": "success",
+      "current_steps": [],
+      "failed_steps": []
+    },
+    {
+      "databaseId": 126777724780,
+      "name": "package (windows-latest, windows-amd64)",
+      "status": "completed",
+      "conclusion": "failure",
+      "current_steps": [],
+      "failed_steps": [
+        "Prepare target-specific legal resources"
+      ]
+    },
+    {
+      "databaseId": 126782825545,
+      "name": "publish",
+      "status": "completed",
+      "conclusion": "skipped",
+      "current_steps": [],
+      "failed_steps": []
+    }
+  ]
+}

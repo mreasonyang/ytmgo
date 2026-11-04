@@ -1,0 +1,12 @@
+{
+  "version": "0.6.5",
+  "checks": {
+    "signature": true,
+    "stapled_ticket": true,
+    "gatekeeper": true
+  },
+  "bundle_matches_public_zip": true,
+  "video_quality_preserved": 1080,
+  "homebrew_receipt": "ytmgo 0.6.5",
+  "backup_retained": true
+}

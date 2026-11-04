@@ -2,47 +2,74 @@
 
 **English** · [简体中文](README.zh-CN.md)
 
-**ytmGO** is a native desktop client for YouTube Music (version baseline **0.6.5**). The user-facing brand is **ytmGO**, while the repository, release artifact prefix, bundle identifier (`si.kyun.ytmgo`), helper identifiers, and local data directories retain the technical name `ytmgo`.
+**ytmGO** is a native desktop client for YouTube Music (source version baseline **0.6.5**). The user-facing brand is **ytmGO**, while the repository, release artifact prefix, bundle identifier (`si.kyun.ytmgo`), helper identifiers, and local data directories retain the technical name `ytmgo`.
 
 The music interface is drawn natively in Go with **MyGo 0.7.1** (`ui.View`)—there is no embedded web music page, HTML/CSS/JS UI bridge, Electron runtime, or bundled Node.js. Go handles YouTube Music catalogue requests, session verification, format selection, and bounded media streaming; MyGo outputs decoded audio to the system audio device, and an on-demand native decoder renders video only while a video view is visible.
 
-> **Release 0.6.5:** [Release notes and downloads](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.5) add saved video quality selection with a **720p default**, plus streaming, video-startup and timed-lyrics recovery fixes. macOS supports **13 Ventura or newer**, on **Apple Silicon and Intel**. Homebrew selects the correct architecture. Windows x64 and Linux x64 packages are also available below.
+> **Downloads (verified 2026-11-05):** [macOS **v0.6.5**](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.5) · [Windows / Linux **v0.6.4**](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.4). The links below point to published packages for each platform. See [all releases](https://github.com/mreasonyang/ytmgo/releases) for other versions.
 
 ---
 
-## Installation & Updates
+## Supported Platforms & Installation
 
-### Homebrew (macOS)
+| Platform | Architectures | OS / Runtime Requirements | Installation Entry |
+| --- | --- | --- | --- |
+| **macOS** | Apple Silicon (`arm64`), Intel (`x86_64` / `amd64`) | **macOS 13 Ventura or newer** (no extra runtime dependencies) | `brew install --cask mreasonyang/taps/ytmgo` or signed & notarized `.dmg` / `.zip` from [Latest Release](https://github.com/mreasonyang/ytmgo/releases/latest) |
+| **Windows** | x64 (`amd64` / `x86_64`) | Current **Microsoft Edge WebView2 Runtime** (`>= 101.0.1210.39`); installer is per-user and **not Authenticode signed** | Setup `.exe` or portable `.zip` from [Windows downloads](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.4) |
+| **Linux** | x64 (`amd64` / `x86_64`) | **Ubuntu 24.04 x64** smoke-test baseline (or compatible distro with **GTK 3**, **WebKitGTK 4.1 `>= 2.50.2`**, **`libsecret >= 0.19` + running Secret Service**, and a desktop display/audio session) | `.deb` (`sudo apt install`) or portable `.tar.gz` from [Linux downloads](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.4) |
+
+- **Published architectures:** Windows ARM64 and Linux ARM64 packages are not published.
+- **Self-contained end-user bundles:** Installed packages include the native playback script host, minimal FFmpeg 9.0.2, login helper, and `legal/` notices. End users do **not** need Go, Rust, Python, C compilers, Node.js, or npm.
+
+### macOS (Homebrew & Direct Download)
+
+#### Homebrew (`mreasonyang/homebrew-taps`)
 
 ```sh
 brew install --cask mreasonyang/taps/ytmgo
 ```
 
-Requires **macOS 13+ on Apple Silicon or Intel**. Homebrew installs the same signed and notarized app as the direct download. To update:
+Requires **macOS 13 Ventura or newer** on **Apple Silicon (`arm64`) or Intel (`amd64`)**. The cask in [`mreasonyang/homebrew-taps`](https://github.com/mreasonyang/homebrew-taps/blob/main/Casks/ytmgo.rb) downloads the notarized ZIP for its listed version, selects your Mac's architecture automatically, verifies the SHA-256 digest, and installs Developer ID signed and Apple-notarized `ytmGO.app` into `/Applications`. To update via Homebrew:
 
 ```sh
 brew update
 brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 ```
 
-The app also supports in-app updates. Quit ytmGO before switching installation methods; if a manually installed copy already exists, back it up and move it out of `/Applications` before installing with Homebrew. `brew uninstall --cask ytmgo` keeps account data and preferences. See [Homebrew maintenance](docs/HOMEBREW.md).
+Quit ytmGO before switching between manual and Homebrew installation; if a manually installed copy already exists in `/Applications`, back it up and move it out before the first Homebrew install (do not use `--force` to overwrite it). `brew uninstall --cask ytmgo` keeps your encrypted account session and preferences. See [docs/HOMEBREW.md](docs/HOMEBREW.md).
 
-### macOS Prebuilt Release
+#### Direct Download (DMG / ZIP)
 
-1. Download the signed and notarized [Apple Silicon DMG](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-0.6.5-arm64-notarized.dmg) or [Intel DMG](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-0.6.5-amd64-notarized.dmg) (requires **macOS 13+**).
-2. Drag the app into a writable `/Applications` directory before launching (running directly from a read-only mounted DMG prevents in-place updates).
-3. When installed in a writable location, ytmGO checks for updates automatically (earliest 10 seconds after launch, then once per day) and manually via **ytmGO → Check for Updates…**.
-4. The native update window supports **Install Update**, **Later**, **Skip**, and optional automatic downloads, relaunching to replace the app bundle in place while keeping your encrypted account session, library snapshot, and preferences.
-   - *Note:* Version `0.4.0` did not include an updater and requires a one-time manual installation of `0.5.0` or newer.
+1. From [Latest Release](https://github.com/mreasonyang/ytmgo/releases/latest), download the signed and notarized package matching your Mac's CPU (requires **macOS 13+**):
+   - **Apple Silicon (`arm64`):** [ytmgo-0.6.5-arm64-notarized.dmg](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-0.6.5-arm64-notarized.dmg) · [ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-0.6.5-arm64-notarized.zip)
+   - **Intel (`x86_64` / `amd64`):** [ytmgo-0.6.5-amd64-notarized.dmg](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-0.6.5-amd64-notarized.dmg) · [ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-0.6.5-amd64-notarized.zip)
+2. Mount the DMG or extract the ZIP, then copy `ytmGO.app` into a writable `/Applications` directory before launching (running directly from a read-only mounted DMG volume or read-only location prevents in-place updates).
 
-### Windows and Linux
+### Windows x64 (`amd64`)
 
-| Platform | Downloads | Requirements |
-| --- | --- | --- |
-| Windows x64 | [Setup EXE](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-setup-0.6.5-amd64.exe) · [Portable ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-0.6.5-windows-amd64.zip) | WebView2 Runtime; installer is not Authenticode signed |
-| Linux x64 | [DEB](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo_0.6.5_amd64.deb) · [tar.gz](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.5/ytmgo-0.6.5-linux-amd64.tar.gz) | Ubuntu 24.04 or compatible GTK 3/WebKitGTK 4.1 2.50.2+ and Secret Service |
+From the published [Windows release](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.4):
 
-For the DEB, run `sudo apt install ./ytmgo_0.6.5_amd64.deb`, then launch ytmGO from the applications menu. Extract portable archives completely and keep the `runtime`, `login`, `legal` and other resources beside the executable. Both platforms have Ed25519-signed in-app update archives. See [installation and release details](docs/DESKTOP_RELEASES.md).
+- **Per-User Installer (`ytmgo-setup-<version>-amd64.exe`):** Download [ytmgo-setup-0.6.4-amd64.exe](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-setup-0.6.4-amd64.exe) and run it. The installer runs per user and is **not Microsoft Authenticode signed** (Windows SmartScreen may prompt on first run).
+- **Portable Archive (`ytmgo-<version>-windows-amd64.zip`):** Download [ytmgo-0.6.4-windows-amd64.zip](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-0.6.4-windows-amd64.zip), extract the **complete** archive into a writable directory, and launch `ytmGO.exe` there. Keep `runtime/`, `login/`, `legal/`, and all other packaged resource directories beside `ytmGO.exe`.
+- **Runtime Dependency:** A current [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) (`>= 101.0.1210.39`) is required for Google sign-in and anonymous/non-Premium playback proof generation. If it is missing, install the Evergreen Runtime from Microsoft's download page.
+
+### Linux x64 (`amd64`)
+
+From the published [Linux release](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.4):
+
+- **Debian / Ubuntu DEB (`ytmgo_<version>_amd64.deb`):** Built and smoke-tested on **Ubuntu 24.04 x64**. Download [ytmgo_0.6.4_amd64.deb](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo_0.6.4_amd64.deb) and install via `apt` so system dependencies are resolved:
+  ```sh
+  sudo apt install ./ytmgo_0.6.4_amd64.deb
+  ```
+  Launch **ytmGO** from the desktop applications menu or run `/opt/ytmgo/ytmgo`. Because the DEB installs under root-owned `/opt/ytmgo`, update a DEB installation by installing the newer `.deb` with `apt`.
+- **Portable Tarball (`ytmgo-<version>-linux-amd64.tar.gz`):** Download [ytmgo-0.6.4-linux-amd64.tar.gz](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-0.6.4-linux-amd64.tar.gz), extract its **complete** contents into a user-writable directory, and run `./ytmgo` from that directory. Keep `runtime/`, `login/`, `legal/`, and all other packaged resource directories alongside `./ytmgo`.
+- **Runtime Dependencies:** Requires a working desktop display and audio session, **GTK 3**, **WebKitGTK 4.1 (`>= 2.50.2`)**, and **`libsecret` (`>= 0.19`) with a running Secret Service** daemon. The DEB declares `libwebkit2gtk-4.1-0 (>= 2.50.2)` and `libsecret-1-0 (>= 0.19)`; other distributions must provide compatible shared libraries (the Linux build is not a statically linked universal binary).
+
+### In-App Updates, Signing & Data Retention
+
+- **Automatic & Manual Updates:** When running from a user-writable directory, ytmGO checks for updates automatically (earliest 10 seconds after launch, then once per day) and manually via **ytmGO → Check for Updates…**. The native update window supports **Install Update**, **Later**, **Skip**, and optional automatic downloads, replacing the application in place while retaining your encrypted account session (`account/session.enc`), library snapshot, playback bookmark, and preferences. Update system-owned Linux DEB installations by installing the newer `.deb` with `apt`. (Version `0.4.0` did not include an updater and requires a one-time manual installation of `0.5.0` or newer.)
+- **Update Signatures vs. OS Code Signing:** Each published target (`darwin-arm64`, `darwin-amd64`, `windows-amd64`, `linux-amd64`) provides an `update-<platform>.json` manifest carrying the `.tar.gz` update archive URL and its **Ed25519 signature**, verified against the embedded public key in `mygo.json` before applying an update. On macOS, the app bundle and DMG are also **Developer ID signed, notarized, and stapled**; on Windows, Ed25519 update-archive signing verifies updater payloads only and does **not** mean the installer or `.exe` is Microsoft Authenticode signed.
+- **Release & Packaging Guides:** See [Windows and Linux release details](docs/DESKTOP_RELEASES.md), [Homebrew maintenance](docs/HOMEBREW.md), and [macOS Actions Guide](docs/MACOS_ACTIONS.md).
 
 ---
 
@@ -125,7 +152,7 @@ For the DEB, run `sudo apt install ./ytmgo_0.6.5_amd64.deb`, then launch ytmGO f
 
 Detailed design specifications live in [DESIGN.md](DESIGN.md); historical and local verification records live in [VERIFICATION.md](VERIFICATION.md) and [docs/AUTO_UPDATE_VERIFICATION.md](docs/AUTO_UPDATE_VERIFICATION.md). Current boundaries to keep in mind:
 
-- **Platform Acceptance:** On 2026-11-04 at commit `8c88037`, both 3-platform GitHub Actions suites—[Native playback runtime](https://github.com/mreasonyang/ytmgo/actions/runs/41800458515) and [Native account login](https://github.com/mreasonyang/ytmgo/actions/runs/41800458464)—passed across macOS, Windows, and Linux. The Windows/Linux [package workflow](https://github.com/mreasonyang/ytmgo/actions/runs/41834832878) additionally builds on the corresponding OS, installs the NSIS/DEB package and verifies installed resources and startup in an empty account profile. Real signed-in playback, complete native UI interaction, hardware audio and prior-version Windows/Linux upgrades remain outside that smoke-test scope; the Mac acceptance records are separate.
+- **Platform Acceptance:** On 2026-11-04, both 3-platform GitHub Actions suites—[Native playback runtime](https://github.com/mreasonyang/ytmgo/actions/runs/41800458515) and [Native account login](https://github.com/mreasonyang/ytmgo/actions/runs/41800458464)—passed across macOS, Windows, and Linux. For **v0.6.4** ([audit record](docs/audits/2026-11-04-macos-compat-0.6.4/README.md)), native packaging, Developer ID signing/notarization/stapling, Gatekeeper checks, helper execution, empty-profile startup, and [actual Homebrew cask installs](https://github.com/mreasonyang/homebrew-taps/actions/runs/41850617166) passed on both **macOS 27 Apple Silicon (`arm64`)** and **macOS 15 Intel (`amd64`)**, alongside an [Intel synthetic WebView login lifecycle run](https://github.com/mreasonyang/ytmgo/actions/runs/41848250319), a [public 0.6.3 → 0.6.4 ARM upgrade](https://github.com/mreasonyang/ytmgo/actions/runs/41850200341), and the [Windows/Linux native package workflow](https://github.com/mreasonyang/ytmgo/actions/runs/41849890402) (which builds on the target OS, installs the NSIS/DEB package, and verifies installed resources and empty-profile startup). However, **CI and native package install/startup smoke tests are not live signed-in playback, complete native UI interaction, hardware audio output, or version-to-version upgrade acceptance on Windows, Linux, or Intel macOS**; likewise, verifying a **macOS 13.0 deployment target** across all shipped Mach-O binaries is **not** physical runtime acceptance on macOS 13 or macOS 14.
 - **Account Tiers & Advertising:** Anonymous full-track playback and real **YouTube Music Premium** browsing, library restoration, and playback have been verified on macOS. **Standard (free/non-Premium) accounts** and **official advertising flows** are **not** accepted: ytmGO does not implement official ad asset sequencing or ad progress reporting, does not simulate ads with artificial wait timers, and does not treat public track playback as ad-flow validation.
 - **Memory Footprint:** Low-memory optimization is **not** claimed complete. The current workspace has no new whole-app memory benchmark; dated measurements for earlier builds are recorded in [VERIFICATION.md](VERIFICATION.md), and historical Node-based figures are not comparable to the current runtime.
 - **Global Shortcuts & Long-Run Stability:** In-app shortcuts (`Space`, `⌘K`, etc.) and UI Tester state machines pass, but physical global shortcut key injection (`⇧⌘Space`) has not yet been confirmed end-to-end on macOS. Local E2E runs also recorded isolated transient playback errors (`audio_stream_failed`, `bootstrap_network_timeout`) that recovered via **Retry** whose upstream/network root causes remain open. Crash/force-kill persistence, sleep/wake endurance, and multi-day stability are not yet certified.
@@ -134,14 +161,13 @@ Detailed design specifications live in [DESIGN.md](DESIGN.md); historical and lo
 
 ## Building & Development
 
-### Prerequisites
+### Build-Time Prerequisites vs. End-User Runtime Dependencies
 
-- **All platforms:** Go **1.27.3+**, Rust/Cargo, Python 3, and a C compiler toolchain.
-- **macOS:** Xcode Command Line Tools (`darwin/arm64` and `darwin/amd64` releases target **macOS 13+**).
-- **Windows:** MSYS2 UCRT64 (`gcc`, `make`, `diffutils`) for building minimal FFmpeg, plus Microsoft Edge WebView2 Runtime at runtime.
-- **Linux:** `build-essential`, `pkg-config`, `nasm`, GTK 3, `libwebkit2gtk-4.1-dev` (`>= 2.50.2`), `libsoup-3.0-dev`, and `libsecret-1-dev` (plus `xvfb`, `xauth`, and `dbus-x11` for headless runtime tests).
-
-Installed application bundles do not require Node.js, npm, Rust, or Python.
+- **Compiling from source (all platforms):** Go **1.27.3+**, Rust/Cargo, Python 3, and a C compiler toolchain.
+- **macOS build host:** Xcode Command Line Tools (`darwin/arm64` and `darwin/amd64` builds target **macOS 13.0+** via `MACOSX_DEPLOYMENT_TARGET=13.0`).
+- **Windows x64 build host:** MSYS2 UCRT64 (`gcc`, `make`, `diffutils`) for compiling minimal FFmpeg, plus Microsoft Edge WebView2 Runtime when running the built app.
+- **Linux x64 build host:** `build-essential`, `pkg-config`, `nasm`, `libgtk-3-dev`, `libwebkit2gtk-4.1-dev` (`>= 2.50.2`), `libsoup-3.0-dev`, and `libsecret-1-dev` (plus `xvfb`, `xauth`, and `dbus-x11` for headless runtime tests).
+- **End-user runtime only:** Installed prebuilt releases do **not** require Go, Rust, Python, C compilers, MSYS2, `-dev` headers, Node.js, or npm—only the target OS runtime requirements listed under [Supported Platforms & Installation](#supported-platforms--installation).
 
 ### Common Commands
 
@@ -149,25 +175,30 @@ Installed application bundles do not require Node.js, npm, Rust, or Python.
 # Run Go tests, runtime/login/license checks, go vet, and 4-language i18n check
 make check
 
-# Build the packaged app and DMG (macOS arm64 outputs to build/darwin-arm64/)
+# Build the packaged application and installer for the current host into build/<os>-<arch>/
 make build
-open build/darwin-arm64/ytmGO.app
 
-# Build the app bundle without DMG and compile cmd/update-package
+# Build the application bundle (skipping macOS DMG) and compile cmd/update-package
 make build-app
 
 # Run in development mode (prepares build/runtime and build/login first)
 make dev
 ```
 
-Local `make build` produces `build/darwin-arm64/ytmGO.app` and `build/darwin-arm64/ytmgo-0.6.3-arm64.dmg` with ad-hoc app signing and an unsigned DMG. Note that when a local rebuild changes the ad-hoc code-signing identity on macOS, Keychain may ask you to re-authorize access to `account-session-key`. For GitHub Actions Developer ID signing, Apple notarization, and signed update feed publishing, see [macOS Actions Guide](docs/MACOS_ACTIONS.md).
+`make build` stages `build/runtime`, `build/login`, and `build/legal` for the current host OS/architecture and outputs to `build/<os>-<arch>/` using the version in `mygo.json` (currently `0.6.5`):
 
-Packaged builds also support non-interactive maintenance flags that exit before starting the music window or accessing account storage:
+- **macOS (`darwin/<arch>`):** Produces `build/darwin-<arch>/ytmGO.app` and `build/darwin-<arch>/ytmgo-<version>-<arch>.dmg` with ad-hoc app signing (`-`) and an unsigned DMG. For example, on Apple Silicon (`darwin/arm64`) at source version `0.6.5`, it writes `build/darwin-arm64/ytmGO.app` and `build/darwin-arm64/ytmgo-0.6.5-arm64.dmg` (launch on macOS with `open build/darwin-arm64/ytmGO.app`). When a local rebuild changes the ad-hoc signing identity on macOS, Keychain may prompt to re-authorize access to `account-session-key`.
+- **Linux (`linux/amd64`):** Outputs `build/linux-amd64/ytmgo` and `build/linux-amd64/ytmgo_<version>_amd64.deb` (launch directly on Linux with `./build/linux-amd64/ytmgo`).
+- **Windows (`windows/amd64`):** Outputs `build/windows-amd64/ytmGO.exe` and `build/windows-amd64/ytmgo-setup-<version>-amd64.exe` (launch on Windows with `.\build\windows-amd64\ytmGO.exe`).
+
+For GitHub Actions Developer ID signing, Apple notarization, native Windows/Linux packaging, and signed update feed publishing, see [macOS Actions Guide](docs/MACOS_ACTIONS.md) and [Windows and Linux releases](docs/DESKTOP_RELEASES.md).
+
+Packaged executables on all platforms also support non-interactive maintenance flags that exit before starting the music window or accessing account storage (shown below for macOS; use `/opt/ytmgo/ytmgo` or `./ytmgo` on Linux, and `ytmGO.exe` on Windows):
 
 ```sh
-/path/to/ytmGO.app/Contents/MacOS/ytmGO --version
-/path/to/ytmGO.app/Contents/MacOS/ytmGO --check-for-updates
-/path/to/ytmGO.app/Contents/MacOS/ytmGO --install-update
+/Applications/ytmGO.app/Contents/MacOS/ytmGO --version
+/Applications/ytmGO.app/Contents/MacOS/ytmGO --check-for-updates
+/Applications/ytmGO.app/Contents/MacOS/ytmGO --install-update
 ```
 
 ### Repository Layout & Targeted Tests

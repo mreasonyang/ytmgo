@@ -1,12 +1,12 @@
 # Homebrew
 
-Install the macOS Apple Silicon release:
+Install the macOS Apple Silicon or Intel release:
 
 ```sh
 brew install --cask mreasonyang/taps/ytmgo
 ```
 
-This uses [mreasonyang/homebrew-taps](https://github.com/mreasonyang/homebrew-taps/blob/main/Casks/ytmgo.rb), requires macOS 27 or newer and Apple Silicon, and installs `ytmGO.app`. The cask downloads the notarized release ZIP and verifies its SHA-256. No source build or additional runtime installation is required.
+This uses [mreasonyang/homebrew-taps](https://github.com/mreasonyang/homebrew-taps/blob/main/Casks/ytmgo.rb), requires macOS 13 or newer on Apple Silicon or Intel, and installs `ytmGO.app`. The cask downloads the notarized release ZIP and verifies its SHA-256. No source build or additional runtime installation is required.
 
 ```sh
 brew update
@@ -19,7 +19,7 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 
 The tap's **Update ytmGO cask** workflow checks the latest public stable release every six hours and can also be dispatched after a release. It needs only its own repository's built-in `GITHUB_TOKEN` to commit the cask; release downloads are anonymous. No extra cross-repository token is required.
 
-The generator accepts stable `0.6.X` releases starting at `0.6.3`, refuses downgrades, checks the source revision, signing/notarization/update flags and platform in `build.json`, and requires the ZIP digest to match both GitHub's asset digest and the published `SHA256SUMS`. Metadata downloads are also checked against their asset digests. A change to the release version series, bundle name or minimum macOS requires reviewing the generator and cask together.
+The generator accepts stable `0.6.X` releases starting at `0.6.4`, refuses downgrades, checks the source revision, signing/notarization/update flags and architecture/minimum macOS in both `build.json` and `build-amd64.json`, and requires each architecture's ZIP digest to match both GitHub's asset digest and the published `SHA256SUMS`. Metadata downloads are also checked against their asset digests. A change to the release version series, bundle name or minimum macOS requires reviewing the generator and cask together.
 
 For immediate synchronization, run the tap workflow after the notarized release is public:
 
@@ -28,3 +28,5 @@ gh workflow run update-ytmgo.yml --repo mreasonyang/homebrew-taps
 ```
 
 The [Homebrew Cask Cookbook](https://docs.brew.sh/Cask-Cookbook) describes the cask fields; [tap maintenance](https://docs.brew.sh/How-to-Create-and-Maintain-a-Tap) describes the fully qualified install command.
+
+The **Verify native ytmGO Homebrew installation** workflow installs the public cask on separate native macOS 27 Apple Silicon and macOS 15 Intel runners, then checks the installed app, helpers, signatures, stapled ticket, Gatekeeper, startup and every Mach-O deployment target. macOS 13/14 runtime acceptance remains separate from the macOS 13 deployment target.

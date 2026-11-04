@@ -1,0 +1,48 @@
+{
+  "name": "ytmGO",
+  "slug": "ytmgo",
+  "identifier": "si.kyun.ytmgo",
+  "copyright": "Copyright 2026 ytmgo contributors",
+  "version": "0.6.4",
+  "updates": {
+    "publicKey": "QdNGPq3cMZgxGD4axj0uOJFhUy6hHpmR710PRm3oovE=",
+    "github": "mreasonyang/ytmgo",
+    "deltas": 0
+  },
+  "out": "build",
+  "icon": "resources/icon.png",
+  "macos": {
+    "minimumSystemVersion": "13.0",
+    "signingIdentity": "-",
+    "infoPlist": {
+      "CFBundleName": "ytmGO",
+      "CFBundleDisplayName": "ytmGO",
+      "NSHighResolutionCapable": true
+    }
+  },
+  "windows": {
+    "displayName": "ytmGO"
+  },
+  "linux": {
+    "comment": "YouTube Music desktop client powered by MyGo",
+    "categories": [
+      "AudioVideo",
+      "Audio",
+      "Player"
+    ],
+    "webview": true,
+    "depends": [
+      "libwebkit2gtk-4.1-0 (>= 2.50.2)",
+      "libsecret-1-0 (>= 0.19)"
+    ]
+  },
+  "i18n": {
+    "dir": "locales",
+    "source": "en"
+  },
+  "resources": [
+    "build/runtime",
+    "build/login",
+    "build/legal"
+  ]
+}

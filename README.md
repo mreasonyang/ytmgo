@@ -2,11 +2,11 @@
 
 **English** · [简体中文](README.zh-CN.md)
 
-**ytmGO** is a native desktop client for YouTube Music (version baseline **0.6.3**). The user-facing brand is **ytmGO**, while the repository, release artifact prefix, bundle identifier (`si.kyun.ytmgo`), helper identifiers, and local data directories retain the technical name `ytmgo`.
+**ytmGO** is a native desktop client for YouTube Music (version baseline **0.6.4**). The user-facing brand is **ytmGO**, while the repository, release artifact prefix, bundle identifier (`si.kyun.ytmgo`), helper identifiers, and local data directories retain the technical name `ytmgo`.
 
 The music interface is drawn natively in Go with **MyGo 0.7.1** (`ui.View`)—there is no embedded web music page, HTML/CSS/JS UI bridge, Electron runtime, or bundled Node.js. Go handles YouTube Music catalogue requests, session verification, format selection, and bounded media streaming; MyGo outputs decoded audio to the system audio device, and an on-demand native decoder renders video only while a video view is visible.
 
-> **Release 0.6.3:** [Release notes and downloads](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.3) for **macOS arm64**, **Windows x64** and **Linux x64**. This release includes the native lyrics, library snapshot, restart restoration and ytmGO branding updates described below. See [Mac release verification](docs/audits/2026-11-04-release-0.6.3/README.md) and [Windows/Linux package verification](docs/audits/2026-11-04-desktop-release-0.6.3/README.md) for acceptance scope.
+> **Release 0.6.4:** [Release notes and downloads](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.4) lower the macOS minimum to **13 Ventura** and add native **Intel** packages alongside Apple Silicon. Homebrew selects the correct architecture. [Compatibility and release verification](docs/audits/2026-11-04-macos-compat-0.6.4/README.md). Windows x64 and Linux x64 packages are also available below.
 
 ---
 
@@ -18,7 +18,7 @@ The music interface is drawn natively in Go with **MyGo 0.7.1** (`ui.View`)—th
 brew install --cask mreasonyang/taps/ytmgo
 ```
 
-Requires **macOS 27+ on Apple Silicon**. Homebrew installs the same signed and notarized app as the direct download. To update:
+Requires **macOS 13+ on Apple Silicon or Intel**. Homebrew installs the same signed and notarized app as the direct download. To update:
 
 ```sh
 brew update
@@ -29,7 +29,7 @@ The app also supports in-app updates. Quit ytmGO before switching installation m
 
 ### macOS Prebuilt Release
 
-1. Download the signed and notarized DMG from [GitHub Releases](https://github.com/mreasonyang/ytmgo/releases/latest) (requires **macOS 27+**, **Apple Silicon / `arm64`**).
+1. Download the signed and notarized [Apple Silicon DMG](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-0.6.4-arm64-notarized.dmg) or [Intel DMG](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-0.6.4-amd64-notarized.dmg) (requires **macOS 13+**).
 2. Drag the app into a writable `/Applications` directory before launching (running directly from a read-only mounted DMG prevents in-place updates).
 3. When installed in a writable location, ytmGO checks for updates automatically (earliest 10 seconds after launch, then once per day) and manually via **ytmGO → Check for Updates…**.
 4. The native update window supports **Install Update**, **Later**, **Skip**, and optional automatic downloads, relaunching to replace the app bundle in place while keeping your encrypted account session, library snapshot, and preferences.
@@ -39,10 +39,10 @@ The app also supports in-app updates. Quit ytmGO before switching installation m
 
 | Platform | Downloads | Requirements |
 | --- | --- | --- |
-| Windows x64 | [Setup EXE](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.3/ytmgo-setup-0.6.3-amd64.exe) · [Portable ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.3/ytmgo-0.6.3-windows-amd64.zip) | WebView2 Runtime; installer is not Authenticode signed |
-| Linux x64 | [DEB](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.3/ytmgo_0.6.3_amd64.deb) · [tar.gz](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.3/ytmgo-0.6.3-linux-amd64.tar.gz) | Ubuntu 24.04 or compatible GTK 3/WebKitGTK 4.1 2.50.2+ and Secret Service |
+| Windows x64 | [Setup EXE](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-setup-0.6.4-amd64.exe) · [Portable ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-0.6.4-windows-amd64.zip) | WebView2 Runtime; installer is not Authenticode signed |
+| Linux x64 | [DEB](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo_0.6.4_amd64.deb) · [tar.gz](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-0.6.4-linux-amd64.tar.gz) | Ubuntu 24.04 or compatible GTK 3/WebKitGTK 4.1 2.50.2+ and Secret Service |
 
-For the DEB, run `sudo apt install ./ytmgo_0.6.3_amd64.deb`, then launch ytmGO from the applications menu. Extract portable archives completely and keep the `runtime`, `login`, `legal` and other resources beside the executable. Both platforms have Ed25519-signed in-app update archives. See [installation and release details](docs/DESKTOP_RELEASES.md).
+For the DEB, run `sudo apt install ./ytmgo_0.6.4_amd64.deb`, then launch ytmGO from the applications menu. Extract portable archives completely and keep the `runtime`, `login`, `legal` and other resources beside the executable. Both platforms have Ed25519-signed in-app update archives. See [installation and release details](docs/DESKTOP_RELEASES.md).
 
 ---
 
@@ -137,7 +137,7 @@ Detailed design specifications live in [DESIGN.md](DESIGN.md); historical and lo
 ### Prerequisites
 
 - **All platforms:** Go **1.27.3+**, Rust/Cargo, Python 3, and a C compiler toolchain.
-- **macOS:** Xcode Command Line Tools (`darwin/arm64` release packaging targets **macOS 27+**).
+- **macOS:** Xcode Command Line Tools (`darwin/arm64` and `darwin/amd64` releases target **macOS 13+**).
 - **Windows:** MSYS2 UCRT64 (`gcc`, `make`, `diffutils`) for building minimal FFmpeg, plus Microsoft Edge WebView2 Runtime at runtime.
 - **Linux:** `build-essential`, `pkg-config`, `nasm`, GTK 3, `libwebkit2gtk-4.1-dev` (`>= 2.50.2`), `libsoup-3.0-dev`, and `libsecret-1-dev` (plus `xvfb`, `xauth`, and `dbus-x11` for headless runtime tests).
 

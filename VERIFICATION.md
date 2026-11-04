@@ -1,5 +1,16 @@
 # Native playback verification
 
+## 0.6.4 macOS 13 target and Intel — 2026-11-04 (Asia/Shanghai)
+
+PASS for packaging and native startup. Both Apple Silicon and Intel releases
+are Developer ID signed, notarized and stapled. Every shipped Mach-O targets
+macOS 13 or earlier. Native installation, helper execution, Gatekeeper and
+startup passed on macOS 27 ARM and macOS 15 Intel; real Homebrew installs from
+the public ZIPs passed on both CPUs. Intel synthetic WebView lifecycle passed.
+Public updater signatures and a public 0.6.3 → 0.6.4 ARM upgrade also passed.
+macOS 13/14 runtime acceptance and Intel real-account/hardware-audio E2E remain
+unverified. [Evidence, source and limitations](docs/audits/2026-11-04-macos-compat-0.6.4/README.md).
+
 ## Windows/Linux 0.6.3 packages — 2026-11-04 (Asia/Shanghai)
 
 Windows x64 NSIS/portable ZIP and Linux x64 DEB/tar packages are now published

@@ -1,0 +1,17 @@
+{
+  "native/account-login": {
+    "release": "e4b3726987a5a178d29b679ac72b9a070f053d71",
+    "intel_fixture_test": "e4b3726987a5a178d29b679ac72b9a070f053d71",
+    "identical": true
+  },
+  "scripts/login": {
+    "release": "aca8e3c44abaafa29eeccc889896436678dc4731",
+    "intel_fixture_test": "aca8e3c44abaafa29eeccc889896436678dc4731",
+    "identical": true
+  },
+  "mygo.json": {
+    "release": "62a1934e011e8120e847f12ebfc3698b0cab3841",
+    "intel_fixture_test": "62a1934e011e8120e847f12ebfc3698b0cab3841",
+    "identical": true
+  }
+}

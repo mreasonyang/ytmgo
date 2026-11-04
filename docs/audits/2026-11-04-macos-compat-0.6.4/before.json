@@ -1,0 +1,35 @@
+{
+  "installed_version": "0.6.3",
+  "app_plist_minimum": "27.0",
+  "binaries": [
+    {
+      "path": "Contents/MacOS/ytmGO",
+      "minimum_macos": "13.0"
+    },
+    {
+      "path": "Contents/Resources/runtime/ytmgo-playback-host",
+      "minimum_macos": "11.0"
+    },
+    {
+      "path": "Contents/Resources/runtime/ffmpeg",
+      "minimum_macos": "27.0"
+    },
+    {
+      "path": "Contents/Resources/login/ytmgo Account Login.app/Contents/MacOS/ytmgo-account-login",
+      "minimum_macos": "11.0"
+    }
+  ],
+  "target_minimum": "13.0",
+  "target_architectures": [
+    "arm64",
+    "amd64"
+  ],
+  "macos_13_14_runtime_acceptance": false,
+  "initial_fix_source": "18093362da658e3ccb21f63ab9b388de3df51b68",
+  "initial_validation_plan": "macOS 15",
+  "release_source": "23b4118cd459de7f12ebcee734cbd99e704f6457",
+  "actual_native_acceptance_hosts": [
+    "macOS 27.0.1 arm64",
+    "macOS 15.7.9 amd64"
+  ]
+}

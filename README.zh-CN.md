@@ -2,11 +2,11 @@
 
 [English](README.md) · **简体中文**
 
-**ytmGO** 是基于 **MyGo 0.7.1 原生 UI** 构建的 YouTube Music 桌面客户端（当前版本基线 **0.6.3**）。应用对外品牌显示名统一为 **ytmGO**；仓库名、发行文件前缀、Bundle ID（`si.kyun.ytmgo`）、内部辅助进程标识以及本地用户数据目录保留技术标识 `ytmgo`。
+**ytmGO** 是基于 **MyGo 0.7.1 原生 UI** 构建的 YouTube Music 桌面客户端（当前版本基线 **0.6.4**）。应用对外品牌显示名统一为 **ytmGO**；仓库名、发行文件前缀、Bundle ID（`si.kyun.ytmgo`）、内部辅助进程标识以及本地用户数据目录保留技术标识 `ytmgo`。
 
 音乐主界面与播放控件完全由 Go 通过 MyGo `ui.View` 原生绘制，不包含内嵌网页音乐页面、HTML/CSS/JS 界面桥接、Electron 或 Node.js 运行时。曲库访问、账号状态核验、媒体格式选择与有界流式传输由 Go 直接处理；音频由 MyGo 输出到系统音频设备，视频仅在打开视频视图时由独立原生解码器按需渲染。
 
-> **0.6.3 正式版：** [发布说明与下载](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.3)，提供 **macOS arm64、Windows x64、Linux x64** 安装包。本版包含下文介绍的原生歌词、曲库快照、重启恢复和 ytmGO 品牌统一更新。验收范围分别见 [Mac 发布记录](docs/audits/2026-11-04-release-0.6.3/README.md)和 [Windows/Linux 包记录](docs/audits/2026-11-04-desktop-release-0.6.3/README.md)。
+> **0.6.4 正式版：** [发布说明与下载](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.4)，将 macOS 最低版本降至 **13 Ventura**，新增原生 **Intel** 安装包，同时提供 Apple Silicon 包。Homebrew 会按架构选择安装包。[兼容性与发布验收](docs/audits/2026-11-04-macos-compat-0.6.4/README.md)。Windows x64、Linux x64 安装方式见下文。
 
 ---
 
@@ -18,7 +18,7 @@
 brew install --cask mreasonyang/taps/ytmgo
 ```
 
-要求 **macOS 27+、Apple Silicon**，安装的应用与直接下载版使用相同的签名和公证产物。更新命令：
+要求 **macOS 13+，支持 Apple Silicon 和 Intel**，安装的应用与直接下载版使用相同的签名和公证产物。更新命令：
 
 ```sh
 brew update
@@ -29,7 +29,7 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 
 ### macOS 正式安装包
 
-1. 前往 [GitHub Releases](https://github.com/mreasonyang/ytmgo/releases/latest) 下载已签名并公证的 macOS 安装包（系统要求 **macOS 27+**，仅限 **Apple Silicon / `arm64`**）。
+1. 下载已签名并公证的 [Apple Silicon DMG](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-0.6.4-arm64-notarized.dmg) 或 [Intel DMG](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-0.6.4-amd64-notarized.dmg)，系统要求 **macOS 13+**。
 2. 将应用从 DMG 拖入可写的 `/Applications` 目录后再运行（直接在只读 DMG 卷内运行无法完成原地自我替换更新）。
 3. 安装到可写目录后，应用会在启动后最早 10 秒自动检查更新（之后每日检查一次），也可随时通过菜单 **ytmGO → 检查更新（Check for Updates…）** 手动触发。
 4. 原生更新窗口支持立即安装、稍后提醒、跳过此版本以及可选的自动下载；下载完成后点击重启即可原地替换 App bundle，并保留已保存的加密账号会话、曲库快照和个性化设置。
@@ -39,10 +39,10 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 
 | 平台 | 下载 | 要求 |
 | --- | --- | --- |
-| Windows x64 | [安装器 EXE](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.3/ytmgo-setup-0.6.3-amd64.exe) · [便携 ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.3/ytmgo-0.6.3-windows-amd64.zip) | 需要 WebView2 Runtime；安装器尚未进行 Authenticode 签名 |
-| Linux x64 | [DEB](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.3/ytmgo_0.6.3_amd64.deb) · [解压包](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.3/ytmgo-0.6.3-linux-amd64.tar.gz) | Ubuntu 24.04 或兼容系统，需要 GTK 3、WebKitGTK 4.1 2.50.2+ 和 Secret Service |
+| Windows x64 | [安装器 EXE](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-setup-0.6.4-amd64.exe) · [便携 ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-0.6.4-windows-amd64.zip) | 需要 WebView2 Runtime；安装器尚未进行 Authenticode 签名 |
+| Linux x64 | [DEB](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo_0.6.4_amd64.deb) · [解压包](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.4/ytmgo-0.6.4-linux-amd64.tar.gz) | Ubuntu 24.04 或兼容系统，需要 GTK 3、WebKitGTK 4.1 2.50.2+ 和 Secret Service |
 
-DEB 使用 `sudo apt install ./ytmgo_0.6.3_amd64.deb` 安装，再从应用菜单启动。便携包需完整解压，将 `runtime`、`login`、`legal` 等资源目录保留在可执行文件旁。两个平台的应用内更新归档均带 Ed25519 签名。[详细安装与发布说明](docs/DESKTOP_RELEASES.md)
+DEB 使用 `sudo apt install ./ytmgo_0.6.4_amd64.deb` 安装，再从应用菜单启动。便携包需完整解压，将 `runtime`、`login`、`legal` 等资源目录保留在可执行文件旁。两个平台的应用内更新归档均带 Ed25519 签名。[详细安装与发布说明](docs/DESKTOP_RELEASES.md)
 
 ---
 
@@ -137,7 +137,7 @@ DEB 使用 `sudo apt install ./ytmgo_0.6.3_amd64.deb` 安装，再从应用菜�
 ### 构建依赖
 
 - **通用要求：** Go **1.27.3+**、Rust/Cargo、Python 3 与 C 编译工具链。
-- **macOS：** Xcode Command Line Tools（`darwin/arm64` 正式打包最低系统要求为 **macOS 27.0**）。
+- **macOS：** Xcode Command Line Tools（`darwin/arm64` 与 `darwin/amd64` 正式包目标最低系统为 **macOS 13.0**）。
 - **Windows：** 使用 MSYS2 UCRT64（`gcc`、`make`、`diffutils`）编译精简 FFmpeg；运行安装后的应用需 Microsoft Edge WebView2 Runtime。
 - **Linux：** `build-essential`、`pkg-config`、`nasm`、GTK 3、`libwebkit2gtk-4.1-dev`（`>= 2.50.2`）、`libsoup-3.0-dev` 与 `libsecret-1-dev`（无头运行测试另需 `xvfb`、`xauth`、`dbus-x11`）。
 

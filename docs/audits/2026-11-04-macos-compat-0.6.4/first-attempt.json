@@ -1,0 +1,12 @@
+{
+  "run": 41842662566,
+  "source": "18093362da658e3ccb21f63ab9b388de3df51b68",
+  "intel_go_tests_and_vet": "PASS",
+  "intel_complete_app_build": "PASS",
+  "intel_offline_runtime_tests": "PASS",
+  "compatibility_startup_gate": "FAIL",
+  "publication": "SKIPPED",
+  "diagnosis": "Popen used a relative bundle executable after changing cwd to the build parent",
+  "repair": "resolve bundle path before native smoke startup; regression test added",
+  "arm_runner": "unassigned queue; switched to existing xcode-27 pool for second attempt"
+}

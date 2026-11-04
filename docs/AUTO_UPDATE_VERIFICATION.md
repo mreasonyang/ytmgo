@@ -1,5 +1,12 @@
 # 自动升级验收
 
+## 0.6.4 — 2026-11-04
+
+**PASS（macOS 包与原生启动）**。最低部署目标降至 macOS 13，新增 Intel 包及独立的 `update-darwin-amd64.json`。ARM 与 Intel 的签名、公证、Gatekeeper、随包组件和原生启动均通过；公开 Homebrew ZIP 在两种架构上实际安装、启动通过。独立公开下载验证了两套更新归档的摘要和 Ed25519 签名，以及全部 Mach-O 的架构与最低版本。
+
+公开 0.6.3 经生产 feed 升级至 0.6.4 后，应用文件、权限及符号链接与独立公开 ZIP 一致，签名及公证票据有效。[升级回执](audits/2026-11-04-macos-compat-0.6.4/public-upgrade-receipt.json) · [完整验收与边界](audits/2026-11-04-macos-compat-0.6.4/README.md)。macOS 13/14 实机和 Intel 真实账号播放 E2E 尚未验证。
+
+
 ## 0.6.3 — 2026-11-04
 
 Windows x64 和 Linux x64 已补充首批原生安装包及各自的 Ed25519 签名更新源。公开下载后的归档签名、平台校验清单及稳定 feed 与版本 feed 的一致性检查通过。两个平台尚无上一正式安装包基线，本轮不宣称完成了真实跨版本更新。[跨平台安装包回执](audits/2026-11-04-desktop-release-0.6.3/public-verification.json)

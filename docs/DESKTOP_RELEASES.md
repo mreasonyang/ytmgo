@@ -30,7 +30,7 @@ For an existing release, dispatch it explicitly:
 
 ```sh
 gh workflow run desktop-package.yml --repo mreasonyang/ytmgo --ref main \
-  -f release_tag=v0.6.3 -f publish_release=true
+  -f release_tag=v0.6.4 -f publish_release=true
 ```
 
 The workflow resolves the public release's `build.json`, checks its GitHub digest and immutable source revision, then checks out that source separately from the current packaging tools. Native Windows/Linux runners build their own FFmpeg, script host, login helper and legal resources. They receive no signing credentials or real accounts. The workflow installs the NSIS/DEB package, verifies installed resources and version, runs the packaged helpers, and checks application startup in an empty account profile.

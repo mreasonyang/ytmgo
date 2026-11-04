@@ -1,0 +1,68 @@
+{
+  "version": "0.6.4",
+  "source": "23b4118cd459de7f12ebcee734cbd99e704f6457",
+  "minimum_macos": "13.0",
+  "architectures": [
+    {
+      "architecture": "arm64",
+      "archive_sha256": "781a365af0b15eb111308d1a5d8ca16e177dc56c995cb2654df1ac9d01df8817",
+      "ed25519_signature": true,
+      "developer_id_signature": true,
+      "notarization_ticket": true,
+      "gatekeeper": true,
+      "binaries": [
+        {
+          "path": "Contents/Resources/login/ytmgo Account Login.app/Contents/MacOS/ytmgo-account-login",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ffmpeg",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ytmgo-playback-host",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/MacOS/ytmGO",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        }
+      ]
+    },
+    {
+      "architecture": "amd64",
+      "archive_sha256": "9b6492daf8435bb7beaf0ef6b8aca4fe55d1d507b52c6f65d3e8fb2b010963d5",
+      "ed25519_signature": true,
+      "developer_id_signature": true,
+      "notarization_ticket": true,
+      "gatekeeper": true,
+      "binaries": [
+        {
+          "path": "Contents/Resources/login/ytmgo Account Login.app/Contents/MacOS/ytmgo-account-login",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ffmpeg",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ytmgo-playback-host",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/MacOS/ytmGO",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        }
+      ]
+    }
+  ],
+  "native_execution": "separate native CI acceptance receipts"
+}

@@ -1,0 +1,10 @@
+{
+  "tools_commit": "3659006",
+  "release_script_tests": 38,
+  "result": "PASS",
+  "release_source": "23b4118cd459de7f12ebcee734cbd99e704f6457",
+  "source_ref": "release/0.6.4-source",
+  "publication_attempt_1": "Draft release creation failed",
+  "publication_attempt_2": "PASS after pinning source reference",
+  "policy_reference": "https://github.blog/changelog/2023-11-02-github-actions-enforcing-workflow-scope-when-creating-a-release/"
+}

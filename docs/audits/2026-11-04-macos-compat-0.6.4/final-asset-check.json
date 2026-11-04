@@ -1,0 +1,8 @@
+{
+  "version": "0.6.4",
+  "source": "23b4118cd459de7f12ebcee734cbd99e704f6457",
+  "public_assets": 22,
+  "mac_assets_unchanged_after_desktop_publication": true,
+  "mac_public_updaters_independently_verified": true,
+  "desktop_signatures_and_installer_acceptance": "PASS in workflow 41849890402; not independently downloaded locally"
+}

@@ -1,0 +1,10 @@
+{
+  "release_script_tests": 36,
+  "login_staging_tests": 10,
+  "licensing_tests": 7,
+  "go_update_package_tests": "PASS",
+  "workflow_yaml": "parsed",
+  "diff_check": "PASS",
+  "release_run": 41845608227,
+  "source": "23b4118cd459de7f12ebcee734cbd99e704f6457"
+}

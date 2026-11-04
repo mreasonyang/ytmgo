@@ -1,6 +1,6 @@
-# ytmgo 0.4 — Native Design Specification
+# ytmGO 0.4 — Native Design Specification
 
-ytmgo is a native MyGo desktop client for YouTube Music. Version 0.4 draws
+ytmGO is a native MyGo desktop client for YouTube Music. Version 0.4 draws
 a Spotify-style interface from Go through `ui.View`. Catalogue responses become typed Go models; audio plays
 through the system output; video is decoded only when requested. Google sign-in
 is the only temporary web surface. The music interface has no HTML, CSS,
@@ -19,7 +19,7 @@ Every decision below exists to protect that model.
 
 The interface follows Spotify's desktop language: a black window frame, three
 rounded near-black panels, a global bar with a centred search pill, and a
-three-zone player bar. ytmgo keeps its own accent for playback state and the
+three-zone player bar. ytmGO keeps its own accent for playback state and the
 primary play actions. The palette and vector icons live in `native_style.go`;
 layout and type live in `native_views.go`, exercised by the MyGo
 software-renderer tests in `native_views_test.go`.

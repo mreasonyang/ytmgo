@@ -25,7 +25,7 @@ before accepting the result. Raw process output must never be logged.
 - macOS: system WKWebView. The application package determines the minimum OS.
   A nested `ytmgo Account Login.app` supplies the helper's own application
   identity and accessibility target; it still runs only for the login lifetime.
-  It uses a regular activation policy and a distinct ytmgo account-badge icon
+  It uses a regular activation policy and a distinct ytmGO account-badge icon
   in the Dock and Command-Tab switcher. Clicking its Dock entry restores the
   existing window, including after minimization. The entry exits with login.
 - Windows: Microsoft Edge WebView2 Runtime 101.0.1210.39 or newer. An older
@@ -61,7 +61,7 @@ repository root. The staging manifest checks the target platform and CPU
 architecture. The media-runtime packager is separate and currently macOS-only;
 successful helper builds do not establish complete Windows/Linux app delivery.
 
-The login artwork retains ytmgo's red record/play logo with a teal account badge.
+The login artwork retains ytmGO's red record/play logo with a teal account badge.
 `artwork/icon.png` is the source; `go run ./cmd/login-icon` converts it to
 the committed ICNS and 128px RGBA assets. Only the native-format assets ship in
 the helper, with no image decoder or new runtime dependency.

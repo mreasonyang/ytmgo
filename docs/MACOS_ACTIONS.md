@@ -101,9 +101,9 @@ gh workflow run macos-package.yml --repo mreasonyang/ytmgo --ref main -f mode=no
 维护命令不启动音乐窗口或读取账号，用于隔离的已发布包验收：
 
 ```sh
-/path/to/ytmgo.app/Contents/MacOS/ytmgo --version
-/path/to/ytmgo.app/Contents/MacOS/ytmgo --check-for-updates
-/path/to/ytmgo.app/Contents/MacOS/ytmgo --install-update
+/path/to/ytmGO.app/Contents/MacOS/ytmGO --version
+/path/to/ytmGO.app/Contents/MacOS/ytmGO --check-for-updates
+/path/to/ytmGO.app/Contents/MacOS/ytmGO --install-update
 ```
 
 最后一个命令只在当前执行的 bundle 中暂存更新，进程退出后由 MyGo helper 替换；之后再次打开。正式验收应保留公开发布的旧版作为起点，验证公开 feed、下载签名、替换后的版本、Apple 签名和 stapled ticket；本地伪造旧版或源码测试不能代替这个结果。

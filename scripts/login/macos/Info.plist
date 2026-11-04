@@ -5,9 +5,9 @@
   <key>CFBundleIdentifier</key>
   <string>si.kyun.ytmgo.account-login</string>
   <key>CFBundleName</key>
-  <string>ytmgo Account Login</string>
+  <string>ytmGO Account Login</string>
   <key>CFBundleDisplayName</key>
-  <string>ytmgo Account Login</string>
+  <string>ytmGO Account Login</string>
   <key>CFBundleExecutable</key>
   <string>ytmgo-account-login</string>
   <key>CFBundlePackageType</key>

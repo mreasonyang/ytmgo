@@ -27,7 +27,7 @@ pub(super) fn run() -> Result<(), ()> {
         events.set_activation_policy(ActivationPolicy::Accessory);
     }
     let window = WindowBuilder::new()
-        .with_title("ytmgo script host")
+        .with_title("ytmGO script host")
         .with_visible(false)
         .build(&events)
         .map_err(|_| ())?;

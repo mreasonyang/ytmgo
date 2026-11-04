@@ -251,7 +251,7 @@ def create_disk_image(app, dmg):
         run(["ditto", "--noclone", app, contents / app.name], "Disk image app copy")
         (contents / "Applications").symlink_to("/Applications", target_is_directory=True)
         writable = work / "rw.dmg"
-        disk_image_command(["create", "-ov", "-volname", "ytmgo", "-srcfolder", contents,
+        disk_image_command(["create", "-ov", "-volname", "ytmGO", "-srcfolder", contents,
                             "-fs", "HFS+", "-fsargs", "-c c=64,a=16,e=16", "-format", "UDRW", writable],
                            "Disk image creation")
         disk_image_command(["convert", writable, "-format", "UDZO", "-ov", "-o", dmg], "Disk image compression")
@@ -262,7 +262,7 @@ def package(mode):
     version = config["version"]
     if not re.fullmatch(r"[0-9A-Za-z.+-]+", version):
         raise PackageError("Invalid app version")
-    app = ROOT / "build/darwin-arm64/ytmgo.app"
+    app = ROOT / "build/darwin-arm64" / (config.get("name", "ytmgo") + ".app")
     if not app.is_dir():
         raise PackageError("Build the complete arm64 app first")
     output = ROOT / "dist/macos"

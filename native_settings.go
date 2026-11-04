@@ -192,7 +192,7 @@ func nativeSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, w
 				ui.Row(c).Padding(14, 16).Gap(16).AlignItems(ui.Center).Children(func() {
 					nativeSettingTile(c, "play", p.accent, p.onAccent)
 					ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
-						ui.Text(c, "ytmgo").FontWeight(700)
+						ui.Text(c, a.Tr("appName")).FontWeight(700)
 						if m.Version != "" {
 							ui.Text(c, a.TrArgs("nativeSettingsVersion", map[string]any{"version": m.Version})).FontSize(13).TextColor(p.secondary)
 						}

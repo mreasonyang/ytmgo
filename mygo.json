@@ -1,5 +1,6 @@
 {
-  "name": "ytmgo",
+  "name": "ytmGO",
+  "slug": "ytmgo",
   "identifier": "si.kyun.ytmgo",
   "version": "0.6.2",
   "updates": {
@@ -13,9 +14,13 @@
     "minimumSystemVersion": "27.0",
     "signingIdentity": "-",
     "infoPlist": {
-      "CFBundleDisplayName": "ytmgo",
+      "CFBundleName": "ytmGO",
+      "CFBundleDisplayName": "ytmGO",
       "NSHighResolutionCapable": true
     }
+  },
+  "windows": {
+    "displayName": "ytmGO"
   },
   "linux": {
     "comment": "YouTube Music desktop client powered by MyGo",

@@ -1,4 +1,4 @@
-Third-party components and license notices bundled with ytmgo.
+Third-party components and license notices bundled with ytmGO.
 
 github.com/ebitengine/purego v0.11.1
 github.com/egoist/mygo v0.6.4

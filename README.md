@@ -1,4 +1,6 @@
-# ytmgo
+# ytmGO
+
+品牌显示名统一为 **ytmGO**；仓库、发行文件前缀、Bundle ID 和数据目录保留技术标识 `ytmgo`。
 
 YouTube Music 桌面客户端，当前版本基线 **0.6.2**。主界面用 **MyGo 0.7.1 原生 UI** 绘制，曲库由 Go 访问，媒体请求、格式选择和有界流式传输由 Go 处理，音频由 MyGo 输出到系统音频设备。保留侧栏、搜索、歌曲与专辑列表、底部播放条、正在播放面板、队列、歌词、沉浸模式、封面/视频切换，以及四语言和深浅色设计。
 
@@ -15,16 +17,16 @@ YouTube Music 桌面客户端，当前版本基线 **0.6.2**。主界面用 **My
 ```sh
 make check
 make build
-open build/darwin-arm64/ytmgo.app
+open build/darwin-arm64/ytmGO.app
 ```
 
 `make build` 打包 Go 主程序、小型原生脚本宿主和精简 FFmpeg 9.0.2。动态签名使用 QuickJS；普通账号和未登录证明使用独立、隐藏、非持久化的系统 WebView。只嵌入 YouTube.js 的脚本提取器、Meriyah 与 MIT BgUtils 的必要代码，不分发整个 SDK、Node、jsdom 或 npm 依赖目录。构建使用锁定源码归档与 Go 版 esbuild。许可证和构建信息随包保存；FFmpeg 仍使用 LGPL。详细说明见 [scripts/runtime/README.md](scripts/runtime/README.md)。
 
-本地默认产物为 `build/darwin-arm64/ytmgo.app` 和 `build/darwin-arm64/ytmgo-0.6.2-arm64.dmg`，采用 ad-hoc App 签名和未签名 DMG。GitHub Actions 已提供手动触发的测试打包、Developer ID 签名及 Apple 公证模式；配置证书、私钥和使用方法见 [macOS Actions 配置指南](docs/MACOS_ACTIONS.md)。选择 `notarized` 并勾选 `publish_release` 后，工作流会发布可下载的 GitHub Release 和签名更新 feed。重新构建导致 ad-hoc 身份变化时，macOS 可能要求重新授权访问本应用保存在钥匙串中的加密密钥。跨平台运行时的实际验收状态以验证记录为准。
+本地默认产物为 `build/darwin-arm64/ytmGO.app` 和 `build/darwin-arm64/ytmgo-0.6.2-arm64.dmg`，采用 ad-hoc App 签名和未签名 DMG。GitHub Actions 已提供手动触发的测试打包、Developer ID 签名及 Apple 公证模式；配置证书、私钥和使用方法见 [macOS Actions 配置指南](docs/MACOS_ACTIONS.md)。选择 `notarized` 并勾选 `publish_release` 后，工作流会发布可下载的 GitHub Release 和签名更新 feed。重新构建导致 ad-hoc 身份变化时，macOS 可能要求重新授权访问本应用保存在钥匙串中的加密密钥。跨平台运行时的实际验收状态以验证记录为准。
 
 当前版本沿 `0.6.X` 迭代，末位为 0–999 的整数，不补前导零：`0.6.0`、`0.6.1`、…、`0.6.999`。仅正式发版时递增末位；普通修复、提交与本地构建不自动升版本，末位未耗尽不因日常迭代提升次版本。发布配置和更新包校验均限制末位范围。
 
-0.6.1 用户可在 ytmgo 菜单中选择 **Check for Updates…** 升级到 0.6.2。已在本机验证原生更新、Premium 播放和封面缓存。首次安装可下载已签名并公证的 macOS 安装包。[正式安装包](https://github.com/mreasonyang/ytmgo/releases/latest) · [自动升级验收](docs/AUTO_UPDATE_VERIFICATION.md)
+0.6.1 用户可在 ytmGO 菜单中选择 **Check for Updates…** 升级到 0.6.2。已在本机验证原生更新、Premium 播放和封面缓存。首次安装可下载已签名并公证的 macOS 安装包。[正式安装包](https://github.com/mreasonyang/ytmgo/releases/latest) · [自动升级验收](docs/AUTO_UPDATE_VERIFICATION.md)
 
 开发运行：
 
@@ -42,13 +44,13 @@ make dev
 - 设置支持 English、简体中文、繁體中文、日本語，以及深色、浅色、跟随系统。修改语言或外观会即时重绘，不重建窗口或播放器。
 - 原生菜单、托盘、全局播放快捷键和系统 Now Playing 共用同一播放状态。全局快捷键可在设置中直接录入或停用；应用内按空格即可播放或暂停。
 - 曲库、账号校验、封面和媒体请求使用一致的代理选择：各平台支持 `HTTP_PROXY`／`HTTPS_PROXY` 和 `NO_PROXY`；macOS 普通启动也会读取系统 HTTP／HTTPS／SOCKS 代理及排除规则。显式环境变量优先，本地解码器回环连接始终直连。目前不执行 PAC 自动代理脚本，也不读取代理密码。封面优先加载当前页面的可见内容，加载失败后退避重试。明确允许公开缓存的封面会写入磁盘，最多 64 MiB、512 个文件，有效期最长 24 小时。账号头像不写入封面缓存。
-- 安装到可写目录后自动检查更新（启动后最早 10 秒，之后每日一次），也可使用 **ytmgo → 检查更新**。原生更新窗口支持立即安装、稍后、跳过，以及可选的自动下载；下载完成后重启安装。0.4.0 没有更新器，需要先手动安装一次 0.5.0。
+- 安装到可写目录后自动检查更新（启动后最早 10 秒，之后每日一次），也可使用 **ytmGO → 检查更新**。原生更新窗口支持立即安装、稍后、跳过，以及可选的自动下载；下载完成后重启安装。0.4.0 没有更新器，需要先手动安装一次 0.5.0。
 
 ## 账号与数据
 
-点击登录会打开 Google 官方登录页面；在窗口里选择账号并完成 Google 要求的验证。登录程序使用带蓝绿色账号徽标的 ytmgo 图标，在 Dock／任务栏和窗口切换器中保留独立入口，方便切回尚未完成的验证；macOS 点击登录程序的 Dock 图标也会恢复已最小化的窗口。正常登录不设应用自定义的强制到期时间；登录成功、关闭窗口或退出应用时结束登录子进程。程序读取当前所选账号的会话，再向 YouTube 验证账号与会员状态后保存。关闭窗口取消本次登录，原有账号保留。会话只从系统 WebView 的私有存储读取，通过匿名管道交接，不经过浏览器扩展、本地 HTTP 服务或临时 Cookie 文件。
+点击登录会打开 Google 官方登录页面；在窗口里选择账号并完成 Google 要求的验证。登录程序使用带蓝绿色账号徽标的 ytmGO 图标，在 Dock／任务栏和窗口切换器中保留独立入口，方便切回尚未完成的验证；macOS 点击登录程序的 Dock 图标也会恢复已最小化的窗口。正常登录不设应用自定义的强制到期时间；登录成功、关闭窗口或退出应用时结束登录子进程。程序读取当前所选账号的会话，再向 YouTube 验证账号与会员状态后保存。关闭窗口取消本次登录，原有账号保留。会话只从系统 WebView 的私有存储读取，通过匿名管道交接，不经过浏览器扩展、本地 HTTP 服务或临时 Cookie 文件。
 
-macOS 登录窗口目前不支持 Google passkey。Apple 要求 WKWebView 的 passkey 服务与应用建立关联域关系，ytmgo 无法自行取得 Google 的关联授权；请使用 Google 页面提供的其他验证方式。没有其他验证方式的账号目前无法完成登录。Windows 的 WebView2 支持 FIDO2，但本应用与具体 Google passkey 提供者的组合尚未实测；Linux 使用 WebKitGTK 4.1 ≥2.50.2，避免旧版本在带 WebAuthn 第二因子的 Google 账号上卡住，这不代表 Linux 已支持 passkey。[Apple 说明](https://developer.apple.com/documentation/authenticationservices/supporting-passkeys)、[WebKitGTK 修复说明](https://webkitgtk.org/2025/11/19/webkitgtk2.50.2-released.html)。
+macOS 登录窗口目前不支持 Google passkey。Apple 要求 WKWebView 的 passkey 服务与应用建立关联域关系，ytmGO 无法自行取得 Google 的关联授权；请使用 Google 页面提供的其他验证方式。没有其他验证方式的账号目前无法完成登录。Windows 的 WebView2 支持 FIDO2，但本应用与具体 Google passkey 提供者的组合尚未实测；Linux 使用 WebKitGTK 4.1 ≥2.50.2，避免旧版本在带 WebAuthn 第二因子的 Google 账号上卡住，这不代表 Linux 已支持 passkey。[Apple 说明](https://developer.apple.com/documentation/authenticationservices/supporting-passkeys)、[WebKitGTK 修复说明](https://webkitgtk.org/2025/11/19/webkitgtk2.50.2-released.html)。
 
 完整会话（Cookies 与账号选择信息）使用 AES-256-GCM 加密保存在应用数据目录的 `account/session.enc`。系统安全存储只保管一把 32 字节随机密钥，固定条目名为 `account-session-key`；macOS 使用 Keychain。打开登录窗口前先准备密钥：复用当前进程已恢复的密钥，或读取固定条目；仅在明确不存在时创建。授权被拒绝、存储锁定或密钥损坏时，直接在登录前报错。登录与二次验证完成后，使用内存中已准备的密钥和新的随机 nonce 加密，原子覆盖会话文件，不再访问系统安全存储。准备密钥不会改动已保存的会话；登录取消或文件保存失败时保留原文件和密钥，首次准备创建的密钥也可供重试复用。退出登录同时清除内存中的密钥。只读写一种会话格式，没有旧格式读取、迁移、随机密钥编号或明文存储备用路径。
 

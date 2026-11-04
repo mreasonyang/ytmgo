@@ -90,9 +90,21 @@ func main() {
 		os.Exit(code)
 	}
 	setupUpdater()
+	// Keep the established storage locations while changing the display name.
+	// MyGo otherwise derives user data, caches and logs from App.Name().
+	storageName, displayName := "ytmgo", "ytmGO"
 	if !mygo.App.IsPackaged() {
-		mygo.App.SetName("ytmgo Dev")
+		storageName, displayName = storageName+" Dev", displayName+" Dev"
 	}
+	mygo.App.SetName(storageName)
+	for _, kind := range []mygo.PathName{mygo.PathUserData, mygo.PathCache, mygo.PathLogs} {
+		path, err := mygo.App.Path(kind)
+		if err != nil {
+			log.Fatal("ytmGO: application storage directory unavailable")
+		}
+		mygo.App.SetPath(kind, path)
+	}
+	mygo.App.SetName(displayName)
 	if !mygo.App.RequestSingleInstanceLock() {
 		return
 	}

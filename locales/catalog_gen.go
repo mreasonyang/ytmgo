@@ -37,13 +37,13 @@ type Messages struct{ locale string }
 // source language.
 func In(locale string) Messages { return Messages{locale} }
 
-// AppName says "ytmgo"
+// AppName says "ytmGO"
 // in the language the app shows.
 //
 // The product name. Do not translate.
 func AppName() string { return In(i18n.Locale()).AppName() }
 
-// AppName says "ytmgo"
+// AppName says "ytmGO"
 // in the language of msgs.
 //
 // The product name. Do not translate.
@@ -79,13 +79,13 @@ func (msgs Messages) MenuFile() string {
 	return Catalog.Format(msgs.locale, "menuFile", nil)
 }
 
-// MenuShowApp says "Show ytmgo"
+// MenuShowApp says "Show ytmGO"
 // in the language the app shows.
 //
 // File menu: bring the main window forward.
 func MenuShowApp() string { return In(i18n.Locale()).MenuShowApp() }
 
-// MenuShowApp says "Show ytmgo"
+// MenuShowApp says "Show ytmGO"
 // in the language of msgs.
 //
 // File menu: bring the main window forward.
@@ -401,13 +401,13 @@ func (msgs Messages) MenuManageAccount() string {
 	return Catalog.Format(msgs.locale, "menuManageAccount", nil)
 }
 
-// MenuSignOut says "Sign Out of ytmgo…"
+// MenuSignOut says "Sign Out of ytmGO…"
 // in the language the app shows.
 //
 // Account menu: opens a confirmation.
 func MenuSignOut() string { return In(i18n.Locale()).MenuSignOut() }
 
-// MenuSignOut says "Sign Out of ytmgo…"
+// MenuSignOut says "Sign Out of ytmGO…"
 // in the language of msgs.
 //
 // Account menu: opens a confirmation.
@@ -443,13 +443,13 @@ func (msgs Messages) MenuShortcuts() string {
 	return Catalog.Format(msgs.locale, "menuShortcuts", nil)
 }
 
-// MenuAbout says "About ytmgo"
+// MenuAbout says "About ytmGO"
 // in the language the app shows.
 //
 // Help menu item.
 func MenuAbout() string { return In(i18n.Locale()).MenuAbout() }
 
-// MenuAbout says "About ytmgo"
+// MenuAbout says "About ytmGO"
 // in the language of msgs.
 //
 // Help menu item.
@@ -457,13 +457,13 @@ func (msgs Messages) MenuAbout() string {
 	return Catalog.Format(msgs.locale, "menuAbout", nil)
 }
 
-// TrayOpen says "Open ytmgo"
+// TrayOpen says "Open ytmGO"
 // in the language the app shows.
 //
 // Tray menu item.
 func TrayOpen() string { return In(i18n.Locale()).TrayOpen() }
 
-// TrayOpen says "Open ytmgo"
+// TrayOpen says "Open ytmGO"
 // in the language of msgs.
 //
 // Tray menu item.
@@ -471,13 +471,13 @@ func (msgs Messages) TrayOpen() string {
 	return Catalog.Format(msgs.locale, "trayOpen", nil)
 }
 
-// TrayQuit says "Quit ytmgo"
+// TrayQuit says "Quit ytmGO"
 // in the language the app shows.
 //
 // Tray menu item.
 func TrayQuit() string { return In(i18n.Locale()).TrayQuit() }
 
-// TrayQuit says "Quit ytmgo"
+// TrayQuit says "Quit ytmGO"
 // in the language of msgs.
 //
 // Tray menu item.
@@ -485,13 +485,13 @@ func (msgs Messages) TrayQuit() string {
 	return Catalog.Format(msgs.locale, "trayQuit", nil)
 }
 
-// AboutMessage says "ytmgo · {version}"
+// AboutMessage says "ytmGO · {version}"
 // in the language the app shows.
 //
 // About dialog headline.
 func AboutMessage(version string) string { return In(i18n.Locale()).AboutMessage(version) }
 
-// AboutMessage says "ytmgo · {version}"
+// AboutMessage says "ytmGO · {version}"
 // in the language of msgs.
 //
 // About dialog headline.
@@ -695,13 +695,13 @@ func (msgs Messages) CrashDetail() string {
 	return Catalog.Format(msgs.locale, "crashDetail", nil)
 }
 
-// LoginWindowTitle says "Google Sign-In · ytmgo"
+// LoginWindowTitle says "Google Sign-In · ytmGO"
 // in the language the app shows.
 //
 // Title of the sign-in window.
 func LoginWindowTitle() string { return In(i18n.Locale()).LoginWindowTitle() }
 
-// LoginWindowTitle says "Google Sign-In · ytmgo"
+// LoginWindowTitle says "Google Sign-In · ytmGO"
 // in the language of msgs.
 //
 // Title of the sign-in window.
@@ -779,13 +779,13 @@ func (msgs Messages) SignOutMessage() string {
 	return Catalog.Format(msgs.locale, "signOutMessage", nil)
 }
 
-// SignOutDetail says "Playback stops, the sign-in window closes, and ytmgo clears every account's sign-in state, cookies, web storage and c…"
+// SignOutDetail says "Playback stops, the sign-in window closes, and ytmGO clears every account's sign-in state, cookies, web storage and c…"
 // in the language the app shows.
 //
 // Confirmation dialog detail.
 func SignOutDetail() string { return In(i18n.Locale()).SignOutDetail() }
 
-// SignOutDetail says "Playback stops, the sign-in window closes, and ytmgo clears every account's sign-in state, cookies, web storage and c…"
+// SignOutDetail says "Playback stops, the sign-in window closes, and ytmGO clears every account's sign-in state, cookies, web storage and c…"
 // in the language of msgs.
 //
 // Confirmation dialog detail.
@@ -807,13 +807,13 @@ func (msgs Messages) SignOutConfirm() string {
 	return Catalog.Format(msgs.locale, "signOutConfirm", nil)
 }
 
-// AccountWindowTitle says "Account · ytmgo"
+// AccountWindowTitle says "Account · ytmGO"
 // in the language the app shows.
 //
 // Title of the sign-out progress window.
 func AccountWindowTitle() string { return In(i18n.Locale()).AccountWindowTitle() }
 
-// AccountWindowTitle says "Account · ytmgo"
+// AccountWindowTitle says "Account · ytmGO"
 // in the language of msgs.
 //
 // Title of the sign-out progress window.
@@ -821,13 +821,13 @@ func (msgs Messages) AccountWindowTitle() string {
 	return Catalog.Format(msgs.locale, "accountWindowTitle", nil)
 }
 
-// LogoutEyebrow says "ytmgo · Account"
+// LogoutEyebrow says "ytmGO · Account"
 // in the language the app shows.
 //
 // Small label above the sign-out status.
 func LogoutEyebrow() string { return In(i18n.Locale()).LogoutEyebrow() }
 
-// LogoutEyebrow says "ytmgo · Account"
+// LogoutEyebrow says "ytmGO · Account"
 // in the language of msgs.
 //
 // Small label above the sign-out status.
@@ -975,13 +975,13 @@ func (msgs Messages) AppearanceSaveError() string {
 	return Catalog.Format(msgs.locale, "appearanceSaveError", nil)
 }
 
-// ShellBrandName says "ytmgo"
+// ShellBrandName says "ytmGO"
 // in the language the app shows.
 //
 // The product wordmark in the sidebar. Do not translate.
 func ShellBrandName() string { return In(i18n.Locale()).ShellBrandName() }
 
-// ShellBrandName says "ytmgo"
+// ShellBrandName says "ytmGO"
 // in the language of msgs.
 //
 // The product wordmark in the sidebar. Do not translate.
@@ -1059,13 +1059,13 @@ func (msgs Messages) ShellNavSearch() string {
 	return Catalog.Format(msgs.locale, "shellNavSearch", nil)
 }
 
-// ShellBrandHome says "ytmgo Home"
+// ShellBrandHome says "ytmGO Home"
 // in the language the app shows.
 //
 // Accessible name of the logo button.
 func ShellBrandHome() string { return In(i18n.Locale()).ShellBrandHome() }
 
-// ShellBrandHome says "ytmgo Home"
+// ShellBrandHome says "ytmGO Home"
 // in the language of msgs.
 //
 // Accessible name of the logo button.
@@ -2463,11 +2463,11 @@ func (msgs Messages) ShellGreetingEvening() string {
 	return Catalog.Format(msgs.locale, "shellGreetingEvening", nil)
 }
 
-// NativeRuntimeMissing says "The audio runtime is missing. Reinstall the complete ytmgo app."
+// NativeRuntimeMissing says "The audio runtime is missing. Reinstall the complete ytmGO app."
 // in the language the app shows.
 func NativeRuntimeMissing() string { return In(i18n.Locale()).NativeRuntimeMissing() }
 
-// NativeRuntimeMissing says "The audio runtime is missing. Reinstall the complete ytmgo app."
+// NativeRuntimeMissing says "The audio runtime is missing. Reinstall the complete ytmGO app."
 // in the language of msgs.
 func (msgs Messages) NativeRuntimeMissing() string {
 	return Catalog.Format(msgs.locale, "nativeRuntimeMissing", nil)
@@ -2533,11 +2533,11 @@ func (msgs Messages) NativeAccountSessionError() string {
 	return Catalog.Format(msgs.locale, "nativeAccountSessionError", nil)
 }
 
-// NativeSignOutConfirm says "Sign out of ytmgo and remove its saved session? Your browser will remain signed in."
+// NativeSignOutConfirm says "Sign out of ytmGO and remove its saved session? Your browser will remain signed in."
 // in the language the app shows.
 func NativeSignOutConfirm() string { return In(i18n.Locale()).NativeSignOutConfirm() }
 
-// NativeSignOutConfirm says "Sign out of ytmgo and remove its saved session? Your browser will remain signed in."
+// NativeSignOutConfirm says "Sign out of ytmGO and remove its saved session? Your browser will remain signed in."
 // in the language of msgs.
 func (msgs Messages) NativeSignOutConfirm() string {
 	return Catalog.Format(msgs.locale, "nativeSignOutConfirm", nil)
@@ -2603,31 +2603,31 @@ func (msgs Messages) NativeVideoUnavailable() string {
 	return Catalog.Format(msgs.locale, "nativeVideoUnavailable", nil)
 }
 
-// NativeAccountStorageError says "Could not access encrypted session storage. Retry and allow ytmgo access if the system asks."
+// NativeAccountStorageError says "Could not access encrypted session storage. Retry and allow ytmGO access if the system asks."
 // in the language the app shows.
 func NativeAccountStorageError() string { return In(i18n.Locale()).NativeAccountStorageError() }
 
-// NativeAccountStorageError says "Could not access encrypted session storage. Retry and allow ytmgo access if the system asks."
+// NativeAccountStorageError says "Could not access encrypted session storage. Retry and allow ytmGO access if the system asks."
 // in the language of msgs.
 func (msgs Messages) NativeAccountStorageError() string {
 	return Catalog.Format(msgs.locale, "nativeAccountStorageError", nil)
 }
 
-// NativeVerificationRequired says "Google requires additional verification. ytmgo cannot complete this request."
+// NativeVerificationRequired says "Google requires additional verification. ytmGO cannot complete this request."
 // in the language the app shows.
 func NativeVerificationRequired() string { return In(i18n.Locale()).NativeVerificationRequired() }
 
-// NativeVerificationRequired says "Google requires additional verification. ytmgo cannot complete this request."
+// NativeVerificationRequired says "Google requires additional verification. ytmGO cannot complete this request."
 // in the language of msgs.
 func (msgs Messages) NativeVerificationRequired() string {
 	return Catalog.Format(msgs.locale, "nativeVerificationRequired", nil)
 }
 
-// NativeConsentRequired says "YouTube returned a consent page. ytmgo cannot continue."
+// NativeConsentRequired says "YouTube returned a consent page. ytmGO cannot continue."
 // in the language the app shows.
 func NativeConsentRequired() string { return In(i18n.Locale()).NativeConsentRequired() }
 
-// NativeConsentRequired says "YouTube returned a consent page. ytmgo cannot continue."
+// NativeConsentRequired says "YouTube returned a consent page. ytmGO cannot continue."
 // in the language of msgs.
 func (msgs Messages) NativeConsentRequired() string {
 	return Catalog.Format(msgs.locale, "nativeConsentRequired", nil)
@@ -2643,21 +2643,21 @@ func (msgs Messages) NativeServiceSignInRequired() string {
 	return Catalog.Format(msgs.locale, "nativeServiceSignInRequired", nil)
 }
 
-// NativeServiceRedirect says "YouTube returned a page redirect that ytmgo cannot handle."
+// NativeServiceRedirect says "YouTube returned a page redirect that ytmGO cannot handle."
 // in the language the app shows.
 func NativeServiceRedirect() string { return In(i18n.Locale()).NativeServiceRedirect() }
 
-// NativeServiceRedirect says "YouTube returned a page redirect that ytmgo cannot handle."
+// NativeServiceRedirect says "YouTube returned a page redirect that ytmGO cannot handle."
 // in the language of msgs.
 func (msgs Messages) NativeServiceRedirect() string {
 	return Catalog.Format(msgs.locale, "nativeServiceRedirect", nil)
 }
 
-// NativeAccountLoginMissing says "The sign-in window could not start. Reinstall ytmgo and check that your system WebView runtime is available."
+// NativeAccountLoginMissing says "The sign-in window could not start. Reinstall ytmGO and check that your system WebView runtime is available."
 // in the language the app shows.
 func NativeAccountLoginMissing() string { return In(i18n.Locale()).NativeAccountLoginMissing() }
 
-// NativeAccountLoginMissing says "The sign-in window could not start. Reinstall ytmgo and check that your system WebView runtime is available."
+// NativeAccountLoginMissing says "The sign-in window could not start. Reinstall ytmGO and check that your system WebView runtime is available."
 // in the language of msgs.
 func (msgs Messages) NativeAccountLoginMissing() string {
 	return Catalog.Format(msgs.locale, "nativeAccountLoginMissing", nil)
@@ -2925,11 +2925,11 @@ func (msgs Messages) NativeShortcutGlobalShortHint() string {
 	return Catalog.Format(msgs.locale, "nativeShortcutGlobalShortHint", nil)
 }
 
-// NativeShortcutLocalHint says "In ytmgo, Space plays or pauses. The global shortcut also works in other apps."
+// NativeShortcutLocalHint says "In ytmGO, Space plays or pauses. The global shortcut also works in other apps."
 // in the language the app shows.
 func NativeShortcutLocalHint() string { return In(i18n.Locale()).NativeShortcutLocalHint() }
 
-// NativeShortcutLocalHint says "In ytmgo, Space plays or pauses. The global shortcut also works in other apps."
+// NativeShortcutLocalHint says "In ytmGO, Space plays or pauses. The global shortcut also works in other apps."
 // in the language of msgs.
 func (msgs Messages) NativeShortcutLocalHint() string {
 	return Catalog.Format(msgs.locale, "nativeShortcutLocalHint", nil)
@@ -2995,11 +2995,11 @@ func (msgs Messages) NativeShortcutInvalid() string {
 	return Catalog.Format(msgs.locale, "nativeShortcutInvalid", nil)
 }
 
-// NativeShortcutReserved says "That combination is used in ytmgo. Choose another."
+// NativeShortcutReserved says "That combination is used in ytmGO. Choose another."
 // in the language the app shows.
 func NativeShortcutReserved() string { return In(i18n.Locale()).NativeShortcutReserved() }
 
-// NativeShortcutReserved says "That combination is used in ytmgo. Choose another."
+// NativeShortcutReserved says "That combination is used in ytmGO. Choose another."
 // in the language of msgs.
 func (msgs Messages) NativeShortcutReserved() string {
 	return Catalog.Format(msgs.locale, "nativeShortcutReserved", nil)
@@ -3085,11 +3085,11 @@ func (msgs Messages) NativeSettingsLanguageHint() string {
 	return Catalog.Format(msgs.locale, "nativeSettingsLanguageHint", nil)
 }
 
-// NativeSettingsShortcutsHint says "Every shortcut that works inside ytmgo."
+// NativeSettingsShortcutsHint says "Every shortcut that works inside ytmGO."
 // in the language the app shows.
 func NativeSettingsShortcutsHint() string { return In(i18n.Locale()).NativeSettingsShortcutsHint() }
 
-// NativeSettingsShortcutsHint says "Every shortcut that works inside ytmgo."
+// NativeSettingsShortcutsHint says "Every shortcut that works inside ytmGO."
 // in the language of msgs.
 func (msgs Messages) NativeSettingsShortcutsHint() string {
 	return Catalog.Format(msgs.locale, "nativeSettingsShortcutsHint", nil)

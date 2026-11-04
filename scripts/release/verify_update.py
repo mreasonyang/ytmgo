@@ -64,7 +64,18 @@ def release(version):
     if sha(directory / name) != sums[name]:
         raise CheckError("public_archive_checksum_mismatch")
     command(["ditto", "-x", "-k", directory / name, directory])
-    return directory / "ytmgo.app", meta, sums[name]
+    apps = list(directory.glob("*.app"))
+    if len(apps) != 1:
+        raise CheckError("invalid_public_app_bundle")
+    return apps[0], meta, sums[name]
+
+
+def bundle_executable(app):
+    plist = plistlib.loads((app / "Contents/Info.plist").read_bytes())
+    name = plist["CFBundleExecutable"]
+    if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9._-]+", name):
+        raise CheckError("invalid_bundle_executable")
+    return app / "Contents/MacOS" / name
 
 
 def integrity(app):
@@ -77,8 +88,8 @@ def integrity(app):
         process = subprocess.run(list(map(str, args)), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=120)
         result[label] = process.returncode == 0
     result["version"] = plistlib.loads((app / "Contents/Info.plist").read_bytes())["CFBundleShortVersionString"]
-    result["cli_version"] = command([app / "Contents/MacOS/ytmgo", "--version"]).decode().strip()
-    result["executable_sha256"] = sha(app / "Contents/MacOS/ytmgo")
+    result["cli_version"] = command([bundle_executable(app), "--version"]).decode().strip()
+    result["executable_sha256"] = sha(bundle_executable(app))
     if not all(result[key] for key in ("apple_signature", "stapled_ticket", "gatekeeper")):
         raise CheckError("bundle_integrity_failed")
     return result
@@ -113,10 +124,10 @@ def main():
     if before["cli_version"] != args.from_version or before["version"] != args.from_version:
         raise CheckError("baseline_version_mismatch")
     print("Public baseline verified", flush=True)
-    checked = json.loads(command([app / "Contents/MacOS/ytmgo", "--check-for-updates"]))
+    checked = json.loads(command([bundle_executable(app), "--check-for-updates"]))
     if checked.get("available_version") != args.to_version:
         raise CheckError("expected_stable_update_not_offered")
-    staged = json.loads(command([app / "Contents/MacOS/ytmgo", "--install-update"], timeout=900))
+    staged = json.loads(command([bundle_executable(app), "--install-update"], timeout=900))
     if staged.get("install_staged") is not True:
         raise CheckError("update_not_staged")
     for _ in range(200):

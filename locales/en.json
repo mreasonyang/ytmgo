@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appName": "ytmgo",
+  "appName": "ytmGO",
   "@appName": {
     "description": "The product name. Do not translate."
   },
@@ -12,7 +12,7 @@
   "@menuFile": {
     "description": "Menu bar: the File menu."
   },
-  "menuShowApp": "Show ytmgo",
+  "menuShowApp": "Show ytmGO",
   "@menuShowApp": {
     "description": "File menu: bring the main window forward."
   },
@@ -104,7 +104,7 @@
   "@menuManageAccount": {
     "description": "Account menu, signed in."
   },
-  "menuSignOut": "Sign Out of ytmgo…",
+  "menuSignOut": "Sign Out of ytmGO…",
   "@menuSignOut": {
     "description": "Account menu: opens a confirmation."
   },
@@ -116,19 +116,19 @@
   "@menuShortcuts": {
     "description": "Help menu item."
   },
-  "menuAbout": "About ytmgo",
+  "menuAbout": "About ytmGO",
   "@menuAbout": {
     "description": "Help menu item."
   },
-  "trayOpen": "Open ytmgo",
+  "trayOpen": "Open ytmGO",
   "@trayOpen": {
     "description": "Tray menu item."
   },
-  "trayQuit": "Quit ytmgo",
+  "trayQuit": "Quit ytmGO",
   "@trayQuit": {
     "description": "Tray menu item."
   },
-  "aboutMessage": "ytmgo · {version}",
+  "aboutMessage": "ytmGO · {version}",
   "@aboutMessage": {
     "description": "About dialog headline.",
     "placeholders": {
@@ -194,7 +194,7 @@
   "@crashDetail": {
     "description": "Dialog detail."
   },
-  "loginWindowTitle": "Google Sign-In · ytmgo",
+  "loginWindowTitle": "Google Sign-In · ytmGO",
   "@loginWindowTitle": {
     "description": "Title of the sign-in window."
   },
@@ -218,7 +218,7 @@
   "@signOutMessage": {
     "description": "Confirmation dialog question."
   },
-  "signOutDetail": "Playback stops, the sign-in window closes, and ytmgo clears every account's sign-in state, cookies, web storage and cache on this device.\nYour appearance and language settings and your cloud library are kept. Other browsers stay signed in.",
+  "signOutDetail": "Playback stops, the sign-in window closes, and ytmGO clears every account's sign-in state, cookies, web storage and cache on this device.\nYour appearance and language settings and your cloud library are kept. Other browsers stay signed in.",
   "@signOutDetail": {
     "description": "Confirmation dialog detail."
   },
@@ -226,11 +226,11 @@
   "@signOutConfirm": {
     "description": "Destructive confirmation button."
   },
-  "accountWindowTitle": "Account · ytmgo",
+  "accountWindowTitle": "Account · ytmGO",
   "@accountWindowTitle": {
     "description": "Title of the sign-out progress window."
   },
-  "logoutEyebrow": "ytmgo · Account",
+  "logoutEyebrow": "ytmGO · Account",
   "@logoutEyebrow": {
     "description": "Small label above the sign-out status."
   },
@@ -274,7 +274,7 @@
   "@appearanceSaveError": {
     "description": "Error when saving the appearance fails."
   },
-  "shellBrandName": "ytmgo",
+  "shellBrandName": "ytmGO",
   "@shellBrandName": {
     "description": "The product wordmark in the sidebar. Do not translate."
   },
@@ -298,7 +298,7 @@
   "@shellNavSearch": {
     "description": "Tab bar destination (compact windows)."
   },
-  "shellBrandHome": "ytmgo Home",
+  "shellBrandHome": "ytmGO Home",
   "@shellBrandHome": {
     "description": "Accessible name of the logo button."
   },
@@ -720,26 +720,26 @@
   "@shellGreetingEvening": {
     "description": "Home greeting, 18:00–24:00."
   },
-  "nativeRuntimeMissing": "The audio runtime is missing. Reinstall the complete ytmgo app.",
+  "nativeRuntimeMissing": "The audio runtime is missing. Reinstall the complete ytmGO app.",
   "nativePlaybackError": "Unable to play this track. Try again or choose another song.",
   "nativeCatalogError": "Unable to load music. Check your connection and try again.",
   "nativeNoLyrics": "Lyrics are not available for this track.",
   "nativeLyricsUnavailable": "Lyrics are not available for this track.",
   "nativeAccountError": "Could not complete the account request. Please try again later.",
   "nativeAccountSessionError": "Your account session is no longer valid. Please reconnect your account.",
-  "nativeSignOutConfirm": "Sign out of ytmgo and remove its saved session? Your browser will remain signed in.",
+  "nativeSignOutConfirm": "Sign out of ytmGO and remove its saved session? Your browser will remain signed in.",
   "nativeAbout": "Native MyGo interface and audio playback. Music catalogue provided by YouTube Music.",
   "nativeEmptyResults": "No music found. Try another search.",
   "nativeAddToQueue": "Add to queue",
   "nativeVideo": "Video",
   "nativeArtwork": "Cover",
   "nativeVideoUnavailable": "Video is temporarily unavailable.",
-  "nativeAccountStorageError": "Could not access encrypted session storage. Retry and allow ytmgo access if the system asks.",
-  "nativeVerificationRequired": "Google requires additional verification. ytmgo cannot complete this request.",
-  "nativeConsentRequired": "YouTube returned a consent page. ytmgo cannot continue.",
+  "nativeAccountStorageError": "Could not access encrypted session storage. Retry and allow ytmGO access if the system asks.",
+  "nativeVerificationRequired": "Google requires additional verification. ytmGO cannot complete this request.",
+  "nativeConsentRequired": "YouTube returned a consent page. ytmGO cannot continue.",
   "nativeServiceSignInRequired": "YouTube requires sign-in. This request could not be completed.",
-  "nativeServiceRedirect": "YouTube returned a page redirect that ytmgo cannot handle.",
-  "nativeAccountLoginMissing": "The sign-in window could not start. Reinstall ytmgo and check that your system WebView runtime is available.",
+  "nativeServiceRedirect": "YouTube returned a page redirect that ytmGO cannot handle.",
+  "nativeAccountLoginMissing": "The sign-in window could not start. Reinstall ytmGO and check that your system WebView runtime is available.",
   "nativeAccountLoginOutdated": "Update Microsoft Edge WebView2 Runtime, then try signing in again.",
   "nativeAccountLoginTimeout": "Sign-in timed out. Please try again.",
   "nativeAccountLoginFailed": "Sign-in could not be completed. Please try again.",
@@ -766,14 +766,14 @@
   "nativePlaybackFailedStatus": "Playback failed",
   "nativeShortcutGlobal": "Global play / pause",
   "nativeShortcutGlobalShortHint": "Works even while you use other apps.",
-  "nativeShortcutLocalHint": "In ytmgo, Space plays or pauses. The global shortcut also works in other apps.",
+  "nativeShortcutLocalHint": "In ytmGO, Space plays or pauses. The global shortcut also works in other apps.",
   "nativeShortcutDisabled": "Off",
   "nativeShortcutRecord": "Record shortcut",
   "nativeShortcutRecording": "Press shortcut…",
   "nativeShortcutDisable": "Turn off",
   "nativeShortcutConfigure": "Configure global shortcut",
   "nativeShortcutInvalid": "Use a modifier with a letter, number or navigation key, or use F1–F12.",
-  "nativeShortcutReserved": "That combination is used in ytmgo. Choose another.",
+  "nativeShortcutReserved": "That combination is used in ytmGO. Choose another.",
   "nativeShortcutConflict": "That shortcut is unavailable. Your previous setting is unchanged.",
   "nativeShortcutSaveFailed": "Could not save the shortcut. Your previous setting is unchanged.",
   "nativeShortcutUnavailable": "Your shortcut could not be activated. Record another shortcut or turn it off.",
@@ -782,7 +782,7 @@
   "nativeSettingsAbout": "About",
   "nativeSettingsAppearanceHint": "Follow your system or pick a theme.",
   "nativeSettingsLanguageHint": "Used for menus, buttons and messages.",
-  "nativeSettingsShortcutsHint": "Every shortcut that works inside ytmgo.",
+  "nativeSettingsShortcutsHint": "Every shortcut that works inside ytmGO.",
   "nativeSettingsViewAll": "View all",
   "nativeSettingsVersion": "Version {version}",
   "nativeAccountSignedOutHint": "Sign in to see your playlists, albums and liked music.",

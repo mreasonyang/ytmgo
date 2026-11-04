@@ -114,9 +114,9 @@ class PackagingTests(unittest.TestCase):
             cleanup.assert_called_once()
 
     def test_updater_packages_final_stapled_app_and_uses_stdin(self):
-        app = self.root / "build/darwin-arm64/ytmgo.app"
+        app = self.root / "build/darwin-arm64/ytmGO.app"
         app.mkdir(parents=True)
-        (self.root / "mygo.json").write_text(json.dumps({"version": "0.5.0", "updates": {"publicKey": "fixture"},
+        (self.root / "mygo.json").write_text(json.dumps({"name": "ytmGO", "version": "0.5.0", "updates": {"publicKey": "fixture"},
                                                        "macos": {"minimumSystemVersion": "27.0"}}))
         events = []
         def command(args, stage, **kwargs):

@@ -8,7 +8,7 @@ pub fn install() {
         return;
     };
     let bar = NSMenu::new(mtm);
-    let app = NSMenu::initWithTitle(NSMenu::alloc(mtm), &NSString::from_str("ytmgo"));
+    let app = NSMenu::initWithTitle(NSMenu::alloc(mtm), &NSString::from_str("ytmGO"));
     let app_item = NSMenuItem::new(mtm);
     app_item.setSubmenu(Some(&app));
     bar.addItem(&app_item);

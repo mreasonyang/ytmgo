@@ -169,18 +169,27 @@ type Client struct {
 	lyrics                   map[string]lyricsReference
 	session                  *accountSession
 	sessionGeneration        uint64
+	pages                    responseCache[Page]
+	queues                   responseCache[queueResult]
+	lyricResults             responseCache[LyricsResult]
 }
 
 func New() *Client { return NewWithOptions(Options{}) }
 
-// SetLanguage changes the locale for future requests without replacing the
-// account session or interrupting playback. In-flight requests keep their locale.
+// SetLanguage invalidates cached/in-flight display metadata without replacing
+// the account session or interrupting playback.
 func (c *Client) SetLanguage(language string) {
 	if !languagePattern.MatchString(language) {
 		language = "en"
 	}
 	c.mu.Lock()
+	if c.language == language {
+		c.mu.Unlock()
+		return
+	}
 	c.language = language
+	c.resetResponsesLocked()
+	clear(c.lyrics)
 	clear(c.continuations)
 	c.mu.Unlock()
 }
@@ -277,7 +286,19 @@ func (c *Client) page(ctx context.Context, endpoint string, payload map[string]a
 	if endpoint == "browse" && strings.HasPrefix(textAt(payload, "browseId"), "MPRE") {
 		album = &albumMetadata{}
 	}
-	return c.loadPage(ctx, endpoint, payload, title, "", "", album)
+	key, _ := json.Marshal(payload)
+	page, err := memoized(c, ctx, &c.pages, endpoint+":"+string(key), 2*time.Minute, 8<<20, pageBytes, func(work context.Context) (Page, error) {
+		return c.loadPage(work, endpoint, payload, title, "", "", album)
+	})
+	if err == nil && page.Continuation != "" {
+		c.mu.RLock()
+		_, valid := c.continuations[page.Continuation]
+		c.mu.RUnlock()
+		if !valid {
+			return c.page(Refresh(ctx), endpoint, payload, title)
+		}
+	}
+	return clonePage(page), err
 }
 
 func (c *Client) loadPage(ctx context.Context, endpoint string, payload map[string]any, title, queryContinuation, visitorData string, album *albumMetadata) (Page, error) {
@@ -330,7 +351,10 @@ func (c *Client) Queue(ctx context.Context, videoID string) ([]Item, error) {
 	if err != nil {
 		return nil, err
 	}
-	items, lyrics, err := c.watchQueue(ctx, videoID)
+	result, err := memoized(c, ctx, &c.queues, videoID, 30*time.Second, 4<<20, func(q queueResult) int { return itemsBytes(q.items) + len(q.lyrics) }, func(work context.Context) (queueResult, error) {
+		items, lyrics, err := c.watchQueue(work, videoID)
+		return queueResult{items, lyrics}, err
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -342,9 +366,9 @@ func (c *Client) Queue(ctx context.Context, videoID string) ([]Item, error) {
 	if len(c.lyrics) >= maxCacheEntries {
 		clear(c.lyrics)
 	}
-	c.lyrics[videoID] = lyricsReference{browseID: lyrics, expires: time.Now().Add(10 * time.Minute)}
+	c.lyrics[videoID] = lyricsReference{browseID: result.lyrics, expires: time.Now().Add(10 * time.Minute)}
 	c.mu.Unlock()
-	return items, nil
+	return append([]Item(nil), result.items...), nil
 }
 
 func (c *Client) watchQueue(ctx context.Context, videoID string) ([]Item, string, error) {
@@ -386,7 +410,7 @@ func (c *Client) Track(ctx context.Context, videoID string) (Item, error) {
 }
 
 func (c *Client) Lyrics(ctx context.Context, videoID string) (string, error) {
-	result, err := c.lyricsResult(ctx, videoID, false)
+	result, err := memoized(c, ctx, &c.lyricResults, "plain:"+videoID, 10*time.Minute, 2<<20, lyricsBytes, func(work context.Context) (LyricsResult, error) { return c.lyricsResult(work, videoID, false) })
 	return result.Text, err
 }
 
@@ -414,7 +438,15 @@ func (c *Client) Like(ctx context.Context, videoID string, liked bool) error {
 	if _, ok := response["responseContext"].(map[string]any); !ok {
 		return ErrInvalidResponse
 	}
-	return c.scopeError(scope)
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if err := c.scopeErrorLocked(scope); err != nil {
+		return err
+	}
+	// Ratings and library contents changed; keep unrelated lyric results.
+	c.queues.reset()
+	c.pages.reset()
+	return nil
 }
 
 func (c *Client) api(ctx context.Context, endpoint string, payload map[string]any) (map[string]any, error) {

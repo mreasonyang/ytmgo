@@ -65,7 +65,7 @@ func (a *desktop) loadPage(route, q string, record bool) {
 			a.model.LibraryCached = true
 		}
 		if a.model.SignedIn {
-			request := a.loadLibrary()
+			request := a.loadLibrary(!record)
 			request.pageGeneration, request.record = generation, record
 		} else if !a.model.LibraryCached {
 			a.model.Loading = false
@@ -76,6 +76,9 @@ func (a *desktop) loadPage(route, q string, record bool) {
 		return
 	}
 	ctx, cancel := context.WithTimeout(a.ctx, 30*time.Second)
+	if !record {
+		ctx = catalog.Refresh(ctx)
+	}
 	params := a.browseParams
 	a.pageCancel = cancel
 	a.invalidate()
@@ -128,11 +131,14 @@ type libraryRequest struct {
 	scope          string
 }
 
-func (a *desktop) loadLibrary() *libraryRequest {
+func (a *desktop) loadLibrary(force ...bool) *libraryRequest {
 	if a.libraryRequest != nil {
 		return a.libraryRequest
 	}
 	ctx, cancel := context.WithTimeout(a.ctx, 30*time.Second)
+	if len(force) > 0 && force[0] {
+		ctx = catalog.Refresh(ctx)
+	}
 	request := &libraryRequest{cancel: cancel, scope: a.libraryScope}
 	a.libraryRequest = request
 	a.model.LibraryRefreshing = true
@@ -201,7 +207,7 @@ func (a *desktop) retryLibrary() {
 		a.reload()
 		return
 	}
-	a.loadLibrary()
+	a.loadLibrary(true)
 	a.invalidate()
 }
 

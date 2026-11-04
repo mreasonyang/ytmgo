@@ -56,6 +56,10 @@ func allowedRequest(u *url.URL, method string) bool {
 	return false
 }
 func (r *Resolver) request(ctx context.Context, method, raw string, body []byte, headers http.Header, stage, step string) ([]byte, error) {
+	return r.requestWithHeaders(ctx, method, raw, body, headers, stage, step, nil)
+}
+
+func (r *Resolver) requestWithHeaders(ctx context.Context, method, raw string, body []byte, headers http.Header, stage, step string, received *http.Header) ([]byte, error) {
 	parent := ctx
 	budget := 20 * time.Second
 	if stage == "bootstrap" && step == "player_script" {
@@ -155,6 +159,9 @@ func (r *Resolver) request(ctx context.Context, method, raw string, body []byte,
 			return nil, &Failure{Category: "bootstrap_network_timeout", Stage: stage, BootstrapStep: step}
 		}
 		return nil, failure("resolver_http_error", stage)
+	}
+	if received != nil {
+		*received = res.Header.Clone()
 	}
 	return data, nil
 }

@@ -113,6 +113,7 @@ func (c *Client) SetSession(cookies []*http.Cookie, accountIndex int, onBehalfOf
 	c.session, c.sessionGeneration = session, c.sessionGeneration+1
 	clear(c.continuations)
 	clear(c.lyrics)
+	c.resetResponsesLocked()
 	c.mu.Unlock()
 	return nil
 }
@@ -165,6 +166,7 @@ func (c *Client) ClearSession() {
 	c.session, c.sessionGeneration = nil, c.sessionGeneration+1
 	clear(c.continuations)
 	clear(c.lyrics)
+	c.resetResponsesLocked()
 }
 
 func (c *Client) operation(ctx context.Context) (context.Context, sessionScope, error) {

@@ -65,6 +65,9 @@ type accountState struct {
 	login                    *accountlogin.Login
 	loginCancel              context.CancelFunc
 	avatar                   *accountAvatarRequest
+	checkedAt                time.Time
+	refreshAttempt           time.Time
+	avatarCheckedAt          time.Time
 	// fallback marks revision as configured (or being configured) for
 	// anonymous playback while a saved account is not active.
 	fallback       bool
@@ -182,13 +185,21 @@ func (a *desktop) startAccountPolling() {
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				a.post(a.refreshAccount)
+				a.post(func() { a.checkAccount(true) })
 			}
 		}
 	}()
 	a.refreshAccount()
 }
 func (a *desktop) refreshAccount() {
+	a.checkAccount(false)
+}
+
+func (s *accountState) refreshDue(now time.Time, periodic bool) bool {
+	return (periodic || !s.ready || now.Sub(s.checkedAt) >= 5*time.Minute) && now.Sub(s.refreshAttempt) >= 30*time.Second
+}
+
+func (a *desktop) checkAccount(periodic bool) {
 	s := &a.accountState
 	if !s.started || a.accountBusy || s.login != nil {
 		return
@@ -204,6 +215,10 @@ func (a *desktop) refreshAccount() {
 	if s.session == nil && s.ready {
 		return
 	}
+	if !s.refreshDue(time.Now(), periodic) {
+		return
+	}
+	s.refreshAttempt = time.Now()
 	a.updateAccount(s.session, false)
 }
 func (a *desktop) restoreAccount(interaction accountsession.Interaction) {
@@ -338,6 +353,7 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 			}
 			identityChanged := false
 			if verified {
+				s.checkedAt = time.Now()
 				s.session, s.revision, s.restored, s.ready = session, revision, true, configured
 				if configured {
 					s.configured = next
@@ -401,12 +417,8 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 			}
 			recordAccountDiagnostic(a.diagnosticPath, category)
 			a.clearAccountRequestFailure(newIdentity)
-			a.preparedID = ""
-			if replay.pending && replay.generation == a.playGeneration {
-				a.startTrackAt(replay.item, replay.position)
-			} else if a.model.Playing {
-				a.prepareNext()
-			}
+			// prepareAccountPlayback already invalidated only changed configurations.
+			a.finishAccountPlayback(replay)
 			if newIdentity {
 				a.navigate("library")
 				a.show()
@@ -421,6 +433,14 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 			}
 		})
 	}()
+}
+
+func (a *desktop) finishAccountPlayback(replay accountReplay) {
+	if replay.pending && replay.generation == a.playGeneration {
+		a.startTrackAt(replay.item, replay.position)
+	} else if a.model.Playing {
+		a.prepareNext()
+	}
 }
 
 // accountRestoreSlowAfter is how long restoration may run before the view

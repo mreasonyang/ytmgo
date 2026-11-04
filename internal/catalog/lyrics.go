@@ -38,6 +38,11 @@ type LyricsResult struct {
 }
 
 func (c *Client) LyricsWithTiming(ctx context.Context, videoID string) (LyricsResult, error) {
+	result, err := memoized(c, ctx, &c.lyricResults, "timed:"+videoID, 10*time.Minute, 2<<20, lyricsBytes, func(work context.Context) (LyricsResult, error) { return c.loadLyricsWithTiming(work, videoID) })
+	return cloneLyrics(result), err
+}
+
+func (c *Client) loadLyricsWithTiming(ctx context.Context, videoID string) (LyricsResult, error) {
 	ctx, scope, err := c.operation(ctx)
 	if err != nil {
 		return LyricsResult{}, err

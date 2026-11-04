@@ -17,14 +17,15 @@ func (a *desktop) clearAccountAvatar() {
 		a.accountState.avatar = nil
 	}
 	a.model.AccountAvatar = ""
+	a.accountState.avatarCheckedAt = time.Time{}
 }
 
 func (a *desktop) loadAccountAvatar() {
-	if !a.model.SignedIn {
+	if !a.model.SignedIn || time.Since(a.accountState.avatarCheckedAt) < 30*time.Minute {
 		return
 	}
 	if previous := a.accountState.avatar; previous != nil {
-		previous.cancel()
+		return
 	}
 	ctx, cancel := context.WithTimeout(a.ctx, 15*time.Second)
 	request := &accountAvatarRequest{ctx: ctx, cancel: cancel, generation: a.accountGeneration}
@@ -44,6 +45,7 @@ func (a *desktop) applyAccountAvatar(request *accountAvatarRequest, avatar strin
 	if request.ctx.Err() != nil || request.generation != a.accountGeneration || !a.model.SignedIn || err != nil {
 		return
 	}
+	a.accountState.avatarCheckedAt = time.Now()
 	a.model.AccountAvatar = avatar
 	a.invalidate()
 }

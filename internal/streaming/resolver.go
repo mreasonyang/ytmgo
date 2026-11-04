@@ -34,6 +34,7 @@ type Resolver struct {
 	idleTimer     *time.Timer
 	ready         bool
 	playerCache   playerCache
+	proofScripts  proofScriptCache
 	playerID      string
 	playerChecked time.Time
 	playerRetry   time.Time
@@ -53,6 +54,7 @@ func New(options Options) (*Resolver, error) {
 	life, cancel := context.WithCancel(context.Background())
 	r := &Resolver{gate: make(chan struct{}, 1), life: life, cancel: cancel, client: transportClient(options.Client), leases: map[*Lease]struct{}{}, slots: make(chan struct{}, 4)}
 	r.playerCache.dir = options.PlayerCacheDir
+	r.proofScripts.dir = options.PlayerCacheDir
 	r.newHost = func(mode string) (scriptHost, error) { return startHost(options.Command, mode) }
 	return r, nil
 }
@@ -146,6 +148,7 @@ func (r *Resolver) Close() {
 		r.revokeAll()
 		r.session = Session{}
 		r.seed = extracted{}
+		r.proofScripts.entry = publicProofScript{}
 		r.client.CloseIdleConnections()
 	})
 }
@@ -344,13 +347,16 @@ func (r *Resolver) warmProof(ctx context.Context) error {
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
+		if reason == "proof_interpreter_failed" || reason == "proof_interpreter_missing" {
+			r.proofScripts.invalidate()
+		}
 		return &Failure{Category: "proof_failed", Stage: "proof_init", ScriptReason: reason}
 	}
 	p, err := parseProofPage(body)
 	if err != nil {
 		return proofFailure("page_parse")
 	}
-	script, err := r.request(ctx, "GET", p.interpreter, nil, nil, "proof_init", "")
+	script, err := r.proofScript(ctx, p.interpreter)
 	if err != nil {
 		return err
 	}

@@ -1,0 +1,15 @@
+{
+  "workflow_url": "https://github.com/mreasonyang/ytmgo/actions/runs/41832533257",
+  "conclusion": "failure",
+  "linux_package": "native installer, installed resources and startup checks passed",
+  "windows_failed_stage": "Stage pinned supplemental license notices",
+  "local_reproduction": {
+    "pinned_git_blob_matches": true,
+    "windows_style_checkout_matches": false,
+    "git_blob_crlf_count": 0,
+    "windows_style_crlf_count": 23
+  },
+  "repair": "Pinned notice files retain original bytes; Windows package checkout disables automatic newline conversion.",
+  "publication_skipped": true,
+  "raw_logs_retained": false
+}

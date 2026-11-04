@@ -86,6 +86,6 @@ jobs:
       - name: Require Go tests to pass
         if: always() && (steps.go_native.outcome == 'failure' || steps.go_linux.outcome == 'failure')
         run: exit 1
-      # This is login-helper and source validation. The media-runtime packager
-      # still targets macOS; no full Windows/Linux app or real-account login
-      # is claimed by this workflow. Never add account credentials to CI.
+      # This is login-helper and source validation. Installer acceptance lives
+      # in desktop-package.yml; real-account login is separate. Never add
+      # account credentials to CI.

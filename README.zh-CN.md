@@ -6,7 +6,7 @@
 
 音乐主界面与播放控件完全由 Go 通过 MyGo `ui.View` 原生绘制，不包含内嵌网页音乐页面、HTML/CSS/JS 界面桥接、Electron 或 Node.js 运行时。曲库访问、账号状态核验、媒体格式选择与有界流式传输由 Go 直接处理；音频由 MyGo 输出到系统音频设备，视频仅在打开视频视图时由独立原生解码器按需渲染。
 
-> **0.6.3 正式版：** [发布说明与下载](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.3)。支持 macOS 27+、Apple Silicon（`arm64`）。本版包含下文介绍的原生歌词、曲库快照、重启恢复和 ytmGO 品牌统一更新。各项检查的覆盖范围见[验证记录](VERIFICATION.md)。
+> **0.6.3 正式版：** [发布说明与下载](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.3)，提供 **macOS arm64、Windows x64、Linux x64** 安装包。本版包含下文介绍的原生歌词、曲库快照、重启恢复和 ytmGO 品牌统一更新。验收范围分别见 [Mac 发布记录](docs/audits/2026-11-04-release-0.6.3/README.md)和 [Windows/Linux 包记录](docs/audits/2026-11-04-desktop-release-0.6.3/README.md)。
 
 ---
 
@@ -34,6 +34,15 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 3. 安装到可写目录后，应用会在启动后最早 10 秒自动检查更新（之后每日检查一次），也可随时通过菜单 **ytmGO → 检查更新（Check for Updates…）** 手动触发。
 4. 原生更新窗口支持立即安装、稍后提醒、跳过此版本以及可选的自动下载；下载完成后点击重启即可原地替换 App bundle，并保留已保存的加密账号会话、曲库快照和个性化设置。
    - *说明：* `0.4.0` 不含自动更新器，需先手动安装一次 `0.5.0` 或更高版本。
+
+### Windows 与 Linux
+
+| 平台 | 下载 | 要求 |
+| --- | --- | --- |
+| Windows x64 | [安装器 EXE](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.3/ytmgo-setup-0.6.3-amd64.exe) · [便携 ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.3/ytmgo-0.6.3-windows-amd64.zip) | 需要 WebView2 Runtime；安装器尚未进行 Authenticode 签名 |
+| Linux x64 | [DEB](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.3/ytmgo_0.6.3_amd64.deb) · [解压包](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.3/ytmgo-0.6.3-linux-amd64.tar.gz) | Ubuntu 24.04 或兼容系统，需要 GTK 3、WebKitGTK 4.1 2.50.2+ 和 Secret Service |
+
+DEB 使用 `sudo apt install ./ytmgo_0.6.3_amd64.deb` 安装，再从应用菜单启动。便携包需完整解压，将 `runtime`、`login`、`legal` 等资源目录保留在可执行文件旁。两个平台的应用内更新归档均带 Ed25519 签名。[详细安装与发布说明](docs/DESKTOP_RELEASES.md)
 
 ---
 
@@ -116,7 +125,7 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 
 详细界面与架构规范见 [DESIGN.md](DESIGN.md)，历史与阶段性实测记录见 [VERIFICATION.md](VERIFICATION.md) 与 [自动升级验收](docs/AUTO_UPDATE_VERIFICATION.md)。阅读与使用时请注意以下客观边界：
 
-- **跨平台运行验收边界：** 2026-11-04 针对提交 `8c88037` 的三平台 GitHub Actions 工作流——[Native playback runtime](https://github.com/mreasonyang/ytmgo/actions/runs/41800458515) 与 [Native account login](https://github.com/mreasonyang/ytmgo/actions/runs/41800458464)——在 macOS、Windows 和 Linux 上均已全部通过。但真实安装版应用播放、原生界面视觉复核以及签名/公证正式包升级目前仅在 **macOS `arm64`（macOS 27+）** 完成实机验收；交叉编译与离线 CI 夹具不能代替 Windows 或 Linux 的原生运行、真实 Google WebView 登录及系统音频输出验收。
+- **跨平台运行验收边界：** 2026-11-04 针对提交 `8c88037` 的三平台 GitHub Actions 工作流——[Native playback runtime](https://github.com/mreasonyang/ytmgo/actions/runs/41800458515) 与 [Native account login](https://github.com/mreasonyang/ytmgo/actions/runs/41800458464)——在 macOS、Windows 和 Linux 上均已全部通过。Windows/Linux 的[安装包工作流](https://github.com/mreasonyang/ytmgo/actions/runs/41834832878)另外在对应系统原生构建，实际安装 NSIS/DEB 包，并核对安装后的资源和空账号启动。真实账号播放、完整原生界面交互、音频硬件及旧版 Windows/Linux 升级仍未包含在这项启动验收中，Mac 的实机验收单独记录。
 - **账号类型与广告流程边界：** macOS 已完成未登录匿名整曲播放及真实 **YouTube Music Premium** 账号的首页、曲库恢复、同步歌词、跳播与暂停恢复实测。**普通（非 Premium）账号**及**官方广告流程**尚未完成验收：当前实现没有官方广告素材序列与真实广告进度上报，不使用推算等待时间模拟广告，也不能将公开歌曲播放成功视为广告流程验收通过。
 - **内存占用现状：** 目前**不能宣称低内存优化已经完成**。当前工作区尚未进行新的整应用内存基准测试；针对早期构建的带日期实测记录见 [VERIFICATION.md](VERIFICATION.md)，旧版基于 Node 的历史数据也不作为当前运行时的对比结论。
 - **全局快捷键与长时稳定性边界：** 应用内快捷键（如空格键播放/暂停、`⌘K` 搜索等）与原生 UI 测试器状态机已验证，但 macOS 实体全局快捷键（`⇧⌘Space`）跨应用触发尚未通过端到端实机确认。此外，本地实机验收中曾记录到偶发的 `audio_stream_failed` 与 `bootstrap_network_timeout`（点击 **Retry** 后均恢复正常播放），其上游或网络根因尚未最终定论；崩溃/强制终止持久化、睡眠唤醒以及多日长时耐久运行仍待后续验收。

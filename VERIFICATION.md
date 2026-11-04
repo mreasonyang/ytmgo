@@ -1,5 +1,15 @@
 # Native playback verification
 
+## Windows/Linux 0.6.3 packages — 2026-11-04 (Asia/Shanghai)
+
+Windows x64 NSIS/portable ZIP and Linux x64 DEB/tar packages are now published
+alongside the existing Mac files. Both target-OS builds, offline runtime tests,
+actual installer/resource/version checks and empty-profile startup passed.
+Independent downloads verified all 11 new asset digests/checksums and both
+Ed25519 update signatures; the six original Mac asset digests are unchanged.
+Windows/Linux real-account UI/audio E2E and a prior-native-version upgrade are
+outside that smoke-test scope. [Evidence and downloads](docs/audits/2026-11-04-desktop-release-0.6.3/README.md).
+
 ## 0.6.3 release and Homebrew — 2026-11-04 (Asia/Shanghai)
 
 The signed/notarized macOS arm64 release, anonymous public-download integrity,

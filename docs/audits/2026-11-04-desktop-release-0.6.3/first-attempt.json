@@ -1,0 +1,20 @@
+{
+  "workflow_url": "https://github.com/mreasonyang/ytmgo/actions/runs/41830894853",
+  "conclusion": "failure",
+  "platforms": [
+    "linux-amd64",
+    "windows-amd64"
+  ],
+  "failed_stage": "Prepare native login helper and legal resources",
+  "login_helpers_built": true,
+  "fixed_failure_category": "Rust dependency notice missing",
+  "supplemented_packages": [
+    "dlopen2@0.8.2",
+    "dlopen2_derive@0.4.3",
+    "webview2-com@0.39.1",
+    "webview2-com-sys@0.39.1",
+    "webview2-com-macros@0.8.1"
+  ],
+  "publication_skipped": true,
+  "raw_logs_retained": false
+}

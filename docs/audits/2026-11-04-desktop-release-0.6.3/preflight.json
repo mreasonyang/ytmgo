@@ -1,0 +1,49 @@
+{
+  "checked_at": "2026-11-04T12:50:19.502374+00:00",
+  "application_source": "a582d25bb3f5b793f4d3e57160db3e4c90f86099",
+  "packaging_tools": "2a8fb53b2629ebb28b341b4d51719e95864c66dd",
+  "release_script_tests": {
+    "passed": 33,
+    "failed": 0
+  },
+  "license_script_tests": {
+    "passed": 6,
+    "failed": 0
+  },
+  "update_signing_tests": {
+    "passed": true,
+    "scope": "synthetic Windows/Linux signing roundtrip and archive tamper rejection"
+  },
+  "local_license_metadata_selection": [
+    {
+      "target": "x86_64-unknown-linux-gnu",
+      "crate": "account-login",
+      "packages": 142,
+      "passed": true
+    },
+    {
+      "target": "x86_64-unknown-linux-gnu",
+      "crate": "playback-host",
+      "packages": 151,
+      "passed": true
+    },
+    {
+      "target": "x86_64-pc-windows-msvc",
+      "crate": "account-login",
+      "packages": 88,
+      "passed": true
+    },
+    {
+      "target": "x86_64-pc-windows-msvc",
+      "crate": "playback-host",
+      "packages": 99,
+      "passed": true
+    }
+  ],
+  "metadata_scope": "Target-specific dependency/license selection executed on Mac; native package execution is recorded separately.",
+  "windows_line_endings_regression": {
+    "passed": true,
+    "lf_and_crlf_upstream_bytes_preserved": true
+  },
+  "public_verification_completed_at": "2026-11-04T13:35:12.317991+00:00"
+}

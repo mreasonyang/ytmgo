@@ -2,6 +2,8 @@
 
 ## 0.6.3 — 2026-11-04
 
+Windows x64 和 Linux x64 已补充首批原生安装包及各自的 Ed25519 签名更新源。公开下载后的归档签名、平台校验清单及稳定 feed 与版本 feed 的一致性检查通过。两个平台尚无上一正式安装包基线，本轮不宣称完成了真实跨版本更新。[跨平台安装包回执](audits/2026-11-04-desktop-release-0.6.3/public-verification.json)
+
 **PASS**。独立 macOS runner 从公开的 0.6.2 ZIP 出发，通过生产 feed 和维护命令完成 0.6.3 升级；更新后的文件、权限、符号链接与公开 0.6.3 ZIP 一致，签名、公证票据及 Gatekeeper 检查通过。该验证使用隔离应用副本，没有初始化账号存储。[公开包升级回执](audits/2026-11-04-release-0.6.3/public-upgrade-receipt.json)
 
 本机通过新增加的 Homebrew cask 安装正式 0.6.3，全部 725 项应用条目与公开 ZIP 一致。Premium、曲库、25 首队列、29.765 秒暂停断点及静音状态恢复。此次本机安装走 Homebrew，未重复操作原生更新窗口；也未声称完成扬声器听感、实体全局快捷键或睡眠唤醒验收。[完整记录](audits/2026-11-04-release-0.6.3/README.md) · [Homebrew 安装](HOMEBREW.md)

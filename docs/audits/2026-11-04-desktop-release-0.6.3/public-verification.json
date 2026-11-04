@@ -1,0 +1,85 @@
+{
+  "release_tag": "v0.6.3",
+  "application_source": "a582d25bb3f5b793f4d3e57160db3e4c90f86099",
+  "new_assets_verified": 11,
+  "original_mac_asset_digests_unchanged": 6,
+  "sha256": {
+    "ytmgo-0.6.3-windows-amd64.tar.gz": "fda9bd4aabb91fa7244ca0b2944e20f8f11519e0d10eeb251d81ab4409cbf20b",
+    "build-windows-amd64.json": "8fb71cd3da9c942144c27be0e75edc3a8b195b577940e7d6da5f3a21e9848e07",
+    "ytmgo-0.6.3-windows-amd64.zip": "e5133d83cc66027b8d20003e98a5b571643b7b3e2bcb55c03798edad9592ea0b",
+    "ytmgo-setup-0.6.3-amd64.exe": "945b57b7529abcd84cc2fa777a1a095c38d957e51f9aa1d59cb6c1e03ef657dd",
+    "update-windows-amd64.json": "4c1d8707a1a616b140fdba47be9de8c045fb499d1ae7e98ae2c0e24b20b46e72",
+    "SHA256SUMS-windows-amd64": "b344b41c0f6b548442a40126271ba3620272f03f96ac6d77c532ac568dc01a5d",
+    "ytmgo-0.6.3-linux-amd64.tar.gz": "3b42a57a28fe3a32d8613cd729c5421073d03f8efe786514d2a3a6bc62d5210b",
+    "build-linux-amd64.json": "9faa0ce949fcf98ce4abfb8e2aaa7022a394d9727f3446305282c240d29a3533",
+    "ytmgo_0.6.3_amd64.deb": "fd813983e5ac784a212c04d680c49effad99bb458e48c08dfa7f99904a26c3ca",
+    "update-linux-amd64.json": "99b7cace75e047e8ce99c261565978d705d3f0582e7c958398b3b97ce56828bc",
+    "SHA256SUMS-linux-amd64": "94142c861112bd41347e7bacf6c65ebe2d4ca8dec7024276fce77e7db0c3805a"
+  },
+  "platforms": {
+    "windows-amd64": {
+      "version": "0.6.3",
+      "commit": "a582d25bb3f5b793f4d3e57160db3e4c90f86099",
+      "packaging_tools_commit": "2a8fb53b2629ebb28b341b4d51719e95864c66dd",
+      "license_notice_overlay": [
+        {
+          "path": "scripts/licensing/upstream/dlopen2-cc80e4a0a90d499b677fdf7743699b4b3a43a989-LICENSE",
+          "sha256": "39fa265207450e77c62e90c5594a06c085b655d8374c7ced4bf7894b6bd95dd2"
+        },
+        {
+          "path": "scripts/licensing/upstream/webview2-rs-dffa41a8a46d3f5565eefbff2de57d38d399f158-LICENSE",
+          "sha256": "0dcf41516e608bbcb6cdc5229feb7b86fe4a643b85e7df251133c93408fdac73"
+        },
+        {
+          "path": "scripts/licensing/upstream/webview2-rs-edc2caf886175ccaebe86078c9cfe1ae2a187328-LICENSE",
+          "sha256": "0dcf41516e608bbcb6cdc5229feb7b86fe4a643b85e7df251133c93408fdac73"
+        },
+        {
+          "path": "scripts/licensing/upstream-notices.json",
+          "sha256": "93b726a2fe3cd7df75b5ddbe4ee190188ba3d288a5af937e153fbbc82f62ddae"
+        }
+      ],
+      "native_build": true,
+      "native_smoke": true,
+      "signed_updates": true,
+      "os_code_signed": false,
+      "bundled_files": 541,
+      "installed_cli_version": "0.6.3",
+      "smoke_scope": "native installer, installed resources, startup in an empty account profile; no signed-in E2E",
+      "run_url": "https://github.com/mreasonyang/ytmgo/actions/runs/41834832878"
+    },
+    "linux-amd64": {
+      "version": "0.6.3",
+      "commit": "a582d25bb3f5b793f4d3e57160db3e4c90f86099",
+      "packaging_tools_commit": "2a8fb53b2629ebb28b341b4d51719e95864c66dd",
+      "license_notice_overlay": [
+        {
+          "path": "scripts/licensing/upstream/dlopen2-cc80e4a0a90d499b677fdf7743699b4b3a43a989-LICENSE",
+          "sha256": "39fa265207450e77c62e90c5594a06c085b655d8374c7ced4bf7894b6bd95dd2"
+        },
+        {
+          "path": "scripts/licensing/upstream/webview2-rs-dffa41a8a46d3f5565eefbff2de57d38d399f158-LICENSE",
+          "sha256": "0dcf41516e608bbcb6cdc5229feb7b86fe4a643b85e7df251133c93408fdac73"
+        },
+        {
+          "path": "scripts/licensing/upstream/webview2-rs-edc2caf886175ccaebe86078c9cfe1ae2a187328-LICENSE",
+          "sha256": "0dcf41516e608bbcb6cdc5229feb7b86fe4a643b85e7df251133c93408fdac73"
+        },
+        {
+          "path": "scripts/licensing/upstream-notices.json",
+          "sha256": "b34bff2c9aabef76c3b6b25de22bba3d349fe58554715587569621416b06d648"
+        }
+      ],
+      "native_build": true,
+      "native_smoke": true,
+      "signed_updates": true,
+      "os_code_signed": false,
+      "bundled_files": 765,
+      "installed_cli_version": "0.6.3",
+      "smoke_scope": "native installer, installed resources, startup in an empty account profile; no signed-in E2E",
+      "run_url": "https://github.com/mreasonyang/ytmgo/actions/runs/41834832878"
+    }
+  },
+  "both_update_signatures_verified": true,
+  "both_stable_feeds_match": true
+}

@@ -3,7 +3,7 @@
 
 build/login is a single-target staging directory, copied unchanged by MyGo.
 Build on each target OS; this command never installs compilers or SDKs. The
-media runtime is separate and its existing preparation remains macOS-only.
+media runtime is prepared separately for the native macOS/Linux/Windows host.
 """
 import argparse
 import hashlib

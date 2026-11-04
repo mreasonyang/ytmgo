@@ -6,7 +6,7 @@
 
 The music interface is drawn natively in Go with **MyGo 0.7.1** (`ui.View`)—there is no embedded web music page, HTML/CSS/JS UI bridge, Electron runtime, or bundled Node.js. Go handles YouTube Music catalogue requests, session verification, format selection, and bounded media streaming; MyGo outputs decoded audio to the system audio device, and an on-demand native decoder renders video only while a video view is visible.
 
-> **Release 0.6.3:** [Release notes and downloads](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.3). macOS 27+ on Apple Silicon (`arm64`). This release includes the native lyrics, library snapshot, restart restoration and ytmGO branding updates described below. See [verification records](VERIFICATION.md) for the scope of individual checks.
+> **Release 0.6.3:** [Release notes and downloads](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.3) for **macOS arm64**, **Windows x64** and **Linux x64**. This release includes the native lyrics, library snapshot, restart restoration and ytmGO branding updates described below. See [Mac release verification](docs/audits/2026-11-04-release-0.6.3/README.md) and [Windows/Linux package verification](docs/audits/2026-11-04-desktop-release-0.6.3/README.md) for acceptance scope.
 
 ---
 
@@ -34,6 +34,15 @@ The app also supports in-app updates. Quit ytmGO before switching installation m
 3. When installed in a writable location, ytmGO checks for updates automatically (earliest 10 seconds after launch, then once per day) and manually via **ytmGO → Check for Updates…**.
 4. The native update window supports **Install Update**, **Later**, **Skip**, and optional automatic downloads, relaunching to replace the app bundle in place while keeping your encrypted account session, library snapshot, and preferences.
    - *Note:* Version `0.4.0` did not include an updater and requires a one-time manual installation of `0.5.0` or newer.
+
+### Windows and Linux
+
+| Platform | Downloads | Requirements |
+| --- | --- | --- |
+| Windows x64 | [Setup EXE](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.3/ytmgo-setup-0.6.3-amd64.exe) · [Portable ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.3/ytmgo-0.6.3-windows-amd64.zip) | WebView2 Runtime; installer is not Authenticode signed |
+| Linux x64 | [DEB](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.3/ytmgo_0.6.3_amd64.deb) · [tar.gz](https://github.com/mreasonyang/ytmgo/releases/download/v0.6.3/ytmgo-0.6.3-linux-amd64.tar.gz) | Ubuntu 24.04 or compatible GTK 3/WebKitGTK 4.1 2.50.2+ and Secret Service |
+
+For the DEB, run `sudo apt install ./ytmgo_0.6.3_amd64.deb`, then launch ytmGO from the applications menu. Extract portable archives completely and keep the `runtime`, `login`, `legal` and other resources beside the executable. Both platforms have Ed25519-signed in-app update archives. See [installation and release details](docs/DESKTOP_RELEASES.md).
 
 ---
 
@@ -116,7 +125,7 @@ The app also supports in-app updates. Quit ytmGO before switching installation m
 
 Detailed design specifications live in [DESIGN.md](DESIGN.md); historical and local verification records live in [VERIFICATION.md](VERIFICATION.md) and [docs/AUTO_UPDATE_VERIFICATION.md](docs/AUTO_UPDATE_VERIFICATION.md). Current boundaries to keep in mind:
 
-- **Platform Acceptance:** On 2026-11-04 at commit `8c88037`, both 3-platform GitHub Actions suites—[Native playback runtime](https://github.com/mreasonyang/ytmgo/actions/runs/41800458515) and [Native account login](https://github.com/mreasonyang/ytmgo/actions/runs/41800458464)—passed across macOS, Windows, and Linux. However, real installed-app playback, native UI visual verification, and signed/notarized release upgrades have been accepted on **macOS `arm64` (macOS 27+)** only; cross-compilation and offline CI fixtures do not establish Windows or Linux native runtime, live Google WebView login, or audio output acceptance.
+- **Platform Acceptance:** On 2026-11-04 at commit `8c88037`, both 3-platform GitHub Actions suites—[Native playback runtime](https://github.com/mreasonyang/ytmgo/actions/runs/41800458515) and [Native account login](https://github.com/mreasonyang/ytmgo/actions/runs/41800458464)—passed across macOS, Windows, and Linux. The Windows/Linux [package workflow](https://github.com/mreasonyang/ytmgo/actions/runs/41834832878) additionally builds on the corresponding OS, installs the NSIS/DEB package and verifies installed resources and startup in an empty account profile. Real signed-in playback, complete native UI interaction, hardware audio and prior-version Windows/Linux upgrades remain outside that smoke-test scope; the Mac acceptance records are separate.
 - **Account Tiers & Advertising:** Anonymous full-track playback and real **YouTube Music Premium** browsing, library restoration, and playback have been verified on macOS. **Standard (free/non-Premium) accounts** and **official advertising flows** are **not** accepted: ytmGO does not implement official ad asset sequencing or ad progress reporting, does not simulate ads with artificial wait timers, and does not treat public track playback as ad-flow validation.
 - **Memory Footprint:** Low-memory optimization is **not** claimed complete. The current workspace has no new whole-app memory benchmark; dated measurements for earlier builds are recorded in [VERIFICATION.md](VERIFICATION.md), and historical Node-based figures are not comparable to the current runtime.
 - **Global Shortcuts & Long-Run Stability:** In-app shortcuts (`Space`, `⌘K`, etc.) and UI Tester state machines pass, but physical global shortcut key injection (`⇧⌘Space`) has not yet been confirmed end-to-end on macOS. Local E2E runs also recorded isolated transient playback errors (`audio_stream_failed`, `bootstrap_network_timeout`) that recovered via **Retry** whose upstream/network root causes remain open. Crash/force-kill persistence, sleep/wake endurance, and multi-day stability are not yet certified.

@@ -1,0 +1,72 @@
+{
+  "checked_at": "2026-11-04T11:30:18.602121+00:00",
+  "source_commit": "19940a327d13979729689351e5274bb0d04c4b67",
+  "checks": [
+    {
+      "name": "go-race",
+      "passed": true,
+      "seconds": 132.99,
+      "counts": {
+        "pass": 1120,
+        "skip": 28,
+        "fail": 0
+      },
+      "failed_tests": []
+    },
+    {
+      "name": "decoder-timeline",
+      "passed": true,
+      "seconds": 8.64,
+      "counts": {
+        "pass": 19,
+        "skip": 0,
+        "fail": 0
+      },
+      "failed_tests": []
+    },
+    {
+      "name": "go-vet",
+      "passed": true,
+      "seconds": 1.81
+    },
+    {
+      "name": "i18n",
+      "passed": true,
+      "seconds": 0.15
+    },
+    {
+      "name": "release-scripts",
+      "passed": true,
+      "seconds": 9.59
+    },
+    {
+      "name": "runtime-manifest",
+      "passed": true,
+      "seconds": 0.08
+    },
+    {
+      "name": "runtime-protocol",
+      "passed": true,
+      "seconds": 0.04
+    },
+    {
+      "name": "runtime-tests",
+      "passed": true,
+      "seconds": 30.13
+    },
+    {
+      "name": "login-tests",
+      "passed": true,
+      "seconds": 0.37
+    },
+    {
+      "name": "license-tests",
+      "passed": true,
+      "seconds": 0.07
+    }
+  ],
+  "tap_generator_tests": {
+    "passed": 6,
+    "failed": 0
+  }
+}

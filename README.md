@@ -1,108 +1,222 @@
 # ytmGO
 
-品牌显示名统一为 **ytmGO**；仓库、发行文件前缀、Bundle ID 和数据目录保留技术标识 `ytmgo`。
+**English** · [简体中文](README.zh-CN.md)
 
-YouTube Music 桌面客户端，当前版本基线 **0.6.2**。主界面用 **MyGo 0.7.1 原生 UI** 绘制，曲库由 Go 访问，媒体请求、格式选择和有界流式传输由 Go 处理，音频由 MyGo 输出到系统音频设备。保留侧栏、搜索、歌曲与专辑列表、底部播放条、正在播放面板、队列、歌词、沉浸模式、封面/视频切换，以及四语言和深浅色设计。
+**ytmGO** is a native desktop client for YouTube Music (version baseline **0.6.3**). The user-facing brand is **ytmGO**, while the repository, release artifact prefix, bundle identifier (`si.kyun.ytmgo`), helper identifiers, and local data directories retain the technical name `ytmgo`.
 
-音乐界面与播放控件使用 MyGo 原生 UI。登录时单独启动 Wry 系统 WebView：macOS 使用 WKWebView，Windows 使用 WebView2，Linux 使用 WebKitGTK。登录会话通过私有父子进程管道交接后，登录子进程退出；主界面与播放不依赖这个窗口。没有浏览器扩展、HTTP 登录桥或 OAuth 配置。外部链接仍使用系统默认浏览器。
+The music interface is drawn natively in Go with **MyGo 0.7.1** (`ui.View`)—there is no embedded web music page, HTML/CSS/JS UI bridge, Electron runtime, or bundled Node.js. Go handles YouTube Music catalogue requests, session verification, format selection, and bounded media streaming; MyGo outputs decoded audio to the system audio device, and an on-demand native decoder renders video only while a video view is visible.
 
-账号状态由服务端明确返回的 `logged_in` 和 `has_unlimited_entitlement` 决定，每五分钟及应用回到前台时刷新。Premium 模式不创建 DOM 或播放证明环境；普通账号和未登录模式在需要播放时启动证明引擎。切换时退出并回收旧引擎，同账号的会员变化保留正在播放的音频，换账号或退出则撤销旧账号的媒体流。请求失败或字段缺失不会被当成会员过期。
+> **Release 0.6.3:** [Release notes and downloads](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.3). macOS 27+ on Apple Silicon (`arm64`). This release includes the native lyrics, library snapshot, restart restoration and ytmGO branding updates described below. See [verification records](VERIFICATION.md) for the scope of individual checks.
 
-当前分支已迁移到无 Node/jsdom 的原生运行时，并完成 macOS 匿名整曲播放、自然切歌、暂停恢复及整应用内存实测；本机也已用真实 Premium 账号验证首页、曲库、播放和暂停恢复。普通账号、Windows 原生执行和长时耐久验收仍待完成。稳定播放时整应用约 357–361 MiB，尚不能宣称内存优化完成。测试范围与证据见 [VERIFICATION.md](VERIFICATION.md)，旧版 Node 数据不作为新实现的内存结果。设计约定见 [DESIGN.md](DESIGN.md)。
+---
 
-## 运行和构建
+## Installation & Updates
 
-运行时构建覆盖 macOS、Windows、Linux，需要 Go **1.27.3+**、Rust/Cargo、Python 3 和 C 编译工具链。macOS 使用 Xcode Command Line Tools；Windows 的 FFmpeg 使用 MSYS2 UCRT64；Linux 使用 GTK 3 与 WebKitGTK 4.1 开发包。安装后的应用无需 Node、npm、Rust 或 Python。Windows 需要 WebView2 Runtime，Linux 需要 WebKitGTK 4.1 与 Secret Service。三平台 CI 构建和完整发行验收分别记录，不能以交叉编译代替原生运行验证。
+### Homebrew (macOS)
 
 ```sh
-make check
-make build
-open build/darwin-arm64/ytmGO.app
+brew install --cask mreasonyang/taps/ytmgo
 ```
 
-`make build` 打包 Go 主程序、小型原生脚本宿主和精简 FFmpeg 9.0.2。动态签名使用 QuickJS；普通账号和未登录证明使用独立、隐藏、非持久化的系统 WebView。只嵌入 YouTube.js 的脚本提取器、Meriyah 与 MIT BgUtils 的必要代码，不分发整个 SDK、Node、jsdom 或 npm 依赖目录。构建使用锁定源码归档与 Go 版 esbuild。许可证和构建信息随包保存；FFmpeg 仍使用 LGPL。详细说明见 [scripts/runtime/README.md](scripts/runtime/README.md)。
-
-本地默认产物为 `build/darwin-arm64/ytmGO.app` 和 `build/darwin-arm64/ytmgo-0.6.2-arm64.dmg`，采用 ad-hoc App 签名和未签名 DMG。GitHub Actions 已提供手动触发的测试打包、Developer ID 签名及 Apple 公证模式；配置证书、私钥和使用方法见 [macOS Actions 配置指南](docs/MACOS_ACTIONS.md)。选择 `notarized` 并勾选 `publish_release` 后，工作流会发布可下载的 GitHub Release 和签名更新 feed。重新构建导致 ad-hoc 身份变化时，macOS 可能要求重新授权访问本应用保存在钥匙串中的加密密钥。跨平台运行时的实际验收状态以验证记录为准。
-
-当前版本沿 `0.6.X` 迭代，末位为 0–999 的整数，不补前导零：`0.6.0`、`0.6.1`、…、`0.6.999`。仅正式发版时递增末位；普通修复、提交与本地构建不自动升版本，末位未耗尽不因日常迭代提升次版本。发布配置和更新包校验均限制末位范围。
-
-0.6.1 用户可在 ytmGO 菜单中选择 **Check for Updates…** 升级到 0.6.2。已在本机验证原生更新、Premium 播放和封面缓存。首次安装可下载已签名并公证的 macOS 安装包。[正式安装包](https://github.com/mreasonyang/ytmgo/releases/latest) · [自动升级验收](docs/AUTO_UPDATE_VERIFICATION.md)
-
-开发运行：
+Requires **macOS 27+ on Apple Silicon**. Homebrew installs the same signed and notarized app as the direct download. To update:
 
 ```sh
+brew update
+brew upgrade --cask --greedy mreasonyang/taps/ytmgo
+```
+
+The app also supports in-app updates. Quit ytmGO before switching installation methods; if a manually installed copy already exists, back it up and move it out of `/Applications` before installing with Homebrew. `brew uninstall --cask ytmgo` keeps account data and preferences. See [Homebrew maintenance](docs/HOMEBREW.md).
+
+### macOS Prebuilt Release
+
+1. Download the signed and notarized DMG from [GitHub Releases](https://github.com/mreasonyang/ytmgo/releases/latest) (requires **macOS 27+**, **Apple Silicon / `arm64`**).
+2. Drag the app into a writable `/Applications` directory before launching (running directly from a read-only mounted DMG prevents in-place updates).
+3. When installed in a writable location, ytmGO checks for updates automatically (earliest 10 seconds after launch, then once per day) and manually via **ytmGO → Check for Updates…**.
+4. The native update window supports **Install Update**, **Later**, **Skip**, and optional automatic downloads, relaunching to replace the app bundle in place while keeping your encrypted account session, library snapshot, and preferences.
+   - *Note:* Version `0.4.0` did not include an updater and requires a one-time manual installation of `0.5.0` or newer.
+
+---
+
+## Everyday Usage
+
+### Browsing & Library
+
+- **Direct Catalogue Access:** Browse **Home**, **Explore**, **Search** (`⌘K` / `Ctrl+K`), **Library** (`⌘L` / `Ctrl+L`), and **Album / Playlist / Artist** pages directly from YouTube Music.
+- **Navigation & Pagination:** Scroll near the end of a page to load continuations automatically. **Back / Forward** history preserves the loaded page data for each visited view. Diagonal trackpad/wheel gestures over horizontal song or album shelves route cleanly to the dominant scroll axis.
+- **Account-Scoped Library Snapshot:** After your signed-in library loads (including paginated continuations), ytmGO saves a local metadata snapshot (`account/library-snapshot.json`) bound to the current encrypted session. On restart, your saved library appears immediately while refreshing in the background; if an update fails, the saved list remains visible with an explicit **Retry** button. Unverified private entries stay disabled while signed out or offline, and signing out or switching accounts clears the snapshot.
+
+### Playback & Restart Restoration
+
+- **Transport Controls:** Click any song or collection play button to start listening. Controls include Play/Pause (`Space` inside the app, or `⌘P` / `Ctrl+P`), Previous/Next (`⌘←` / `⌘→` or `Ctrl+Left` / `Ctrl+Right`), seek bar with hover/drag time readout, volume (`⌘↑` / `⌘↓` or `Ctrl+Up` / `Ctrl+Down`), mute (`⇧⌘M` / `Ctrl+Shift+M`, preserving your previous unmuted volume), shuffle, repeat (**Off**, **All**, **One**), Like/Unlike, and right-click context menus (**Play**, **Add to queue**).
+- **Restart Session Restore:** On normal quit (`⌘Q` / `Ctrl+Q`), ytmGO saves your current queue, selected track index, playback position bookmark, volume, and unmuted volume (`playback-session.json`). On the next launch, it restores the queue, track, volume/mute state, and exact position in a **paused** state (publishing paused system Now Playing metadata) until you explicitly press **Play**. Reconnecting a saved account after an offline launch retains the restored paused bookmark; explicit new sign-in or sign-out clears the old queue.
+- **Next-Track Prefetch:** No script host or proof engine is warmed at startup. While a track plays, Go prepares at most the next queued track's stream and initial PCM so natural transitions start without re-resolving; random selection, cold start, seeks, queue changes, and account switches cancel obsolete preparation.
+
+### Now Playing, Synchronized Lyrics & Video
+
+- **Now Playing Views:** Click the artwork/title in the bottom player bar (or press `⌘J` / `Ctrl+J`, or click the **Lyrics** / **Queue** buttons) to open the **Now Playing** panel, or toggle full-window **Immersive Mode** (`⇧⌘F` / `Ctrl+Shift+F`).
+- **Default Lyrics on First Play:** When playback starts for the first time in a session, Now Playing opens automatically on the **Lyrics** tab—unless you have already opened or dismissed Now Playing or Immersive Mode during that session.
+- **Live Follow & Manual Reading:** When synchronized lyrics are available, the current cue is highlighted and kept centered inside the lyrics viewport without moving the outer panel. Scrolling with a mouse wheel, trackpad, keyboard, or scrollbar switches to manual reading and reveals a **Follow playback** button below the lyrics viewport; clicking it (or pressing `Tab` then `Return`) returns to live following. Tracks without synchronized timing display plain lyrics or an unavailable notice.
+- **Drag Lyrics to Seek:** On tracks with synchronized lyrics, drag vertically inside the lyrics area to preview target cues (highlighting the selected line against a center guide with a `<time> · Release to seek` badge). Releasing the pointer seeks to that cue's start timestamp and resumes live following while preserving play or pause state. Single clicks, horizontal movement, pressing `Escape`, or losing focus cancels the gesture without seeking.
+- **Expandable Lyrics Layout:** On the **Lyrics** tab (outside Immersive Mode and Video mode), click the expand button beside the **Lyrics / Queue** chips to shrink the cover art and give more vertical height to lyrics. Click again to restore the cover size; this choice is saved in `lyrics-layout` across restarts.
+- **On-Demand Video:** Switch between **Cover** and **Video** in Now Playing or Immersive Mode. Video is decoded on demand by a dedicated native decoder (up to **480p / 24fps**, synchronized to the audio clock, preserving aspect ratio). Hiding or minimizing the window, closing Now Playing/Immersive Mode, or switching back to **Cover** immediately releases the video decoder while audio continues uninterrupted.
+
+### Responsive Layout, Localization & Shortcuts
+
+- **Adaptive Window Geometry:**
+  - **Wide (`>1180` DIP):** Full collapsible library sidebar (`⌘B` / `Ctrl+B`), main page panel, and docked right-hand Now Playing panel.
+  - **Medium (`761–1180` DIP):** Compact 72-DIP icon rail and floating Now Playing dialog.
+  - **Compact (`≤760` DIP):** Single-column page, floating mini player card, and bottom navigation tab bar.
+- **Languages & Themes:** Settings (`Settings → General`) supports **English**, **简体中文**, **繁體中文**, **日本語** (plus **Match system**), and **Dark**, **Light**, or **System** appearance. Changes redraw the active native window immediately without interrupting playback.
+- **System Integration & Shortcuts:** Native application menus, system tray, OS Now Playing media controls, and a configurable global play/pause shortcut (`⇧⌘Space` / `Ctrl+Shift+Space` by default, recordable or disableable in `Settings → Keyboard`) share the same playback controller. Press `⌘/` (`Ctrl+/`) or open `Settings → Keyboard → View all` to inspect all in-app shortcuts.
+
+---
+
+## Account Sign-In, Security & Platform Limits
+
+### Isolated System WebView Sign-In
+
+- Clicking **Sign in** launches a separate, temporary Wry native WebView helper process (`WKWebView` on macOS, `WebView2` on Windows, `WebKitGTK` on Linux) showing Google's official sign-in page.
+- The login helper uses a distinct **ytmGO** icon with a teal account badge and keeps its own Dock / taskbar / window-switcher entry so multi-step verification is easy to return to; clicking the main app or Dock icon while sign-in is active focuses the existing login window.
+- Normal interactive sign-in has no forced application timeout. Once sign-in completes, the helper reads the selected account's cookies from the private WebView store, hands them to the main process over an anonymous parent-child pipe, and exits. The main UI and audio playback never depend on the login window.
+- There is no browser extension, local HTTP login bridge, OAuth client configuration, or temporary cookie file. Closing the login window cancels sign-in and keeps any previously connected account. External links open in your system default browser.
+
+### Passkey & Platform Authentication Limits
+
+- **macOS (`WKWebView`):** Google passkey sign-in is **not supported** in the macOS login window. Apple requires `WKWebView` passkey relying parties to have an Associated Domains relationship with the application (or a restricted web-browser entitlement), which an independent client cannot obtain for `google.com`. Use another verification method offered by Google's sign-in page; accounts that only allow passkeys cannot currently complete sign-in on macOS. See [Apple Passkeys Documentation](https://developer.apple.com/documentation/authenticationservices/supporting-passkeys).
+- **Windows (`WebView2`):** Requires Microsoft Edge WebView2 Runtime (`>= 101.0.1210.39`). While WebView2 supports FIDO2, ytmGO has not yet been live-tested against specific Google passkey providers on Windows.
+- **Linux (`WebKitGTK`):** Requires WebKitGTK 4.1 `>= 2.50.2` and `libsecret` (`Secret Service`). Version `2.50.2` avoids an upstream WebKitGTK hang on Google accounts with WebAuthn second factors, though this does not establish Linux passkey support. See [WebKitGTK 2.50.2 Release Notes](https://webkitgtk.org/2025/11/19/webkitgtk2.50.2-released.html).
+
+### Single-Key Encrypted Session Storage
+
+- Your full session (cookies and selected account metadata) is encrypted with **AES-256-GCM** (`YTMSESS\x03` authenticated header, fresh 12-byte random nonce, ciphertext, and 16-byte tag) in `account/session.enc` under the app data directory (`0700` directory and `0600` file on macOS/Linux; per-user AppData on Windows).
+- The OS secret store (macOS Keychain, Windows Credential Manager, Linux Secret Service) holds only a single 32-byte random encryption key under the fixed entry name `account-session-key`.
+- Before opening the login window, ytmGO prepares this key in memory: reusing a restored key, reading `account-session-key`, or creating it only when explicitly not found. If secret-store access is denied, locked, or malformed, sign-in fails immediately before opening the login window without overwriting existing data.
+- After login and YouTube membership verification succeed, ytmGO encrypts and atomically replaces `account/session.enc` using the prepared in-memory key, without making another OS secret-store call. Only this single encrypted format is read or written; there is no legacy migration or plaintext fallback.
+- On macOS startup, automatic restoration reads Keychain silently without triggering a system authorization dialog (`NoPrompt`). If restoration takes longer than 12 seconds or is deferred, the UI offers **Continue without account** and **Restore account** so you can listen to public tracks anonymously while keeping your saved session intact.
+- Confirming **Sign out and clear local data** stops playback, deletes `account/session.enc` first, and then deletes `account-session-key` from the OS secret store (allowing retry if key deletion fails, even after the file is gone). Signing out of ytmGO never affects your Google session in external browsers.
+
+### Membership Polling & Service Redirects
+
+- Account status is determined strictly from server-returned `logged_in` and `has_unlimited_entitlement` booleans on startup restoration, sign-in, window focus, and every 5 minutes. Network errors or missing fields are treated as transient errors, never as membership expiration.
+- **Premium mode** never loads DOM or proof modules; **standard (non-Premium) and signed-out modes** launch the proof engine on demand when playback requires it. Same-account membership changes reap obsolete proof engines while keeping the currently playing stream; account identity changes or sign-out revoke old streams.
+- When Google or YouTube returns a verification, consent, sign-in, or unknown redirect page, ytmGO explains the requirement inline and keeps ordinary **Retry** actions for catalogue and playback requests. It does not offer unverified web-verification flows, mislabel ordinary HTTP `403`/`429`/network errors as CAPTCHAs, or save/open server redirect URLs.
+
+---
+
+## Runtime Architecture, Network & Privacy Boundaries
+
+- **Node-Free Native Playback Runtime:** `make build` packages the Go main executable alongside a small Rust script host (`ytmgo-playback-host`) and a minimal **FFmpeg 9.0.2** binary. Dynamic player script extraction uses pinned MIT **YouTube.js** extractor subsets and ISC **Meriyah** in a temporary **QuickJS** process that exits immediately after returning bounded transform code; signature evaluations run in a fresh QuickJS realm per call (32 MiB limit, 3-second interrupt). Anonymous/free proof generation runs MIT **BgUtils** inside an isolated, hidden, non-persistent Wry system WebView with network/media blocked by CSP. No Node binary, npm tree, jsdom, or full YouTube.js SDK is shipped. Details: [scripts/runtime/README.md](scripts/runtime/README.md).
+- **Bounded Media Streaming:** Remote media URLs and account credentials stay in Go memory. FFmpeg connects only to a per-decoder random loopback capability URL passed over `stdin`. Go fetches remote media in **64 KiB** audio ranges and **512 KiB** video ranges, forwarding with **32 KiB** backpressure across at most 4 active leases/requests and without caching full tracks on disk.
+- **Proxy & Artwork Policy:** Catalogue, account verification, artwork, and media requests share `internal/netproxy`. Explicit `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` environment variables take priority on all platforms; on macOS, normal launches also read system HTTP, HTTPS, and SOCKS proxy settings and bypass rules. Local decoder loopback traffic always connects directly. PAC scripts and proxy passwords are not supported. Visible artwork is prioritized and retries with exponential backoff (2s to 1m). Explicitly public-cacheable covers are stored on disk up to **64 MiB / 512 files** for up to **24 hours**; account avatars are never written to the disk cover cache.
+- **Sanitized Diagnostics:** Local files under `native-diagnostics/` (`audio-status.json`, `video-status.json`, `account-status.json`) record only fixed status/failure categories, timestamps, and app version (plus closed-set stage, bootstrap step, HTTP status code, redirect category, and MIME type on playback init failures). Media URLs, headers, cookies, account identifiers, process arguments/environments, and raw logs are never written.
+
+---
+
+## Verification Scope & Current Caveats
+
+Detailed design specifications live in [DESIGN.md](DESIGN.md); historical and local verification records live in [VERIFICATION.md](VERIFICATION.md) and [docs/AUTO_UPDATE_VERIFICATION.md](docs/AUTO_UPDATE_VERIFICATION.md). Current boundaries to keep in mind:
+
+- **Platform Acceptance:** On 2026-11-04 at commit `8c88037`, both 3-platform GitHub Actions suites—[Native playback runtime](https://github.com/mreasonyang/ytmgo/actions/runs/41800458515) and [Native account login](https://github.com/mreasonyang/ytmgo/actions/runs/41800458464)—passed across macOS, Windows, and Linux. However, real installed-app playback, native UI visual verification, and signed/notarized release upgrades have been accepted on **macOS `arm64` (macOS 27+)** only; cross-compilation and offline CI fixtures do not establish Windows or Linux native runtime, live Google WebView login, or audio output acceptance.
+- **Account Tiers & Advertising:** Anonymous full-track playback and real **YouTube Music Premium** browsing, library restoration, and playback have been verified on macOS. **Standard (free/non-Premium) accounts** and **official advertising flows** are **not** accepted: ytmGO does not implement official ad asset sequencing or ad progress reporting, does not simulate ads with artificial wait timers, and does not treat public track playback as ad-flow validation.
+- **Memory Footprint:** Low-memory optimization is **not** claimed complete. The current workspace has no new whole-app memory benchmark; dated measurements for earlier builds are recorded in [VERIFICATION.md](VERIFICATION.md), and historical Node-based figures are not comparable to the current runtime.
+- **Global Shortcuts & Long-Run Stability:** In-app shortcuts (`Space`, `⌘K`, etc.) and UI Tester state machines pass, but physical global shortcut key injection (`⇧⌘Space`) has not yet been confirmed end-to-end on macOS. Local E2E runs also recorded isolated transient playback errors (`audio_stream_failed`, `bootstrap_network_timeout`) that recovered via **Retry** whose upstream/network root causes remain open. Crash/force-kill persistence, sleep/wake endurance, and multi-day stability are not yet certified.
+
+---
+
+## Building & Development
+
+### Prerequisites
+
+- **All platforms:** Go **1.27.3+**, Rust/Cargo, Python 3, and a C compiler toolchain.
+- **macOS:** Xcode Command Line Tools (`darwin/arm64` release packaging targets **macOS 27+**).
+- **Windows:** MSYS2 UCRT64 (`gcc`, `make`, `diffutils`) for building minimal FFmpeg, plus Microsoft Edge WebView2 Runtime at runtime.
+- **Linux:** `build-essential`, `pkg-config`, `nasm`, GTK 3, `libwebkit2gtk-4.1-dev` (`>= 2.50.2`), `libsoup-3.0-dev`, and `libsecret-1-dev` (plus `xvfb`, `xauth`, and `dbus-x11` for headless runtime tests).
+
+Installed application bundles do not require Node.js, npm, Rust, or Python.
+
+### Common Commands
+
+```sh
+# Run Go tests, runtime/login/license checks, go vet, and 4-language i18n check
+make check
+
+# Build the packaged app and DMG (macOS arm64 outputs to build/darwin-arm64/)
+make build
+open build/darwin-arm64/ytmGO.app
+
+# Build the app bundle without DMG and compile cmd/update-package
+make build-app
+
+# Run in development mode (prepares build/runtime and build/login first)
 make dev
 ```
 
-## 使用
+Local `make build` produces `build/darwin-arm64/ytmGO.app` and `build/darwin-arm64/ytmgo-0.6.3-arm64.dmg` with ad-hoc app signing and an unsigned DMG. Note that when a local rebuild changes the ad-hoc code-signing identity on macOS, Keychain may ask you to re-authorize access to `account-session-key`. For GitHub Actions Developer ID signing, Apple notarization, and signed update feed publishing, see [macOS Actions Guide](docs/MACOS_ACTIONS.md).
 
-- 首页、探索、搜索和专辑/歌单页面直接访问 YouTube Music。首页支持继续加载，前进/后退保留浏览位置所对应的页面数据。
-- 重启后先恢复上次成功加载的曲库列表，再后台同步更新；更新失败时保留已保存的列表并提供重试。快照绑定当前保存的账号，退出登录时清除。
-- 点击歌曲开始播放；支持播放/暂停、上一首/下一首、seek、音量、静音、随机与单曲/列表循环。右键曲目可加入队列。
-- 点击底部封面打开正在播放，可查看队列或歌词。视频由独立原生解码器按需显示，最高 480p / 24fps，按音频时钟同步；隐藏窗口、关闭播放视图或切回封面会释放视频解码器。
-- 宽窗口使用完整侧栏和停靠面板；中等窗口使用图标侧栏与浮动面板；紧凑窗口使用底部导航和迷你播放器。
-- 设置支持 English、简体中文、繁體中文、日本語，以及深色、浅色、跟随系统。修改语言或外观会即时重绘，不重建窗口或播放器。
-- 原生菜单、托盘、全局播放快捷键和系统 Now Playing 共用同一播放状态。全局快捷键可在设置中直接录入或停用；应用内按空格即可播放或暂停。
-- 曲库、账号校验、封面和媒体请求使用一致的代理选择：各平台支持 `HTTP_PROXY`／`HTTPS_PROXY` 和 `NO_PROXY`；macOS 普通启动也会读取系统 HTTP／HTTPS／SOCKS 代理及排除规则。显式环境变量优先，本地解码器回环连接始终直连。目前不执行 PAC 自动代理脚本，也不读取代理密码。封面优先加载当前页面的可见内容，加载失败后退避重试。明确允许公开缓存的封面会写入磁盘，最多 64 MiB、512 个文件，有效期最长 24 小时。账号头像不写入封面缓存。
-- 安装到可写目录后自动检查更新（启动后最早 10 秒，之后每日一次），也可使用 **ytmGO → 检查更新**。原生更新窗口支持立即安装、稍后、跳过，以及可选的自动下载；下载完成后重启安装。0.4.0 没有更新器，需要先手动安装一次 0.5.0。
+Packaged builds also support non-interactive maintenance flags that exit before starting the music window or accessing account storage:
 
-## 账号与数据
+```sh
+/path/to/ytmGO.app/Contents/MacOS/ytmGO --version
+/path/to/ytmGO.app/Contents/MacOS/ytmGO --check-for-updates
+/path/to/ytmGO.app/Contents/MacOS/ytmGO --install-update
+```
 
-点击登录会打开 Google 官方登录页面；在窗口里选择账号并完成 Google 要求的验证。登录程序使用带蓝绿色账号徽标的 ytmGO 图标，在 Dock／任务栏和窗口切换器中保留独立入口，方便切回尚未完成的验证；macOS 点击登录程序的 Dock 图标也会恢复已最小化的窗口。正常登录不设应用自定义的强制到期时间；登录成功、关闭窗口或退出应用时结束登录子进程。程序读取当前所选账号的会话，再向 YouTube 验证账号与会员状态后保存。关闭窗口取消本次登录，原有账号保留。会话只从系统 WebView 的私有存储读取，通过匿名管道交接，不经过浏览器扩展、本地 HTTP 服务或临时 Cookie 文件。
-
-macOS 登录窗口目前不支持 Google passkey。Apple 要求 WKWebView 的 passkey 服务与应用建立关联域关系，ytmGO 无法自行取得 Google 的关联授权；请使用 Google 页面提供的其他验证方式。没有其他验证方式的账号目前无法完成登录。Windows 的 WebView2 支持 FIDO2，但本应用与具体 Google passkey 提供者的组合尚未实测；Linux 使用 WebKitGTK 4.1 ≥2.50.2，避免旧版本在带 WebAuthn 第二因子的 Google 账号上卡住，这不代表 Linux 已支持 passkey。[Apple 说明](https://developer.apple.com/documentation/authenticationservices/supporting-passkeys)、[WebKitGTK 修复说明](https://webkitgtk.org/2025/11/19/webkitgtk2.50.2-released.html)。
-
-完整会话（Cookies 与账号选择信息）使用 AES-256-GCM 加密保存在应用数据目录的 `account/session.enc`。系统安全存储只保管一把 32 字节随机密钥，固定条目名为 `account-session-key`；macOS 使用 Keychain。打开登录窗口前先准备密钥：复用当前进程已恢复的密钥，或读取固定条目；仅在明确不存在时创建。授权被拒绝、存储锁定或密钥损坏时，直接在登录前报错。登录与二次验证完成后，使用内存中已准备的密钥和新的随机 nonce 加密，原子覆盖会话文件，不再访问系统安全存储。准备密钥不会改动已保存的会话；登录取消或文件保存失败时保留原文件和密钥，首次准备创建的密钥也可供重试复用。退出登录同时清除内存中的密钥。只读写一种会话格式，没有旧格式读取、迁移、随机密钥编号或明文存储备用路径。
-
-macOS 自动恢复不弹出钥匙串授权；用户主动点击“恢复账号”或重新登录时允许系统请求授权。无法恢复的登录数据可以在设置中明确清除，再重新登录。macOS/Linux 目录权限为 0700、文件为 0600，Windows 使用当前用户的数据目录和 Credential Manager。重启后先重新核验服务端状态，再启用对应播放模式。确认退出会停止播放、清空本应用的个人数据，先删除加密会话文件，再删除唯一密钥；密钥删除失败可以重试，不会因文件已不存在而漏删。外部浏览器的 Google 登录状态不受影响。
-
-遇到 Google 验证、登录或同意页面跳转时，应用直接说明服务端要求及当前请求无法完成；未知跳转也会如实说明。曲库和播放保留普通重试，不提供未经证实的网页验证步骤。已连接账号会保留，不会把请求限制认定为会员过期。普通 403、429 或网络错误不会被称为验证码，服务端返回的跳转地址不会被保存或打开。
-
-播放器创建时不启动脚本宿主，也不预热证明环境。当前曲目播放时最多准备下一首的媒体和首批 PCM；随机点播与初次启动仍需网络解析。快速切歌、账号切换、队列变化及 seek 会取消过期准备。
-
-播放器脚本分析在临时 QuickJS 进程中完成，随后立即回收；Go 仅保留有界提取代码。签名执行每次使用新 JS 环境。Premium 只在需要动态签名时启动解释器，普通/未登录模式按需创建独立的隐藏证明环境。会员变化或到期会销毁旧证明环境。账号凭据只留在 Go 中，不发送到脚本宿主；签名媒体地址不进入 argv、环境、日志或证据文件。
-
-当前实现没有官方广告素材序列和真实广告进度上报；不能把公开歌曲播放成功描述成广告流程验收通过，也不使用推算等待时间模拟广告。
-
-远端媒体地址只留在 Go 媒体租约中；FFmpeg 只连接每个解码器的随机回环能力地址，通过 stdin 接收。Go 直接按音频 64 KiB、视频 512 KiB 区间请求远端，以 32 KiB 背压转发；最多四个租约与四条活动请求，不缓存整曲。账号身份变化撤销旧租约；同账号会员变化保留当前媒体，取消过期预加载。
-
-本地 `native-diagnostics/audio-status.json` 与 `video-status.json` 仅保存启动状态或最近一次失败的固定类别、时间和应用版本；播放初始化失败还可包含封闭的阶段、HTTP 状态码、跳转类别与内容类型。不会保存媒体地址、请求头、账号数据或原始日志。
-
-## 代码与测试
+### Repository Layout & Targeted Tests
 
 ```text
-updates.go                  原生更新窗口、菜单与维护命令
-main.go / controller.go      原生窗口、菜单、导航、队列与请求生命周期
-native_views.go              原生屏幕、响应式布局和交互
-native_style.go              原有色板与矢量图标
-account.go                  登录会话交接、权益轮询和退出
-internal/accountsession/    会话校验与加密存储
-internal/accountlogin/      登录子进程与有界私有协议
-native/account-login/       三平台 Wry 临时登录窗口
-scripts/login/              登录组件构建与平台校验
-artwork.go                  有界图片下载与解码缓存
-video_controller.go         视频视图可见性及帧更新
-internal/catalog/           类型化曲库、分页、队列、歌词和账号接口
-internal/player/            独立解析、有界音视频解码、系统音频输出
-locales/                    四语言目录
-scripts/runtime/            可重现的播放器组件打包
-scripts/diagnostics/        不读取 argv/env 的内存测量
+main.go / controller.go         Window lifecycle, menus, navigation, queue & request generations
+updates.go                      Native updater plugin setup, menu item & CLI maintenance flags
+native_views.go / native_style.go  Native MyGo screens, responsive layouts, palette & vector icons
+native_settings.go              Settings & Keyboard Shortcuts sheets
+native_lyrics.go / native_lyrics_drag.go  Synced lyrics follow, manual reading & drag-to-seek
+lyrics_layout.go                Persistent standard/expanded lyrics layout preference
+playback_session.go             Normal-quit playback bookmark & queue persistence
+library_snapshot.go             Account-scoped library snapshot display & background sync
+global_shortcut.go              Global play/pause shortcut recorder & OS registration
+account.go                      Login helper handoff, 5-minute entitlement polling & sign-out
+artwork.go                      Prioritized viewport cover loader, backoff retry & disk cache
+video_controller.go             On-demand video lifecycle & 24fps frame updates
+diagnostics.go                  Allowlisted audio/video/account diagnostic status files
+internal/accountsession/        AES-256-GCM session file & single-key OS secret store
+internal/accountlogin/          Parent-child pipe protocol & login helper process management
+internal/catalog/               Typed Innertube client, browse/search/continuation, queue & lyrics
+internal/librarysnapshot/       Sanitized library snapshot serialization
+internal/netproxy/              Environment & macOS system proxy selection
+internal/player/ / internal/streaming/   Bootstrap, QuickJS/WebView proof host, range relay & FFmpeg PCM/video
+native/account-login/           Cross-platform Wry temporary Google sign-in helper (Rust)
+native/playback-host/           QuickJS extractor/evaluator & non-persistent proof WebView (Rust)
+locales/                        English, Simplified Chinese, Traditional Chinese & Japanese catalogs
+scripts/runtime/                Locked playback runtime & minimal FFmpeg 9.0.2 builder
+scripts/login/                  Login helper builder & platform binary verifier
+scripts/licensing/              Bundled legal notices & LGPL/MPL corresponding source collector
+scripts/release/                macOS signing, notarization, release publication & update checks
+scripts/diagnostics/            Safe process-tree physical-footprint collector (no argv/env reads)
 ```
 
 ```sh
-make check
+# Race detector across all Go packages
 go test -race ./...
+
+# Player unit tests with the prepared runtime
 YTMGO_RUNTIME_DIR="$PWD/build/runtime" go test ./internal/player
+
+# Opt-in live catalogue & playback checks
 YTMGO_LIVE_CATALOG=1 go test -v -run TestLive ./internal/catalog
 YTMGO_RUNTIME_DIR="$PWD/build/runtime" YTMGO_LIVE_PLAYBACK=1 go test -v -run TestNativePlaybackLive ./internal/player
 YTMGO_RUNTIME_DIR="$PWD/build/runtime" YTMGO_LIVE_PREPARED=1 go test -v -run TestNativePreparedPlaybackLive ./internal/player
+
+# Deterministic MyGo software-renderer UI snapshots
 YTMGO_UI_SNAPSHOT_DIR="$PWD/build/native-screenshots" go test -run '^TestNative' .
 ```
 
-自动布局截图使用 MyGo 软件渲染器，属于原生视图测试；真实应用、音频设备、网络和内存证据分别记录，互不替代。历史 0.3 审计保留在 `docs/audits/`，只作为设计参考和历史证据。
+Software-renderer layout snapshots test native view geometry deterministically; real-app interaction, audio device output, live network behavior, and whole-app memory measurements are verified and recorded separately.
 
-## 开源协议
+---
 
-ytmgo 自有代码、文档和项目资源统一采用 [Apache License 2.0](LICENSE)，版权及署名见 [NOTICE](NOTICE)。第三方依赖、引用或改编的代码，以及包含第三方代码的生成文件，保留各自的原始协议和版权声明；详见 [第三方组件说明](THIRD_PARTY_NOTICES.md)。
+## License
 
-构建时自动按实际 Go 依赖和两个 Rust 组件的锁文件生成随包 `legal/` 目录，其中包含许可证、组件版本、原始署名，以及 FFmpeg 和 MPL 组件的对应源码。运行 `make check-licenses` 可重新生成并校验，正式打包也会检查这些文件。FFmpeg 保持 LGPL-2.1-or-later，MPL 组件保持 MPL-2.0。
+Original **ytmgo** code, documentation, and project assets are licensed under the [Apache License 2.0](LICENSE); see [NOTICE](NOTICE) for copyright and attribution and [CONTRIBUTING.md](CONTRIBUTING.md) for contribution terms.
+
+Third-party dependencies, adapted code, and generated bundles containing third-party code retain their upstream licenses and copyright notices—including **FFmpeg 9.0.2** under **LGPL-2.1-or-later** and **MPL-2.0** components (such as `option-ext` when selected by the target's Rust dependency graph); see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+During `make build` and `make build-app` (and verifiable via `make check-licenses`), the build system generates a target-specific `legal/` directory inside the packaged application containing upstream notices, `manifest.json`, and checksum-verified corresponding source archives plus rebuild instructions for FFmpeg and MPL-2.0 components.

@@ -102,12 +102,13 @@ def publish():
     existing = json.loads(gh(["api", "repos/" + REPOSITORY + "/git/matching-refs/tags/" + tag], "Tag lookup"))
     if any(ref.get("ref") == "refs/tags/" + tag for ref in existing):
         raise ReleaseError("Release tag already exists")
-    notes = ("Native update checks with signed downloads and restart installation.\n\n"
+    notes_path = ROOT / "docs/releases" / (version + ".md")
+    notes = notes_path.read_text() if notes_path.is_file() else ("Native update checks with signed downloads and restart installation.\n\n"
              "macOS 27 or newer, Apple Silicon. Install the DMG once when upgrading from 0.4.0.\n"
              "The app checks for updates after launch and daily. Check manually from the ytmgo menu.\n\n"
              "The App and DMG are Developer ID signed, notarized and stapled. "
-             "The updater verifies a separate Ed25519 signature before installation.\n\n"
-             "Source: " + commit + "\n")
+             "The updater verifies a separate Ed25519 signature before installation.\n")
+    notes += "\nSource: " + commit + "\n"
     with tempfile.TemporaryDirectory(prefix="ytmgo-release-") as temporary:
         body = Path(temporary) / "notes.md"
         body.write_text(notes)

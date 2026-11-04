@@ -385,4 +385,7 @@ if __name__ == "__main__":
         main()
     except Exception as error:
         message = str(error) if isinstance(error, DesktopError) else "desktop_release_operation_failed"
+        diagnostics = ROOT / "dist/desktop-errors"
+        diagnostics.mkdir(parents=True, exist_ok=True)
+        (diagnostics / "desktop-error.json").write_text(json.dumps({"category": message}, indent=2) + "\n")
         raise SystemExit("Desktop release: " + message)

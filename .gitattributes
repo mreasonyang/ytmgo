@@ -1,3 +1,6 @@
 # Preserve exact upstream source/license bytes, including upstream whitespace.
 scripts/runtime/vendor/** whitespace=-blank-at-eol
 scripts/runtime/licenses/* whitespace=-blank-at-eol
+
+# Upstream notices are checksum-pinned to their original bytes.
+/scripts/licensing/upstream/** -text

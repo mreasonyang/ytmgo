@@ -2,6 +2,7 @@ import hashlib
 import json
 from pathlib import Path
 import tempfile
+import subprocess
 import unittest
 from unittest.mock import patch
 
@@ -131,6 +132,26 @@ class DesktopReleaseTests(unittest.TestCase):
         (tools / "scripts/licensing/upstream-notices.json").write_text(json.dumps({"other@1.0.0": record}))
         with patch.object(desktop, "ROOT", tools), self.assertRaises(desktop.DesktopError):
             desktop.stage_notices(source)
+
+    def test_windows_checkout_preserves_pinned_notice_bytes(self):
+        repository = self.root / "notice-repository"
+        repository.mkdir()
+        attributes = (desktop.ROOT / ".gitattributes").read_bytes()
+        (repository / ".gitattributes").write_bytes(attributes)
+        notices = repository / "scripts/licensing/upstream"
+        notices.mkdir(parents=True)
+        for name, data in (("lf-LICENSE", b"synthetic upstream notice\n"),
+                           ("crlf-LICENSE", b"synthetic upstream notice\r\n")):
+            (notices / name).write_bytes(data)
+        for command in (["git", "init"], ["git", "add", ".gitattributes", "scripts/licensing/upstream"]):
+            subprocess.run(command, cwd=repository, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        checked = self.root / "windows-checkout"
+        checked.mkdir()
+        subprocess.run(["git", "-c", "core.autocrlf=true", "-c", "core.eol=crlf", "checkout-index",
+                        "--prefix=" + str(checked) + "/", "--all"], cwd=repository,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        for name in ("lf-LICENSE", "crlf-LICENSE"):
+            self.assertEqual((checked / "scripts/licensing/upstream" / name).read_bytes(), (notices / name).read_bytes())
 
 
 if __name__ == "__main__":

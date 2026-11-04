@@ -70,6 +70,9 @@ jobs:
       CARGO_BUILD_JOBS: '2'
       DESKTOP_SOURCE_SHA: ${{ needs.resolve.outputs.source_sha }}
     steps:
+      - name: Preserve release-source bytes on Windows
+        if: runner.os == 'Windows'
+        run: git config --global core.autocrlf false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.resolve.outputs.tools_sha }}
@@ -137,6 +140,14 @@ jobs:
           name: ytmgo-desktop-${{ matrix.target }}
           path: dist/desktop/*
           if-no-files-found: error
+          retention-days: 14
+      - name: Upload fixed failure category without raw logs
+        if: failure()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: ytmgo-package-diagnostic-${{ matrix.target }}
+          path: dist/desktop-errors/*.json
+          if-no-files-found: ignore
           retention-days: 14
 
   publish:

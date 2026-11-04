@@ -1,0 +1,17 @@
+ytmGO
+Copyright 2026 ytmgo contributors
+
+Original ytmgo code, documentation and project assets are licensed under the
+Apache License, Version 2.0. See LICENSE.
+
+Third-party code, generated bundles containing third-party code, dependencies
+and their notices retain their original licenses. See THIRD_PARTY_NOTICES.md.
+The project license does not replace or extend third-party permissions.
+
+The URL transformation in internal/streaming/format.go derives from the MIT
+YouTube.js getNsigProcessorFn. The native proof adapter follows the MIT BgUtils
+example by LuanRT. Their original copyright and permission notices are retained
+in scripts/runtime/licenses and in the generated distribution notices.
+
+YouTube and YouTube Music are trademarks of their respective owners. This
+independent project is not affiliated with or endorsed by Google or YouTube.

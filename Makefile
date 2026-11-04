@@ -1,4 +1,4 @@
-.PHONY: dev runtime login build build-app test test-runtime test-login check
+.PHONY: dev runtime login licenses check-licenses test-licenses build build-app test test-runtime test-login check
 
 LOGIN_OS := $(shell go env GOOS)
 ifeq ($(LOGIN_OS),darwin)
@@ -16,13 +16,24 @@ runtime:
 login:
 	python3 scripts/login/prepare.py
 
-build: runtime login
+licenses: runtime login
+	python3 scripts/licensing/prepare.py
+
+check-licenses: licenses
+	python3 scripts/licensing/prepare.py --verify
+
+test-licenses:
+	python3 -m unittest discover -s scripts/licensing -p 'test_*.py'
+
+build: licenses
 	python3 scripts/login/prepare.py --verify
 	CGO_ENABLED=0 go tool mygo build
+	python3 scripts/licensing/prepare.py --verify-build
 
-build-app: runtime login
+build-app: licenses
 	python3 scripts/login/prepare.py --verify
 	CGO_ENABLED=0 go tool mygo build -skip-dmg
+	python3 scripts/licensing/prepare.py --verify-build
 	CGO_ENABLED=0 go build -o build/release/update-package ./cmd/update-package
 
 test:
@@ -36,6 +47,6 @@ test-runtime: runtime
 test-login:
 	python3 -m unittest discover -s scripts/login -p 'test_*.py'
 
-check: test test-runtime test-login
+check: test test-runtime test-login test-licenses check-licenses
 	go vet ./...
 	go tool mygo i18n check

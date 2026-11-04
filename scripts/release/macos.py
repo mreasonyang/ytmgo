@@ -265,6 +265,8 @@ def package(mode):
     app = ROOT / "build/darwin-arm64" / (config.get("name", "ytmgo") + ".app")
     if not app.is_dir():
         raise PackageError("Build the complete arm64 app first")
+    run([sys.executable, ROOT / "scripts/licensing/prepare.py", "--bundle", app / "Contents/Resources"],
+        "Packaged licenses and corresponding source verification")
     output = ROOT / "dist/macos"
     if output.exists():
         raise PackageError("Output directory already exists; use a clean build workspace")

@@ -100,3 +100,9 @@ YTMGO_UI_SNAPSHOT_DIR="$PWD/build/native-screenshots" go test -run '^TestNative'
 ```
 
 自动布局截图使用 MyGo 软件渲染器，属于原生视图测试；真实应用、音频设备、网络和内存证据分别记录，互不替代。历史 0.3 审计保留在 `docs/audits/`，只作为设计参考和历史证据。
+
+## 开源协议
+
+ytmgo 自有代码、文档和项目资源统一采用 [Apache License 2.0](LICENSE)，版权及署名见 [NOTICE](NOTICE)。第三方依赖、引用或改编的代码，以及包含第三方代码的生成文件，保留各自的原始协议和版权声明；详见 [第三方组件说明](THIRD_PARTY_NOTICES.md)。
+
+构建时自动按实际 Go 依赖和两个 Rust 组件的锁文件生成随包 `legal/` 目录，其中包含许可证、组件版本、原始署名，以及 FFmpeg 和 MPL 组件的对应源码。运行 `make check-licenses` 可重新生成并校验，正式打包也会检查这些文件。FFmpeg 保持 LGPL-2.1-or-later，MPL 组件保持 MPL-2.0。

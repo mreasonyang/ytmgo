@@ -2,6 +2,7 @@
   "name": "ytmGO",
   "slug": "ytmgo",
   "identifier": "si.kyun.ytmgo",
+  "copyright": "Copyright 2026 ytmgo contributors",
   "version": "0.6.2",
   "updates": {
     "publicKey": "QdNGPq3cMZgxGD4axj0uOJFhUy6hHpmR710PRm3oovE=",
@@ -41,6 +42,7 @@
   },
   "resources": [
     "build/runtime",
-    "build/login"
+    "build/login",
+    "build/legal"
   ]
 }

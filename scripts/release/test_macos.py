@@ -106,6 +106,7 @@ class PackagingTests(unittest.TestCase):
         app.mkdir(parents=True)
         (self.root / "mygo.json").write_text(json.dumps({"version": "0.4.0"}))
         with patch.object(macos, "ROOT", self.root), \
+             patch.object(macos, "run", return_value=b""), \
              patch.object(macos, "signing_directory", return_value=self.root / "private"), \
              patch.object(macos, "import_identity", side_effect=macos.PackageError("Certificate import failed")), \
              patch.object(macos, "cleanup") as cleanup:

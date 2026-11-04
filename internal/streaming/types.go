@@ -106,6 +106,9 @@ func failure(category, stage string) error { return &Failure{Category: category,
 type Options struct {
 	Command func(context.Context, string) *exec.Cmd
 	Client  *http.Client
+	// PlayerCacheDir stores only public player transforms, never session data.
+	// Empty disables disk caching (useful for isolated protocol tests).
+	PlayerCacheDir string
 }
 type Media struct {
 	Lease         *Lease

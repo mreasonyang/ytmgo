@@ -73,6 +73,7 @@ func TestPremiumGoProtocolSkipsProofAndKeepsLeasesAcrossMembershipChange(t *test
 		t.Fatal(err)
 	}
 	r.seed = extracted{Code: "synthetic", Timestamp: 12345}
+	r.playerID, r.playerChecked = "fixture", time.Now()
 	r.sessionClient = map[string]any{"clientName": "WEB_REMIX", "visitorData": "fixture_visitor"}
 	result, err := r.Resolve(context.Background(), "AAAAAAAAAAA", "audio")
 	if err != nil || result.Duration != 2*time.Minute {

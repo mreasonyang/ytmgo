@@ -6,13 +6,14 @@ import (
 	"encoding/base64"
 	"errors"
 	"net/http"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
 )
 
-const resolverOperationTimeout = 45 * time.Second
+// First use may download a large public player; ordinary requests retain their
+// shorter budgets and account changes still cancel the active operation.
+const resolverOperationTimeout = 90 * time.Second
 
 type scriptHost interface {
 	call(context.Context, string, any) error
@@ -32,6 +33,10 @@ type Resolver struct {
 	sessionClient map[string]any
 	idleTimer     *time.Timer
 	ready         bool
+	playerCache   playerCache
+	playerID      string
+	playerChecked time.Time
+	playerRetry   time.Time
 	seed          extracted
 	binding       proofBinding
 	expires       time.Time
@@ -47,6 +52,7 @@ func New(options Options) (*Resolver, error) {
 	}
 	life, cancel := context.WithCancel(context.Background())
 	r := &Resolver{gate: make(chan struct{}, 1), life: life, cancel: cancel, client: transportClient(options.Client), leases: map[*Lease]struct{}{}, slots: make(chan struct{}, 4)}
+	r.playerCache.dir = options.PlayerCacheDir
 	r.newHost = func(mode string) (scriptHost, error) { return startHost(options.Command, mode) }
 	return r, nil
 }
@@ -107,7 +113,7 @@ func (r *Resolver) Configure(ctx context.Context, s Session) error {
 		r.revokeAll()
 	}
 	r.resetHosts()
-	r.seed = extracted{}
+	// Public transforms are independent of account/proof generations.
 	r.binding = proofBinding{}
 	r.sessionClient = nil
 	r.session = s
@@ -155,14 +161,12 @@ func (r *Resolver) revokeAll() {
 	}
 }
 
-var playerIDPattern = regexp.MustCompile(`player\\?/([A-Za-z0-9_-]{1,128})\\?/`)
-
 func (r *Resolver) warm(ctx context.Context) error {
 	if r.session.Revision == 0 {
 		return failure("init_failed", "sdk_create")
 	}
 	if r.ready && time.Until(r.expires) > time.Minute {
-		return nil
+		return r.ensurePlayer(ctx)
 	}
 	r.resetHosts()
 	if r.sessionClient == nil {
@@ -170,47 +174,8 @@ func (r *Resolver) warm(ctx context.Context) error {
 			return err
 		}
 	}
-	if r.seed.Code == "" {
-		data, err := r.request(ctx, "GET", "https://www.youtube.com/iframe_api", nil, nil, "bootstrap", "player_identifier")
-		if err != nil {
-			return err
-		}
-		match := playerIDPattern.FindSubmatch(data)
-		if len(match) != 2 {
-			return &Failure{Category: "init_failed", Stage: "bootstrap", BootstrapStep: "player_identifier"}
-		}
-		script, err := r.request(ctx, "GET", "https://www.youtube.com/s/player/"+string(match[1])+"/player_es6.vflset/en_US/base.js", nil, nil, "bootstrap", "player_script")
-		if err != nil {
-			return err
-		}
-		h, err := r.newHost("extract")
-		if err != nil {
-			return &Failure{Category: "init_failed", Stage: "bootstrap", BootstrapStep: "player_script", ScriptReason: "host_start"}
-		}
-		var seed extracted
-		err = h.call(ctx, "extractPlayer("+jsJSON(string(script))+")", &seed)
-		h.Close()
-		if err != nil {
-			if ctx.Err() != nil {
-				return ctx.Err()
-			}
-			if err.Error() == "script_memory_limit" || err.Error() == "script_output_limit" {
-				return &Failure{Category: "cache_limit", Stage: "bootstrap", BootstrapStep: "player_script"}
-			}
-			if err.Error() == "script_timeout" {
-				return &Failure{Category: "request_timeout", Stage: "bootstrap", BootstrapStep: "player_script"}
-			}
-			reason := "script_failed"
-			switch err.Error() {
-			case "script_stack_limit", "player_timestamp_missing", "player_function_missing", "script_reference_error", "script_type_error", "script_syntax_error", "script_internal_error", "script_range_error":
-				reason = err.Error()
-			}
-			return &Failure{Category: "init_failed", Stage: "bootstrap", BootstrapStep: "player_script", ScriptReason: reason}
-		}
-		if seed.Timestamp <= 0 || seed.Timestamp > 1000000 || len(seed.Code) == 0 || len(seed.Code) > 8<<20 {
-			return &Failure{Category: "init_failed", Stage: "bootstrap", BootstrapStep: "player_script", ScriptReason: "invalid_extraction"}
-		}
-		r.seed = seed
+	if err := r.ensurePlayer(ctx); err != nil {
+		return err
 	}
 	if r.session.LoggedIn {
 		response, err := r.api(ctx, "browse", map[string]any{"browseId": "FEmusic_library_landing"}, "account_validation")
@@ -328,6 +293,9 @@ func (r *Resolver) Resolve(ctx context.Context, id, kind string) (Media, error) 
 	}
 	remote, err := r.decipher(ctx, selected)
 	if err != nil {
+		if err.Error() == "decipher_failed" {
+			r.invalidatePlayer()
+		}
 		return Media{}, err
 	}
 	if r.proof != nil {

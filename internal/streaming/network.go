@@ -57,7 +57,13 @@ func allowedRequest(u *url.URL, method string) bool {
 }
 func (r *Resolver) request(ctx context.Context, method, raw string, body []byte, headers http.Header, stage, step string) ([]byte, error) {
 	parent := ctx
-	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	budget := 20 * time.Second
+	if stage == "bootstrap" && step == "player_script" {
+		budget = 60 * time.Second
+	} else if stage == "bootstrap" && step == "player_identifier" {
+		budget = 5 * time.Second
+	}
+	ctx, cancel := context.WithTimeout(ctx, budget)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, method, raw, bytes.NewReader(body))
 	if err != nil || !allowedRequest(req.URL, method) {

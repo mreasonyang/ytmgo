@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"ytmgo/internal/streaming"
 )
@@ -12,7 +13,11 @@ import (
 type resolver struct{ native *streaming.Resolver }
 
 func (paths runtimePaths) newResolver() (*resolver, error) {
-	native, err := streaming.New(streaming.Options{Command: func(ctx context.Context, mode string) *exec.Cmd {
+	cacheDir := ""
+	if root, err := os.UserCacheDir(); err == nil {
+		cacheDir = filepath.Join(root, "ytmgo", "public-player")
+	}
+	native, err := streaming.New(streaming.Options{PlayerCacheDir: cacheDir, Command: func(ctx context.Context, mode string) *exec.Cmd {
 		cmd := childCommand(ctx, paths.helper, mode)
 		if mode == "dom" && runtime.GOOS == "linux" {
 			for _, name := range []string{"DISPLAY", "WAYLAND_DISPLAY", "XDG_RUNTIME_DIR", "XAUTHORITY", "DBUS_SESSION_BUS_ADDRESS"} {

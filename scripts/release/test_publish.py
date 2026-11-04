@@ -31,28 +31,33 @@ class ReleaseTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.commit = "a" * 40
-        self.config = {"version": "0.5.0"}
+        self.config = {"version": "0.5.0", "macos": {"minimumSystemVersion": "13.0"}}
         self.directory = self.root / "dist/macos"
         self.directory.mkdir(parents=True)
         self.meta = {"version": "0.5.0", "commit": self.commit, "mode": "notarized", "architecture": "arm64",
-                     "notarized": True, "developer_id_signed": True, "signed_updates": True}
-        self.names = ["ytmgo-0.5.0-arm64-notarized.dmg", "ytmgo-0.5.0-arm64-notarized.zip",
-                      "ytmgo-0.5.0-darwin-arm64.tar.gz", "update-darwin-arm64.json", "build.json"]
-        for name in self.names[:3]:
-            (self.directory / name).write_bytes(b"public artifact fixture")
-        (self.directory / "update-darwin-arm64.json").write_text(json.dumps({"version": "0.5.0", "size": 23,
-            "url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.5.0/ytmgo-0.5.0-darwin-arm64.tar.gz"}))
+                     "notarized": True, "developer_id_signed": True, "signed_updates": True, "minimum_macos": "13.0"}
+        self.names = []
+        for arch in ("arm64", "amd64"):
+            self.names += ["ytmgo-0.5.0-" + arch + "-notarized.dmg", "ytmgo-0.5.0-" + arch + "-notarized.zip",
+                           "ytmgo-0.5.0-darwin-" + arch + ".tar.gz", "update-darwin-" + arch + ".json",
+                           "build.json" if arch == "arm64" else "build-amd64.json"]
+            for name in self.names[-5:-2]:
+                (self.directory / name).write_bytes(b"public artifact fixture")
+            (self.directory / ("update-darwin-" + arch + ".json")).write_text(json.dumps({"version": "0.5.0", "size": 23,
+                "url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.5.0/ytmgo-0.5.0-darwin-" + arch + ".tar.gz"}))
         self.update_metadata()
 
     def update_metadata(self):
-        (self.directory / "build.json").write_text(json.dumps(self.meta))
+        for arch in ("arm64", "amd64"):
+            name = "build.json" if arch == "arm64" else "build-amd64.json"
+            (self.directory / name).write_text(json.dumps(dict(self.meta, architecture=arch)))
         (self.directory / "SHA256SUMS").write_text("".join(
             hashlib.sha256((self.directory / name).read_bytes()).hexdigest() + "  " + name + "\n" for name in self.names))
 
     def test_release_requires_source_notarization_and_update_signature(self):
         with patch.object(publish, "ROOT", self.root), patch.object(publish.subprocess, "run") as verifier:
             verifier.return_value.returncode = 0
-            self.assertEqual(len(publish.validate(self.directory, self.config, self.commit)), 6)
+            self.assertEqual(len(publish.validate(self.directory, self.config, self.commit)), 11)
             verifier.return_value.returncode = 1
             with self.assertRaisesRegex(publish.ReleaseError, "signature verification"):
                 publish.validate(self.directory, self.config, self.commit)
@@ -90,7 +95,7 @@ class ReleaseTests(unittest.TestCase):
         (self.root / "mygo.json").write_text(json.dumps(self.config))
         with patch.object(publish, "ROOT", self.root), patch.dict(os.environ, {
                 "GITHUB_REF": "refs/heads/main", "GITHUB_REPOSITORY": publish.REPOSITORY, "GITHUB_SHA": self.commit}), \
-                patch.object(publish, "validate", return_value=[]), patch.object(publish, "gh", return_value=b'{"id": 1}') as gh:
+                patch.object(publish, "validate_smoke"), patch.object(publish, "validate", return_value=[]), patch.object(publish, "gh", return_value=b'{"id": 1}') as gh:
             with self.assertRaisesRegex(publish.ReleaseError, "already exists"):
                 publish.publish()
         gh.assert_called_once()
@@ -99,7 +104,7 @@ class ReleaseTests(unittest.TestCase):
         (self.root / "mygo.json").write_text(json.dumps(self.config))
         with patch.object(publish, "ROOT", self.root), patch.dict(os.environ, {
                 "GITHUB_REF": "refs/heads/main", "GITHUB_REPOSITORY": publish.REPOSITORY, "GITHUB_SHA": self.commit}), \
-                patch.object(publish, "validate", return_value=[self.directory / self.names[0]]), \
+                patch.object(publish, "validate_smoke"), patch.object(publish, "validate", return_value=[self.directory / self.names[0]]), \
                 patch.object(publish, "gh", side_effect=[None, b'[]', b'', b'',
                     b'{"apiUrl":"https://api.github.com/repos/mreasonyang/ytmgo/releases/123"}',
                     b'{"draft":true,"assets":[]}']) as gh:

@@ -217,6 +217,8 @@ def build(target):
     env = os.environ.copy()
     env["CARGO_TARGET_DIR"] = str(TARGET_DIR)
     env["CARGO_BUILD_JOBS"] = "2"
+    if target[0] == "darwin":
+        env["MACOSX_DEPLOYMENT_TARGET"] = json.loads((ROOT / "mygo.json").read_text())["macos"]["minimumSystemVersion"]
     result = subprocess.run(
         [cargo, "build", "--manifest-path", str(CRATE / "Cargo.toml"), "--release", "--locked", "--no-default-features",
          "--target", TARGETS[target], "--bin", BINARY],

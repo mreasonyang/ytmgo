@@ -217,7 +217,7 @@ def verify_helper_inputs(manifest, resources, legal=None):
         raise LicenseError("packaged FFmpeg source does not match build")
 
 
-def verify(folder, check_inputs=False):
+def verify(folder, check_inputs=False, check_staged_runtime=True):
     manifest = json.loads((folder / "manifest.json").read_text())
     if manifest.get("schema") != 1 or manifest.get("project_license") != "Apache-2.0":
         raise LicenseError("legal manifest invalid")
@@ -238,7 +238,7 @@ def verify(folder, check_inputs=False):
     if check_inputs:
         if input_checksums() != manifest["inputs"]:
             raise LicenseError("licensing inputs changed; regenerate notices")
-        if digest(ROOT / "build/runtime/licenses/ffmpeg-build.json") != digest(folder / "ffmpeg/build.json"):
+        if check_staged_runtime and digest(ROOT / "build/runtime/licenses/ffmpeg-build.json") != digest(folder / "ffmpeg/build.json"):
             raise LicenseError("FFmpeg build changed; regenerate notices")
     return manifest
 
@@ -283,7 +283,7 @@ def main():
         if target["GOOS"] == "darwin":
             options.bundle = options.bundle / (config["name"] + ".app") / "Contents/Resources"
     if options.bundle:
-        manifest = verify(options.bundle / "legal", check_inputs=True)
+        manifest = verify(options.bundle / "legal", check_inputs=True, check_staged_runtime=False)
         verify_helper_inputs(manifest, options.bundle)
         print("Verified packaged licenses and corresponding source")
     elif options.verify:

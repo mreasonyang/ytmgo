@@ -63,6 +63,12 @@ class DistributionLicenseTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "inputs changed"):
                 prepare.verify(self.folder, check_inputs=True)
 
+    def test_bundle_verification_does_not_depend_on_signer_staging(self):
+        with patch.object(prepare, "ROOT", self.root), patch.object(prepare, "input_checksums", return_value={}):
+            prepare.verify(self.folder, check_inputs=True, check_staged_runtime=False)
+            with self.assertRaises(FileNotFoundError):
+                prepare.verify(self.folder, check_inputs=True)
+
     def test_nested_upstream_notices_are_preserved_byte_for_byte(self):
         crate = self.root / "crate"
         (crate / "vendor").mkdir(parents=True)

@@ -75,6 +75,8 @@ def prepare_assets(output):
     return {p["name"]:p["version"] for p in lock["packages"]}
 
 def prepare_host(output,suffix):
+    if sys.platform=="darwin":
+        os.environ["MACOSX_DEPLOYMENT_TARGET"]=json.loads((ROOT / "mygo.json").read_text())["macos"]["minimumSystemVersion"]
     run(["cargo","build","--release","--locked","--target-dir",str(ROOT / "build/playback-target"),"--manifest-path",str(HOST / "Cargo.toml")])
     shutil.copy2(ROOT / "build/playback-target/release" / ("ytmgo-playback-host"+suffix),output / ("ytmgo-playback-host"+suffix))
     run([str(output / ("ytmgo-playback-host"+suffix)),"check"])
@@ -100,11 +102,13 @@ def prepare_ffmpeg(output,suffix):
     archive=verified(FFMPEG_DOWNLOAD_URL,CACHE / (name+".tar.xz"),FFMPEG_SHA256)
     source=CACHE / (name+"-native-source")
     if not source.exists():extract(archive,source,name)
-    folder=CACHE / ("ffmpeg-build-"+sys.platform+"-"+platform.machine());folder.mkdir(exist_ok=True)
+    minimum=json.loads((ROOT / "mygo.json").read_text())["macos"]["minimumSystemVersion"] if sys.platform=="darwin" else ""
+    folder=CACHE / ("ffmpeg-build-"+sys.platform+"-"+platform.machine()+("-min"+minimum if minimum else ""));folder.mkdir(exist_ok=True)
     # MSYS sh accepts forward-slash drive paths, not Python's Windows separators.
     config=["sh",(source / "configure").as_posix(),"--disable-everything","--disable-autodetect","--disable-doc","--disable-debug","--disable-ffplay","--disable-ffprobe","--enable-ffmpeg","--enable-small","--enable-static","--disable-shared","--enable-protocol=pipe,file,http,tcp,concatf","--enable-demuxer=concat,matroska,mov","--enable-decoder=opus,aac,mp3,pcm_f32le,h264,vp9,av1","--enable-parser=opus,aac,mpegaudio,h264,vp9,av1","--enable-encoder=pcm_f32le,rawvideo","--enable-bsf=h264_mp4toannexb","--enable-muxer=pcm_f32le,rawvideo","--enable-swscale","--enable-filter=aresample,aformat,anull,scale,fps,format"]
     if sys.platform=="win32":config += ["--target-os=mingw32","--cc=gcc","--extra-ldflags=-static","--disable-x86asm"]
     elif platform.machine().lower() in {"x86_64","amd64"} and not shutil.which("nasm"):config += ["--disable-x86asm"]
+    if minimum:config += ["--extra-cflags=-mmacosx-version-min="+minimum,"--extra-ldflags=-mmacosx-version-min="+minimum]
     marker=folder / "ytmgo-config.json"
     if not marker.exists() or json.loads(marker.read_text())!=config:
         run(config,folder);marker.write_text(json.dumps(config))

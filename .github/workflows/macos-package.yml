@@ -33,17 +33,23 @@ defaults:
     shell: bash
 
 jobs:
-  package:
-    # Only reviewed main-branch code may access the signing environment.
+  build:
     if: github.ref == 'refs/heads/main'
-    environment: macos-release
-    runs-on: xcode-27
-    timeout-minutes: 90
-    permissions:
-      contents: write
+    name: Native build (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 70
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            arch: arm64
+          - os: macos-15-intel
+            arch: amd64
     env:
       CGO_ENABLED: "0"
       CARGO_BUILD_JOBS: "2"
+      MACOSX_DEPLOYMENT_TARGET: "13.0"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -56,37 +62,81 @@ jobs:
         with:
           python-version: "3.13"
       - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
-      - name: Check packaging scripts
-        run: python3 -m unittest discover -s scripts/release -p 'test_*.py'
       - name: Configure release version
         env:
           RELEASE_VERSION: ${{ inputs.release_version }}
           PUBLISH_RELEASE: ${{ inputs.publish_release }}
           PACKAGE_MODE: ${{ inputs.mode }}
         run: python3 scripts/release/publish.py configure
-      # Keep the make check stages separate so a failed run identifies the
-      # command without requiring raw diagnostic-log retrieval.
-      - name: Go tests
-        run: make test
-      - name: Prepare locked media runtime
-        run: make runtime
-      - name: Test media runtime
+      - name: Test packaging and license gates
+        run: |
+          python3 -m unittest discover -s scripts/release -p 'test_*.py'
+          make test-licenses test-login
+      - name: Go tests and vet
+        run: |
+          make test
+          go vet ./...
+          go tool mygo i18n check
+      - name: Build complete native app with locked runtime
+        run: make build-app
+      - name: Test bundled media runtime
         run: |
           python3 scripts/runtime/test_runtime_manifest.py
           python3 scripts/runtime/test_protocol_version.py
           python3 scripts/runtime/run_tests.py
-      - name: Test login build staging
-        run: make test-login
-      - name: Go vet
-        run: go vet ./...
-      - name: Check translations
-        run: go tool mygo i18n check
-      - name: Build app with bundled runtime and login helper
-        run: make build-app
-      - name: Package unsigned test build
+      - name: Inspect deployment targets and smoke native build
+        run: |
+          python3 scripts/release/macos_compat.py --app build/darwin-${{ matrix.arch }}/ytmGO.app --arch ${{ matrix.arch }} --smoke --receipt dist/receipts/build-${{ matrix.arch }}.json
+          ditto -c -k --keepParent build/darwin-${{ matrix.arch }}/ytmGO.app dist/app-${{ matrix.arch }}.zip
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: native-app-${{ matrix.arch }}
+          path: |
+            dist/app-${{ matrix.arch }}.zip
+            dist/receipts/build-${{ matrix.arch }}.json
+          if-no-files-found: error
+          retention-days: 14
+
+  package:
+    needs: build
+    # Native builders receive no signing credentials. Only this protected job does.
+    environment: macos-release
+    runs-on: xcode-27
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+          cache: false
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          pattern: native-app-*
+          path: dist/native
+          merge-multiple: true
+      - name: Configure release version
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+          PUBLISH_RELEASE: ${{ inputs.publish_release }}
+          PACKAGE_MODE: ${{ inputs.mode }}
+        run: python3 scripts/release/publish.py configure
+      - name: Restore and inspect both native bundles
+        run: |
+          for arch in arm64 amd64; do
+            mkdir -p "build/darwin-$arch"
+            ditto -x -k "dist/native/app-$arch.zip" "build/darwin-$arch"
+            python3 scripts/release/macos_compat.py --app "build/darwin-$arch/ytmGO.app" --arch "$arch" --receipt "dist/receipts/unsigned-$arch.json"
+          done
+          go build -o build/release/update-package ./cmd/update-package
+      - name: Package unsigned test builds
         if: inputs.mode == 'unsigned'
-        run: python3 scripts/release/macos.py package --mode unsigned
-      - name: Sign and optionally notarize
+        run: |
+          for arch in arm64 amd64; do
+            python3 scripts/release/macos.py package --mode unsigned --arch "$arch" --out "dist/macos-$arch"
+          done
+      - name: Sign and optionally notarize both native builds
         if: inputs.mode != 'unsigned'
         env:
           PACKAGE_MODE: ${{ inputs.mode }}
@@ -96,26 +146,96 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           MYGO_UPDATER_PRIVATE_KEY: ${{ secrets.MYGO_UPDATER_PRIVATE_KEY }}
-        run: python3 scripts/release/macos.py package --mode "$PACKAGE_MODE"
+        run: |
+          for arch in arm64 amd64; do
+            python3 scripts/release/macos.py package --mode "$PACKAGE_MODE" --arch "$arch" --out "dist/macos-$arch"
+          done
       - name: Remove temporary signing materials
         if: always()
         run: python3 scripts/release/macos.py cleanup
-      - name: Publish signed release and update feed
-        if: inputs.publish_release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: python3 scripts/release/publish.py publish
-      - name: Upload DMG, app ZIP, checksums and build metadata
-        continue-on-error: ${{ inputs.publish_release }}
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+      - name: Assemble immutable dual architecture asset set
+        run: python3 scripts/release/assemble_macos.py
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: ytmgo-macos-arm64-${{ inputs.mode }}-${{ github.run_number }}
-          path: |
-            dist/macos/*.dmg
-            dist/macos/*.zip
-            dist/macos/*.tar.gz
-            dist/macos/update-darwin-arm64.json
-            dist/macos/SHA256SUMS
-            dist/macos/build.json
+          name: ytmgo-macos-${{ inputs.mode }}-${{ github.run_number }}
+          path: dist/macos/*
           if-no-files-found: error
           retention-days: 14
+
+  acceptance:
+    needs: package
+    name: Signed native startup (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            arch: arm64
+          - os: macos-15-intel
+            arch: amd64
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: ytmgo-macos-${{ inputs.mode }}-${{ github.run_number }}
+          path: dist/macos
+      - name: Configure release version
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+        run: python3 scripts/release/publish.py configure
+      - name: Native installed app and helper startup
+        env:
+          ARCH: ${{ matrix.arch }}
+          MODE: ${{ inputs.mode }}
+        run: |
+          version=$(python3 -c 'import json; print(json.load(open("mygo.json"))["version"])')
+          archive="dist/macos/ytmgo-$version-$ARCH-$MODE.zip"
+          (cd dist/macos && shasum -a 256 -c SHA256SUMS)
+          ditto -x -k "$archive" /Applications
+          flags=()
+          if [ "$MODE" = notarized ]; then flags+=(--signed); fi
+          python3 scripts/release/macos_compat.py --app /Applications/ytmGO.app --arch "$ARCH" --smoke "${flags[@]}" --archive "$archive" --receipt "dist/receipts/signed-$ARCH.json"
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: native-acceptance-${{ matrix.arch }}
+          path: dist/receipts/signed-${{ matrix.arch }}.json
+          if-no-files-found: error
+
+  publish:
+    needs: acceptance
+    if: inputs.publish_release
+    runs-on: xcode-27
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+          cache: false
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: ytmgo-macos-${{ inputs.mode }}-${{ github.run_number }}
+          path: dist/macos
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          pattern: native-acceptance-*
+          path: dist/receipts
+          merge-multiple: true
+      - name: Verify both native acceptances and publish
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+          PUBLISH_RELEASE: ${{ inputs.publish_release }}
+          PACKAGE_MODE: ${{ inputs.mode }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/release/publish.py configure
+          go build -o build/release/update-package ./cmd/update-package
+          python3 scripts/release/publish.py publish

@@ -59,10 +59,10 @@ func fixture(t *testing.T) (string, string, configuration, string) {
 
 func TestPackagePreservesBundleAndRejectsTampering(t *testing.T) {
 	app, out, cfg, key := fixture(t)
-	if err := writePackage(app, out, cfg, key, "fixture notes"); err != nil {
+	if err := writePackage(app, out, cfg, key, "fixture notes", "arm64"); err != nil {
 		t.Fatal(err)
 	}
-	if err := verifyPackage(out, cfg); err != nil {
+	if err := verifyPackage(out, cfg, "arm64"); err != nil {
 		t.Fatal(err)
 	}
 	data, err := os.ReadFile(filepath.Join(out, "ytmgo-0.5.0-darwin-arm64.tar.gz"))
@@ -114,7 +114,7 @@ func TestPackagePreservesBundleAndRejectsTampering(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(out, "ytmgo-0.5.0-darwin-arm64.tar.gz"), data, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if verifyPackage(out, cfg) == nil {
+	if verifyPackage(out, cfg, "arm64") == nil {
 		t.Fatal("accepted a tampered archive")
 	}
 }
@@ -141,7 +141,7 @@ func TestSigningRejectsWrongKeyAndUnsafeBundle(t *testing.T) {
 			case "invalid_version":
 				cfg.Version = "../../bad"
 			}
-			if writePackage(app, out, cfg, key, "") == nil {
+			if writePackage(app, out, cfg, key, "", "arm64") == nil {
 				t.Fatal("accepted invalid package")
 			}
 			if _, err := os.Stat(filepath.Join(out, "update-darwin-arm64.json")); !os.IsNotExist(err) {
@@ -153,7 +153,7 @@ func TestSigningRejectsWrongKeyAndUnsafeBundle(t *testing.T) {
 
 func TestVerificationRejectsManifestMismatch(t *testing.T) {
 	app, out, cfg, key := fixture(t)
-	if err := writePackage(app, out, cfg, key, ""); err != nil {
+	if err := writePackage(app, out, cfg, key, "", "arm64"); err != nil {
 		t.Fatal(err)
 	}
 	path := filepath.Join(out, "update-darwin-arm64.json")
@@ -173,7 +173,31 @@ func TestVerificationRejectsManifestMismatch(t *testing.T) {
 	if err := os.WriteFile(path, data, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if verifyPackage(out, cfg) == nil {
+	if verifyPackage(out, cfg, "arm64") == nil {
 		t.Fatal("accepted mismatched version")
+	}
+}
+
+func TestArchitectureFeedsAreIndependent(t *testing.T) {
+	app, out, cfg, key := fixture(t)
+	for _, arch := range []string{"arm64", "amd64"} {
+		if err := writePackage(app, out, cfg, key, "fixture", arch); err != nil {
+			t.Fatal(err)
+		}
+		if err := verifyPackage(out, cfg, arch); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.Remove(filepath.Join(out, "update-darwin-amd64.json")); err != nil {
+		t.Fatal(err)
+	}
+	if verifyPackage(out, cfg, "amd64") == nil {
+		t.Fatal("missing Intel feed accepted")
+	}
+	if err := verifyPackage(out, cfg, "arm64"); err != nil {
+		t.Fatal(err)
+	}
+	if writePackage(app, out, cfg, key, "", "../../bad") == nil {
+		t.Fatal("unsafe architecture accepted")
 	}
 }

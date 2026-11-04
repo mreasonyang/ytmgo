@@ -56,14 +56,18 @@ def validate(directory, config, commit):
     version = config["version"]
     if not VERSION.fullmatch(version) or not re.fullmatch(r"[0-9a-f]{40}", commit):
         raise ReleaseError("Invalid version or source revision")
-    metadata = json.loads((directory / "build.json").read_text())
-    if (metadata.get("version") != version or metadata.get("commit") != commit
-            or metadata.get("mode") != "notarized" or metadata.get("architecture") != "arm64"
-            or any(metadata.get(field) is not True for field in ("notarized", "developer_id_signed", "signed_updates"))):
-        raise ReleaseError("Release requires matching notarized, signed update artifacts")
-    prefix = "ytmgo-" + version
-    names = [prefix + "-arm64-notarized.dmg", prefix + "-arm64-notarized.zip",
-             prefix + "-darwin-arm64.tar.gz", "update-darwin-arm64.json", "build.json"]
+    names = []
+    for arch in ("arm64", "amd64"):
+        metadata_name = "build.json" if arch == "arm64" else "build-amd64.json"
+        metadata = json.loads((directory / metadata_name).read_text())
+        if (metadata.get("version") != version or metadata.get("commit") != commit
+                or metadata.get("mode") != "notarized" or metadata.get("architecture") != arch
+                or metadata.get("minimum_macos") != config["macos"]["minimumSystemVersion"]
+                or any(metadata.get(field) is not True for field in ("notarized", "developer_id_signed", "signed_updates"))):
+            raise ReleaseError("Release requires matching notarized, signed update artifacts for both architectures")
+        prefix = "ytmgo-" + version
+        names += [prefix + "-" + arch + "-notarized.dmg", prefix + "-" + arch + "-notarized.zip",
+                  prefix + "-darwin-" + arch + ".tar.gz", "update-darwin-" + arch + ".json", metadata_name]
     expected = {}
     for line in (directory / "SHA256SUMS").read_text().splitlines():
         match = re.fullmatch(r"([0-9a-f]{64})  ([A-Za-z0-9._-]+)", line)
@@ -72,19 +76,30 @@ def validate(directory, config, commit):
         expected[match[2]] = match[1]
     if set(expected) != set(names) or any(sha256(directory / name) != expected[name] for name in names):
         raise ReleaseError("Release checksum mismatch")
-    manifest = json.loads((directory / "update-darwin-arm64.json").read_text())
-    archive = directory / names[2]
-    if (manifest.get("version") != version or manifest.get("size") != archive.stat().st_size
-            or manifest.get("url") != "https://github.com/" + REPOSITORY + "/releases/download/v" + version + "/" + archive.name):
-        raise ReleaseError("Update manifest does not match release")
-    # Verify the updater signature with the public key, independently from its
-    # generation. This process receives neither Apple nor update credentials.
-    helper = ROOT / "build/release/update-package"
-    result = subprocess.run([str(helper), "--verify", "--out", str(directory)], cwd=ROOT,
-                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
-    if result.returncode:
-        raise ReleaseError("Update signature verification failed")
+    for arch in ("arm64", "amd64"):
+        manifest = json.loads((directory / ("update-darwin-" + arch + ".json")).read_text())
+        archive = directory / ("ytmgo-" + version + "-darwin-" + arch + ".tar.gz")
+        if (manifest.get("version") != version or manifest.get("size") != archive.stat().st_size
+                or manifest.get("url") != "https://github.com/" + REPOSITORY + "/releases/download/v" + version + "/" + archive.name):
+            raise ReleaseError("Update manifest does not match release")
+        helper = ROOT / "build/release/update-package"
+        result = subprocess.run([str(helper), "--verify", "--arch", arch, "--out", str(directory)], cwd=ROOT,
+                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+        if result.returncode:
+            raise ReleaseError("Update signature verification failed")
     return [directory / name for name in [*names, "SHA256SUMS"]]
+
+
+def validate_smoke(directory, config, commit):
+    for arch in ("arm64", "amd64"):
+        receipt = json.loads((ROOT / "dist/receipts" / ("signed-" + arch + ".json")).read_text())
+        archive = directory / ("ytmgo-" + config["version"] + "-" + arch + "-notarized.zip")
+        if (receipt.get("architecture") != arch or receipt.get("version") != config["version"]
+                or receipt.get("commit") != commit or receipt.get("native_smoke") is not True
+                or receipt.get("signed") is not True
+                or receipt.get("minimum_macos") != config["macos"]["minimumSystemVersion"]
+                or receipt.get("archive_sha256") != sha256(archive)):
+            raise ReleaseError("Matching signed native smoke receipts required for both architectures")
 
 
 def publish():
@@ -93,6 +108,7 @@ def publish():
     config = json.loads((ROOT / "mygo.json").read_text())
     commit = os.environ.get("GITHUB_SHA", "")
     files = validate(ROOT / "dist/macos", config, commit)
+    validate_smoke(ROOT / "dist/macos", config, commit)
     version = config["version"]
     tag = "v" + version
     # Never overwrite a published version or repoint an existing tag. A failed
@@ -104,7 +120,7 @@ def publish():
         raise ReleaseError("Release tag already exists")
     notes_path = ROOT / "docs/releases" / (version + ".md")
     notes = notes_path.read_text() if notes_path.is_file() else ("Native update checks with signed downloads and restart installation.\n\n"
-             "macOS 27 or newer, Apple Silicon. Install the DMG once when upgrading from 0.4.0.\n"
+             "macOS 13 or newer, Apple Silicon and Intel. Install the DMG once when upgrading from 0.4.0.\n"
              "The app checks for updates after launch and daily. Check manually from the ytmgo menu.\n\n"
              "The App and DMG are Developer ID signed, notarized and stapled. "
              "The updater verifies a separate Ed25519 signature before installation.\n")

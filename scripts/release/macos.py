@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Package a complete macOS arm64 build; never emit raw signing diagnostics."""
+"""Package a complete macOS build; never emit raw signing diagnostics."""
 import argparse
 import base64
 import hashlib
@@ -197,9 +197,7 @@ def sign_app(app, identity, keychain):
     run(["codesign", "--verify", "--deep", "--strict", app], "App signature verification")
     for path in binaries:
         run(["codesign", "--verify", "--strict", path], "Embedded code signature verification")
-    # QuickJS interprets code without executable-memory/JIT entitlements.
-    run([app / "Contents/Resources/runtime/ytmgo-playback-host", "check"], "Signed script host execution")
-    run([app / "Contents/Resources/runtime/ffmpeg", "-version"], "Signed FFmpeg execution")
+    # Both signed helpers execute on their native runners before publication.
 
 
 def notarize(path, directory):
@@ -257,17 +255,19 @@ def create_disk_image(app, dmg):
         disk_image_command(["convert", writable, "-format", "UDZO", "-ov", "-o", dmg], "Disk image compression")
 
 
-def package(mode):
+def package(mode, arch="arm64", output=None):
+    if arch not in {"arm64", "amd64"}:
+        raise PackageError("Unsupported architecture")
     config = json.loads((ROOT / "mygo.json").read_text())
     version = config["version"]
     if not re.fullmatch(r"[0-9A-Za-z.+-]+", version):
         raise PackageError("Invalid app version")
-    app = ROOT / "build/darwin-arm64" / (config.get("name", "ytmgo") + ".app")
+    app = ROOT / ("build/darwin-" + arch) / (config.get("name", "ytmgo") + ".app")
     if not app.is_dir():
-        raise PackageError("Build the complete arm64 app first")
+        raise PackageError("Build the complete target app first")
     run([sys.executable, ROOT / "scripts/licensing/prepare.py", "--bundle", app / "Contents/Resources"],
         "Packaged licenses and corresponding source verification")
-    output = ROOT / "dist/macos"
+    output = Path(output) if output else ROOT / "dist/macos"
     if output.exists():
         raise PackageError("Output directory already exists; use a clean build workspace")
     output.mkdir(parents=True)
@@ -285,7 +285,7 @@ def package(mode):
                 run(["spctl", "--assess", "--type", "execute", app], "App Gatekeeper assessment")
         else:
             run(["codesign", "--verify", "--deep", "--strict", app], "Ad-hoc app signature verification")
-        name = "ytmgo-" + version + "-arm64-" + mode
+        name = "ytmgo-" + version + "-" + arch + "-" + mode
         archive = output / (name + ".zip")
         run(["ditto", "-c", "-k", "--keepParent", app, archive], "App archive creation")
         dmg = output / (name + ".dmg")
@@ -300,12 +300,12 @@ def package(mode):
                     "Disk image Gatekeeper assessment")
         update_files = []
         if mode == "notarized" and config.get("updates"):
-            run([ROOT / "build/release/update-package", "--app", app, "--out", output],
+            run([ROOT / "build/release/update-package", "--app", app, "--out", output, "--arch", arch],
                 "Signed updater package creation", input_bytes=required("MYGO_UPDATER_PRIVATE_KEY").encode())
-            update_files = [output / ("ytmgo-" + version + "-darwin-arm64.tar.gz"),
-                            output / "update-darwin-arm64.json"]
+            update_files = [output / ("ytmgo-" + version + "-darwin-" + arch + ".tar.gz"),
+                            output / ("update-darwin-" + arch + ".json")]
         metadata = {
-            "version": version, "architecture": "arm64", "mode": mode,
+            "version": version, "architecture": arch, "mode": mode,
             "minimum_macos": config["macos"]["minimumSystemVersion"],
             "commit": os.environ.get("GITHUB_SHA", "local"),
             "run_url": "https://github.com/" + os.environ.get("GITHUB_REPOSITORY", "mreasonyang/ytmgo")
@@ -313,10 +313,11 @@ def package(mode):
             "developer_id_signed": mode != "unsigned", "notarized": mode == "notarized",
             "signed_updates": bool(update_files),
         }
-        (output / "build.json").write_text(json.dumps(metadata, indent=2) + "\n")
+        metadata_path = output / ("build.json" if arch == "arm64" else "build-amd64.json")
+        metadata_path.write_text(json.dumps(metadata, indent=2) + "\n")
         (output / "SHA256SUMS").write_text("".join(
-            digest(path) + "  " + path.name + "\n" for path in (archive, dmg, output / "build.json", *update_files)))
-        print("Packaged macOS arm64 build: " + mode, flush=True)
+            digest(path) + "  " + path.name + "\n" for path in (archive, dmg, metadata_path, *update_files)))
+        print("Packaged macOS " + arch + " build: " + mode, flush=True)
     finally:
         if directory is not None:
             cleanup()
@@ -327,6 +328,8 @@ def main():
     commands = parser.add_subparsers(dest="command", required=True)
     build = commands.add_parser("package")
     build.add_argument("--mode", choices=("unsigned", "developer-id", "notarized"), required=True)
+    build.add_argument("--arch", choices=("arm64", "amd64"), default="arm64")
+    build.add_argument("--out", type=Path)
     commands.add_parser("cleanup")
     args = parser.parse_args()
     try:
@@ -335,7 +338,7 @@ def main():
         elif sys.platform != "darwin":
             raise PackageError("macOS is required")
         else:
-            package(args.mode)
+            package(args.mode, args.arch, args.out)
     except Exception as error:
         # Print only our fixed categories, never arbitrary exception messages,
         # commands, environment values, notary responses or tool diagnostics.

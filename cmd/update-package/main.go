@@ -45,6 +45,7 @@ func main() {
 	app := flag.String("app", "", "final signed and notarized app bundle")
 	out := flag.String("out", "dist/macos", "output directory")
 	config := flag.String("config", "mygo.json", "public build configuration")
+	arch := flag.String("arch", "arm64", "target architecture: arm64 or amd64")
 	verify := flag.Bool("verify", false, "verify the published archive with only the public key")
 	notes := flag.String("notes", "Native update checks, verified downloads, and restart installation.", "release notes")
 	flag.Parse()
@@ -54,22 +55,25 @@ func main() {
 		err = json.Unmarshal(data, &cfg)
 	}
 	if err == nil && *verify {
-		err = verifyPackage(*out, cfg)
+		err = verifyPackage(*out, cfg, *arch)
 	} else if err == nil {
 		var private []byte
 		private, err = io.ReadAll(io.LimitReader(os.Stdin, 1024))
 		if err == nil {
-			err = writePackage(*app, *out, cfg, strings.TrimSpace(string(private)), *notes)
+			err = writePackage(*app, *out, cfg, strings.TrimSpace(string(private)), *notes, *arch)
 		}
 	}
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Signed update packaging failed")
 		os.Exit(1)
 	}
-	fmt.Println("Verified signed darwin-arm64 update package")
+	fmt.Println("Verified signed darwin-" + *arch + " update package")
 }
 
-func writePackage(app, out string, cfg configuration, encodedKey, notes string) error {
+func writePackage(app, out string, cfg configuration, encodedKey, notes, arch string) error {
+	if arch != "arm64" && arch != "amd64" {
+		return errors.New("invalid target architecture")
+	}
 	key, err := base64.StdEncoding.DecodeString(encodedKey)
 	pub, pubErr := base64.StdEncoding.DecodeString(cfg.Updates.PublicKey)
 	if err != nil || pubErr != nil || len(key) != ed25519.PrivateKeySize || len(pub) != ed25519.PublicKeySize {
@@ -100,7 +104,7 @@ func writePackage(app, out string, cfg configuration, encodedKey, notes string) 
 	if err := os.MkdirAll(out, 0o755); err != nil {
 		return err
 	}
-	name := "ytmgo-" + cfg.Version + "-darwin-arm64.tar.gz"
+	name := "ytmgo-" + cfg.Version + "-darwin-" + arch + ".tar.gz"
 	archive := filepath.Join(out, name)
 	temporary := archive + ".partial"
 	defer os.Remove(temporary)
@@ -134,14 +138,17 @@ func writePackage(app, out string, cfg configuration, encodedKey, notes string) 
 	if err := os.Rename(temporary, archive); err != nil {
 		return err
 	}
-	return os.WriteFile(filepath.Join(out, "update-darwin-arm64.json"), append(data, '\n'), 0o644)
+	return os.WriteFile(filepath.Join(out, "update-darwin-"+arch+".json"), append(data, '\n'), 0o644)
 }
 
-func verifyPackage(out string, cfg configuration) error {
+func verifyPackage(out string, cfg configuration, arch string) error {
+	if arch != "arm64" && arch != "amd64" {
+		return errors.New("invalid target architecture")
+	}
 	if !validVersion.MatchString(cfg.Version) || !validRepository.MatchString(cfg.Updates.GitHub) {
 		return errors.New("invalid release configuration")
 	}
-	data, err := os.ReadFile(filepath.Join(out, "update-darwin-arm64.json"))
+	data, err := os.ReadFile(filepath.Join(out, "update-darwin-"+arch+".json"))
 	if err != nil {
 		return err
 	}
@@ -149,7 +156,7 @@ func verifyPackage(out string, cfg configuration) error {
 	if err := json.Unmarshal(data, &m); err != nil {
 		return err
 	}
-	name := "ytmgo-" + cfg.Version + "-darwin-arm64.tar.gz"
+	name := "ytmgo-" + cfg.Version + "-darwin-" + arch + ".tar.gz"
 	if m.Version != cfg.Version || m.URL != "https://github.com/"+cfg.Updates.GitHub+"/releases/download/v"+cfg.Version+"/"+name {
 		return errors.New("invalid update manifest")
 	}

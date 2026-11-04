@@ -109,6 +109,29 @@ class DesktopReleaseTests(unittest.TestCase):
                 desktop.run(["fixture"])
         self.assertEqual(child.call_args.kwargs["stderr"], desktop.subprocess.DEVNULL)
 
+    def test_only_pinned_notice_data_is_added_to_released_source(self):
+        tools, source = self.root / "tools", self.root / "source"
+        for root in (tools, source):
+            (root / "scripts/licensing/upstream").mkdir(parents=True)
+        (source / "mygo.json").write_text(json.dumps({"version": self.version, "name": "ytmGO"}))
+        (source / "main.go").write_text("synthetic immutable application code")
+        (source / "scripts/licensing/upstream-notices.json").write_text("{}")
+        notice = tools / "scripts/licensing/upstream/fixture-LICENSE"
+        notice.write_bytes(b"synthetic upstream notice")
+        record = {"path": "upstream/fixture-LICENSE", "sha256": desktop.digest(notice)}
+        (tools / "scripts/licensing/upstream-notices.json").write_text(json.dumps({"fixture@1.0.0": record}))
+        before = desktop.digest(source / "main.go")
+        with patch.object(desktop, "ROOT", tools), patch("builtins.print"):
+            desktop.stage_notices(source)
+        self.assertEqual(desktop.digest(source / "main.go"), before)
+        self.assertEqual((source / "scripts/licensing/upstream/fixture-LICENSE").read_bytes(), notice.read_bytes())
+        overlay = json.loads((source / "build/desktop-notice-overlay.json").read_text())
+        self.assertEqual({item["path"] for item in overlay}, {"scripts/licensing/upstream/fixture-LICENSE", "scripts/licensing/upstream-notices.json"})
+        record["path"] = "../../outside"
+        (tools / "scripts/licensing/upstream-notices.json").write_text(json.dumps({"other@1.0.0": record}))
+        with patch.object(desktop, "ROOT", tools), self.assertRaises(desktop.DesktopError):
+            desktop.stage_notices(source)
+
 
 if __name__ == "__main__":
     unittest.main()

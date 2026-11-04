@@ -105,11 +105,12 @@ jobs:
       - name: Prepare Linux playback runtime
         if: runner.os == 'Linux'
         run: cd source && python3 scripts/runtime/prepare.py
-      - name: Prepare native login helper and legal resources
-        run: |
-          cd source
-          python scripts/login/prepare.py
-          python scripts/licensing/prepare.py
+      - name: Prepare native login helper
+        run: cd source && python scripts/login/prepare.py
+      - name: Stage pinned supplemental license notices
+        run: python scripts/release/desktop.py notices --source source
+      - name: Prepare target-specific legal resources
+        run: cd source && python scripts/licensing/prepare.py
       - name: Windows offline runtime tests
         if: runner.os == 'Windows'
         run: cd source && python scripts/runtime/run_tests.py

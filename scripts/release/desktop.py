@@ -130,6 +130,41 @@ def entries(folder, version, which):
     return result
 
 
+def stage_notices(source):
+    """Supplement only pinned legal data; keep the released application code."""
+    config(source)
+    index_path = source / "scripts/licensing/upstream-notices.json"
+    previous = json.loads(index_path.read_text())
+    current = json.loads((ROOT / "scripts/licensing/upstream-notices.json").read_text())
+    overlay = []
+    for identity, record in current.items():
+        if identity in previous:
+            if previous[identity] != record:
+                raise DesktopError("existing_pinned_notice_changed")
+            continue
+        for item in [record] + ([record["terms"]] if record.get("terms") else []):
+            relative = Path(item["path"])
+            if relative.is_absolute() or ".." in relative.parts or not relative.parts or relative.parts[0] != "upstream":
+                raise DesktopError("invalid_pinned_notice_path")
+            path = ROOT / "scripts/licensing" / relative
+            if digest(path) != item["sha256"]:
+                raise DesktopError("pinned_notice_checksum_mismatch")
+            destination = source / "scripts/licensing" / relative
+            if destination.exists() and digest(destination) != item["sha256"]:
+                raise DesktopError("existing_notice_file_changed")
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(path, destination)
+            overlay.append({"path": "scripts/licensing/" + relative.as_posix(), "sha256": item["sha256"]})
+        previous[identity] = record
+    if overlay:
+        index_path.write_text(json.dumps(previous, indent=2, sort_keys=True) + "\n")
+        overlay.append({"path": "scripts/licensing/upstream-notices.json", "sha256": digest(index_path)})
+    overlay = list({item["path"]: item for item in overlay}.values())
+    (source / "build").mkdir(exist_ok=True)
+    (source / "build/desktop-notice-overlay.json").write_text(json.dumps(overlay, indent=2) + "\n")
+    print("Staged checksum-pinned supplemental license notices", flush=True)
+
+
 def package(source, out):
     which = target()
     cfg = config(source)
@@ -165,6 +200,8 @@ def package(source, out):
     metadata = {"version": version, "commit": commit, "platform": which, "architecture": "amd64",
                 "native_build": True, "os_code_signed": False, "signed_updates": False,
                 "bundled_files": len(files), "native_smoke": False,
+                "packaging_tools_commit": run(["git", "rev-parse", "HEAD"]).decode().strip(),
+                "license_notice_overlay": json.loads((source / "build/desktop-notice-overlay.json").read_text()),
                 "run_url": "https://github.com/" + REPO + "/actions/runs/" + os.environ.get("GITHUB_RUN_ID", "local")}
     (out / ("build-" + which + ".json")).write_text(json.dumps(metadata, indent=2) + "\n")
     print("Packaged native desktop target: " + which, flush=True)
@@ -315,7 +352,7 @@ def publish(out, tag, source=ROOT):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("resolve", "build", "package", "smoke", "sign", "publish"))
+    parser.add_argument("command", choices=("resolve", "notices", "build", "package", "smoke", "sign", "publish"))
     parser.add_argument("--source", type=Path, default=ROOT)
     parser.add_argument("--out", type=Path, default=ROOT / "dist/desktop")
     parser.add_argument("--tag", default="")
@@ -329,6 +366,8 @@ def main():
                 for key, value in values.items():
                     stream.write(key + "=" + value + "\n")
         print(json.dumps(values), flush=True)
+    elif args.command == "notices":
+        stage_notices(source)
     elif args.command == "build":
         build(source)
     elif args.command == "package":

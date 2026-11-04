@@ -100,6 +100,29 @@ class ReleaseTests(unittest.TestCase):
                 publish.publish()
         gh.assert_called_once()
 
+    def test_source_pin_never_moves_an_existing_release_branch(self):
+        (self.root / "mygo.json").write_text(json.dumps(self.config))
+        ref = "refs/heads/release/0.5.0-source"
+        with patch.object(publish, "ROOT", self.root), patch.dict(os.environ, {
+                "PUBLISH_RELEASE": "true", "GITHUB_REF": "refs/heads/main",
+                "GITHUB_REPOSITORY": publish.REPOSITORY, "GITHUB_SHA": self.commit}), \
+                patch.object(publish, "gh", return_value=json.dumps({"ref": ref, "object": {"sha": "b"*40}}).encode()) as gh:
+            with self.assertRaisesRegex(publish.ReleaseError, "another revision"):
+                publish.pin_source()
+            gh.assert_called_once()
+
+    def test_source_pin_creation_checks_returned_revision(self):
+        (self.root / "mygo.json").write_text(json.dumps(self.config))
+        ref = "refs/heads/release/0.5.0-source"
+        with patch.object(publish, "ROOT", self.root), patch.dict(os.environ, {
+                "PUBLISH_RELEASE": "true", "GITHUB_REF": "refs/heads/main",
+                "GITHUB_REPOSITORY": publish.REPOSITORY, "GITHUB_SHA": self.commit}), \
+                patch.object(publish, "gh", side_effect=[None, json.dumps({"ref": ref, "object": {"sha": self.commit}}).encode()]) as gh, \
+                patch("builtins.print"):
+            publish.pin_source()
+            self.assertEqual(gh.call_count, 2)
+            self.assertIn("sha=" + self.commit, gh.call_args.args[0])
+
     def test_failed_asset_verification_leaves_draft_unpublished(self):
         (self.root / "mygo.json").write_text(json.dumps(self.config))
         with patch.object(publish, "ROOT", self.root), patch.dict(os.environ, {

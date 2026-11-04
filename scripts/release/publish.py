@@ -52,6 +52,27 @@ def sha256(path):
     return value.hexdigest()
 
 
+def pin_source():
+    if os.environ.get("PUBLISH_RELEASE") != "true":
+        return
+    if os.environ.get("GITHUB_REF") != "refs/heads/main" or os.environ.get("GITHUB_REPOSITORY") != REPOSITORY:
+        raise ReleaseError("Release source pins are restricted to main")
+    config = json.loads((ROOT / "mygo.json").read_text())
+    version, commit = config["version"], os.environ.get("GITHUB_SHA", "")
+    if not VERSION.fullmatch(version) or not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise ReleaseError("Invalid source pin version or revision")
+    name = "heads/release/" + version + "-source"
+    endpoint = "repos/" + REPOSITORY + "/git/ref/" + name
+    existing = gh(["api", endpoint], "Release source lookup", True)
+    if existing is None:
+        existing = gh(["api", "repos/" + REPOSITORY + "/git/refs", "--method", "POST",
+                       "--raw-field", "ref=refs/" + name, "--raw-field", "sha=" + commit], "Release source creation")
+    value = json.loads(existing)
+    if value.get("ref") != "refs/" + name or value.get("object", {}).get("sha") != commit:
+        raise ReleaseError("Release source already pins another revision; choose a new version")
+    print("Pinned release source revision")
+
+
 def validate(directory, config, commit):
     version = config["version"]
     if not VERSION.fullmatch(version) or not re.fullmatch(r"[0-9a-f]{40}", commit):
@@ -156,10 +177,10 @@ def publish():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("configure", "publish"))
+    parser.add_argument("command", choices=("configure", "pin-source", "publish"))
     args = parser.parse_args()
     try:
-        configure() if args.command == "configure" else publish()
+        {"configure": configure, "pin-source": pin_source, "publish": publish}[args.command]()
     except Exception as error:
         message = str(error) if isinstance(error, ReleaseError) else "operation failed"
         print("::error title=Release publication::" + message)

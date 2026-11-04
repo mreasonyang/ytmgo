@@ -33,7 +33,29 @@ defaults:
     shell: bash
 
 jobs:
+  source:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      # Keep the tested commit referenced even if main advances during builds.
+      # GitHub requires workflow scope for an unreferenced workflow-changing SHA.
+      - name: Configure and pin formal release source
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+          PUBLISH_RELEASE: ${{ inputs.publish_release }}
+          PACKAGE_MODE: ${{ inputs.mode }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/release/publish.py configure
+          python3 scripts/release/publish.py pin-source
   build:
+    needs: source
     if: github.ref == 'refs/heads/main'
     name: Native build (${{ matrix.arch }})
     runs-on: ${{ matrix.os }}

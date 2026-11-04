@@ -43,6 +43,7 @@ func nativeViewFixture() (*UIModel, ViewActions) {
 	noop := func() {}
 	a := ViewActions{Tr: func(key string) string { return locales.Catalog.Format(m.Language, key, nil) }, TrArgs: func(key string, args map[string]any) string { return locales.Catalog.Format(m.Language, key, args) }, Navigate: func(route string) { m.Route = route }, Search: func(query string) { m.Route = "search"; m.Query = query }, Open: func(item catalog.Item) { m.Page = catalog.Page{Title: item.Title} }, Play: func(item catalog.Item) { m.Current = item; m.Playing = true }, QueueAppend: func(item catalog.Item) { m.Queue = append(m.Queue, item) }, PlayQueue: func(i int) { m.Current = m.Queue[i] }, Toggle: func() { m.Playing = !m.Playing }, Next: noop, Previous: noop, Like: func() { m.Liked = !m.Liked }, Shuffle: func() { m.Shuffle = !m.Shuffle }, Repeat: func() { m.Repeat = (m.Repeat + 1) % 3 }, Mute: func() { m.Muted = !m.Muted }, Back: noop, Forward: noop, Reload: noop, Account: noop, SignOut: noop, Seek: func(value float64) { m.Position = value }, Volume: func(value float64) { m.Volume = value }, Appearance: func(value string) { m.Appearance = value }, Language: func(value string) { m.Language = value }, Artwork: func(src string, _ int, _ artworkPriority) ui.ImageSource { return art[src] }}
 	a.Video = func(video bool) { m.Video = video }
+	a.SetLyricsExpanded = func(expanded bool) { m.LyricsExpanded = expanded }
 	a.LoadMore = func() { m.Page.Continuation = "" }
 	return m, a
 }

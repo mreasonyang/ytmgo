@@ -91,13 +91,18 @@ func startDecoder(ctx context.Context, executable string, info media, at time.Du
 		cancel()
 		return nil, err
 	}
-	input := audioDecoderManifest(bridge.URL, info.Duration, at)
 	cmd := childCommand(life, executable, "-hide_banner", "-loglevel", "error", "-nostdin",
-		"-ss", "0", "-f", "concat", "-safe", "0",
-		"-protocol_whitelist", "pipe,file,http,tcp", "-i", "pipe:0",
+		"-ss", fmt.Sprintf("%.6f", at.Seconds()), "-rw_timeout", "10000000",
+		"-protocol_whitelist", "pipe,file,http,tcp,concatf", "-i", "concatf:pipe:0",
 		"-vn", "-sn", "-dn", "-threads", "1", "-ac", "2", "-ar", "48000", "-f", "f32le", "pipe:1")
 	diagnostic := &decoderDiagnostics{}
-	cmd.Stdin, cmd.Stderr = strings.NewReader(input), diagnostic
+	// concatf carries one URL over stdin without replacing the media demuxer
+	// or its timeline. Input -ss then seeks relative to the recording's start,
+	// including containers whose first timestamp is nonzero. A concat inpoint
+	// exposes earlier fragment/codec preroll as a negative start time; outer
+	// -ss 0 then treats that preroll as its origin instead of discarding it.
+	// The UI/lyrics clock was already at the requested position, ahead of audio.
+	cmd.Stdin, cmd.Stderr = strings.NewReader(bridge.URL+"\n"), diagnostic
 	rd, wr, err := os.Pipe()
 	if err != nil {
 		cancel()
@@ -153,16 +158,6 @@ func startDecoder(ctx context.Context, executable string, info media, at time.Du
 	}
 	d.input = io.MultiReader(bytes.NewReader(first[:n]), rd)
 	return d, nil
-}
-
-// Seek the media inside the concat demuxer before it probes packets. Applying
-// only -ss to the outer concat input can scan an entire AAC file before the
-// first PCM sample, making late seeks hit the startup deadline. The inpoint
-// resets the timeline; input -ss 0 still discards audio codec preroll.
-// Both the upstream URL and the local capability stay out of process argv:
-// FFmpeg receives only this single-file manifest over its private stdin.
-func audioDecoderManifest(url string, duration, at time.Duration) string {
-	return fmt.Sprintf("ffconcat version 1.0\nfile '%s'\ninpoint %.6f\nduration %.6f\noption rw_timeout 10000000\n", url, at.Seconds(), max(duration-at, 0).Seconds())
 }
 
 func (d *pcmDecoder) SampleRate() int { return sampleRate }

@@ -2,13 +2,95 @@ package main
 
 import (
 	"fmt"
+	"image"
 	"math"
 	"testing"
 	"time"
 
 	"github.com/egoist/mygo/ui"
 	"ytmgo/internal/catalog"
+	"ytmgo/internal/player"
 )
+
+// Read the rendered glyph color, not just the selected index. A stale UI clock
+// can pass the old visibility/scroll tests while highlighting the wrong words.
+func requireLyricHighlight(t *testing.T, tt *ui.Tester, label string, want bool) {
+	t.Helper()
+	r, ok := tt.Find(label)
+	if !ok {
+		t.Fatal("lyric missing")
+	}
+	img := tt.Image()
+	area := image.Rect(int(r.X), int(r.Y), int(r.X+r.W), int(r.Y+r.H)).Intersect(img.Bounds())
+	bright := 0
+	for y := area.Min.Y; y < area.Max.Y; y++ {
+		for x := area.Min.X; x < area.Max.X; x++ {
+			p := img.RGBAAt(x, y)
+			if p.R > 220 && p.G > 220 && p.B > 220 {
+				bright++
+			}
+		}
+	}
+	if (bright > 10) != want {
+		t.Fatalf("lyric highlight=%t, want %t", bright > 10, want)
+	}
+}
+
+func TestNativeLyricsHighlightUsesAudioClockBetweenModelPolls(t *testing.T) {
+	m, a := nativeTimedLyricsFixture()
+	m.Position = 0 // The general playback poll deliberately never runs.
+	m.LyricLines = []catalog.LyricLine{
+		{Text: "First synthetic cue", Start: 0, End: 100 * time.Millisecond},
+		{Text: "Second synthetic cue", Start: 100 * time.Millisecond, End: 200 * time.Millisecond},
+		{Text: "Third synthetic cue", Start: 230 * time.Millisecond, End: time.Second},
+	}
+	var tt *ui.Tester
+	var start time.Time
+	playing, stalled := true, false
+	position := 0.0
+	a.LyricsClock = func() (float64, bool) {
+		if tt != nil && playing && !stalled {
+			position = tt.Now().Sub(start).Seconds()
+		}
+		return position, playing
+	}
+	tt = ui.NewTester(func(c *ui.Context) { nativePanelCard(c, m, a, palette(true)).Grow(1) }, 360, 340)
+	start = tt.Now()
+	requireLyricHighlight(t, tt, "First synthetic cue", true)
+	tt.Advance(110 * time.Millisecond)
+	requireLyricHighlight(t, tt, "First synthetic cue", false)
+	requireLyricHighlight(t, tt, "Second synthetic cue", true)
+	// Audio starvation must not advance lyrics based on elapsed wall time.
+	stalled = true
+	tt.Advance(time.Second)
+	requireLyricHighlight(t, tt, "Second synthetic cue", true)
+	// A seek while paused reads the new decoder clock even if model.Playing
+	// and model.Position still contain the previous general poll.
+	playing = false
+	position = .24
+	tt.Frame()
+	requireLyricHighlight(t, tt, "Third synthetic cue", true)
+	position = .21
+	tt.Frame()
+	requireLyricHighlight(t, tt, "Second synthetic cue", false)
+	requireLyricHighlight(t, tt, "Third synthetic cue", false)
+	position = .01
+	tt.Frame()
+	requireLyricHighlight(t, tt, "First synthetic cue", true)
+	tt.Advance(time.Second)
+	requireLyricHighlight(t, tt, "First synthetic cue", true)
+	if m.Position != 0 {
+		t.Fatal("lyrics mutated the general playback model")
+	}
+}
+
+func TestLyricsClockKeepsPendingAndRestoredBookmarks(t *testing.T) {
+	for _, a := range []*desktop{{model: UIModel{Position: 19, Playing: true}}, {player: &player.Player{}, model: UIModel{Position: 41, Playing: true}, loadPending: true}, {player: &player.Player{}, model: UIModel{Position: 75}, restoredTrack: true}} {
+		if at, playing := a.lyricsClock(); at != a.model.Position || playing {
+			t.Fatal("unattached audio clock replaced a bookmark or started running")
+		}
+	}
+}
 
 func TestNativeLyricCueBoundaries(t *testing.T) {
 	lines := []catalog.LyricLine{{Text: "one", Start: 2 * time.Second, End: 4 * time.Second}, {Text: "two", Start: 5 * time.Second, End: 8 * time.Second}}
@@ -51,19 +133,54 @@ func requireLyricVisible(t *testing.T, tt *ui.Tester, line int) ui.Rect {
 	return r
 }
 
+func requireLyricCentered(t *testing.T, tt *ui.Tester, line int) ui.Rect {
+	t.Helper()
+	r := requireLyricVisible(t, tt, line)
+	v, _ := tt.Find("Lyrics · Content")
+	if delta := r.Y + r.H/2 - v.Y - v.H/2; math.Abs(float64(delta)) > 1 {
+		t.Fatalf("current line %d is %.1f pixels away from viewport center", line, delta)
+	}
+	return r
+}
+
+func TestNativeLyricsKeepsCurrentLineCentered(t *testing.T) {
+	for _, width := range []int{360, 240} {
+		t.Run(fmt.Sprintf("width_%d", width), func(t *testing.T) {
+			m, a := nativeTimedLyricsFixture()
+			// Exercise natural playback, forward/backward seeks, and both ends.
+			tt := ui.NewTester(func(c *ui.Context) { nativePanelCard(c, m, a, palette(true)).Grow(1) }, width, 340)
+			for _, line := range []int{0, 1, 2, 17, 29, 8, 0} {
+				m.Position = float64(line*5 + 1)
+				tt.Frame()
+				requireLyricCentered(t, tt, line)
+			}
+			// This line wraps to several rows; center its rendered block.
+			m.LyricLines[8].Text = "A synthetic lyric that wraps across several rows in a narrow viewport"
+			m.Position = 41
+			tt.Frame()
+			r, ok := tt.Find(m.LyricLines[8].Text)
+			v, vok := tt.Find("Lyrics · Content")
+			if !ok || !vok || r.H <= 32 || math.Abs(float64(r.Y+r.H/2-v.Y-v.H/2)) > 1 {
+				t.Fatalf("wrapped cue is not centered: row=%+v viewport=%+v", r, v)
+			}
+			nativeSnapshot(t, tt, fmt.Sprintf("lyrics-centered-%d", width))
+		})
+	}
+}
+
 func TestNativeLyricsFollowSeekPauseAndManualScroll(t *testing.T) {
 	m, a := nativeTimedLyricsFixture()
 	tt := ui.NewTester(func(c *ui.Context) { nativePanelCard(c, m, a, palette(true)).Grow(1) }, 360, 340)
 	if tt.HasText(a.Tr("nativeLyricsFollowing")) || tt.HasText(a.Tr("nativeLyricsFollow")) {
 		t.Fatal("timed lyrics should follow silently until the reader scrolls")
 	}
-	requireLyricVisible(t, tt, 0)
+	requireLyricCentered(t, tt, 0)
 	m.Position = 86
 	tt.Frame()
-	requireLyricVisible(t, tt, 17)
+	requireLyricCentered(t, tt, 17)
 	m.Playing = false
 	tt.Frame()
-	paused := requireLyricVisible(t, tt, 17)
+	paused := requireLyricCentered(t, tt, 17)
 	tt.Advance(3 * time.Second)
 	if after := requireLyricVisible(t, tt, 17); after != paused {
 		t.Fatal("paused playback moved the lyric viewport")
@@ -71,7 +188,7 @@ func TestNativeLyricsFollowSeekPauseAndManualScroll(t *testing.T) {
 	// A backward seek follows the actual player position, even while paused.
 	m.Position = 11
 	tt.Frame()
-	requireLyricVisible(t, tt, 2)
+	requireLyricCentered(t, tt, 2)
 	v, _ := tt.Find("Lyrics · Content")
 	tt.Scroll(v.X+v.W/2, v.Y+v.H/2, 0, 150)
 	if !tt.HasText(a.Tr("nativeLyricsFollow")) {
@@ -94,9 +211,9 @@ func TestNativeLyricsFollowSeekPauseAndManualScroll(t *testing.T) {
 	if !tt.Focused("Lyrics · Content") {
 		t.Fatal("resuming follow did not return focus to the lyrics")
 	}
-	requireLyricVisible(t, tt, 26)
+	requireLyricCentered(t, tt, 26)
 	tt.SetSize(360, 240)
-	requireLyricVisible(t, tt, 26)
+	requireLyricCentered(t, tt, 26)
 	if tt.HasText(a.Tr("nativeLyricsFollow")) || tt.HasText(a.Tr("nativeLyricsFollowing")) {
 		t.Fatal("the follow control should disappear after resuming")
 	}
@@ -104,7 +221,7 @@ func TestNativeLyricsFollowSeekPauseAndManualScroll(t *testing.T) {
 	// Switching track resets both scroll position and the manual-follow override.
 	m.Current.ID, m.Position = "another-track", 1
 	tt.Frame()
-	requireLyricVisible(t, tt, 0)
+	requireLyricCentered(t, tt, 0)
 }
 
 func TestNativeLyricsPlainFallbackAndClear(t *testing.T) {

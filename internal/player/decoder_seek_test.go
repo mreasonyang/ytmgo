@@ -21,6 +21,89 @@ import (
 	"time"
 )
 
+// YouTube recordings can have coarse fragment seek points or start at a nonzero
+// container timestamp. The UI and lyrics use time since the recording's start.
+// Compare the streaming decoder with FFmpeg's normal file input, including the
+// first load, mid-track seek, resume bookmark, and the tail. Both AAC and Opus
+// fixtures exercise timestamps that the original zero-origin tone missed.
+func TestFFmpegSeekUsesRecordingTimeline(t *testing.T) {
+	runtimeDir, fixtureFFmpeg := os.Getenv("YTMGO_RUNTIME_DIR"), os.Getenv("YTMGO_FIXTURE_FFMPEG")
+	if runtimeDir == "" || fixtureFFmpeg == "" {
+		t.Skip("set YTMGO_RUNTIME_DIR and YTMGO_FIXTURE_FFMPEG for timeline acceptance")
+	}
+	for _, format := range []struct{ name, codec, extension, origin string }{
+		{"aac", "aac", ".m4a", "10"},
+		{"fragmented_aac", "aac", ".m4a", "0"},
+		{"opus", "libopus", ".webm", "7.375"},
+	} {
+		t.Run(format.name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			fixture := filepath.Join(t.TempDir(), "timeline"+format.extension)
+			args := []string{"-hide_banner", "-loglevel", "error", "-nostdin", "-f", "lavfi", "-i",
+				"aevalsrc=sin(2*PI*(200*t+2*t*t)):s=48000:d=48", "-ac", "2", "-c:a", format.codec,
+				"-b:a", "192k", "-output_ts_offset", format.origin}
+			if format.name == "aac" {
+				args = append(args, "-movflags", "+faststart")
+			} else if format.name == "fragmented_aac" {
+				args = append(args, "-movflags", "empty_moov+default_base_moof", "-frag_duration", "10000000")
+			}
+			generate := childCommand(ctx, fixtureFFmpeg, append(args, fixture)...)
+			generate.Stdout, generate.Stderr = io.Discard, io.Discard
+			if generate.Run() != nil {
+				t.Fatal("timeline_fixture_generation_failed")
+			}
+			data, err := os.ReadFile(fixture)
+			if err != nil {
+				t.Fatal("timeline_fixture_unavailable")
+			}
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				http.ServeContent(w, r, "recording"+format.extension, time.Time{}, bytes.NewReader(data))
+			}))
+			defer server.Close()
+			executable := filepath.Join(runtimeDir, "ffmpeg")
+			for _, at := range []time.Duration{0, 125 * time.Millisecond, 7*time.Second + 125*time.Millisecond, 30 * time.Second, 47*time.Second + 125*time.Millisecond} {
+				t.Run(fmt.Sprintf("at_%dms", at.Milliseconds()), func(t *testing.T) {
+					d, err := startDecoder(ctx, executable, media{URL: server.URL + "/" + strings.Repeat("a", 64), Duration: 48 * time.Second}, at)
+					if err != nil {
+						t.Fatalf("timeline_decoder_failed: %s", safeError(err))
+					}
+					defer d.Close()
+					stop := context.AfterFunc(ctx, func() { d.Close() })
+					defer stop()
+					var actual []byte
+					buf := make([]float32, 4096)
+					for {
+						n, err := d.Read(buf)
+						for _, sample := range buf[:n] {
+							actual = binary.LittleEndian.AppendUint32(actual, math.Float32bits(sample))
+						}
+						if err != nil {
+							if err != io.EOF {
+								t.Fatal("timeline_pcm_read_failed")
+							}
+							break
+						}
+					}
+					if d.failed.Load() {
+						t.Fatal("timeline_pcm_failed")
+					}
+					d.Close()
+					reference := childCommand(ctx, executable, "-hide_banner", "-loglevel", "error", "-nostdin", "-ss", fmt.Sprintf("%.6f", at.Seconds()), "-i", fixture, "-vn", "-sn", "-dn", "-threads", "1", "-ac", "2", "-ar", "48000", "-f", "f32le", "pipe:1")
+					reference.Stderr = io.Discard
+					expected, err := reference.Output()
+					if err != nil {
+						t.Fatal("timeline_reference_failed")
+					}
+					if !bytes.Equal(actual, expected) {
+						t.Fatalf("recording_timeline_mismatch: actual_frames=%d expected_frames=%d", len(actual)/8, len(expected)/8)
+					}
+				})
+			}
+		})
+	}
+}
+
 // This test deliberately stalls sequential reads before they reach the seek
 // target. A decoder that scans and discards earlier audio cannot pass merely
 // because the local fixture server is faster than the real media transport.
@@ -251,21 +334,16 @@ func TestEmptySeekDecoderProcess(t *testing.T) {
 		return
 	}
 	input, _ := io.ReadAll(io.LimitReader(os.Stdin, 64<<10))
-	for _, line := range strings.Split(string(input), "\n") {
-		if strings.HasPrefix(line, "file '") && strings.HasSuffix(line, "'") {
-			target := strings.TrimSuffix(strings.TrimPrefix(line, "file '"), "'")
-			if !validMediaURL(target) {
-				os.Exit(2)
-			}
-			client := http.Client{Timeout: 2 * time.Second}
-			if response, err := client.Get(target); err == nil {
-				_, _ = io.Copy(io.Discard, response.Body)
-				response.Body.Close()
-			}
-			os.Exit(0)
-		}
+	target := strings.TrimSpace(string(input))
+	if !validMediaURL(target) {
+		os.Exit(2)
 	}
-	os.Exit(2)
+	client := http.Client{Timeout: 2 * time.Second}
+	if response, err := client.Get(target); err == nil {
+		_, _ = io.Copy(io.Discard, response.Body)
+		response.Body.Close()
+	}
+	os.Exit(0)
 }
 
 func TestEmptySeekDoesNotMaskBridgeFailure(t *testing.T) {

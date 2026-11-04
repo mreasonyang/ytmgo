@@ -39,6 +39,7 @@ type desktop struct {
 	prefs                           *Preferences
 	shortcut                        *shortcutBinding
 	languagePath                    string
+	lyricsLayoutPath                string
 	playbackPath                    string
 	restoredTrack                   bool // shown paused until the first explicit play
 	diagnosticPath                  string
@@ -121,6 +122,8 @@ func main() {
 	recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 	recordPlaybackDiagnostic(a.diagnosticPath, "video", "ready")
 	a.model = UIModel{Route: "home", Appearance: a.prefs.Appearance(), Language: language.Load(a.languagePath), Volume: 0.7, Version: applicationVersion()}
+	a.lyricsLayoutPath = filepath.Join(dataDir, "lyrics-layout")
+	a.model.LyricsExpanded = loadLyricsExpanded(a.lyricsLayoutPath)
 	a.playbackPath = filepath.Join(dataDir, "playback-session.json")
 	a.restorePlayback()
 	mygo.Theme.SetSource(mygo.ThemeSource(a.model.Appearance))
@@ -271,7 +274,7 @@ func (a *desktop) prefetchNextCover(frame *artworkFrame) {
 }
 
 func (a *desktop) actions(artwork func(string, int, artworkPriority) ui.ImageSource) ViewActions {
-	return ViewActions{BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, RetryPlayback: a.retryPlayback, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: artwork}
+	return ViewActions{LyricsClock: a.lyricsClock, BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, SetLyricsExpanded: a.setLyricsExpanded, RetryPlayback: a.retryPlayback, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: artwork}
 }
 
 func (a *desktop) pollPlayback() {

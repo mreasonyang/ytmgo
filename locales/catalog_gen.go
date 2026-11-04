@@ -2693,6 +2693,36 @@ func (msgs Messages) NativeAccountLoginFailed() string {
 	return Catalog.Format(msgs.locale, "nativeAccountLoginFailed", nil)
 }
 
+// NativeLyricsExpand says "Expand lyrics"
+// in the language the app shows.
+func NativeLyricsExpand() string { return In(i18n.Locale()).NativeLyricsExpand() }
+
+// NativeLyricsExpand says "Expand lyrics"
+// in the language of msgs.
+func (msgs Messages) NativeLyricsExpand() string {
+	return Catalog.Format(msgs.locale, "nativeLyricsExpand", nil)
+}
+
+// NativeLyricsRestore says "Restore cover size"
+// in the language the app shows.
+func NativeLyricsRestore() string { return In(i18n.Locale()).NativeLyricsRestore() }
+
+// NativeLyricsRestore says "Restore cover size"
+// in the language of msgs.
+func (msgs Messages) NativeLyricsRestore() string {
+	return Catalog.Format(msgs.locale, "nativeLyricsRestore", nil)
+}
+
+// NativeLyricsLayoutSaveError says "Unable to save the lyrics layout. Please try again."
+// in the language the app shows.
+func NativeLyricsLayoutSaveError() string { return In(i18n.Locale()).NativeLyricsLayoutSaveError() }
+
+// NativeLyricsLayoutSaveError says "Unable to save the lyrics layout. Please try again."
+// in the language of msgs.
+func (msgs Messages) NativeLyricsLayoutSaveError() string {
+	return Catalog.Format(msgs.locale, "nativeLyricsLayoutSaveError", nil)
+}
+
 // NativeLyricsFollow says "Follow playback"
 // in the language the app shows.
 func NativeLyricsFollow() string { return In(i18n.Locale()).NativeLyricsFollow() }
@@ -2701,6 +2731,26 @@ func NativeLyricsFollow() string { return In(i18n.Locale()).NativeLyricsFollow()
 // in the language of msgs.
 func (msgs Messages) NativeLyricsFollow() string {
 	return Catalog.Format(msgs.locale, "nativeLyricsFollow", nil)
+}
+
+// NativeLyricsDragHint says "Drag lyrics to seek on release"
+// in the language the app shows.
+func NativeLyricsDragHint() string { return In(i18n.Locale()).NativeLyricsDragHint() }
+
+// NativeLyricsDragHint says "Drag lyrics to seek on release"
+// in the language of msgs.
+func (msgs Messages) NativeLyricsDragHint() string {
+	return Catalog.Format(msgs.locale, "nativeLyricsDragHint", nil)
+}
+
+// NativeLyricsReleaseToSeek says "Release to seek"
+// in the language the app shows.
+func NativeLyricsReleaseToSeek() string { return In(i18n.Locale()).NativeLyricsReleaseToSeek() }
+
+// NativeLyricsReleaseToSeek says "Release to seek"
+// in the language of msgs.
+func (msgs Messages) NativeLyricsReleaseToSeek() string {
+	return Catalog.Format(msgs.locale, "nativeLyricsReleaseToSeek", nil)
 }
 
 // NativeLyricsFollowing says "Following playback"

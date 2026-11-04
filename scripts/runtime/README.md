@@ -60,6 +60,13 @@ pins the Rust closure; FFmpeg 9.0.2 source is SHA-256 verified and built with th
 existing limited codec/protocol configuration. License texts and build metadata
 are copied into the runtime. QuickJS needs no V8/JIT signing entitlement.
 
+Audio uses the `concatf` byte-stream protocol to pass its single private input
+URL through stdin. The original media demuxer handles relative seeks, fragment
+preroll, and nonzero container timestamp origins. A concat-demuxer `inpoint` can
+expose preroll as a negative start time; outer `-ss 0` then incorrectly retains
+that earlier audio while the UI clock starts at the requested position. Rebuild the bundled runtime
+when updating this path, so its FFmpeg includes the `concatf` protocol.
+
 ```sh
 python3 scripts/runtime/prepare.py
 python3 scripts/runtime/prepare.py --verify

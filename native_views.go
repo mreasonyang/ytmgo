@@ -28,6 +28,7 @@ type UIModel struct {
 	LyricsSource                                                string
 	LyricsAvailable                                             bool
 	LyricsRevision                                              uint64
+	LyricsExpanded                                              bool
 	Loading, Playing, Muted, Liked, Shuffle                     bool
 	Panel, Immersive, Settings, Shortcuts, SidebarCollapsed     bool
 	SignedIn, CanBack, CanForward                               bool
@@ -94,9 +95,11 @@ type ViewActions struct {
 	Back, Forward, Reload, Account, SignOut             func()
 	RestoreAccount, SkipRestore, RetryLibrary           func()
 	Seek, Volume                                        func(float64)
+	LyricsClock                                         func() (seconds float64, playing bool)
 	Appearance, Language                                func(string)
 	Artwork                                             func(string, int, artworkPriority) ui.ImageSource
 	Video                                               func(bool)
+	SetLyricsExpanded                                   func(bool)
 	RetryPlayback                                       func()
 	LoadMore                                            func()
 	BeginShortcut, CancelShortcut                       func()
@@ -1628,6 +1631,14 @@ func nativeSeek(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 			a.Seek(state.value)
 		}
 		state.pressed = pressed
+		if enabled && !state.canceled && (s.Hovered() || pressed) {
+			preview := state.value
+			if !pressed {
+				x, _, _ := s.PointerPosition()
+				preview = float64(max(0, min(1, (x-5)/max(1, s.LayoutBounds().W-10)))) * m.Duration
+			}
+			nativeSliderReadout(c.Key("seek-readout"), s, p, nativeTime(math.Round(preview)), preview/m.Duration)
+		}
 		ui.Text(c, nativeTime(m.Duration)).Width(40).FontSize(12).TextColor(p.secondary)
 	})
 }
@@ -1651,6 +1662,17 @@ func nativeSlider(c *ui.Context, value *float64, maximum float64, p nativePalett
 		}
 	})
 	return s
+}
+
+// Slider values stay visible while pressed, including when a drag leaves the
+// track. Ordinary tooltips dismiss on press, so use a non-interactive overlay.
+func nativeSliderReadout(c *ui.Context, slider ui.Element, p nativePalette, text string, fraction float64) {
+	x := 5 + max(0, slider.LayoutBounds().W-10)*float32(max(0, min(1, fraction)))
+	ui.Overlay(c, func() {
+		ui.Text(c, text).AttachTo(slider, ui.AnchorTopLeft, ui.AnchorBottom).Margin(0, 0, 6, x).
+			Padding(4, 8).Radius(4).Background(p.raised).TextColor(p.text).FontSize(12).FontWeight(600).
+			Shadow(0, 2, 8, 0, ui.RGBA(0, 0, 0, 0.25)).PassThrough().Role(ui.RoleTooltip)
+	})
 }
 
 func nativeProgressLine(c *ui.Context, m *UIModel, p nativePalette) {
@@ -1678,6 +1700,9 @@ func nativeVolume(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, sho
 		s := nativeSlider(c.Key("volume"), &volume, 1, p).Width(93).Label(a.Tr("shellVolume"))
 		if s.Changed() {
 			a.Volume(volume)
+		}
+		if s.Hovered() || s.Pressed() {
+			nativeSliderReadout(c.Key("volume-readout"), s, p, fmt.Sprintf("%.0f%%", volume*100), volume)
 		}
 	}
 }
@@ -1744,6 +1769,11 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 			if overlay {
 				artSize = min(artSize, max(float32(120), windowHeight-600))
 			}
+			lyricsExtra := float32(0)
+			if m.LyricsExpanded && m.selectedPanelTab() == "lyrics" && !m.Video {
+				lyricsExtra = max(0, artSize-80)
+				artSize = min(artSize, 80)
+			}
 			nativeMedia(c, m, a, p, artSize).AlignSelf(ui.Center)
 			nativeMediaSwitch(c, m, a, p)
 			ui.Row(c).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
@@ -1770,7 +1800,7 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 			}
 			card := nativePanelCard(c, m, a, p)
 			if overlay {
-				card.Height(300).Shrink(0)
+				card.Height(300 + lyricsExtra).Shrink(0)
 				if revealLyrics {
 					// On short windows the card begins below the fold. Reveal it
 					// on entry only, so the reader can still scroll back to the cover.
@@ -1799,11 +1829,21 @@ func nativePanelCard(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 }
 
 func nativePanelTabs(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
-	ui.Row(c).Shrink(0).Gap(8).Children(func() {
+	ui.Row(c).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 		for _, tab := range []struct{ id, key string }{{"lyrics", "shellLyrics"}, {"queue", "shellQueue"}} {
 			active := m.selectedPanelTab() == tab.id
 			if nativeChip(c, a.Tr(tab.key), p, active).Label(a.Tr(tab.key) + " · " + a.Tr("shellNowPlaying")).Clicked() {
 				m.PanelTab = tab.id
+			}
+		}
+		if !m.Immersive && !m.Video && m.selectedPanelTab() == "lyrics" {
+			ui.Spacer(c)
+			icon, label := "expand", "nativeLyricsExpand"
+			if m.LyricsExpanded {
+				icon, label = "collapse", "nativeLyricsRestore"
+			}
+			if nativeIconButton(c.Key("lyrics-layout"), icon, a.Tr(label), p, m.LyricsExpanded, 32).Disabled(a.SetLyricsExpanded == nil).Clicked() {
+				a.SetLyricsExpanded(!m.LyricsExpanded)
 			}
 		}
 	})
@@ -1964,7 +2004,7 @@ func nativeSongShelf(items []catalog.Item) bool {
 // Request the next frame explicitly so it becomes visible without another input.
 type nativePresentationKey struct {
 	texts                              [15]string
-	flags                              [20]bool
+	flags                              [21]bool
 	values                             [4]float64
 	repeat, queueLength, libraryLength int
 	errorScope                         errorScope
@@ -1975,7 +2015,7 @@ type nativePresentationKey struct {
 func nativePresentation(m *UIModel) nativePresentationKey {
 	return nativePresentationKey{
 		texts:  [15]string{m.Route, m.Query, m.PanelTab, m.Appearance, m.Language, m.Current.ID, m.Current.Title, m.Page.Title, m.Error, m.Lyrics, m.Current.Artwork, m.VideoError, m.PlaybackError, m.AccountRestore, m.LibraryErrorKey},
-		flags:  [20]bool{m.Loading, m.Playing, m.Muted, m.Liked, m.Shuffle, m.Panel, m.Immersive, m.Settings, m.Shortcuts, m.SidebarCollapsed, m.SignedIn, m.CanBack, m.CanForward, m.FocusSearch, m.Video, m.VideoLoading, m.PlaybackLoading, m.MusicPremium, m.LibraryCached, m.LibraryRefreshing},
+		flags:  [21]bool{m.Loading, m.Playing, m.Muted, m.Liked, m.Shuffle, m.Panel, m.Immersive, m.Settings, m.Shortcuts, m.SidebarCollapsed, m.SignedIn, m.CanBack, m.CanForward, m.FocusSearch, m.Video, m.VideoLoading, m.PlaybackLoading, m.MusicPremium, m.LibraryCached, m.LibraryRefreshing, m.LyricsExpanded},
 		values: [4]float64{m.Volume, m.Position, m.Duration, 0}, repeat: m.Repeat, queueLength: len(m.Queue), libraryLength: len(m.LibraryItems),
 		errorScope: m.ErrorScope, libraryLoaded: m.LibraryLoaded, shortcutRecording: m.ShortcutRecording, shortcut: m.GlobalShortcut, shortcutError: m.ShortcutError,
 	}

@@ -49,6 +49,9 @@ def inspect(app, arch, minimum):
 
 
 def smoke(app, arch, signed):
+    # Popen changes cwd to the bundle's parent; relative executable paths would
+    # otherwise repeat the build directory and fail before launching the app.
+    app = app.resolve()
     native = {"arm64": "arm64", "x86_64": "amd64"}.get(platform.machine())
     if os.environ.get("GITHUB_ACTIONS") != "true" or native != arch:
         raise macos.PackageError("Smoke requires a fresh native CI runner")
@@ -99,11 +102,14 @@ def main():
     parser.add_argument("--archive", type=Path)
     parser.add_argument("--receipt", type=Path, required=True)
     args = parser.parse_args()
+    stage = "deployment inspection"
     try:
         cfg = json.loads((macos.ROOT / "mygo.json").read_text())
         records = inspect(args.app, args.arch, cfg["macos"]["minimumSystemVersion"])
         if args.smoke:
+            stage = "native startup"
             smoke(args.app, args.arch, args.signed)
+        stage = "receipt generation"
         args.receipt.parent.mkdir(parents=True, exist_ok=True)
         args.receipt.write_text(json.dumps({"version": cfg["version"], "commit": os.environ.get("GITHUB_SHA", "local"),
             "architecture": args.arch, "minimum_macos": cfg["macos"]["minimumSystemVersion"],
@@ -112,7 +118,8 @@ def main():
         print("Verified macOS deployment and architecture" + ("; native startup passed" if args.smoke else ""))
         return 0
     except Exception as error:
-        print(str(error) if isinstance(error, macos.PackageError) else "macOS compatibility check failed", file=sys.stderr)
+        category = str(error) if isinstance(error, macos.PackageError) else stage + " failed"
+        print(category, file=sys.stderr)
         return 1
 
 

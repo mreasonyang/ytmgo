@@ -42,7 +42,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-15
+          - os: xcode-27
             arch: arm64
           - os: macos-15-intel
             arch: amd64
@@ -171,7 +171,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-15
+          - os: xcode-27
             arch: arm64
           - os: macos-15-intel
             arch: amd64

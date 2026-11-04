@@ -4,6 +4,7 @@ import plistlib
 import tempfile
 import unittest
 from unittest.mock import patch
+import os
 
 import macos
 import macos_compat
@@ -11,6 +12,31 @@ import publish
 
 
 class CompatibilityTests(unittest.TestCase):
+    def test_native_startup_resolves_relative_bundle_before_changing_cwd(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            app = root / 'build/App.app'
+            resources = app / 'Contents/Resources'
+            (resources / 'login').mkdir(parents=True)
+            (resources / 'login/manifest.json').write_text(json.dumps({'executable': 'helper'}))
+            (root / 'mygo.json').write_text(json.dumps({'version': '0.6.4'}))
+            def start(command, **kwargs):
+                self.assertEqual(Path(command[0]), app / 'Contents/MacOS/ytmGO')
+                self.assertTrue(Path(command[0]).is_absolute())
+                raise macos.PackageError('startup path checked')
+            previous = Path.cwd()
+            try:
+                os.chdir(root)
+                with patch.object(macos, 'ROOT', root), patch.dict(os.environ, {'GITHUB_ACTIONS': 'true'}), \
+                     patch.object(macos_compat.platform, 'machine', return_value='arm64'), \
+                     patch.object(macos_compat.Path, 'home', return_value=root / 'fresh-home'), \
+                     patch.object(macos, 'run', side_effect=[b'0.6.4', b'', b'', b'{"status":"cancelled"}']), \
+                     patch.object(macos_compat.subprocess, 'Popen', side_effect=start):
+                    with self.assertRaisesRegex(macos.PackageError, 'startup path checked'):
+                        macos_compat.smoke(Path('build/App.app'), 'arm64', False)
+            finally:
+                os.chdir(previous)
+
     def test_newer_embedded_binary_and_wrong_architecture_are_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

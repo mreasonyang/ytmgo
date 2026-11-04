@@ -47,7 +47,8 @@ def main():
              "ytmgo-" + VERSION + "-darwin-arm64.tar.gz",
              "build.json", "update-darwin-arm64.json", "SHA256SUMS"]
     assets = {a["name"]: a for a in release["assets"]}
-    assert set(assets) == set(names)
+    # Other platforms may be added later without replacing these Mac assets.
+    assert set(names).issubset(assets)
     digests = {}
     for name in names:
         asset = assets[name]

@@ -1,0 +1,191 @@
+name: Windows and Linux packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing public stable release to supplement (same immutable source)
+        required: true
+        default: v0.6.3
+        type: string
+      publish_release:
+        description: Upload verified desktop packages to that release
+        default: false
+        type: boolean
+  workflow_run:
+    workflows: [macOS package]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-packages-${{ inputs.release_tag || github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  resolve:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-24.04
+    outputs:
+      release_tag: ${{ steps.release.outputs.release_tag }}
+      source_sha: ${{ steps.release.outputs.source_sha }}
+      tools_sha: ${{ steps.release.outputs.tools_sha }}
+      enabled: ${{ steps.release.outputs.enabled }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Resolve immutable released source
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          EXPECTED_MAC_SOURCE: ${{ github.event.workflow_run.head_sha }}
+        run: python3 scripts/release/desktop.py resolve --tag "$RELEASE_TAG"
+
+  package:
+    needs: resolve
+    if: needs.resolve.outputs.enabled == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: windows-amd64
+          - os: ubuntu-24.04
+            target: linux-amd64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    env:
+      CGO_ENABLED: '0'
+      CARGO_BUILD_JOBS: '2'
+      DESKTOP_SOURCE_SHA: ${{ needs.resolve.outputs.source_sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.resolve.outputs.tools_sha }}
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.resolve.outputs.source_sha }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: source/go.mod
+          cache: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - name: Install Linux package dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential pkg-config nasm libgtk-3-dev libwebkit2gtk-4.1-dev libsoup-3.0-dev libsecret-1-dev xvfb xauth dbus-x11 libasound2t64
+      - uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows'
+        with:
+          msystem: UCRT64
+          path-type: inherit
+          install: make diffutils mingw-w64-ucrt-x86_64-gcc
+      - name: Prepare Windows playback runtime
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: cd source && python scripts/runtime/prepare.py
+      - name: Prepare Linux playback runtime
+        if: runner.os == 'Linux'
+        run: cd source && python3 scripts/runtime/prepare.py
+      - name: Prepare native login helper and legal resources
+        run: |
+          cd source
+          python scripts/login/prepare.py
+          python scripts/licensing/prepare.py
+      - name: Windows offline runtime tests
+        if: runner.os == 'Windows'
+        run: cd source && python scripts/runtime/run_tests.py
+      - name: Linux offline runtime tests
+        if: runner.os == 'Linux'
+        run: cd source && xvfb-run -a dbus-run-session -- python3 scripts/runtime/run_tests.py
+      - name: Build Windows production application and installer
+        if: runner.os == 'Windows'
+        run: python scripts/release/desktop.py build --source source
+      - name: Build Linux production application and installer
+        if: runner.os == 'Linux'
+        run: xvfb-run -a dbus-run-session -- python3 scripts/release/desktop.py build --source source
+      - name: Validate bundle architecture and package complete resources
+        run: python scripts/release/desktop.py package --source source
+      - name: Install and launch Windows package in an empty profile
+        if: runner.os == 'Windows'
+        run: python scripts/release/desktop.py smoke --source source
+      - name: Install and launch Linux package in an empty display session
+        if: runner.os == 'Linux'
+        run: xvfb-run -a dbus-run-session -- python3 scripts/release/desktop.py smoke --source source
+      - name: Upload accepted native packages
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: ytmgo-desktop-${{ matrix.target }}
+          path: dist/desktop/*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    needs: [resolve, package]
+    if: github.event_name == 'workflow_run' || inputs.publish_release
+    runs-on: xcode-27
+    environment: macos-release
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.resolve.outputs.tools_sha }}
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.resolve.outputs.source_sha }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Download artifacts from this workflow run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --pattern 'ytmgo-desktop-*' --dir dist/incoming
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil
+          output = Path('dist/desktop')
+          output.mkdir(parents=True)
+          for path in Path('dist/incoming').rglob('*'):
+              if path.is_file():
+                  dest = output / path.name
+                  if dest.exists():
+                      raise SystemExit('Duplicate desktop artifact')
+                  shutil.copy2(path, dest)
+          PY
+      # The key stays in the existing Mac signing environment. Hosted Windows
+      # and Linux builders receive no signing credentials or real accounts.
+      - name: Sign and verify platform update archives on the release Mac
+        env:
+          MYGO_UPDATER_PRIVATE_KEY: ${{ secrets.MYGO_UPDATER_PRIVATE_KEY }}
+        run: python3 scripts/release/desktop.py sign --source source
+      - name: Publish additional assets without replacing existing files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
+        run: python3 scripts/release/desktop.py publish --tag "$RELEASE_TAG"

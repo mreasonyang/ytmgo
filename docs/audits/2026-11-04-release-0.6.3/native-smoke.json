@@ -1,0 +1,19 @@
+{
+  "checked_at": "2026-11-04T11:45:07.579428+00:00",
+  "version_in_native_settings": "0.6.3",
+  "premium_restored": true,
+  "library_loaded": true,
+  "paused": true,
+  "position_seconds": 29.765,
+  "volume": 0,
+  "appearance": "dark",
+  "language": "en",
+  "process": {
+    "pid": 15535,
+    "ppid": 1,
+    "uid": 501,
+    "state": "S",
+    "executable": "/Applications/ytmGO.app/Contents/MacOS/ytmGO"
+  },
+  "method": "Native app AX reads before and after the Settings dialog; no playback or preference changes."
+}

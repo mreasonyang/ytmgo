@@ -1,0 +1,12 @@
+[
+  {
+    "name": "homebrew-style",
+    "passed": true,
+    "seconds": 23.12
+  },
+  {
+    "name": "homebrew-audit",
+    "passed": true,
+    "seconds": 16.38
+  }
+]

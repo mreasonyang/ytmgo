@@ -1,0 +1,42 @@
+[
+  {
+    "databaseId": 41821419039,
+    "name": "macOS package",
+    "headSha": "a582d25bb3f5b793f4d3e57160db3e4c90f86099",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/mreasonyang/ytmgo/actions/runs/41821419039"
+  },
+  {
+    "databaseId": 41821414884,
+    "name": "Native playback runtime",
+    "headSha": "a582d25bb3f5b793f4d3e57160db3e4c90f86099",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/mreasonyang/ytmgo/actions/runs/41821414884"
+  },
+  {
+    "databaseId": 41821414841,
+    "name": "Native account login",
+    "headSha": "a582d25bb3f5b793f4d3e57160db3e4c90f86099",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/mreasonyang/ytmgo/actions/runs/41821414841"
+  },
+  {
+    "databaseId": 41822955199,
+    "name": "macOS public update check",
+    "headSha": "a582d25bb3f5b793f4d3e57160db3e4c90f86099",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/mreasonyang/ytmgo/actions/runs/41822955199"
+  },
+  {
+    "databaseId": 41823175886,
+    "name": "Update ytmGO cask",
+    "headSha": "0b99f3ff9d9f53a4b2c69e369995cba5cb477cd5",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/mreasonyang/homebrew-taps/actions/runs/41823175886"
+  }
+]

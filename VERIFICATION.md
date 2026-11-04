@@ -1,5 +1,16 @@
 # Native playback verification
 
+## 0.6.3 release and Homebrew — 2026-11-04 (Asia/Shanghai)
+
+The signed/notarized macOS arm64 release, anonymous public-download integrity,
+production-feed upgrade from public 0.6.2, and real Homebrew installation passed.
+The Homebrew-installed app restored Premium, the library and the paused/muted
+playback bookmark. All 725 bundle entries matched the public ZIP, and its bundled
+decoder passed 26 explicit cases without skips. Local race regression passed
+1,120 cases with 28 skips; both native CI workflows passed on all three platforms.
+[Full evidence and scope](docs/audits/2026-11-04-release-0.6.3/README.md) ·
+[Homebrew installation](docs/HOMEBREW.md).
+
 ## Installed system playlist artwork — 2026-11-02 (Asia/Shanghai)
 
 The user still saw placeholders because the November 1 system-cover candidate

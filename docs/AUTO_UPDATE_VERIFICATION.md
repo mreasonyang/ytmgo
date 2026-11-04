@@ -1,5 +1,11 @@
 # 自动升级验收
 
+## 0.6.3 — 2026-11-04
+
+**PASS**。独立 macOS runner 从公开的 0.6.2 ZIP 出发，通过生产 feed 和维护命令完成 0.6.3 升级；更新后的文件、权限、符号链接与公开 0.6.3 ZIP 一致，签名、公证票据及 Gatekeeper 检查通过。该验证使用隔离应用副本，没有初始化账号存储。[公开包升级回执](audits/2026-11-04-release-0.6.3/public-upgrade-receipt.json)
+
+本机通过新增加的 Homebrew cask 安装正式 0.6.3，全部 725 项应用条目与公开 ZIP 一致。Premium、曲库、25 首队列、29.765 秒暂停断点及静音状态恢复。此次本机安装走 Homebrew，未重复操作原生更新窗口；也未声称完成扬声器听感、实体全局快捷键或睡眠唤醒验收。[完整记录](audits/2026-11-04-release-0.6.3/README.md) · [Homebrew 安装](HOMEBREW.md)
+
 ## 0.6.2 — 2026-11-04
 
 **PASS**。本机从公开的 0.6.1 通过 **Check for Updates… → Install Update → Relaunch Now** 升级至 0.6.2。自动重启后，设置与更新窗口均显示 0.6.2。安装包与独立下载的正式 ZIP 一致，Apple 签名、公证票据和 Gatekeeper 检查通过。[发布与本机验收记录](audits/2026-11-04-release-0.6.2/README.md)

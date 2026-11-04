@@ -68,6 +68,7 @@ type desktop struct {
 	libraryScope                    string
 	libraryPage                     *catalog.Page
 	libraryWrites                   sync.WaitGroup
+	libraryWriteRevision            atomic.Uint64
 	pageGeneration, playGeneration  uint64
 	accountGeneration               uint64
 	accountState                    accountState

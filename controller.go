@@ -592,20 +592,30 @@ func (a *desktop) loadMore() {
 		defer cancel()
 		page, err := a.catalog.Continue(ctx, token)
 		a.post(func() {
-			if generation != a.pageGeneration {
-				return
-			}
-			a.model.Loading = false
-			if err != nil {
-				a.catalogFailure(err)
-				return
-			}
-			a.model.Page.Items = append(a.model.Page.Items, page.Items...)
-			a.model.Page.Shelves = append(a.model.Page.Shelves, page.Shelves...)
-			a.model.Page.Continuation = page.Continuation
-			a.pushHistory(false)
+			a.finishContinuation(generation, page, err)
 		})
 	}()
+}
+
+func (a *desktop) finishContinuation(generation uint64, page catalog.Page, err error) {
+	if generation != a.pageGeneration {
+		return
+	}
+	a.model.Loading = false
+	if err != nil {
+		a.catalogFailure(err)
+		return
+	}
+	a.model.Page.Items = append(a.model.Page.Items, page.Items...)
+	a.model.Page.Shelves = append(a.model.Page.Shelves, page.Shelves...)
+	a.model.Page.Continuation = page.Continuation
+	if a.model.Route == "library" && a.model.SignedIn {
+		saved := a.model.Page
+		a.libraryPage = &saved
+		a.model.LibraryItems = append([]catalog.Item(nil), saved.Items...)
+		a.saveLibrarySnapshot(saved)
+	}
+	a.pushHistory(false)
 }
 func (a *desktop) seek(seconds float64) {
 	if a.player == nil || a.model.Current.ID == "" || math.IsNaN(seconds) || math.IsInf(seconds, 0) {

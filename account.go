@@ -525,37 +525,7 @@ func (a *desktop) beforeAccountConfigure(ctx context.Context, generation uint64,
 		if ctx.Err() != nil || generation != a.accountGeneration {
 			return
 		}
-		identityChanged := newIdentity || (a.model.SignedIn && !next.LoggedIn) || (a.accountState.fallback && next.LoggedIn)
-		changed := accountConfigurationChanged(a.accountState.configured, next, a.accountState.ready)
-		replay := accountReplay{}
-		if changed {
-			if a.prepareCancel != nil {
-				a.prepareCancel()
-			}
-			a.preparedID = ""
-			if a.loadPending || identityChanged {
-				if a.loadPending && !identityChanged {
-					replay.item = a.model.Current
-					replay.position = time.Duration(a.model.Position * float64(time.Second))
-					replay.pending = replay.item.ID != ""
-				}
-				if a.playCancel != nil {
-					a.playCancel()
-				}
-				if a.seekCancel != nil {
-					a.seekCancel()
-				}
-				a.cancelResume()
-				a.playGeneration++
-				a.loadPending = false
-				a.model.PlaybackLoading = false
-				replay.generation = a.playGeneration
-			}
-			if identityChanged {
-				a.clearAccountPlayback()
-			}
-		}
-		result <- replay
+		result <- a.prepareAccountPlayback(next, newIdentity)
 	})
 	select {
 	case replay := <-result:
@@ -563,6 +533,42 @@ func (a *desktop) beforeAccountConfigure(ctx context.Context, generation uint64,
 	case <-ctx.Done():
 		return accountReplay{}, ctx.Err()
 	}
+}
+
+func (a *desktop) prepareAccountPlayback(next player.AccountSession, newIdentity bool) accountReplay {
+	// Reconnecting the same saved account must retain its paused restart
+	// bookmark. Explicit sign-in and sign-out still clear the old queue.
+	identityChanged := newIdentity || (a.model.SignedIn && !next.LoggedIn) || (a.accountState.fallback && next.LoggedIn && !a.restoredTrack)
+	changed := accountConfigurationChanged(a.accountState.configured, next, a.accountState.ready)
+	replay := accountReplay{}
+	if changed {
+		if a.prepareCancel != nil {
+			a.prepareCancel()
+		}
+		a.preparedID = ""
+		if a.loadPending || identityChanged {
+			if a.loadPending && !identityChanged {
+				replay.item = a.model.Current
+				replay.position = time.Duration(a.model.Position * float64(time.Second))
+				replay.pending = replay.item.ID != ""
+			}
+			if a.playCancel != nil {
+				a.playCancel()
+			}
+			if a.seekCancel != nil {
+				a.seekCancel()
+			}
+			a.cancelResume()
+			a.playGeneration++
+			a.loadPending = false
+			a.model.PlaybackLoading = false
+			replay.generation = a.playGeneration
+		}
+		if identityChanged {
+			a.clearAccountPlayback()
+		}
+	}
+	return replay
 }
 
 func accountConfigurationChanged(previous, next player.AccountSession, ready bool) bool {

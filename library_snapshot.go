@@ -37,6 +37,7 @@ func (a *desktop) saveLibrarySnapshot(page catalog.Page) {
 	}
 	scope, path := a.libraryScope, a.librarySnapshotPath
 	page = librarysnapshot.Metadata(page)
+	revision := a.libraryWriteRevision.Add(1)
 	a.libraryWrites.Add(1)
 	go func() {
 		defer a.libraryWrites.Done()
@@ -45,7 +46,7 @@ func (a *desktop) saveLibrarySnapshot(page catalog.Page) {
 		defer s.work.Unlock()
 		// Save/Delete of the selected account uses this same serial worker.
 		// A result queued by an old account cannot rewrite its snapshot later.
-		if s.store.CacheScope() != scope {
+		if s.store.CacheScope() != scope || a.libraryWriteRevision.Load() != revision {
 			return
 		}
 		if librarysnapshot.Save(path, scope, page) != nil {

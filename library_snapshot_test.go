@@ -125,6 +125,41 @@ func TestCachedLibraryRemainsVisibleWhileRefreshingAndAfterFailure(t *testing.T)
 	}
 }
 
+func TestLibraryPaginationPersistsEveryLoadedItemAndRejectsStalePage(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "account")
+	store := &accountsession.Store{Secrets: &snapshotSecrets{}, Path: filepath.Join(dir, "session.enc")}
+	if err := store.PrepareLogin(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.Save(context.Background(), syntheticAccountSession()); err != nil {
+		t.Fatal(err)
+	}
+	first := catalog.Page{Items: []catalog.Item{{Title: "First", BrowseID: "VLfirst", Kind: "playlist"}}, Continuation: "old-process-page-2"}
+	a := &desktop{libraryScope: store.CacheScope(), librarySnapshotPath: filepath.Join(dir, "library.json"),
+		pageGeneration: 1, historyIndex: -1, libraryPage: &first,
+		model: UIModel{Route: "library", SignedIn: true, LibraryLoaded: true, LibraryItems: first.Items, Page: first}}
+	a.accountState.store = store
+	// Both saves queue behind the worker. The initial page cannot overwrite a
+	// newer full list even if the scheduler acquires the lock out of order.
+	storeLock := &a.accountState.work
+	storeLock.Lock()
+	a.saveLibrarySnapshot(first)
+	a.finishContinuation(1, catalog.Page{Items: []catalog.Item{{Title: "Second", BrowseID: "VLsecond", Kind: "playlist"}}}, nil)
+	storeLock.Unlock()
+	a.libraryWrites.Wait()
+	saved, ok := librarysnapshot.Load(a.librarySnapshotPath, a.libraryScope)
+	if !ok || len(saved.Items) != 2 || len(a.model.LibraryItems) != 2 || len(a.libraryPage.Items) != 2 || saved.Items[1].Title != "Second" || saved.Continuation != "" {
+		t.Fatal("pagination did not persist the complete metadata list independently of continuation handles")
+	}
+	a.clearAccountContent()
+	a.finishContinuation(1, catalog.Page{Items: []catalog.Item{{Title: "Late", BrowseID: "VLlate", Kind: "playlist"}}}, nil)
+	a.libraryWrites.Wait()
+	saved, ok = librarysnapshot.Load(a.librarySnapshotPath, a.libraryScope)
+	if !ok || len(saved.Items) != 2 || len(a.model.LibraryItems) != 0 {
+		t.Fatal("stale continuation modified the account's saved library")
+	}
+}
+
 func TestNativeSavedLibraryStatesAndInteraction(t *testing.T) {
 	for _, locale := range locales.Catalog.Languages() {
 		for _, width := range []int{1440, 420} {

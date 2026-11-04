@@ -8,7 +8,47 @@ import (
 	"time"
 
 	"ytmgo/internal/catalog"
+	"ytmgo/internal/player"
 )
+
+func TestOfflineAccountReconnectionPreservesRestartBookmark(t *testing.T) {
+	for _, tc := range []struct {
+		name                         string
+		restored, fallback, signedIn bool
+		newIdentity, nextSignedIn    bool
+		preserve                     bool
+	}{
+		{"saved-account-reconnected", true, true, false, false, true, true},
+		{"normal-account-restored", true, false, false, false, true, true},
+		{"explicit-new-login", true, true, false, true, true, false},
+		{"signed-out", true, false, true, false, false, false},
+		{"active-anonymous-account-change", false, true, false, false, true, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "playback.json")
+			track := catalog.Item{ID: "aaaaaaaaaaa", Title: "Saved track", Duration: time.Minute}
+			a := &desktop{playbackPath: path, queueIndex: 0, restoredTrack: tc.restored, unmutedVolume: .7,
+				model: UIModel{SignedIn: tc.signedIn, Current: track, Queue: []catalog.Item{track}, Position: 31.25, Duration: 60, Volume: .7}}
+			a.accountState.fallback = tc.fallback
+			a.accountState.ready = true
+			a.accountState.configured = player.AccountSession{LoggedIn: tc.signedIn, Revision: 1}
+			replay := a.prepareAccountPlayback(player.AccountSession{LoggedIn: tc.nextSignedIn, Revision: 2}, tc.newIdentity)
+			if replay.pending || a.model.Playing || a.model.SignedIn != tc.signedIn {
+				t.Fatal("account preparation started playback or granted sign-in")
+			}
+			a.savePlayback()
+			restarted := &desktop{playbackPath: path, queueIndex: -1}
+			restarted.restorePlayback()
+			if tc.preserve {
+				if restarted.queueIndex != 0 || restarted.model.Current.ID != track.ID || restarted.model.Position != 31.25 || len(restarted.model.Queue) != 1 || !a.restoredTrack {
+					t.Fatal("same saved account reconnection lost the persisted paused bookmark")
+				}
+			} else if restarted.queueIndex != -1 || len(restarted.model.Queue) != 0 || a.restoredTrack {
+				t.Fatal("identity change retained the previous account's playback")
+			}
+		})
+	}
+}
 
 func TestRestartRestoresDuplicateQueueEntryPaused(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "playback-session.json")

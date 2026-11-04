@@ -2,9 +2,9 @@
 
 [English](README.md) · **简体中文**
 
-**ytmGO** 是基于 **MyGo 0.7.1 原生 UI** 构建的 YouTube Music 桌面客户端（仓库源码版本基线 **0.6.5**）。应用对外品牌显示名统一为 **ytmGO**；仓库名、发行文件前缀、Bundle ID（`si.kyun.ytmgo`）、内部辅助进程标识以及本地用户数据目录保留技术标识 `ytmgo`。
+**ytmGO** 是使用 Go 与 **MyGo 0.7.1** 构建的跨平台 YouTube Music 桌面客户端（仓库源码版本基线 **0.6.5**）。应用对外品牌显示名统一为 **ytmGO**；仓库名、发行文件前缀、Bundle ID（`si.kyun.ytmgo`）、内部辅助进程标识以及本地用户数据目录保留技术标识 `ytmgo`。
 
-音乐主界面与播放控件完全由 Go 通过 MyGo `ui.View` 原生绘制，不包含内嵌网页音乐页面、HTML/CSS/JS 界面桥接、Electron 或 Node.js 运行时。曲库访问、账号状态核验、媒体格式选择与有界流式传输由 Go 直接处理；音频由 MyGo 输出到系统音频设备，视频仅在打开视频视图时由独立原生解码器按需渲染。
+音乐主窗口采用 Go/MyGo 自绘界面（`ui.View`），控件由 MyGo 工具包绘制，而非各操作系统的标准控件库。Google 登录及未登录/普通账号按需播放验证使用独立的系统 WebView。曲库访问、账号状态核验、媒体格式选择与有界流式传输由 Go 直接处理；音频由 MyGo 输出到系统音频设备，视频仅在打开视频视图时由按需启动的 FFmpeg 解码器渲染。
 
 > **下载入口（2026-11-05 核验）：** [macOS **v0.6.5**](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.5) · [Windows / Linux **v0.6.4**](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.4)。下文链接指向各平台已公开的安装包，其他版本见 [全部发布](https://github.com/mreasonyang/ytmgo/releases)。
 
@@ -19,7 +19,7 @@
 | **Linux** | x64（`amd64` / `x86_64`） | 以 **Ubuntu 24.04 x64** 为原生构建与冒烟测试基线；兼容发行版需具备桌面显示与音频会话、**GTK 3**、**WebKitGTK 4.1 `>= 2.50.2`**，以及 **`libsecret >= 0.19` 与运行中的 Secret Service** | 从 [Linux 下载页](https://github.com/mreasonyang/ytmgo/releases/tag/v0.6.4) 下载 `.deb`（`sudo apt install`）或便携 `.tar.gz` |
 
 - **已发布架构：** 暂不发布 Windows ARM64 与 Linux ARM64 预编译包。
-- **安装后无需开发工具链：** 打包后的应用已内含原生播放脚本宿主、精简版 FFmpeg 9.0.2、登录辅助进程及 `legal/` 许可证目录，终端用户运行应用**无需**安装 Go、Rust、Python、C 编译器、Node.js 或 npm。
+- **安装后无需开发工具链：** 打包后的应用已内含 Rust 播放脚本宿主、精简版 FFmpeg 9.0.2、登录辅助进程及 `legal/` 许可证目录，终端用户运行应用**无需**安装 Go、Rust、Python、C 编译器、Node.js 或 npm。
 
 ### macOS（Homebrew 与直接下载）
 
@@ -67,7 +67,7 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 
 ### 应用内自动更新、签名区分与数据保留
 
-- **自动与手动更新：** 在当前用户可写目录中运行时，应用会在启动后最早 10 秒自动检查更新（之后每 24 小时检查一次），也可随时通过菜单 **ytmGO → 检查更新（Check for Updates…）** 手动触发。原生更新窗口支持 **立即安装**、**稍后提醒**、**跳过此版本** 及可选的自动下载；重启后原地替换应用，并完整保留加密账号会话（`account/session.enc`）、曲库快照、播放进度断点与个性化设置。安装在系统目录下的 Linux DEB 版本请通过 `apt` 安装新版 `.deb` 升级。（`0.4.0` 不含自动更新器，需先手动安装一次 `0.5.0` 或更高版本。）
+- **自动与手动更新：** 在当前用户可写目录中运行时，应用会在启动后最早 10 秒自动检查更新（之后每 24 小时检查一次），也可随时通过菜单 **ytmGO → 检查更新（Check for Updates…）** 手动触发。MyGo 更新窗口支持 **立即安装**、**稍后提醒**、**跳过此版本** 及可选的自动下载；重启后原地替换应用，并完整保留加密账号会话（`account/session.enc`）、曲库快照、播放进度断点与个性化设置。安装在系统目录下的 Linux DEB 版本请通过 `apt` 安装新版 `.deb` 升级。（`0.4.0` 不含自动更新器，需先手动安装一次 `0.5.0` 或更高版本。）
 - **更新包签名与系统代码签名的区别：** 四个已发布桌面目标（`darwin-arm64`、`darwin-amd64`、`windows-amd64`、`linux-amd64`）均提供 `update-<platform>.json` 更新清单，内含 `.tar.gz` 更新归档地址及其 **Ed25519 签名**，安装更新前由应用内置公钥（见 `mygo.json`）验签。macOS 正式版在此基础上同时具备 Apple **Developer ID Application 签名、Apple 公证与 stapled ticket**；而在 Windows 上，Ed25519 更新归档签名仅用于核验更新载荷来源，**不代表**安装器或 `.exe` 具备 Microsoft Authenticode 系统代码签名。
 - **跨平台发布与维护文档：** 详见 [Windows 与 Linux 发布说明](docs/DESKTOP_RELEASES.md)、[Homebrew 维护文档](docs/HOMEBREW.md) 及 [macOS Actions 打包指南](docs/MACOS_ACTIONS.md)。
 
@@ -94,7 +94,7 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 - **同步歌词跟随与手动阅读：** 当曲目提供同步歌词时间轴时，当前演唱句会高亮并在歌词视口内自动居中跟随，且不会拉动外层面板滚动。使用滚轮、触控板、键盘或滚动条手动浏览歌词时，自动切换为手动阅读状态，并在歌词区域下方显示 **跟随播放（Follow playback）** 按钮；点击该按钮（或按 `Tab` + `Return`）即可回到当前播放句并恢复自动跟随。无同步时间轴的曲目展示纯文本歌词或无歌词提示。
 - **拖动歌词跳转进度：** 对于带同步时间轴的歌词，在歌词区域按住鼠标纵向拖动可预览目标歌词句（选中句以强调色高亮，配合中心参考线及右上角 `<时间> · 松开跳转` 提示）；松开指针后立即跳转到该句起始时间并恢复跟随，同时保持原有的播放或暂停状态。单击歌词、横向拖动、按 `Escape` 或窗口失焦会取消拖动，不会误触发跳转。
 - **放大歌词区域布局：** 在正在播放面板的 **歌词** 标签右侧（非沉浸模式且非视频模式下），点击放大按钮可缩小封面尺寸、为歌词留出更多纵向空间，再次点击恢复原封面大小；该布局偏好保存在 `lyrics-layout` 中，重启后自动保留。
-- **封面 / 视频按需切换：** 在正在播放面板或沉浸模式中可显式切换 **封面（Cover）** 与 **视频（Video）**。视频由独立原生解码器按需解码渲染（默认 **720p**，可在视频切换按钮旁或设置中选择 **144p–1080p**；以 24fps 渲染，按音频时钟同步并保持原始画幅比例）。上次选择会立即保存，切歌及重启后继续沿用；切换时仅按当前音频进度重新加载视频，源不提供所选清晰度时优先使用较低清晰度。隐藏或最小化窗口、关闭播放视图或切回封面会立即释放视频解码器，音频播放不受影响。
+- **封面 / 视频按需切换：** 在正在播放面板或沉浸模式中可显式切换 **封面（Cover）** 与 **视频（Video）**。视频由独立 FFmpeg 解码器按需解码渲染（默认 **720p**，可在视频切换按钮旁或设置中选择 **144p–1080p**；以 24fps 渲染，按音频时钟同步并保持原始画幅比例）。上次选择会立即保存，切歌及重启后继续沿用；切换时仅按当前音频进度重新加载视频，源不提供所选清晰度时优先使用较低清晰度。隐藏或最小化窗口、关闭播放视图或切回封面会立即释放视频解码器，音频播放不受影响。
 
 ### 响应式布局、多语言与快捷键
 
@@ -102,7 +102,7 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
   - **宽窗口（`>1180` DIP）：** 完整可折叠音乐库侧栏（`⌘B` / `Ctrl+B`）、主内容区与右侧停靠的正在播放面板。
   - **中等窗口（`761–1180` DIP）：** 72 DIP 图标侧栏与浮动正在播放面板。
   - **紧凑窗口（`≤760` DIP）：** 单列页面、底部浮动迷你播放器与底部导航标签栏。
-- **四语言与深浅色外观：** 设置（`设置 → 通用`）支持 **English**、**简体中文**、**繁體中文**、**日本語**（含**跟随系统**）以及 **深色**、**浅色**、**跟随系统** 三种外观。切换语言或外观会即时重绘当前原生窗口，不中断正在播放的音乐。
+- **四语言与深浅色外观：** 设置（`设置 → 通用`）支持 **English**、**简体中文**、**繁體中文**、**日本語**（含**跟随系统**）以及 **深色**、**浅色**、**跟随系统** 三种外观。切换语言或外观会即时重绘当前应用窗口，不中断正在播放的音乐。
 - **系统集成与全局快捷键：** 原生应用菜单、系统托盘、系统媒体中心（Now Playing）与全局播放/暂停快捷键（默认 `⇧⌘Space` / `Ctrl+Shift+Space`，可在 `设置 → 键盘` 中直接点击录入或停用）共用同一播放控制器。按 `⌘/`（`Ctrl+/`）或在设置中点击 **查看全部** 可浏览全部应用内快捷键。
 
 ---
@@ -111,7 +111,7 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 
 ### 独立系统 WebView 登录辅助进程
 
-- 点击 **登录** 会单独启动基于 Wry 的原生系统 WebView 子进程（macOS 使用 `WKWebView`，Windows 使用 `WebView2`，Linux 使用 `WebKitGTK`），加载 Google 官方登录页面。
+- 点击 **登录** 会单独启动基于 Wry 的系统 WebView 子进程（macOS 使用 `WKWebView`，Windows 使用 `WebView2`，Linux 使用 `WebKitGTK`），加载 Google 官方登录页面。
 - 登录程序使用带蓝绿色账号徽标的专属 **ytmGO** 图标，在 Dock / 任务栏和窗口切换器中保留独立入口，方便在多步验证期间切回；macOS 下点击主程序或登录程序的 Dock 图标也会恢复并聚焦已打开的登录窗口。
 - 正常交互登录不设应用自定义的强制超时时间；登录成功、手动关闭窗口或退出主应用时，登录子进程立即结束。程序仅从系统 WebView 的私有非持久化存储中读取当前所选账号的会话，通过父子进程匿名管道交接给主进程并向 YouTube 核验账号与会员状态后保存；主界面与音视频播放完全不依赖登录窗口。
 - 不使用浏览器扩展、本地 HTTP 登录桥、OAuth 客户端配置或临时 Cookie 文件。直接关闭登录窗口即取消本次登录，原有已登录账号保持不变。外部链接通过系统默认浏览器打开。
@@ -139,9 +139,9 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 
 ---
 
-## 原生播放架构、网络代理与隐私边界
+## 播放架构、网络代理与隐私边界
 
-- **无 Node/jsdom 的原生播放运行时：** `make build` 打包 Go 主程序、轻量 Rust 脚本宿主（`ytmgo-playback-host`）和精简版 **FFmpeg 9.0.2**。播放器脚本提取在临时 **QuickJS** 进程中运行锁定的 MIT **YouTube.js** 提取器子集与 ISC **Meriyah** 解析器，返回有界转换代码后立即退出；签名求值每次使用全新 QuickJS 领域（32 MiB 内存上限与 3 秒中断保护）。普通账号与未登录模式的播放证明（MIT **BgUtils**）在独立、隐藏、非持久化的系统 WebView 中按需生成，并通过 CSP 禁止网络与媒体加载。安装包不分发 Node、npm 依赖树、jsdom 或完整 YouTube.js SDK。详见 [scripts/runtime/README.md](scripts/runtime/README.md)。
+- **无 Node/jsdom 的播放运行时：** `make build` 打包 Go 主程序、轻量 Rust 脚本宿主（`ytmgo-playback-host`）和精简版 **FFmpeg 9.0.2**。播放器脚本提取在临时 **QuickJS** 进程中运行锁定的 MIT **YouTube.js** 提取器子集与 ISC **Meriyah** 解析器，返回有界转换代码后立即退出；签名求值每次使用全新 QuickJS 领域（32 MiB 内存上限与 3 秒中断保护）。普通账号与未登录模式的播放证明（MIT **BgUtils**）在独立、隐藏、非持久化的系统 WebView 中按需生成，并通过 CSP 禁止网络与媒体加载。安装包不分发 Node、npm 依赖树、jsdom 或完整 YouTube.js SDK。详见 [scripts/runtime/README.md](scripts/runtime/README.md)。
 - **有界流式传输与地址隔离：** 远端签名媒体地址与账号凭据只留在 Go 进程内存中；FFmpeg 仅通过 `stdin` 接收每个解码器独立的随机本地回环（loopback）能力地址。Go 直接按音频 **64 KiB**、视频 **512 KiB** 字节区间请求远端媒体，并以 **32 KiB** 背压转发；同时最多保持 4 个媒体租约与 4 条活动请求，不在磁盘上缓存整首歌曲。
 - **统一代理与封面缓存策略：** 曲库、账号核验、封面与媒体流请求共用 `internal/netproxy`：各平台优先读取显式 `HTTP_PROXY`、`HTTPS_PROXY` 和 `NO_PROXY` 环境变量；macOS 普通启动也会读取系统 HTTP、HTTPS 与 SOCKS 代理及排除规则；本地解码器回环连接始终直连。当前不执行 PAC 自动代理脚本，也不读取代理密码。封面加载优先调度当前视口内的可见图片，失败后按 2 秒至 1 分钟指数退避重试。明确允许公开缓存的封面会写入本地磁盘缓存（上限 **64 MiB / 512 个文件**，有效期最长 **24 小时**）；账号头像不写入磁盘封面缓存。
 - **脱敏本地诊断：** 应用数据目录下的 `native-diagnostics/audio-status.json`、`video-status.json` 和 `account-status.json` 仅记录固定枚举状态/错误类别、时间戳与应用版本（播放初始化失败时还可包含封闭枚举的阶段、bootstrap 步骤、HTTP 状态码、跳转类别与 MIME 类型），绝不写入媒体 URL、请求头、Cookie、账号标识、进程参数/环境变量或原始日志。
@@ -152,10 +152,10 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 
 详细界面与架构规范见 [DESIGN.md](DESIGN.md)，历史与阶段性实测记录见 [VERIFICATION.md](VERIFICATION.md) 与 [自动升级验收](docs/AUTO_UPDATE_VERIFICATION.md)。阅读与使用时请注意以下客观边界：
 
-- **跨平台运行验收边界：** 2026-11-04 三平台 GitHub Actions 工作流——[Native playback runtime](https://github.com/mreasonyang/ytmgo/actions/runs/41800458515) 与 [Native account login](https://github.com/mreasonyang/ytmgo/actions/runs/41800458464)——在 macOS、Windows 和 Linux 上均已全部通过。针对 **v0.6.4**（[验收记录](docs/audits/2026-11-04-macos-compat-0.6.4/README.md)），**macOS 27 Apple Silicon（`arm64`）** 与 **macOS 15 Intel（`amd64`）** 双架构原生打包、Developer ID 签名/公证/staple、Gatekeeper 校验、辅助进程执行、空配置冷启动以及[双架构 Homebrew Cask 实装校验](https://github.com/mreasonyang/homebrew-taps/actions/runs/41850617166)均已通过，同时完成了 [Intel 模拟 WebView 登录生命周期校验](https://github.com/mreasonyang/ytmgo/actions/runs/41848250319)、[0.6.3 → 0.6.4 ARM 公开源升级验收](https://github.com/mreasonyang/ytmgo/actions/runs/41850200341) 以及 [Windows/Linux 原生安装包工作流](https://github.com/mreasonyang/ytmgo/actions/runs/41849890402)（在对应系统原生构建、实际安装 NSIS/DEB 包，并核对安装后的资源与空账号启动）。请注意：**CI 与原生安装包安装/空配置启动冒烟测试不等于已完成 Windows、Linux 或 Intel macOS 上的真实登录播放、完整原生界面交互、实体音频硬件输出或跨版本升级验收**；同理，所有随包 Mach-O 二进制已核验 `13.0` 部署目标，但**编译部署目标（macOS 13.0）不等于在 macOS 13 或 macOS 14 实体系统上完成了运行验收**。
+- **跨平台运行验收边界：** 2026-11-04 三平台 GitHub Actions 工作流——[Native playback runtime](https://github.com/mreasonyang/ytmgo/actions/runs/41800458515) 与 [Native account login](https://github.com/mreasonyang/ytmgo/actions/runs/41800458464)——在 macOS、Windows 和 Linux 上均已全部通过。针对 **v0.6.4**（[验收记录](docs/audits/2026-11-04-macos-compat-0.6.4/README.md)），**macOS 27 Apple Silicon（`arm64`）** 与 **macOS 15 Intel（`amd64`）** 双架构原生打包、Developer ID 签名/公证/staple、Gatekeeper 校验、辅助进程执行、空配置冷启动以及[双架构 Homebrew Cask 实装校验](https://github.com/mreasonyang/homebrew-taps/actions/runs/41850617166)均已通过，同时完成了 [Intel 模拟 WebView 登录生命周期校验](https://github.com/mreasonyang/ytmgo/actions/runs/41848250319)、[0.6.3 → 0.6.4 ARM 公开源升级验收](https://github.com/mreasonyang/ytmgo/actions/runs/41850200341) 以及 [Windows/Linux 原生安装包工作流](https://github.com/mreasonyang/ytmgo/actions/runs/41849890402)（在对应系统原生构建、实际安装 NSIS/DEB 包，并核对安装后的资源与空账号启动）。请注意：**CI 与原生安装包安装/空配置启动冒烟测试不等于已完成 Windows、Linux 或 Intel macOS 上的真实登录播放、完整界面交互、实体音频硬件输出或跨版本升级验收**；同理，所有随包 Mach-O 二进制已核验 `13.0` 部署目标，但**编译部署目标（macOS 13.0）不等于在 macOS 13 或 macOS 14 实体系统上完成了运行验收**。
 - **账号类型与广告流程边界：** macOS 已完成未登录匿名整曲播放及真实 **YouTube Music Premium** 账号的首页、曲库恢复、同步歌词、跳播与暂停恢复实测。**普通（非 Premium）账号**及**官方广告流程**尚未完成验收：当前实现没有官方广告素材序列与真实广告进度上报，不使用推算等待时间模拟广告，也不能将公开歌曲播放成功视为广告流程验收通过。
 - **内存占用现状：** 目前**不能宣称低内存优化已经完成**。当前工作区尚未进行新的整应用内存基准测试；针对早期构建的带日期实测记录见 [VERIFICATION.md](VERIFICATION.md)，旧版基于 Node 的历史数据也不作为当前运行时的对比结论。
-- **全局快捷键与长时稳定性边界：** 应用内快捷键（如空格键播放/暂停、`⌘K` 搜索等）与原生 UI 测试器状态机已验证，但 macOS 实体全局快捷键（`⇧⌘Space`）跨应用触发尚未通过端到端实机确认。此外，本地实机验收中曾记录到偶发的 `audio_stream_failed` 与 `bootstrap_network_timeout`（点击 **Retry** 后均恢复正常播放），其上游或网络根因尚未最终定论；崩溃/强制终止持久化、睡眠唤醒以及多日长时耐久运行仍待后续验收。
+- **全局快捷键与长时稳定性边界：** 应用内快捷键（如空格键播放/暂停、`⌘K` 搜索等）与 MyGo UI 测试器状态机已验证，但 macOS 实体全局快捷键（`⇧⌘Space`）跨应用触发尚未通过端到端实机确认。此外，本地实机验收中曾记录到偶发的 `audio_stream_failed` 与 `bootstrap_network_timeout`（点击 **Retry** 后均恢复正常播放），其上游或网络根因尚未最终定论；崩溃/强制终止持久化、睡眠唤醒以及多日长时耐久运行仍待后续验收。
 
 ---
 
@@ -204,9 +204,9 @@ make dev
 ### 目录结构与专项测试
 
 ```text
-main.go / controller.go         原生窗口生命周期、菜单、导航、队列与异步请求代数控制
-updates.go                      原生更新窗口插件、菜单项与命令行维护参数
-native_views.go / native_style.go  MyGo 原生界面、三档响应式布局、色板与矢量图标
+main.go / controller.go         应用窗口生命周期、菜单、导航、队列与异步请求代数控制
+updates.go                      MyGo 更新窗口插件、菜单项与命令行维护参数
+native_views.go / native_style.go  MyGo 自绘界面视图、三档响应式布局、色板与矢量图标
 native_settings.go              设置面板与键盘快捷键说明面板
 native_lyrics.go / native_lyrics_drag.go  同步歌词自动跟随、手动阅读恢复与拖动跳转进度
 lyrics_layout.go                歌词区域标准/放大布局偏好持久化
@@ -240,16 +240,16 @@ go test -race ./...
 # 指定构建好的运行时目录运行播放器单元测试
 YTMGO_RUNTIME_DIR="$PWD/build/runtime" go test ./internal/player
 
-# 显式启用的实时曲库与原生播放测试
+# 显式启用的实时曲库与播放器测试
 YTMGO_LIVE_CATALOG=1 go test -v -run TestLive ./internal/catalog
 YTMGO_RUNTIME_DIR="$PWD/build/runtime" YTMGO_LIVE_PLAYBACK=1 go test -v -run TestNativePlaybackLive ./internal/player
 YTMGO_RUNTIME_DIR="$PWD/build/runtime" YTMGO_LIVE_PREPARED=1 go test -v -run TestNativePreparedPlaybackLive ./internal/player
 
-# 使用 MyGo 软件渲染器生成确定性原生视图截图
+# 使用 MyGo 软件渲染器生成确定性自绘视图截图
 YTMGO_UI_SNAPSHOT_DIR="$PWD/build/native-screenshots" go test -run '^TestNative' .
 ```
 
-自动布局截图使用 MyGo 软件渲染器检验原生视图几何与排版；真实应用交互、音频设备输出、实时网络请求与整应用内存测量分别独立验证和记录，互不替代。
+自动布局截图使用 MyGo 软件渲染器检验自绘视图几何与排版；真实应用交互、音频设备输出、实时网络请求与整应用内存测量分别独立验证和记录，互不替代。
 
 ---
 

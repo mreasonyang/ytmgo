@@ -3246,3 +3246,45 @@ func NativeLibraryReconnectBody() string { return In(i18n.Locale()).NativeLibrar
 func (msgs Messages) NativeLibraryReconnectBody() string {
 	return Catalog.Format(msgs.locale, "nativeLibraryReconnectBody", nil)
 }
+
+// NativeMusicRegionUnavailable says "Unavailable in this region. Check your network or proxy location, then retry."
+// in the language the app shows.
+func NativeMusicRegionUnavailable() string { return In(i18n.Locale()).NativeMusicRegionUnavailable() }
+
+// NativeMusicRegionUnavailable says "Unavailable in this region. Check your network or proxy location, then retry."
+// in the language of msgs.
+func (msgs Messages) NativeMusicRegionUnavailable() string {
+	return Catalog.Format(msgs.locale, "nativeMusicRegionUnavailable", nil)
+}
+
+// NativeAccountLoginCancelled says "Sign-in cancelled."
+// in the language the app shows.
+func NativeAccountLoginCancelled() string { return In(i18n.Locale()).NativeAccountLoginCancelled() }
+
+// NativeAccountLoginCancelled says "Sign-in cancelled."
+// in the language of msgs.
+func (msgs Messages) NativeAccountLoginCancelled() string {
+	return Catalog.Format(msgs.locale, "nativeAccountLoginCancelled", nil)
+}
+
+// NativePlaybackAccessDenied says "Audio access denied. Check your network or proxy, then retry to refresh the stream."
+// in the language the app shows.
+func NativePlaybackAccessDenied() string { return In(i18n.Locale()).NativePlaybackAccessDenied() }
+
+// NativePlaybackAccessDenied says "Audio access denied. Check your network or proxy, then retry to refresh the stream."
+// in the language of msgs.
+func (msgs Messages) NativePlaybackAccessDenied() string {
+	return Catalog.Format(msgs.locale, "nativePlaybackAccessDenied", nil)
+}
+
+// NativePlaybackAccessDeniedHTTP says "Audio access denied (HTTP {status}). Check your network or proxy, then retry to refresh the stream."
+// in the language the app shows.
+func NativePlaybackAccessDeniedHTTP(status string) string {
+	return In(i18n.Locale()).NativePlaybackAccessDeniedHTTP(status)
+}
+
+// NativePlaybackAccessDeniedHTTP says "Audio access denied (HTTP {status}). Check your network or proxy, then retry to refresh the stream."
+// in the language of msgs.
+func (msgs Messages) NativePlaybackAccessDeniedHTTP(status string) string {
+	return Catalog.Format(msgs.locale, "nativePlaybackAccessDeniedHTTP", map[string]any{"status": status})
+}

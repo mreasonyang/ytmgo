@@ -1,5 +1,168 @@
 # Native playback verification
 
+## Linux 0.6.5 accept-2218 follow-up — 2026-11-05 (Asia/Shanghai)
+
+Addressed the two remaining regressions from the third independent acceptance
+report. The new tests first reproduced `no_track` after cancel-then-seek and
+missed English contractions / Spanish `zona` before the fixes were applied.
+
+- A track whose denied media lease has been retired remains seekable after its
+  recovery operation is cancelled. This state is separate from `Loading`, so a
+  cancelled worker can finish without leaving a spinner, while the next gesture
+  can re-resolve at its own bookmark. Generations still reject stale completions
+  and preserve play/pause intent. Successful installation, terminal failure,
+  Stop, a replacement Load, account reconfiguration, suspend and Close retire
+  that state; it cannot revive a stopped track or cross an account change.
+- The region-template guard again accepts `isn't available`, `isn’t available`
+  and Spanish `zona`. Both geographic scope and refusal remain necessary;
+  browser incompatibility, generic errors and a zone-selection message are
+  negative fixtures. Branding, layout and script guards are unchanged.
+
+The seek regression mirrors `desktop.seek`: cancel the previous context before
+starting the next worker. It covers cancellation during refresh, resolution and
+decoder opening, each with the old operation either fully finished or still
+unwinding, for playing and paused tracks. It checks the new bookmark, old decoder
+cleanup and exact media-lease release counts. Additional cases cover Stop,
+account switching, replacement loading and terminal failure after cancellation.
+The scheduling/region cases also pass twenty repetitions under the race detector.
+
+Full Go tests, race checks, vet, i18n and native build/support results, the delta
+from `accept-2218/src`, and source fingerprints before/after final validation
+are recorded under `outputs/e2e-round4-20261105/`. This round uses deterministic
+injected failures and the real player/output lifecycle; it does not establish
+successful recovery through the unstable live WARP egress. No installation or
+real-account changes were made.
+
+## Linux 0.6.5 accept-2033 follow-up — 2026-11-05 (Asia/Shanghai)
+
+Addressed N1–N5 from the second independent acceptance report:
+
+- Empty login-helper exits are neutral only for the Linux GDK-compatible exit
+  code **1**. Empty successful exits, other exit codes, SIGKILL and SIGABRT stay
+  failures. Explicit protocol errors and deadlines retain their previous
+  semantics. The real fixture still reproduces XDestroyWindow exit 1 and the
+  parent reports cancelled. Code 1 with no protocol bytes remains a deliberate
+  compatibility heuristic; it cannot identify every possible silent failure.
+- Cold/manual playback gets one fresh resolution after an initial open denial.
+  Automatic recovery allows one additional fresh URL if its first new URL is
+  also denied. These are finite open-attempt budgets, independent of the
+  existing ten-second healthy-playback budget. Failed leases are released
+  before another resolution; other error categories do not gain these retries.
+- A seek during resolution/recovery now replaces the pending operation at the
+  latest requested bookmark, preserving play/pause intent. Generations cancel
+  old work and prevent its completion from overwriting the new seek. A cancelled
+  foreground load no longer reports a spurious failure for the newer seek.
+- Displayed playback/account/video errors and lyrics notices retain translation
+  keys and arguments, and are reformatted on locale changes. Provider lyrics
+  stay literal, and cleared/replaced notices cannot be resurrected by a locale
+  change. Existing loading/no-lyrics/error notices share this path.
+- A localized region interstitial must now convey both geographic scope and
+  unavailability, in addition to the branded template checks. A generic error
+  with identical title/body is rejected. Explicit branded region text can
+  survive a logo filename change. English requests remain pinned; semantic
+  fallbacks cover the app's locales and Spanish. Unknown text/layouts fall back
+  to the existing proof-config failure rather than guessing a region cause.
+
+Regressions cover signal versus exit-code outcomes, real X11 window destruction,
+fresh-open success/failure bounds and media ownership, seeks during recovery and
+initial resolution, locale changes with an HTTP status, real lyrics, cleared
+errors, and same-title generic region-template negatives. Full Go tests, race
+checks, vet, i18n, native runtime/login/licensing checks and packaging are
+recorded under `outputs/e2e-round3-20261105/`, alongside before/after source
+fingerprints. The rebuilt bundle is under `build/linux-amd64/` and was not
+installed over `/opt/ytmgo`. The original intermittent egress root cause and
+real-account/hardware-audio coverage remain outside this validation.
+
+## Linux 0.6.5 acceptance follow-up — 2026-11-04 (America/Los_Angeles)
+
+Closed the remaining code paths identified by the independent `accept-1919`
+report, on top of the preceding uncommitted E2E fixes:
+
+- A helper that actually exits without any protocol bytes is treated as a
+  cancelled login, including a nonzero GDK exit after `XDestroyWindow`. Explicit
+  error replies, malformed/partial output, read failures, parent deadlines and
+  a helper that closes stdout but remains alive keep their failure semantics.
+  An opt-in real fixture test reproduced helper exit **1** after direct window
+  destruction and verified the Go parent's outcome was **cancelled**, with no
+  session installed.
+- The automatic 403 recovery budget is restored after **10 seconds of heard
+  audio** in the new decoder. It can therefore recover again during the same
+  song. Pause/resume and a new seek decoder start a fresh healthy interval;
+  paused wall time, loading and the distance skipped by a seek cannot refill
+  it. Repeated denial before healthy playback still stops instead of looping.
+- Access-denied errors now have specific four-language explanations, with the
+  exact sanitized HTTP **401/403** status when available, network/proxy guidance
+  and Retry. The full reason is visible in both narrow and wide Now Playing
+  panels rather than the generic unable-to-play text.
+- Region-page recognition also matches the observed small branded interstitial
+  template (official on-platform logo, matching title/message, no app scripts
+  or form), independently of its language. Proof config requests explicitly pin
+  English, with a regression asserting the outgoing header. The older English
+  text fallback examines rendered text, excluding script/style strings.
+
+Validation includes full Go tests, race checks, vet, i18n (255 messages in four
+languages), runtime/login/licensing checks, `make build`, real X11 direct-window
+destruction through the Go login parent, and eight localized panel snapshots.
+Regressions cover replenished and exhausted recovery budgets, paused/seeked
+playback, empty versus invalid helper exits, localized region templates and
+unrelated-page rejection. Evidence is in `outputs/e2e-followup-20261104/`.
+The rebuilt package is in `build/linux-amd64/`; `/opt/ytmgo` was not changed.
+The original intermittent egress/region root cause and real-account/hardware
+audio limitations from the preceding report remain outside these conclusions.
+
+## Linux 0.6.5 E2E follow-up — 2026-11-04 (America/Los_Angeles)
+
+Reviewed the Debian 13 report against `6d38d94`. Failed proof initialization
+now discards the visitor, binding, proof host and idle HTTP connections. Explicit
+playback retries do the same before resolving a new lease. The specific English
+YouTube Music region rejection page becomes `region_unavailable` at
+`proof_config_parse`, with actionable messages in all four UI languages.
+
+A midstream access denial gets one automatic fresh resolution per explicit
+track load, preserving the consumed playback position. A denied seek also
+re-resolves and preserves pause intent. Persistent denials stop with a visible
+error; Stop, a newer load and account changes retain their cancellation gates.
+Prepared decoders from the failed generation cannot satisfy its retry. Successful
+loads, seeks, resumes and automatic recovery replace stale audio diagnostics
+with `ready`, removing the old HTTP status and stage. The collapsed player shows
+the actual error and offers its complete text as a tooltip.
+
+Empty Home responses are retried once without caching the empty page. A second
+empty response becomes a catalog error with Retry rather than search-empty text.
+Login cancellation now records `cancelled` and shows a neutral localized notice,
+preserving any unrelated catalog failure. Both window close and destruction are
+handled. The original helper's standard window-manager close returned a valid
+`cancelled` reply in this environment, so the original reported `session_failed`
+could not be reproduced through that path. The fixture lifecycle test now has an
+optional Linux `--window-close` case that keeps the parent pipe open.
+
+Validation: `go test ./...`, race tests for player/streaming/catalog, `go vet`,
+catalog checks, login Python tests, login Rust tests, offline runtime tests,
+runtime manifest/protocol tests, licensing tests, and `make build`. The native
+login fixture passed success, cancellation, parent EOF, timeout and a real X11
+window-manager close. Deterministic regressions cover same-process proof failure
+then successful resolution, fresh leases after 403, retry bounds, bookmarks,
+paused seeks, cancellation, neutral login notices and stale diagnostics. Public
+Home requests returned 18 Japanese items and 30 items each in English, Simplified
+Chinese and Traditional Chinese. UI snapshots and local logs are under
+`outputs/e2e-fixes-20261104/`; the rebuilt DEB/tar bundle is under
+`build/linux-amd64/` and was not installed over `/opt/ytmgo`. The rebuilt app
+also passed an isolated-profile Japanese cold-start smoke: Home rendered real
+content, the catalog diagnostic was `ready`, and audio diagnostics initialized.
+
+The real prepared-playback probe was attempted twice; both attempts were blocked
+by the current network's region rejection and reported `region_unavailable`.
+This confirms classification, not successful live audio or recovery from an
+actual changing egress IP. Logged-in/Premium flows and physical audio output
+remain outside this follow-up's coverage.
+
+The small Japanese glyphs have a local font fallback explanation:
+`fc-match 'sans-serif:charset=30d5'` selects **Gothic A1** (Katakana), while
+`fc-match 'sans-serif:charset=7de8'` selects **Noto Sans CJK JP** (Kanji).
+Use a Japanese-capable sans family consistently in the user's Fontconfig/GTK
+preferences to align these metrics. The application does not override global
+desktop font preferences.
+
 ## 0.6.4 macOS 13 target and Intel — 2026-11-04 (Asia/Shanghai)
 
 PASS for packaging and native startup. Both Apple Silicon and Intel releases

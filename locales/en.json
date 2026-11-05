@@ -797,5 +797,9 @@
   "nativeLibraryUpdating": "Updating your library…",
   "nativeLibrarySaved": "Showing your saved library.",
   "nativeLibrarySavedError": "Couldn’t update. Showing your saved library.",
-  "nativeLibraryReconnectBody": "Your saved library is available below. Reconnect your account to update it."
+  "nativeLibraryReconnectBody": "Your saved library is available below. Reconnect your account to update it.",
+  "nativeMusicRegionUnavailable": "Unavailable in this region. Check your network or proxy location, then retry.",
+  "nativeAccountLoginCancelled": "Sign-in cancelled.",
+  "nativePlaybackAccessDenied": "Audio access denied. Check your network or proxy, then retry to refresh the stream.",
+  "nativePlaybackAccessDeniedHTTP": "Audio access denied (HTTP {status}). Check your network or proxy, then retry to refresh the stream."
 }

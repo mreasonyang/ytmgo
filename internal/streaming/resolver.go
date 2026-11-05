@@ -17,6 +17,10 @@ import (
 // shorter budgets and account changes still cancel the active operation.
 const resolverOperationTimeout = 90 * time.Second
 
+// Config parsing must not inherit the UI's locale. Keep the region-page text
+// fallback stable even when the upstream response lacks its usual template.
+const proofConfigLanguage = "en-US,en;q=0.7"
+
 type scriptHost interface {
 	call(context.Context, string, any) error
 	Close()
@@ -135,6 +139,28 @@ func (r *Resolver) resetHosts() {
 	r.ready = false
 	r.expires = time.Time{}
 }
+
+// Refresh discards network-bound visitor/proof state after a playback failure.
+// Existing leases keep their lifetimes; public player transforms remain reusable.
+func (r *Resolver) Refresh(ctx context.Context) error {
+	ctx, done, err := r.enter(ctx)
+	if err != nil {
+		return err
+	}
+	defer done()
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	r.resetSession()
+	return nil
+}
+
+func (r *Resolver) resetSession() {
+	r.resetHosts()
+	r.binding = proofBinding{}
+	r.sessionClient = nil
+	r.client.CloseIdleConnections()
+}
 func (r *Resolver) Close() {
 	r.closeOnce.Do(func() {
 		r.stateMu.Lock()
@@ -166,7 +192,12 @@ func (r *Resolver) revokeAll() {
 	}
 }
 
-func (r *Resolver) warm(ctx context.Context) error {
+func (r *Resolver) warm(ctx context.Context) (err error) {
+	defer func() {
+		if err != nil {
+			r.resetSession()
+		}
+	}()
 	if r.session.Revision == 0 {
 		return failure("init_failed", "sdk_create")
 	}
@@ -196,7 +227,7 @@ func (r *Resolver) warm(ctx context.Context) error {
 	} else {
 		req, _ := http.NewRequest("GET", musicOrigin+"/", nil)
 		req.Header.Set("Accept", "text/html")
-		req.Header.Set("Accept-Language", "en-US,en;q=0.7")
+		req.Header.Set("Accept-Language", proofConfigLanguage)
 		r.session.authorize(req, false)
 		page, err := r.request(ctx, "GET", musicOrigin+"/", nil, req.Header, "proof_config_request", "")
 		if err != nil {
@@ -204,6 +235,9 @@ func (r *Resolver) warm(ctx context.Context) error {
 		}
 		binding, err := parseBinding(page, r.session)
 		if err != nil {
+			if musicRegionUnavailable(page) {
+				return failure("region_unavailable", "proof_config_parse")
+			}
 			return failure("proof_request_rejected", "proof_config_parse")
 		}
 		r.binding = binding

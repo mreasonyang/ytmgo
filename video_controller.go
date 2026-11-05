@@ -10,7 +10,7 @@ import (
 
 func (a *desktop) setVideoQuality(quality int) {
 	if a.changeVideoQuality(quality) {
-		a.model.VideoError = a.tr("nativeVideoUnavailable")
+		a.setVideoError("nativeVideoUnavailable")
 	}
 	a.invalidate()
 }
@@ -47,7 +47,7 @@ func (a *desktop) syncVideo() {
 
 func (a *desktop) syncVideoState(retry bool) {
 	if a.syncVideoSession(retry) {
-		a.model.VideoError = a.tr("nativeVideoUnavailable")
+		a.setVideoError("nativeVideoUnavailable")
 	}
 }
 
@@ -122,6 +122,9 @@ func (a *desktop) pollVideo() {
 					message = a.tr("nativeVideoUnavailable")
 				}
 				a.applyVideoFrame(generation, frame, number, loading, message)
+				if errText != "" {
+					a.setVideoError("nativeVideoUnavailable")
+				}
 			})
 		}
 	}

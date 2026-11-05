@@ -44,8 +44,10 @@ type UIModel struct {
 	VideoQualityError                                           string
 	ErrorScope                                                  errorScope
 	AccountRestore                                              string
+	AccountNotice                                               string
 	AccountAvatar                                               string
 	Version                                                     string
+	errorMessage, playbackMessage, videoMessage, lyricsMessage  uiMessage
 
 	// Presentation state for this window.
 	playbackViewSeen                bool // first playback opens Now Playing unless already visited
@@ -890,6 +892,9 @@ func nativeContinuationFailed(m *UIModel) bool {
 }
 
 func nativePageBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool, contentWidth float32) {
+	if m.AccountNotice != "" {
+		ui.Text(c, a.Tr(m.AccountNotice)).TextColor(p.secondary)
+	}
 	if m.Route == "library" {
 		nativeLibraryCacheStatus(c, m, a, p)
 	}
@@ -1532,12 +1537,16 @@ func nativeTrackCaption(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 		ui.Text(c, title).FontSize(14).FontWeight(600).MaxLines(1).Ellipsis("…")
 		if m.PlaybackError != "" {
 			artist = a.Tr("nativePlaybackFailedStatus")
+			if !m.Panel && !m.Immersive {
+				artist = m.PlaybackError
+			}
 		} else if nativeAwaitingAccount(m) {
 			artist = a.Tr("nativePlaybackAwaitingAccount")
 		}
 		caption := ui.Text(c, artist).FontSize(12).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
 		if m.PlaybackError != "" {
 			caption.TextColor(p.accentText)
+			caption.Tooltip(m.PlaybackError)
 		}
 	})
 }
@@ -2006,7 +2015,7 @@ func nativeSongShelf(items []catalog.Item) bool {
 // A presentation action can occur after its destination was built in this pass.
 // Request the next frame explicitly so it becomes visible without another input.
 type nativePresentationKey struct {
-	texts                              [15]string
+	texts                              [16]string
 	flags                              [21]bool
 	values                             [4]float64
 	repeat, queueLength, libraryLength int
@@ -2019,7 +2028,7 @@ type nativePresentationKey struct {
 
 func nativePresentation(m *UIModel) nativePresentationKey {
 	return nativePresentationKey{
-		texts:  [15]string{m.Route, m.Query, m.PanelTab, m.Appearance, m.Language, m.Current.ID, m.Current.Title, m.Page.Title, m.Error, m.Lyrics, m.Current.Artwork, m.VideoError, m.PlaybackError, m.AccountRestore, m.LibraryErrorKey},
+		texts:  [16]string{m.Route, m.Query, m.PanelTab, m.Appearance, m.Language, m.Current.ID, m.Current.Title, m.Page.Title, m.Error, m.Lyrics, m.Current.Artwork, m.VideoError, m.PlaybackError, m.AccountRestore, m.LibraryErrorKey, m.AccountNotice},
 		flags:  [21]bool{m.Loading, m.Playing, m.Muted, m.Liked, m.Shuffle, m.Panel, m.Immersive, m.Settings, m.Shortcuts, m.SidebarCollapsed, m.SignedIn, m.CanBack, m.CanForward, m.FocusSearch, m.Video, m.VideoLoading, m.PlaybackLoading, m.MusicPremium, m.LibraryCached, m.LibraryRefreshing, m.LyricsExpanded},
 		values: [4]float64{m.Volume, m.Position, m.Duration, 0}, repeat: m.Repeat, queueLength: len(m.Queue), libraryLength: len(m.LibraryItems),
 		errorScope: m.ErrorScope, libraryLoaded: m.LibraryLoaded, shortcutRecording: m.ShortcutRecording, shortcut: m.GlobalShortcut, shortcutError: m.ShortcutError,

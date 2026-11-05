@@ -47,6 +47,7 @@ func (p *Player) Suspend() error {
 		old.output.Pause()
 	}
 	p.session, p.media = nil, nil
+	p.seekReloadable = false
 	p.clearPreparedLocked()
 	p.state.Position, p.state.Playing, p.state.Loading, p.state.Ended = at, false, false, false
 	previous := p.suspendDone

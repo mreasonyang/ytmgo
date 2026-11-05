@@ -41,6 +41,15 @@ func catalogServiceErrorKey(err error) string {
 }
 
 func playbackServiceErrorKey(state player.State) string {
+	if state.Error == "audio_access_denied" {
+		if status := state.ErrorDetails.Sanitized().HTTPStatus; status == 401 || status == 403 {
+			return "nativePlaybackAccessDeniedHTTP"
+		}
+		return "nativePlaybackAccessDenied"
+	}
+	if state.Error == "region_unavailable" {
+		return "nativeMusicRegionUnavailable"
+	}
 	d := state.ErrorDetails.Sanitized()
 	if state.Error == "bootstrap_redirect" && d.Stage == "bootstrap" && d.HTTPStatus >= 300 && d.HTTPStatus < 400 {
 		return serviceRedirectErrorKey(d.Redirect)
@@ -52,11 +61,19 @@ func playbackServiceErrorKey(state player.State) string {
 }
 
 func (a *desktop) playbackFailure(state player.State) {
+	a.model.setPlaybackFailure(state, a.trArgs)
+}
+
+func (m *UIModel) setPlaybackFailure(state player.State, tr func(string, map[string]any) string) {
 	key := playbackServiceErrorKey(state)
 	if key == "" {
 		key = "nativePlaybackError"
 	}
-	a.model.PlaybackError = a.tr(key)
+	if key == "nativePlaybackAccessDeniedHTTP" {
+		m.playbackMessage.set(&m.PlaybackError, tr, key, map[string]any{"status": state.ErrorDetails.Sanitized().HTTPStatus})
+		return
+	}
+	m.playbackMessage.set(&m.PlaybackError, tr, key, nil)
 }
 
 func catalogErrorKey(err error) string {
@@ -68,7 +85,7 @@ func catalogErrorKey(err error) string {
 
 func (a *desktop) catalogFailure(err error) {
 	a.model.ErrorScope = errorCatalog
-	a.model.Error = a.tr(catalogErrorKey(err))
+	a.setError(catalogErrorKey(err))
 }
 
 func accountErrorScope(newIdentity bool) errorScope {

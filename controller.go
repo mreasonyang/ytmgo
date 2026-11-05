@@ -57,6 +57,7 @@ func (a *desktop) loadPage(route, q string, record bool) {
 	a.model.Loading = true
 	a.model.Error = ""
 	a.model.ErrorScope = ""
+	a.model.AccountNotice = ""
 	a.model.Page = catalog.Page{}
 	if route == "library" {
 		if a.model.LibraryLoaded && a.libraryPage != nil {
@@ -321,7 +322,7 @@ func (a *desktop) startTrack(it catalog.Item) {
 
 func (a *desktop) startTrackAt(it catalog.Item, at time.Duration) {
 	if a.player == nil {
-		a.model.Error = a.tr("nativeRuntimeMissing")
+		a.setError("nativeRuntimeMissing")
 		a.model.ErrorScope = ""
 		return
 	}
@@ -349,7 +350,7 @@ func (a *desktop) startTrackAt(it catalog.Item, at time.Duration) {
 	a.model.Playing = false
 	a.model.PlaybackLoading = true
 	a.loadPending = true
-	a.model.clearLyrics(a.tr("shellLoading"))
+	a.setLyricsNotice("shellLoading")
 	a.model.Liked = it.Liked
 	a.model.PlaybackError = ""
 	a.endedHandled = true
@@ -377,6 +378,12 @@ func (a *desktop) startTrackAt(it catalog.Item, at time.Duration) {
 			}
 			a.loadPending = false
 			a.model.PlaybackLoading = false
+			if errors.Is(err, context.Canceled) {
+				// A seek may replace an in-flight load of this same track.
+				// Its newer player generation owns the bookmark and loading UI.
+				a.model.PlaybackLoading = a.player.Snapshot().Loading
+				return
+			}
 			if err != nil && ctx.Err() == nil {
 				// Resolution may fail before the decoder has a position (for
 				// example, during account setup). Keep the bookmark for Retry.
@@ -387,6 +394,7 @@ func (a *desktop) startTrackAt(it catalog.Item, at time.Duration) {
 			} else if err == nil {
 				a.endedHandled = false
 				state := a.player.Snapshot()
+				recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 				mygo.NowPlaying.Set(mygo.NowPlayingInfo{Title: it.Title, Artist: it.Artist, Album: it.Album, Duration: state.Duration, Position: state.Position, State: mygo.PlaybackPlaying, Commands: mygo.MediaPlay | mygo.MediaPause | mygo.MediaNext | mygo.MediaPrevious | mygo.MediaSeek})
 				a.prepareNext()
 			}
@@ -399,9 +407,9 @@ func (a *desktop) startTrackAt(it catalog.Item, at time.Duration) {
 				return
 			}
 			if err != nil && !errors.Is(err, catalog.ErrNoLyrics) {
-				a.model.clearLyrics(a.tr("nativeLyricsError"))
+				a.setLyricsNotice("nativeLyricsError")
 			} else if err != nil || lyrics.Text == "" {
-				a.model.clearLyrics(a.tr("nativeNoLyrics"))
+				a.setLyricsNotice("nativeNoLyrics")
 			} else {
 				a.model.clearLyrics(lyrics.Text)
 				a.model.LyricLines = lyrics.Lines
@@ -580,6 +588,7 @@ func (a *desktop) resume() {
 				a.playbackFailure(a.player.Snapshot())
 			} else {
 				a.model.PlaybackError = ""
+				recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 				a.endedHandled = false
 			}
 		})
@@ -659,6 +668,7 @@ func (a *desktop) seek(seconds float64) {
 					a.playbackFailure(a.player.Snapshot())
 				} else if err == nil {
 					a.endedHandled = false
+					recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 					a.prepareNext()
 				}
 			}
@@ -723,7 +733,7 @@ func (a *desktop) like() {
 				return
 			}
 			if err != nil {
-				a.model.Error = a.tr("nativeAccountError")
+				a.setError("nativeAccountError")
 				a.model.ErrorScope = ""
 			} else {
 				a.setLiked(id, liked)

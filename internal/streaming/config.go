@@ -9,6 +9,8 @@ import (
 	"strings"
 	"unicode/utf16"
 	"unicode/utf8"
+
+	"golang.org/x/net/html"
 )
 
 var configCalls = regexp.MustCompile(`\bytcfg\.set\s*\(\s*`)
@@ -16,6 +18,102 @@ var challengeCalls = regexp.MustCompile(`\bwindow\.ytAtN\s*\(\s*`)
 var globalNamePattern = regexp.MustCompile(`^[A-Za-z_$][A-Za-z0-9_$]*$`)
 var visitorPattern = regexp.MustCompile(`^[A-Za-z0-9_%=+/-]+$`)
 var syncIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,256}\|\|[A-Za-z0-9_-]{0,256}$`)
+
+func musicRegionUnavailable(body []byte) bool {
+	// The observed region interstitial is a small, script-free branded page:
+	// its title repeats the .message under the on-platform logo. The template
+	// alone is not a region signal: a generic error can use the same layout.
+	// Never retain its message in diagnostics.
+	if len(body) > 64<<10 {
+		return false
+	}
+	page, err := html.Parse(strings.NewReader(string(body)))
+	if err != nil {
+		return false
+	}
+	var title, message string
+	var logo, script bool
+	var messages int
+	var nodeText func(*html.Node) string
+	nodeText = func(n *html.Node) string {
+		if n.Type == html.ElementNode && (n.Data == "script" || n.Data == "style") {
+			return ""
+		}
+		if n.Type == html.TextNode {
+			return n.Data
+		}
+		var b strings.Builder
+		for child := n.FirstChild; child != nil; child = child.NextSibling {
+			b.WriteString(nodeText(child))
+		}
+		return b.String()
+	}
+	// Keep the English fallback for older/minimal interstitials. Requests pin
+	// their config locale, independently of the UI's language preference.
+	// Ignore script/style data so application strings cannot mimic a refusal.
+	text := strings.ToLower(strings.Join(strings.Fields(nodeText(page)), " "))
+	if strings.Contains(text, "youtube music is not available in your area") ||
+		strings.Contains(text, "youtube music is not available in your country") {
+		return true
+	}
+	var walk func(*html.Node)
+	walk = func(n *html.Node) {
+		if n.Type == html.ElementNode {
+			var class, src string
+			for _, attr := range n.Attr {
+				switch attr.Key {
+				case "class":
+					class = " " + strings.Join(strings.Fields(attr.Val), " ") + " "
+				case "src":
+					src = attr.Val
+				}
+			}
+			switch n.Data {
+			case "script", "form", "iframe":
+				script = true
+			case "title":
+				title = strings.Join(strings.Fields(nodeText(n)), " ")
+			case "div":
+				if strings.Contains(class, " message ") {
+					messages++
+					message = strings.Join(strings.Fields(nodeText(n)), " ")
+				}
+			case "img":
+				base, _ := url.Parse(musicOrigin + "/")
+				u, err := base.Parse(src)
+				if strings.Contains(class, " logo ") && err == nil && u.Scheme == "https" && u.Host == "music.youtube.com" && u.RawQuery == "" && u.Fragment == "" && u.User == nil &&
+					(u.Path == "/img/on_platform_logo_dark.svg" || u.Path == "/img/on_platform_logo_light.svg") {
+					logo = true
+				}
+			}
+		}
+		for child := n.FirstChild; child != nil; child = child.NextSibling {
+			walk(child)
+		}
+	}
+	walk(page)
+	brand := logo || strings.Contains(strings.ToLower(message), "youtube music")
+	return brand && !script && messages == 1 && title != "" && title == message && regionRefusal(message)
+}
+
+func regionRefusal(message string) bool {
+	text := strings.ReplaceAll(strings.ToLower(message), "’", "'")
+	contains := func(words ...string) bool {
+		for _, word := range words {
+			if strings.Contains(text, word) {
+				return true
+			}
+		}
+		return false
+	}
+	// Proof requests pin English. These additional semantic guards cover the
+	// application's locales and observed Spanish variants without treating an
+	// unknown same-title/message error template as a geographic rejection.
+	return contains("area", "country", "region") && contains("not available", "isn't available", "unavailable") ||
+		contains("地区", "地區", "国家", "國家") && contains("无法使用", "無法使用", "不可用", "不提供", "未提供", "尚未推出", "暂不支持", "暫不支援") ||
+		contains("地域", "国では") && contains("利用できません", "利用いただけません", "利用になれません", "提供されていません") ||
+		contains("región", "país", "zona") && contains("no está disponible", "no se encuentra disponible")
+}
 
 // Parse literals only. No eval, function calls, getters or prototype setters.
 // YouTube's challenge may use single quotes, hex escapes and trailing commas.

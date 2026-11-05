@@ -38,7 +38,7 @@ func TestServiceErrorClassificationRequiresMatchingEvidence(t *testing.T) {
 	for _, state := range []player.State{
 		{Error: "init_failed", ErrorDetails: player.FailureDetails{Stage: "bootstrap", HTTPStatus: 302, Redirect: "google_challenge"}},
 		{Error: "bootstrap_redirect", ErrorDetails: player.FailureDetails{Stage: "player_request", HTTPStatus: 302, Redirect: "google_challenge"}},
-		{Error: "audio_access_denied"}, {Error: "audio_rate_limited"},
+		{Error: "audio_rate_limited"},
 	} {
 		if playbackServiceErrorKey(state) != "" {
 			t.Fatal("ordinary or mismatched error became verification")
@@ -46,6 +46,16 @@ func TestServiceErrorClassificationRequiresMatchingEvidence(t *testing.T) {
 	}
 	if playbackServiceErrorKey(player.State{Error: "login_required"}) != "nativeServiceSignInRequired" {
 		t.Fatal("explicit service login requirement was discarded")
+	}
+	for _, status := range []int{0, 401, 403, 999} {
+		key := playbackServiceErrorKey(player.State{Error: "audio_access_denied", ErrorDetails: player.FailureDetails{Stage: "media_stream", HTTPStatus: status}})
+		want := "nativePlaybackAccessDenied"
+		if status == 401 || status == 403 {
+			want = "nativePlaybackAccessDeniedHTTP"
+		}
+		if key != want {
+			t.Fatal("access denial lost its specific explanation or trusted invalid status")
+		}
 	}
 	if catalogServiceErrorKey(errors.New("synthetic arbitrary upstream error")) != "" {
 		t.Fatal("raw error became verification")

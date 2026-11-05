@@ -634,6 +634,7 @@ func (a *desktop) signIn() {
 // its verified session cannot trigger another native secret-store operation.
 func (a *desktop) startAccountLogin() {
 	s := &a.accountState
+	a.model.AccountNotice = ""
 	ctx, cancel := context.WithCancel(a.ctx)
 	login, err := accountlogin.Start(ctx, accountlogin.Options{Title: locales.LoginWindowTitle()})
 	if err != nil {
@@ -654,6 +655,7 @@ func (a *desktop) startAccountLogin() {
 			s.login, s.loginCancel = nil, nil
 			cancel()
 			if errors.Is(err, accountlogin.ErrCancelled) {
+				a.accountLoginCancelled()
 				return
 			}
 			if err != nil {
@@ -663,6 +665,12 @@ func (a *desktop) startAccountLogin() {
 			a.updateAccount(&session, true)
 		})
 	}()
+}
+
+func (a *desktop) accountLoginCancelled() {
+	a.clearAccountRequestFailure(true)
+	a.model.AccountNotice = "nativeAccountLoginCancelled"
+	recordAccountDiagnostic(a.diagnosticPath, "cancelled")
 }
 
 func loginErrorMessageKey(err error) string {
@@ -707,7 +715,7 @@ func (a *desktop) accountMessage(key string) {
 }
 func (a *desktop) accountFailure(key, category string) {
 	recordAccountDiagnostic(a.diagnosticPath, category)
-	a.model.Error = a.tr(key)
+	a.setError(key)
 	a.model.ErrorScope = errorAccount
 	a.invalidate()
 }

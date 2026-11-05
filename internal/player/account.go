@@ -85,6 +85,7 @@ func (p *Player) SetAccount(ctx context.Context, next AccountSession) error {
 	p.account, p.accountSet = next, true
 	if !keepLeaseOpen {
 		p.gen++
+		p.seekReloadable = false
 		if p.cancel != nil {
 			p.cancel()
 			p.cancel = nil

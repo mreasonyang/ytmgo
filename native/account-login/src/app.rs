@@ -370,7 +370,7 @@ pub fn run(request: Request, input: impl BufRead + Send + 'static) -> Outcome {
         match event {
             Event::UserEvent(Signal::Cancel)
             | Event::WindowEvent {
-                event: WindowEvent::CloseRequested,
+                event: WindowEvent::CloseRequested | WindowEvent::Destroyed,
                 ..
             } => {
                 outcome = Some(Outcome::cancelled());

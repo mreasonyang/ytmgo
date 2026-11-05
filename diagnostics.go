@@ -26,7 +26,7 @@ func recordPlaybackDiagnostic(directory, component, category string, details ...
 		"playback_timeout", "playback_failed", "video_resolution_failed", "video_decoder_unavailable",
 		"video_stream_failed", "video_access_denied", "video_rate_limited", "video_server_error",
 		"video_network_timeout", "video_connection_failed", "proof_failed", "proof_expired",
-		"proof_request_rejected", "bootstrap_cache_miss",
+		"proof_request_rejected", "region_unavailable", "bootstrap_cache_miss",
 		"unexpected_request_host", "unexpected_authentication", "unexpected_client", "resolver_http_error",
 		"init_failed", "resolver_response_limit", "cache_limit",
 		"bootstrap_redirect", "bootstrap_network_failed", "bootstrap_network_timeout", "bootstrap_tls_failed":
@@ -59,7 +59,7 @@ func recordAccountDiagnostic(directory, category string) {
 		return
 	}
 	switch category {
-	case "restoring", "restore_slow", "restore_deferred", "signed_out", "standard", "premium", "refresh_failed", "session_failed":
+	case "restoring", "restore_slow", "restore_deferred", "signed_out", "standard", "premium", "refresh_failed", "session_failed", "cancelled":
 	default:
 		category = "session_failed"
 	}

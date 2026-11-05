@@ -420,7 +420,7 @@ func TestLanguageChangeKeepsSessionAndSnapshotsRequest(t *testing.T) {
 		if req.Header.Get("Authorization") == "" {
 			t.Error("language change discarded session")
 		}
-		_ = json.NewEncoder(w).Encode(catalogResponse())
+		_ = json.NewEncoder(w).Encode(catalogResponse(responsiveSong("abc123DEF_-", "Home song")))
 	})
 	if err := client.SetSession([]*http.Cookie{{Name: "SAPISID", Value: "synthetic-test-only", Domain: ".youtube.com", Secure: true}}, 0, ""); err != nil {
 		t.Fatal(err)

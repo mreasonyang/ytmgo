@@ -168,7 +168,7 @@ func main() {
 		a.player, err = player.New()
 		a.video, _ = player.NewVideo(a.player)
 		if err != nil {
-			a.model.Error = a.tr("nativeRuntimeMissing")
+			a.setError("nativeRuntimeMissing")
 		}
 		if a.player != nil {
 			a.player.SetVolume(a.model.Volume)
@@ -285,6 +285,8 @@ func (a *desktop) pollPlayback() {
 	t := time.NewTicker(350 * time.Millisecond)
 	defer t.Stop()
 	var previous player.State
+	diagnosticCategory := "ready"
+	var diagnosticDetails player.FailureDetails
 	for {
 		select {
 		case <-a.ctx.Done():
@@ -311,8 +313,19 @@ func (a *desktop) pollPlayback() {
 					a.model.Duration = state.Duration.Seconds()
 				}
 				if state.Error != "" {
-					recordPlaybackDiagnostic(a.diagnosticPath, "audio", state.Error, state.ErrorDetails)
+					if diagnosticCategory != state.Error || diagnosticDetails != state.ErrorDetails {
+						recordPlaybackDiagnostic(a.diagnosticPath, "audio", state.Error, state.ErrorDetails)
+						diagnosticCategory = state.Error
+						diagnosticDetails = state.ErrorDetails
+					}
 					a.playbackFailure(state)
+				} else if !state.Loading && state.Playing {
+					a.model.PlaybackError = ""
+					if diagnosticCategory != "ready" {
+						recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
+						diagnosticCategory = "ready"
+						diagnosticDetails = player.FailureDetails{}
+					}
 				}
 				if state.Ended && !a.endedHandled {
 					a.endedHandled = true

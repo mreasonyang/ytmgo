@@ -8,6 +8,7 @@ stdout, stderr, URLs and session values are never printed or saved.
 import argparse
 import json
 import os
+import sys
 from pathlib import Path
 import subprocess
 import threading
@@ -137,7 +138,8 @@ def run_case(helper, case, seen_stages=None):
         except (OSError, ValueError):
             return False
 
-    send({"version": 1, "title": "ytmgo synthetic login test", "timeoutSeconds": 2 if case == "timeout" else 0})
+    title = "ytmgo synthetic login test " + str(process.pid)
+    send({"version": 1, "title": title, "timeoutSeconds": 2 if case == "timeout" else 0})
     try:
         if case == "success":
             # The control command is compiled out of production. Repeating it
@@ -152,6 +154,20 @@ def run_case(helper, case, seen_stages=None):
         elif case == "parent_eof":
             time.sleep(1)
             process.stdin.close()
+        elif case == "window_close":
+            # Exercise the window manager's close request, independently of
+            # the parent's cancel command. Optional Linux/X11 acceptance.
+            found = subprocess.run(
+                ["xdotool", "search", "--sync", "--onlyvisible", "--name", "^" + title + "$"],
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=12,
+            )
+            windows = found.stdout.splitlines()
+            if found.returncode != 0 or not windows:
+                return "window_missing"
+            closed = subprocess.run(["wmctrl", "-i", "-c", windows[0].decode("ascii")],
+                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=3)
+            if closed.returncode != 0:
+                return "window_close_failed"
         process.wait(timeout=18)
         reader.join(timeout=3)
         if reader.is_alive() or len(reply) != 1:
@@ -187,6 +203,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--helper", required=True, type=Path)
     parser.add_argument("--success-runs", type=int, choices=range(1, 11), default=1)
+    parser.add_argument("--window-close", action="store_true", help="test Linux X11 window close (requires a window manager, xdotool and wmctrl)")
     args = parser.parse_args()
     helper = args.helper.resolve()
     if not helper.is_file():
@@ -195,6 +212,10 @@ def main():
     passed = True
     cases = [("success", attempt) for attempt in range(1, args.success_runs + 1)]
     cases += [(case, 1) for case in ("cancel", "parent_eof", "timeout")]
+    if args.window_close:
+        if sys.platform != "linux":
+            parser.error("--window-close requires Linux X11")
+        cases.append(("window_close", 1))
     for case, attempt in cases:
         stages = []
         started = time.monotonic()

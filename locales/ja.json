@@ -250,5 +250,9 @@
   "nativeLibraryUpdating": "ライブラリを更新中…",
   "nativeLibrarySaved": "前回保存したライブラリを表示しています。",
   "nativeLibrarySavedError": "更新できませんでした。保存済みのライブラリを表示しています。",
-  "nativeLibraryReconnectBody": "前回保存したライブラリを表示しています。更新するにはアカウントに再接続してください。"
+  "nativeLibraryReconnectBody": "前回保存したライブラリを表示しています。更新するにはアカウントに再接続してください。",
+  "nativeMusicRegionUnavailable": "地域制限により再生できません。ネットワークまたはプロキシの接続先を確認してから、再試行してください。",
+  "nativeAccountLoginCancelled": "ログインをキャンセルしました。",
+  "nativePlaybackAccessDenied": "音声ストリームへのアクセスが拒否されました。ネットワークまたはプロキシを確認してから、再試行してください。",
+  "nativePlaybackAccessDeniedHTTP": "音声ストリームへのアクセスが拒否されました（HTTP {status}）。ネットワークまたはプロキシを確認してから、再試行してください。"
 }

@@ -18,6 +18,7 @@ func (a *desktop) setLyricsExpanded(expanded bool) {
 	}
 	if err := preference.Save(a.lyricsLayoutPath, value, validLyricsLayout); err != nil {
 		a.model.Error = locales.NativeLyricsLayoutSaveError()
+		a.model.errorMessage = uiMessage{key: "nativeLyricsLayoutSaveError", rendered: a.model.Error}
 		a.model.ErrorScope = ""
 	} else {
 		a.model.LyricsExpanded = expanded

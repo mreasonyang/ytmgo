@@ -135,11 +135,7 @@ func TestNativeWidePlaybackErrorAppearsOnce(t *testing.T) {
 							buttons++
 						}
 					}
-					want := 0
-					if panel {
-						want = 1
-					}
-					if messages != want || buttons != 1 {
+					if messages != 1 || buttons != 1 {
 						t.Fatalf("error duplication: messages=%d retries=%d", messages, buttons)
 					}
 					if err := tt.Click(a.Tr("buttonRetry")); err != nil {

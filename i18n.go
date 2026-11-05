@@ -44,6 +44,7 @@ func (a *desktop) localeChanged() {
 	a.relocalize()
 }
 func (a *desktop) relocalize() {
+	a.model.relocalizeMessages(a.trArgs)
 	mygo.App.SetMenu(a.menu())
 	if a.tray != nil {
 		a.tray.SetMenu(a.trayMenu())
@@ -55,7 +56,7 @@ func (a *desktop) relocalize() {
 }
 func (a *desktop) setAppearance(value string) {
 	if _, err := a.prefs.SetAppearance(value); err != nil {
-		a.model.Error = a.tr("appearanceSaveError")
+		a.setError("appearanceSaveError")
 		a.model.ErrorScope = ""
 	} else {
 		a.model.Appearance = value

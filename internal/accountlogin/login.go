@@ -259,6 +259,7 @@ func (l *Login) run() {
 	} else {
 		session, resultErr = decodeResult(data, time.Now())
 	}
+	emptyReply := readErr == nil && len(data) == 0
 	clear(data)
 	// EOF alone is insufficient. A helper must release its window and exit;
 	// closing stdout while remaining alive is also a protocol failure.
@@ -276,6 +277,12 @@ func (l *Login) run() {
 		resultErr = l.stopReason
 	} else if l.ctx.Err() != nil {
 		resultErr = contextError(l.ctx.Err())
+	} else if emptyReply && runtime.GOOS == "linux" && l.cmd.ProcessState.ExitCode() == 1 {
+		// Direct destruction of an X11 WebView can terminate GDK before the
+		// helper can emit its cancellation reply. No session was transferred.
+		// GDK's known X11 failure exits with code 1. Signal termination, other
+		// exit codes and protocol failures must remain real failures.
+		resultErr = ErrCancelled
 	} else if waitErr != nil {
 		resultErr = ErrFailed
 	}

@@ -11,6 +11,7 @@ import (
 )
 
 func (m *UIModel) clearLyrics(message string) {
+	m.lyricsMessage = uiMessage{}
 	m.Lyrics = message
 	m.LyricLines = nil
 	m.LyricsSource = ""

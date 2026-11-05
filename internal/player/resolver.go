@@ -46,7 +46,8 @@ func nativeFailure(err error) error {
 	}
 	return resolverError(err.Error())
 }
-func (r *resolver) Warm(ctx context.Context) error { return nativeFailure(r.native.Warm(ctx)) }
+func (r *resolver) Warm(ctx context.Context) error    { return nativeFailure(r.native.Warm(ctx)) }
+func (r *resolver) Refresh(ctx context.Context) error { return nativeFailure(r.native.Refresh(ctx)) }
 func (r *resolver) Configure(ctx context.Context, s AccountSession) error {
 	if !s.valid() {
 		return errors.New("invalid_account_session")
@@ -81,7 +82,7 @@ func resolverError(category string) error {
 	case "resolver_rate_limited":
 		return errors.New("audio_rate_limited")
 	case "login_required", "playability_unavailable", "drm_unsupported", "sabr_unsupported", "no_audio_format", "no_video_format", "media_expired",
-		"proof_failed", "proof_expired", "proof_request_rejected", "bootstrap_cache_miss",
+		"proof_failed", "proof_expired", "proof_request_rejected", "region_unavailable", "bootstrap_cache_miss",
 		"unexpected_request_host", "unexpected_authentication", "unexpected_client", "resolver_http_error",
 		"bootstrap_redirect", "bootstrap_network_failed", "bootstrap_network_timeout", "bootstrap_tls_failed",
 		"init_failed", "resolver_response_limit", "cache_limit":

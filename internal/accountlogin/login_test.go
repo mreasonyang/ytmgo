@@ -112,6 +112,15 @@ func runFixture(mode string) int {
 	case "nonzero":
 		_, _ = os.Stdout.Write(data)
 		return 22
+	case "empty":
+		return 0
+	case "empty-nonzero":
+		return 1
+	case "empty-other":
+		return 2
+	case "empty-linger":
+		_ = os.Stdout.Close()
+		time.Sleep(20 * time.Second)
 	case "duplicate":
 		_, _ = os.Stdout.Write(append(data, data...))
 	case "trailing":
@@ -321,7 +330,7 @@ func TestHelperSessionFocusAndConcurrentWait(t *testing.T) {
 // Invalid or incomplete output and a failed exit never install session data or
 // include any child output in their public errors.
 func TestHelperRejectsInvalidOutputAndExit(t *testing.T) {
-	for _, mode := range []string{"nonzero", "duplicate", "trailing", "partial", "oversized", "linger", "error:" + privateMarker} {
+	for _, mode := range []string{"nonzero", "duplicate", "trailing", "partial", "oversized", "linger", "empty-linger", "error:" + privateMarker} {
 		t.Run(mode, func(t *testing.T) {
 			l := startFixture(t, mode, context.Background(), 8*time.Second)
 			started := time.Now()
@@ -340,6 +349,52 @@ func TestHelperRejectsInvalidOutputAndExit(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHelperEmptyExitClassification(t *testing.T) {
+	for _, mode := range []string{"empty", "empty-nonzero", "empty-other"} {
+		t.Run(mode, func(t *testing.T) {
+			l := startFixture(t, mode, context.Background(), 5*time.Second)
+			session, err := l.Wait()
+			want := ErrFailed
+			if runtime.GOOS == "linux" && mode == "empty-nonzero" {
+				want = ErrCancelled
+			}
+			if !errors.Is(err, want) || len(session.Cookies) != 0 || l.cmd.ProcessState == nil {
+				t.Fatal("empty terminal exit lost its platform/exit-code classification")
+			}
+		})
+	}
+}
+
+// Opt-in, account-free acceptance of the real WebView helper's XDestroyWindow
+// path. Unlike WM_DELETE this may kill GDK before it can send a protocol reply.
+func TestNativeWindowDestroyIsCancelled(t *testing.T) {
+	path := os.Getenv("YTMGO_TEST_LOGIN_DESTROY_HELPER")
+	if runtime.GOOS != "linux" || path == "" {
+		t.Skip("explicit Linux fixture helper and X11 display required")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	title := "ytmgo synthetic destroy " + strconv.Itoa(os.Getpid())
+	l, err := Start(ctx, Options{Path: path, Title: title})
+	if err != nil {
+		t.Fatal("native fixture helper could not start")
+	}
+	t.Cleanup(func() { l.Cancel(); _, _ = l.Wait() })
+	found, err := exec.CommandContext(ctx, "xdotool", "search", "--sync", "--onlyvisible", "--name", "^"+title+"$").Output()
+	if err != nil || len(strings.Fields(string(found))) == 0 {
+		t.Fatal("native login window did not appear")
+	}
+	window := strings.Fields(string(found))[0]
+	if exec.CommandContext(ctx, "xdotool", "windowclose", window).Run() != nil {
+		t.Fatal("native login window could not be destroyed")
+	}
+	session, err := l.Wait()
+	if !errors.Is(err, ErrCancelled) || len(session.Cookies) != 0 {
+		t.Fatal("directly destroyed login window became a failed session")
+	}
+	t.Logf("destroyed helper exit=%d; parent outcome=cancelled", l.cmd.ProcessState.ExitCode())
 }
 
 // Receiving JSON is not completion: the login keeps waiting until the child

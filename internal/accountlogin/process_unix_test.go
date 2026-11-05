@@ -3,12 +3,31 @@
 package accountlogin
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
 	"runtime"
 	"strings"
 	"syscall"
+	"testing"
+	"time"
 )
+
+func TestHelperSignalCrashRemainsFailure(t *testing.T) {
+	for _, signal := range []syscall.Signal{syscall.SIGKILL, syscall.SIGABRT} {
+		t.Run(signal.String(), func(t *testing.T) {
+			l := startFixture(t, "stubborn", context.Background(), 5*time.Second)
+			if err := l.cmd.Process.Signal(signal); err != nil {
+				t.Fatal("could not signal synthetic helper")
+			}
+			session, err := l.Wait()
+			if !errors.Is(err, ErrFailed) || len(session.Cookies) != 0 {
+				t.Fatal("a signal crash was hidden as cancellation")
+			}
+		})
+	}
+}
 
 // Only the known synthetic descendant PID is examined. No argv or environment
 // is read. Linux container init may leave an already-dead orphan as a zombie.

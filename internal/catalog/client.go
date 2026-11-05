@@ -248,7 +248,16 @@ func (c *Client) Search(ctx context.Context, query string) (Page, error) {
 }
 
 func (c *Client) Home(ctx context.Context) (Page, error) {
-	return c.page(ctx, "browse", map[string]any{"browseId": "FEmusic_home"}, "Home")
+	for attempt := 0; ; attempt++ {
+		page, err := c.page(ctx, "browse", map[string]any{"browseId": "FEmusic_home"}, "Home")
+		if !errors.Is(err, ErrInvalidResponse) || attempt == 1 || ctx.Err() != nil {
+			return page, err
+		}
+		// The service occasionally returns an empty Home on a cold request.
+		// Retry once on a fresh connection; never cache it as search results.
+		c.http.CloseIdleConnections()
+		ctx = Refresh(ctx)
+	}
 }
 func (c *Client) Explore(ctx context.Context) (Page, error) {
 	return c.page(ctx, "browse", map[string]any{"browseId": "FEmusic_explore"}, "Explore")
@@ -332,6 +341,9 @@ func (c *Client) loadPage(ctx context.Context, endpoint string, payload map[stri
 	page, token, err := parsePage(response)
 	if err != nil {
 		return Page{}, err
+	}
+	if textAt(payload, "browseId") == "FEmusic_home" && len(page.Items) == 0 && len(page.Shelves) == 0 {
+		return Page{}, ErrInvalidResponse
 	}
 	if page.Title == "" {
 		page.Title = title

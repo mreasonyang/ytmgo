@@ -75,11 +75,21 @@ class PackagingTests(unittest.TestCase):
             if kind == "sign":
                 self.assertIsNone(entitlements)
 
-    def test_secret_decode_is_private_and_invalid_value_is_never_echoed(self):
+    def test_secret_decode_writes_expected_bytes(self):
+        with patch.dict(os.environ, {"FIXTURE_SETTING": base64.b64encode(b"synthetic fixture").decode()}):
+            destination = self.root / "fixture"
+            macos.write_secret("FIXTURE_SETTING", destination)
+            self.assertEqual(destination.read_bytes(), b"synthetic fixture")
+
+    @unittest.skipUnless(os.name == "posix", "requires POSIX file permissions")
+    def test_secret_file_has_private_posix_permissions(self):
+        # Windows chmod() controls the read-only flag, not POSIX access bits.
         with patch.dict(os.environ, {"FIXTURE_SETTING": base64.b64encode(b"synthetic fixture").decode()}):
             destination = self.root / "fixture"
             macos.write_secret("FIXTURE_SETTING", destination)
             self.assertEqual(destination.stat().st_mode & 0o777, 0o600)
+
+    def test_invalid_secret_value_is_never_echoed(self):
         with patch.dict(os.environ, {"FIXTURE_SETTING": "invalid fixture!"}):
             with self.assertRaises(macos.PackageError) as error:
                 macos.write_secret("FIXTURE_SETTING", self.root / "invalid")

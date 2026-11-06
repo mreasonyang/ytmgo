@@ -96,6 +96,7 @@ jobs:
           make test-licenses test-login
       - name: Go tests and vet
         run: |
+          go test ./internal/player -run '^(TestAccessRecoveryBudgetReturnsAfterHealthyPlayback|TestPausedAndSeekTimeCannotRestoreAccessBudget)$' -count=25
           make test
           go vet ./...
           go tool mygo i18n check

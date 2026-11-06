@@ -3,7 +3,7 @@
   "slug": "ytmgo",
   "identifier": "si.kyun.ytmgo",
   "copyright": "Copyright 2026 ytmgo contributors",
-  "version": "0.6.8",
+  "version": "0.6.9",
   "updates": {
     "publicKey": "QdNGPq3cMZgxGD4axj0uOJFhUy6hHpmR710PRm3oovE=",
     "github": "mreasonyang/ytmgo",

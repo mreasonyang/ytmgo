@@ -11,6 +11,14 @@ const accessRecoveryHealthyPlayback = 10 * time.Second
 // track's absolute position. Pause and a newly installed seek decoder restart
 // the healthy interval; loading and buffering cannot replenish the budget.
 func (p *Player) observeAccessPlaybackLocked() {
+	if p.session != nil {
+		p.observeAccessProgressLocked(p.session.output.Position())
+	}
+}
+
+// The budget policy consumes heard progress independently of device scheduling.
+// The caller holds p.mu and supplies the current decoder's output position.
+func (p *Player) observeAccessProgressLocked(position time.Duration) {
 	if p.accessRecoveries == 0 || p.session == nil || !p.wantPlay || p.state.Loading {
 		return
 	}
@@ -18,7 +26,7 @@ func (p *Player) observeAccessPlaybackLocked() {
 	if period <= 0 {
 		period = accessRecoveryHealthyPlayback
 	}
-	if p.session.output.Position()-p.accessHealthyFrom >= period {
+	if position-p.accessHealthyFrom >= period {
 		p.accessRecoveries = 0
 	}
 }

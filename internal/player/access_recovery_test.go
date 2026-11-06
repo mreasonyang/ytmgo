@@ -137,8 +137,6 @@ func TestProofRetryRefreshesBeforeResolution(t *testing.T) {
 func TestAccessRecoveryBudgetReturnsAfterHealthyPlayback(t *testing.T) {
 	p := testPlayer()
 	defer p.Close()
-	// Exercise the production progress-based policy on a shorter interval.
-	p.accessHealthyPeriod = 100 * time.Millisecond
 	var resolves atomic.Int32
 	p.resolve = func(context.Context, string) (media, error) {
 		resolves.Add(1)
@@ -151,8 +149,19 @@ func TestAccessRecoveryBudgetReturnsAfterHealthyPlayback(t *testing.T) {
 	p.Snapshot()
 	waitPlayerCondition(t, func() bool {
 		s := p.Snapshot()
-		return !s.Loading && s.Playing && s.Position >= 12*time.Second+200*time.Millisecond
+		return !s.Loading && s.Playing
 	})
+	// Drive the heard-progress policy explicitly. A hosted audio device need
+	// not advance within a wall-clock deadline for a recovery-policy test.
+	p.mu.Lock()
+	p.observeAccessProgressLocked(p.accessHealthyFrom + accessRecoveryHealthyPlayback - time.Nanosecond)
+	early := p.accessRecoveries == 0
+	p.observeAccessProgressLocked(p.accessHealthyFrom + accessRecoveryHealthyPlayback)
+	restored := p.accessRecoveries == 0
+	p.mu.Unlock()
+	if early || !restored {
+		t.Fatal("recovery budget was not restored at the healthy playback boundary")
+	}
 	denyCurrentDecoder(p)
 	if s := p.Snapshot(); !s.Loading || s.Error != "" {
 		t.Fatal("healthy playback did not restore the automatic recovery budget")
@@ -170,7 +179,6 @@ func TestAccessRecoveryBudgetReturnsAfterHealthyPlayback(t *testing.T) {
 func TestPausedAndSeekTimeCannotRestoreAccessBudget(t *testing.T) {
 	p := testPlayer()
 	defer p.Close()
-	p.accessHealthyPeriod = 100 * time.Millisecond
 	if err := p.Load(context.Background(), "aaaaaaaaaaa"); err != nil {
 		t.Fatal(err)
 	}
@@ -178,7 +186,9 @@ func TestPausedAndSeekTimeCannotRestoreAccessBudget(t *testing.T) {
 	p.Snapshot()
 	waitPlayerCondition(t, func() bool { return !p.Snapshot().Loading })
 	p.Pause()
-	time.Sleep(200 * time.Millisecond)
+	p.mu.Lock()
+	p.observeAccessProgressLocked(p.accessHealthyFrom + accessRecoveryHealthyPlayback)
+	p.mu.Unlock()
 	p.Snapshot()
 	if err := p.Seek(45 * time.Second); err != nil {
 		t.Fatal(err)

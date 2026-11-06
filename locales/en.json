@@ -298,10 +298,6 @@
   "@shellNavSearch": {
     "description": "Tab bar destination (compact windows)."
   },
-  "shellBrandHome": "ytmGO Home",
-  "@shellBrandHome": {
-    "description": "Accessible name of the logo button."
-  },
   "shellSidebarCollapse": "Collapse sidebar",
   "@shellSidebarCollapse": {
     "description": "Icon button."

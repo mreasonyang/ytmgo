@@ -1059,20 +1059,6 @@ func (msgs Messages) ShellNavSearch() string {
 	return Catalog.Format(msgs.locale, "shellNavSearch", nil)
 }
 
-// ShellBrandHome says "ytmGO Home"
-// in the language the app shows.
-//
-// Accessible name of the logo button.
-func ShellBrandHome() string { return In(i18n.Locale()).ShellBrandHome() }
-
-// ShellBrandHome says "ytmGO Home"
-// in the language of msgs.
-//
-// Accessible name of the logo button.
-func (msgs Messages) ShellBrandHome() string {
-	return Catalog.Format(msgs.locale, "shellBrandHome", nil)
-}
-
 // ShellSidebarCollapse says "Collapse sidebar"
 // in the language the app shows.
 //

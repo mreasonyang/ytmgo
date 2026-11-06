@@ -309,11 +309,6 @@ func nativeTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wid
 	nativeTitleBarRow(c, bar).Height(max(nativeTopbarHeight, bar.Height)).Padding(0, right, 0, left).Gap(16).AlignItems(ui.Center).Children(func() {
 		ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
 			nativeAppMenuButton(c, a, p, 32)
-			brand := ui.ButtonBase(c).Size(32, 32).Shrink(0).Radius(16).Background(p.accent).TextColor(p.onAccent).Label(a.Tr("shellBrandHome")).Tooltip(a.Tr("shellBrandHome")).Children(func() { ui.Icon(c, nativeIcons["play"]).Size(18, 18) })
-			if brand.Clicked() {
-				a.Navigate("home")
-			}
-			ui.Box(c).Width(8).Shrink(0)
 			if nativeCircleButton(c, "back", a.Tr("shellBack"), p, 32, false).Disabled(!m.CanBack).Clicked() {
 				a.Back()
 			}

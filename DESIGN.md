@@ -73,7 +73,7 @@ adjacent controls.
 
 | Region | Wide (>1180) | Medium (761–1180) | Compact (≤760) |
 |---|---|---|---|
-| Global bar | 64: brand, back/forward · home + search (Explore inside) · settings, account | same | 60 in-page: back, search, settings |
+| Global bar | 64: back/forward · home + search (Explore inside) · settings, account | same | 60 in-page: back, search, settings |
 | Library | 300 panel, collapsible to 72 | 72 rail | Library tab |
 | Page panel | rounded 8, inset 24 | same | full bleed, inset 16 |
 | Now Playing | 360 docked | 380 floating | fitted sheet |

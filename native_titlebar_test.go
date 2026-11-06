@@ -67,16 +67,16 @@ func TestNativeTopbarIsTheTitleBar(t *testing.T) {
 		for _, width := range []int{1100, 1440} {
 			t.Run(fmt.Sprintf("%s-%d", tc.name, width), func(t *testing.T) {
 				_, a, tt, opened := nativeTitleBarFixture(tc.bar, width, 900)
-				for _, key := range []string{"shellAppMenu", "shellBrandHome", "shellBack", "shellForward", "shellNavHome", "shellSettings"} {
+				for _, key := range []string{"shellAppMenu", "shellBack", "shellForward", "shellNavHome", "shellSettings"} {
 					r := nativeAssertClearOfControls(t, tt, tc.bar, a.Tr(key), width)
 					if r.Y+r.H > nativeTopbarHeight {
 						t.Fatalf("%s at %+v left the %v-DIP bar", key, r, nativeTopbarHeight)
 					}
 				}
 				menu := nativeAssertClearOfControls(t, tt, tc.bar, a.Tr("shellAppMenu"), width)
-				brand, _ := tt.Find(a.Tr("shellBrandHome"))
-				if menu.X > brand.X || menu.X > tc.bar.Left+24 {
-					t.Fatalf("application menu at %+v does not lead the bar (brand %+v)", menu, brand)
+				back, _ := tt.Find(a.Tr("shellBack"))
+				if menu.X > back.X || menu.X > tc.bar.Left+24 {
+					t.Fatalf("application menu at %+v does not lead the bar (back %+v)", menu, back)
 				}
 				// The bar only grows as tall as the controls: no extra band.
 				if search, ok := tt.Find(a.Tr("shellNavSearch")); !ok || search.Y > nativeTopbarHeight {

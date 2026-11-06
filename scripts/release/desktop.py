@@ -18,7 +18,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
 REPO = "mreasonyang/ytmgo"
-TAG = re.compile(r"v0\.6\.(?:0|[1-9][0-9]{0,2})")
+TAG = re.compile(r"v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]{0,2})")
 PLATFORMS = ("windows-amd64", "linux-amd64")
 
 

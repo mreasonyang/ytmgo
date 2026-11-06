@@ -2,7 +2,7 @@
 
 [English](README.md) · **简体中文**
 
-**ytmGO** 是使用 Go 与 **MyGo 0.7.1** 构建的跨平台 YouTube Music 桌面客户端（仓库源码版本基线 **0.6.10**）。应用对外品牌显示名统一为 **ytmGO**；仓库名、发行文件前缀、Bundle ID（`si.kyun.ytmgo`）、内部辅助进程标识以及本地用户数据目录保留技术标识 `ytmgo`。
+**ytmGO** 是使用 Go 与 **MyGo 0.7.1** 构建的跨平台 YouTube Music 桌面客户端（仓库源码版本基线 **0.0.61**）。应用对外品牌显示名统一为 **ytmGO**；仓库名、发行文件前缀、Bundle ID（`si.kyun.ytmgo`）、内部辅助进程标识以及本地用户数据目录保留技术标识 `ytmgo`。
 
 音乐主窗口采用 Go/MyGo 自绘界面（`ui.View`），控件由 MyGo 工具包绘制，而非各操作系统的标准控件库。Google 登录及未登录/普通账号按需播放验证使用独立的系统 WebView。曲库访问、账号状态核验、媒体格式选择与有界流式传输由 Go 直接处理；音频由 MyGo 输出到系统音频设备，视频仅在打开视频视图时由按需启动的 FFmpeg 解码器渲染。
 
@@ -189,9 +189,9 @@ make build-app
 make dev
 ```
 
-执行 `make build` 会按当前宿主机系统与架构准备 `build/runtime`、`build/login` 和 `build/legal`，并根据 `mygo.json` 中的版本号（当前源码为 `0.6.10`）输出至 `build/<os>-<arch>/`：
+执行 `make build` 会按当前宿主机系统与架构准备 `build/runtime`、`build/login` 和 `build/legal`，并根据 `mygo.json` 中的版本号（当前源码为 `0.0.61`）输出至 `build/<os>-<arch>/`：
 
-- **macOS（`darwin/<arch>`）：** 生成 `build/darwin-<arch>/ytmGO.app` 与 `build/darwin-<arch>/ytmgo-<version>-<arch>.dmg`（采用 ad-hoc 应用签名 `-` 与未签名 DMG）。例如在 Apple Silicon（`darwin/arm64`）上基于当前源码版本 `0.6.10` 构建时，输出 `build/darwin-arm64/ytmGO.app` 与 `build/darwin-arm64/ytmgo-0.6.10-arm64.dmg`（在 macOS 上可通过 `open build/darwin-arm64/ytmGO.app` 启动）。注意：本地重新构建导致 ad-hoc 签名身份变化时，macOS 钥匙串可能会提示重新授权访问 `account-session-key`。
+- **macOS（`darwin/<arch>`）：** 生成 `build/darwin-<arch>/ytmGO.app` 与 `build/darwin-<arch>/ytmgo-<version>-<arch>.dmg`（采用 ad-hoc 应用签名 `-` 与未签名 DMG）。例如在 Apple Silicon（`darwin/arm64`）上基于当前源码版本 `0.0.61` 构建时，输出 `build/darwin-arm64/ytmGO.app` 与 `build/darwin-arm64/ytmgo-0.0.61-arm64.dmg`（在 macOS 上可通过 `open build/darwin-arm64/ytmGO.app` 启动）。注意：本地重新构建导致 ad-hoc 签名身份变化时，macOS 钥匙串可能会提示重新授权访问 `account-session-key`。
 - **Linux（`linux/amd64`）：** 生成 `build/linux-amd64/ytmgo` 与 `build/linux-amd64/ytmgo_<version>_amd64.deb`（在 Linux 上可直接执行 `./build/linux-amd64/ytmgo` 启动）。
 - **Windows（`windows/amd64`）：** 生成 `build/windows-amd64/ytmGO.exe` 与 `build/windows-amd64/ytmgo-setup-<version>-amd64.exe`（在 Windows 上可执行 `.\build\windows-amd64\ytmGO.exe` 启动）。
 

@@ -2,7 +2,7 @@
 
 **English** · [简体中文](README.zh-CN.md)
 
-**ytmGO** is a cross-platform YouTube Music desktop client built with Go and **MyGo 0.7.1** (source version baseline **0.6.10**). The user-facing brand is **ytmGO**, while the repository, release artifact prefix, bundle identifier (`si.kyun.ytmgo`), helper identifiers, and local data directories retain the technical name `ytmgo`.
+**ytmGO** is a cross-platform YouTube Music desktop client built with Go and **MyGo 0.7.1** (source version baseline **0.0.61**). The user-facing brand is **ytmGO**, while the repository, release artifact prefix, bundle identifier (`si.kyun.ytmgo`), helper identifiers, and local data directories retain the technical name `ytmgo`.
 
 The main music window uses a custom-rendered Go/MyGo interface (`ui.View`), with controls drawn by the toolkit rather than each operating system's standard widget library. Separate system WebViews handle Google sign-in and on-demand anonymous/non-Premium playback verification. Go handles YouTube Music catalogue requests, session verification, format selection, and bounded media streaming; MyGo outputs decoded audio to the system audio device, and an on-demand FFmpeg decoder renders video only while a video view is visible.
 
@@ -189,9 +189,9 @@ make build-app
 make dev
 ```
 
-`make build` stages `build/runtime`, `build/login`, and `build/legal` for the current host OS/architecture and outputs to `build/<os>-<arch>/` using the version in `mygo.json` (currently `0.6.10`):
+`make build` stages `build/runtime`, `build/login`, and `build/legal` for the current host OS/architecture and outputs to `build/<os>-<arch>/` using the version in `mygo.json` (currently `0.0.61`):
 
-- **macOS (`darwin/<arch>`):** Produces `build/darwin-<arch>/ytmGO.app` and `build/darwin-<arch>/ytmgo-<version>-<arch>.dmg` with ad-hoc app signing (`-`) and an unsigned DMG. For example, on Apple Silicon (`darwin/arm64`) at source version `0.6.10`, it writes `build/darwin-arm64/ytmGO.app` and `build/darwin-arm64/ytmgo-0.6.10-arm64.dmg` (launch on macOS with `open build/darwin-arm64/ytmGO.app`). When a local rebuild changes the ad-hoc signing identity on macOS, Keychain may prompt to re-authorize access to `account-session-key`.
+- **macOS (`darwin/<arch>`):** Produces `build/darwin-<arch>/ytmGO.app` and `build/darwin-<arch>/ytmgo-<version>-<arch>.dmg` with ad-hoc app signing (`-`) and an unsigned DMG. For example, on Apple Silicon (`darwin/arm64`) at source version `0.0.61`, it writes `build/darwin-arm64/ytmGO.app` and `build/darwin-arm64/ytmgo-0.0.61-arm64.dmg` (launch on macOS with `open build/darwin-arm64/ytmGO.app`). When a local rebuild changes the ad-hoc signing identity on macOS, Keychain may prompt to re-authorize access to `account-session-key`.
 - **Linux (`linux/amd64`):** Outputs `build/linux-amd64/ytmgo` and `build/linux-amd64/ytmgo_<version>_amd64.deb` (launch directly on Linux with `./build/linux-amd64/ytmgo`).
 - **Windows (`windows/amd64`):** Outputs `build/windows-amd64/ytmGO.exe` and `build/windows-amd64/ytmgo-setup-<version>-amd64.exe` (launch on Windows with `.\build\windows-amd64\ytmGO.exe`).
 

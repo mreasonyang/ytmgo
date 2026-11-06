@@ -12,7 +12,7 @@ import publish
 
 class ReleaseTests(unittest.TestCase):
     def test_patch_versions_use_zero_to_999_without_padding(self):
-        for version in ("0.6.0", "0.6.1", "0.6.9", "0.6.10", "0.6.99", "0.6.100", "0.6.999", "0.6.999-rc.1"):
+        for version in ("0.0.61", "0.0.62", "0.6.0", "0.6.1", "0.6.9", "0.6.10", "0.6.99", "0.6.100", "0.6.999", "0.6.999-rc.1"):
             with self.subTest(version=version), patch.object(publish, "ROOT", self.root), \
                     patch.dict(os.environ, {"PUBLISH_RELEASE": "false", "RELEASE_VERSION": version}), patch("builtins.print"):
                 (self.root / "mygo.json").write_text(json.dumps(self.config))

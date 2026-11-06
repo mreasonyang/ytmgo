@@ -15,13 +15,13 @@ class DesktopReleaseTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.commit = "a" * 40
-        self.tag = "v0.6.3"
-        self.version = "0.6.3"
+        self.tag = "v0.0.61"
+        self.version = "0.0.61"
         self.metadata = {"version": self.version, "commit": self.commit, "notarized": True}
         self.data = json.dumps(self.metadata).encode()
         self.remote = {"tag_name": self.tag, "draft": False, "prerelease": False, "target_commitish": self.commit,
                        "assets": [{"name": "build.json", "digest": "sha256:" + hashlib.sha256(self.data).hexdigest(),
-                                   "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.6.3/build.json"}]}
+                                   "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/" + self.tag + "/build.json"}]}
 
     def resolve(self, expected=""):
         with patch.object(desktop, "gh", return_value=json.dumps(self.remote).encode()), \
@@ -42,7 +42,7 @@ class DesktopReleaseTests(unittest.TestCase):
             with self.subTest(field=field), self.assertRaises(desktop.DesktopError):
                 self.resolve()
             self.remote[field] = False
-        for tag in ("../main", "v0.6.003", "v0.6.1000", "v0.6.3-rc.1"):
+        for tag in ("../main", "v0.0.061", "v0.0.1000", "v0.0.61-rc.1", "v00.0.61", "v0.00.61"):
             with self.subTest(tag=tag), patch.object(desktop, "gh") as gh, self.assertRaises(desktop.DesktopError):
                 desktop.resolve(tag)
             gh.assert_not_called()
@@ -69,7 +69,7 @@ class DesktopReleaseTests(unittest.TestCase):
         self.assertEqual(len(desktop.validate(self.root, release)), 11)
         with self.assertRaises(desktop.DesktopError):
             desktop.validate(self.root, dict(release, source_sha="b" * 40))
-        archive = self.root / "ytmgo-0.6.3-linux-amd64.tar.gz"
+        archive = self.root / ("ytmgo-" + self.version + "-linux-amd64.tar.gz")
         archive.write_bytes(b"changed")
         with self.assertRaises(desktop.DesktopError):
             desktop.validate(self.root, release)

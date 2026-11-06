@@ -1,0 +1,18 @@
+{
+  "failed_version": "0.6.8",
+  "published": false,
+  "run": 42166620806,
+  "source": "66846caddcb5da7cb88d2a5b8ad6f6bbe7935b95",
+  "platform": "darwin-amd64",
+  "step": "Go tests and vet",
+  "test": "TestAccessRecoveryBudgetReturnsAfterHealthyPlayback",
+  "failure_category": "player_lifecycle_transition_timed_out",
+  "wall_clock_deadline_seconds": 2,
+  "required_audio_progress_milliseconds": 200,
+  "corrective_source": "dfef9af2d8cbe91800fc390480c5433953383e61",
+  "corrective_version": "0.6.9",
+  "local_repetitions_per_affected_test": 100,
+  "player_race_suite_passed": true,
+  "release_repetitions_per_architecture": 25,
+  "native_runtime_checks_retained": true
+}

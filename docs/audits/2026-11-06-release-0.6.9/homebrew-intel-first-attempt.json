@@ -1,0 +1,15 @@
+{
+  "workflow_run": 42169536145,
+  "first_failed_job": 127733845095,
+  "first_attempt_failure": "Native stapled ticket verification failed",
+  "public_package_source": "dfef9af2d8cbe91800fc390480c5433953383e61",
+  "independent_public_intel_signature": true,
+  "independent_public_intel_ticket": true,
+  "independent_public_intel_gatekeeper": true,
+  "prepublication_native_intel_startup": true,
+  "runner_discrepancy_root_cause": "not_established",
+  "retry_scope": "failed native Homebrew Intel job; same public archive and original source tag",
+  "second_attempt": "passed on both native architectures",
+  "second_attempt_run": 42169536145,
+  "public_archive_replaced": false
+}

@@ -1,0 +1,35 @@
+{
+  "desktop_run": "42169471322",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "name": "resolve",
+      "status": "completed",
+      "conclusion": "success",
+      "current": [],
+      "failed_steps": []
+    },
+    {
+      "name": "package (ubuntu-24.04, linux-amd64)",
+      "status": "completed",
+      "conclusion": "success",
+      "current": [],
+      "failed_steps": []
+    },
+    {
+      "name": "package (windows-latest, windows-amd64)",
+      "status": "completed",
+      "conclusion": "success",
+      "current": [],
+      "failed_steps": []
+    },
+    {
+      "name": "publish",
+      "status": "completed",
+      "conclusion": "success",
+      "current": [],
+      "failed_steps": []
+    }
+  ]
+}

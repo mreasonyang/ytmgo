@@ -5,11 +5,91 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/egoist/mygo"
+	"ytmgo/locales"
 )
+
+func TestUpdateMenuVisibleOnCurrentPlatform(t *testing.T) {
+	a := &desktop{}
+	// Use the complete menu after MyGo has applied platform role visibility.
+	// Only the updater's own item is a fixture: its translations need App.Run.
+	const label = "Check for Updates…"
+	menu := a.menuWithUpdates(func() *mygo.MenuItem {
+		return &mygo.MenuItem{Label: label, Click: func(*mygo.MenuItem, *mygo.Window) {}}
+	})
+	var paths [][]*mygo.MenuItem
+	var walk func([]*mygo.MenuItem, []*mygo.MenuItem)
+	walk = func(items []*mygo.MenuItem, parents []*mygo.MenuItem) {
+		for _, item := range items {
+			if item.Hidden || item.Disabled {
+				continue
+			}
+			path := append(append([]*mygo.MenuItem(nil), parents...), item)
+			if item.Label == label {
+				paths = append(paths, path)
+			}
+			walk(item.Submenu, path)
+		}
+	}
+	walk(menu.Items(), nil)
+	if len(paths) != 1 {
+		t.Fatalf("%s: got %d reachable update items, want 1", runtime.GOOS, len(paths))
+	}
+	path := paths[0]
+	if len(path) != 2 || path[1].Click == nil {
+		t.Fatal("update item must be an actionable child of a top-level menu")
+	}
+	if runtime.GOOS == "darwin" {
+		if path[0].Role != mygo.RoleAppMenu {
+			t.Fatal("macOS update item must be in the application menu")
+		}
+	} else if path[0].Role != "" || path[0].Label != locales.MenuHelp() {
+		t.Fatal("Windows/Linux update item must be in the ordinary Help menu")
+	}
+}
+
+func TestDesktopMenuActionsRemainReachable(t *testing.T) {
+	for _, signedIn := range []bool{false, true} {
+		a := &desktop{model: UIModel{SignedIn: signedIn}}
+		// Rebuilding after an account or language change must retain all entries.
+		for range 2 {
+			menu := a.menuWithUpdates(func() *mygo.MenuItem {
+				return &mygo.MenuItem{Label: "Check for Updates…", Click: func(*mygo.MenuItem, *mygo.Window) {}}
+			})
+			labels, roles := map[string]bool{}, map[mygo.MenuRole]bool{}
+			var walk func([]*mygo.MenuItem)
+			walk = func(items []*mygo.MenuItem) {
+				for _, item := range items {
+					if item.Hidden || item.Disabled {
+						continue
+					}
+					if item.Click != nil || item.Role != "" {
+						labels[item.Label], roles[item.Role] = true, true
+					}
+					walk(item.Submenu)
+				}
+			}
+			walk(menu.Items())
+			for _, label := range []string{locales.MenuShowApp(), locales.MenuAbout(), locales.MenuShortcuts(), locales.MenuSignIn(), locales.MenuPlayPause(), locales.MenuNext(), locales.MenuPrevious(), locales.MenuLike(), locales.MenuVolumeUp(), locales.MenuVolumeDown(), locales.MenuMute(), locales.MenuHome(), locales.MenuExplore(), locales.MenuLibrary(), locales.MenuPanel(), locales.MenuLyrics(), locales.MenuImmersive(), locales.MenuSidebar(), locales.MenuLanguageSystem(), "Check for Updates…"} {
+				if !labels[label] {
+					t.Errorf("%s signed-in=%t: action %q is unreachable", runtime.GOOS, signedIn, label)
+				}
+			}
+			if labels[locales.MenuSignOut()] != signedIn {
+				t.Error("sign-out visibility does not match account state")
+			}
+			for _, role := range []mygo.MenuRole{mygo.RoleQuit, mygo.RoleClose, mygo.RoleMinimize, mygo.RoleToggleFullScreen, mygo.RoleCopy, mygo.RolePaste} {
+				if !roles[role] {
+					t.Errorf("%s: required menu role %s is unreachable", runtime.GOOS, role)
+				}
+			}
+		}
+	}
+}
 
 func TestUpdateCommands(t *testing.T) {
 	for _, test := range []struct {

@@ -67,7 +67,7 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 
 ### 应用内自动更新、签名区分与数据保留
 
-- **自动与手动更新：** 在当前用户可写目录中运行时，应用会在启动后最早 10 秒自动检查更新（之后每 24 小时检查一次），也可随时通过菜单 **ytmGO → 检查更新（Check for Updates…）** 手动触发。MyGo 更新窗口支持 **立即安装**、**稍后提醒**、**跳过此版本** 及可选的自动下载；重启后原地替换应用，并完整保留加密账号会话（`account/session.enc`）、曲库快照、播放进度断点与个性化设置。安装在系统目录下的 Linux DEB 版本请通过 `apt` 安装新版 `.deb` 升级。（`0.4.0` 不含自动更新器，需先手动安装一次 `0.5.0` 或更高版本。）
+- **自动与手动更新：** 在当前用户可写目录中运行时，应用会在启动后最早 10 秒自动检查更新（之后每 24 小时检查一次），macOS 可通过菜单 **ytmGO → 检查更新（Check for Updates…）** 手动触发。Windows/Linux 截至 `0.6.7` 的正式版会隐藏手动更新菜单；源码已修复，下一版将提供 **帮助 → 检查更新**。现有安装仍可使用 `--check-for-updates` 与 `--install-update` 命令行维护参数。MyGo 更新窗口支持 **立即安装**、**稍后提醒**、**跳过此版本** 及可选的自动下载；重启后原地替换应用，并完整保留加密账号会话（`account/session.enc`）、曲库快照、播放进度断点与个性化设置。安装在系统目录下的 Linux DEB 版本请通过 `apt` 安装新版 `.deb` 升级。（`0.4.0` 不含自动更新器，需先手动安装一次 `0.5.0` 或更高版本。）
 - **更新包签名与系统代码签名的区别：** 四个已发布桌面目标（`darwin-arm64`、`darwin-amd64`、`windows-amd64`、`linux-amd64`）均提供 `update-<platform>.json` 更新清单，内含 `.tar.gz` 更新归档地址及其 **Ed25519 签名**，安装更新前由应用内置公钥（见 `mygo.json`）验签。macOS 正式版在此基础上同时具备 Apple **Developer ID Application 签名、Apple 公证与 stapled ticket**；而在 Windows 上，Ed25519 更新归档签名仅用于核验更新载荷来源，**不代表**安装器或 `.exe` 具备 Microsoft Authenticode 系统代码签名。
 - **跨平台发布与维护文档：** 详见 [Windows 与 Linux 发布说明](docs/DESKTOP_RELEASES.md)、[Homebrew 维护文档](docs/HOMEBREW.md) 及 [macOS Actions 打包指南](docs/MACOS_ACTIONS.md)。
 

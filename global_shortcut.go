@@ -104,6 +104,17 @@ func shortcutChord(mods ui.Modifiers, key ui.Key) (string, string) {
 		return "", "nativeShortcutInvalid"
 	}
 	// Keep application navigation, editing and lifecycle shortcuts available.
+	if runtime.GOOS != "darwin" && mods == 0 && key == ui.KeyF11 {
+		return "", "nativeShortcutReserved"
+	}
+	if runtime.GOOS == "windows" && mods == ui.Ctrl && key == ui.KeyY {
+		return "", "nativeShortcutReserved"
+	}
+	if runtime.GOOS == "darwin" && (mods == ui.Ctrl|ui.Super && key == ui.KeyF ||
+		mods == ui.Alt|ui.Super && key == ui.KeyH ||
+		mods == ui.Alt|ui.Shift|ui.Super && key == ui.KeyV) {
+		return "", "nativeShortcutReserved"
+	}
 	if mods&ui.Cmd != 0 && mods&(ui.Ctrl|ui.Alt|ui.Super) == ui.Cmd {
 		switch key {
 		case ui.KeyA, ui.KeyB, ui.KeyC, ui.KeyF, ui.KeyH, ui.KeyJ, ui.KeyK, ui.KeyL, ui.KeyM, ui.KeyP, ui.KeyQ, ui.KeyV, ui.KeyW, ui.KeyX, ui.KeyZ, ui.Key1, ui.KeyLeft, ui.KeyRight, ui.KeyUp, ui.KeyDown:

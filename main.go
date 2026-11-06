@@ -358,8 +358,12 @@ func (a *desktop) menuItem(label, shortcut string, fn func()) *mygo.MenuItem {
 }
 
 func (a *desktop) menu() *mygo.Menu {
+	return a.menuWithUpdates(updateMenuItem)
+}
+
+func (a *desktop) menuWithUpdates(newUpdateItem func() *mygo.MenuItem) *mygo.Menu {
 	return mygo.NewMenu([]*mygo.MenuItem{
-		applicationMenuWithUpdates(),
+		applicationMenuWithUpdates(newUpdateItem),
 		{Label: locales.MenuFile(), Submenu: []*mygo.MenuItem{a.menuItem(locales.MenuShowApp(), "CmdOrCtrl+1", a.show), {Role: mygo.RoleClose}, mygo.Separator(), {Role: mygo.RoleQuit}}},
 		{Role: mygo.RoleEditMenu},
 		{Label: locales.MenuPlayback(), Submenu: []*mygo.MenuItem{
@@ -368,11 +372,11 @@ func (a *desktop) menu() *mygo.Menu {
 			a.menuItem(locales.MenuHome(), "CmdOrCtrl+Shift+H", func() { a.navigate("home") }), a.menuItem(locales.MenuExplore(), "", func() { a.navigate("explore") }), a.menuItem(locales.MenuLibrary(), "CmdOrCtrl+L", func() { a.navigate("library") }), mygo.Separator(), a.menuItem(locales.MenuPanel(), "CmdOrCtrl+J", func() { a.model.Panel = !a.model.Panel; a.invalidate() }), a.menuItem(locales.MenuLyrics(), "", func() { a.model.Panel = true; a.model.PanelTab = "lyrics"; a.invalidate() }), a.menuItem(locales.MenuImmersive(), "CmdOrCtrl+Shift+F", func() { a.model.Immersive = !a.model.Immersive; a.invalidate() }), a.menuItem(locales.MenuSidebar(), "CmdOrCtrl+B", func() { a.model.SidebarCollapsed = !a.model.SidebarCollapsed; a.invalidate() }), {Label: locales.MenuLanguage(), Submenu: a.languageMenu()}, {Role: mygo.RoleToggleFullScreen}}},
 		{Role: mygo.RoleWindowMenu},
 		{Label: locales.MenuAccount(), Submenu: a.accountMenuItems()},
-		{Label: locales.MenuHelp(), Submenu: []*mygo.MenuItem{a.menuItem(locales.MenuShortcuts(), "CmdOrCtrl+/", func() { a.model.Shortcuts = true; a.invalidate() }), a.menuItem(locales.MenuAbout(), "", func() {
+		helpMenuWithUpdates([]*mygo.MenuItem{a.menuItem(locales.MenuShortcuts(), "CmdOrCtrl+/", func() { a.model.Shortcuts = true; a.invalidate() }), a.menuItem(locales.MenuAbout(), "", func() {
 			go func() {
 				_, _ = mygo.Dialog.Message(mygo.MessageOptions{Parent: a.window, Title: locales.MenuAbout(), Message: locales.AboutMessage(applicationVersion()), Detail: a.tr("nativeAbout"), Buttons: []string{locales.ButtonOK()}})
 			}()
-		})}},
+		})}, newUpdateItem),
 	})
 }
 

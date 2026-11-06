@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"sync"
 	"time"
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/plugins/updater"
 	updatenative "github.com/egoist/mygo/plugins/updater/native"
+	"ytmgo/locales"
 )
 
 var updaterSetup sync.Once
@@ -27,13 +29,25 @@ func applicationVersion() string {
 	return version
 }
 
-func applicationMenuWithUpdates() *mygo.MenuItem {
+func updateMenuItem() *mygo.MenuItem {
 	setupUpdater()
+	return updater.MenuItem()
+}
+
+func applicationMenuWithUpdates(newUpdateItem func() *mygo.MenuItem) *mygo.MenuItem {
 	return &mygo.MenuItem{Role: mygo.RoleAppMenu, Submenu: []*mygo.MenuItem{
-		{Role: mygo.RoleAbout}, updater.MenuItem(), mygo.Separator(),
+		{Role: mygo.RoleAbout}, newUpdateItem(), mygo.Separator(),
 		{Role: mygo.RoleServices}, mygo.Separator(), {Role: mygo.RoleHide},
 		{Role: mygo.RoleHideOthers}, {Role: mygo.RoleUnhide}, mygo.Separator(), {Role: mygo.RoleQuit},
 	}}
+}
+
+func helpMenuWithUpdates(items []*mygo.MenuItem, newUpdateItem func() *mygo.MenuItem) *mygo.MenuItem {
+	// MyGo hides RoleAppMenu and its children outside macOS.
+	if runtime.GOOS != "darwin" {
+		items = append(items, mygo.Separator(), newUpdateItem())
+	}
+	return &mygo.MenuItem{Label: locales.MenuHelp(), Submenu: items}
 }
 
 type updateCommands struct {

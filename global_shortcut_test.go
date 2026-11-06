@@ -3,8 +3,11 @@ package main
 import (
 	"errors"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"testing"
 
+	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 	"ytmgo/internal/preference"
 )
@@ -106,6 +109,59 @@ func TestGlobalShortcutValidation(t *testing.T) {
 		t.Fatal("local accelerator can be stolen")
 	}
 }
+
+func TestGlobalShortcutCannotStealVisibleMenuAccelerators(t *testing.T) {
+	menu := (&desktop{}).menuWithUpdates(func() *mygo.MenuItem {
+		return &mygo.MenuItem{Label: "Check for Updates…", Click: func(*mygo.MenuItem, *mygo.Window) {}}
+	})
+	var walk func([]*mygo.MenuItem)
+	walk = func(items []*mygo.MenuItem) {
+		for _, item := range items {
+			if item.Hidden || item.Disabled {
+				continue
+			}
+			if item.Accelerator != "" {
+				var mods ui.Modifiers
+				parts := strings.Split(item.Accelerator, "+")
+				for _, part := range parts[:len(parts)-1] {
+					mods |= map[string]ui.Modifiers{"CmdOrCtrl": ui.Cmd, "Cmd": ui.Super, "Ctrl": ui.Ctrl, "Alt": ui.Alt, "Shift": ui.Shift}[part]
+				}
+				for key := ui.Key(1); key <= ui.KeyZ; key++ {
+					if shortcutKeyName(key) == parts[len(parts)-1] {
+						if chord, _ := shortcutChord(mods, key); chord != "" {
+							t.Errorf("global binding %s can steal menu accelerator %s", chord, item.Accelerator)
+						}
+						break
+					}
+				}
+			}
+			walk(item.Submenu)
+		}
+	}
+	walk(menu.Items())
+}
+
+func TestGlobalShortcutDiscardsSavedMenuConflicts(t *testing.T) {
+	conflicts := []string{"F11"}
+	switch runtime.GOOS {
+	case "darwin":
+		conflicts = []string{"Ctrl+Super+F", "Alt+Super+H", "Alt+Shift+Super+V"}
+	case "windows":
+		conflicts = append(conflicts, "Ctrl+Y")
+	}
+	path := filepath.Join(t.TempDir(), "global-shortcut")
+	for _, chord := range conflicts {
+		if err := preference.WriteFile(path, []byte(chord+"\n")); err != nil {
+			t.Fatal(err)
+		}
+		if validGlobalShortcut(chord) {
+			t.Errorf("conflicting saved shortcut %s remains valid", chord)
+		}
+		if got := preference.Load(path, validGlobalShortcut, defaultGlobalShortcut); got != defaultGlobalShortcut {
+			t.Errorf("conflicting saved shortcut %s did not fall back to the default", chord)
+		}
+	}
+}
 func TestNativeShortcutRecorderAndHelp(t *testing.T) {
 	for _, locale := range []string{"en", "zh-Hans", "zh-Hant", "ja"} {
 		t.Run(locale, func(t *testing.T) {
@@ -127,6 +183,14 @@ func TestNativeShortcutRecorderAndHelp(t *testing.T) {
 			tt.Key(ui.Cmd, ui.KeyP)
 			if m.ShortcutError != "nativeShortcutReserved" || !m.ShortcutRecording {
 				t.Fatal("reserved key was accepted")
+			}
+			if runtime.GOOS == "darwin" {
+				tt.Key(ui.Ctrl|ui.Super, ui.KeyF)
+			} else {
+				tt.Key(0, ui.KeyF11)
+			}
+			if m.ShortcutError != "nativeShortcutReserved" || !m.ShortcutRecording || saved != "" {
+				t.Fatal("fullscreen shortcut was accepted as a global playback key")
 			}
 			tt.Key(ui.Ctrl|ui.Alt, ui.KeyP)
 			if saved != "Ctrl+Alt+P" || m.ShortcutRecording {

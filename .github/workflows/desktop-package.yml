@@ -6,7 +6,7 @@ on:
       release_tag:
         description: Existing public stable release to supplement (same immutable source)
         required: true
-        default: v0.0.61
+        default: v0.0.62
         type: string
       publish_release:
         description: Upload verified desktop packages to that release

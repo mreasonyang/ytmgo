@@ -1001,7 +1001,15 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 	if contentWidth == 0 {
 		inner = 960
 	}
+	trackOffset := 0
 	for i, shelf := range m.Page.Shelves {
+		offset := trackOffset
+		if shelf.Title == "" {
+			// Continuations append untitled shelves to the same track list.
+			trackOffset += len(shelf.Items)
+		} else {
+			offset, trackOffset = 0, 0
+		}
 		ui.Column(c.Key(fmt.Sprintf("shelf-%d", i))).Gap(12).Children(func() {
 			if shelf.Title != "" {
 				size := float32(24)
@@ -1012,7 +1020,7 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 			}
 			switch {
 			case shelf.Title == "" || (m.Route == "search" && nativeSongShelf(shelf.Items)):
-				nativeTrackList(c, shelf.Items, m, a, p, compact, browse)
+				nativeTrackList(c, shelf.Items, m, a, p, compact, browse, offset)
 			case nativeSongShelf(shelf.Items):
 				columnWidth := float32(340)
 				if compact {
@@ -1050,7 +1058,7 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 	}
 	if len(m.Page.Shelves) == 0 && len(m.Page.Items) > 0 {
 		if nativeSongShelf(m.Page.Items) {
-			nativeTrackList(c, m.Page.Items, m, a, p, compact, browse)
+			nativeTrackList(c, m.Page.Items, m, a, p, compact, browse, 0)
 		} else {
 			// Cards take the column count that fits and grow to fill the
 			// row, so a grid never ends in a ragged gap.
@@ -1348,7 +1356,7 @@ const (
 	nativeTrackQueue                           // the Now Playing queue
 )
 
-func nativeTrackList(c *ui.Context, items []catalog.Item, m *UIModel, a ViewActions, p nativePalette, compact, numbered bool) {
+func nativeTrackList(c *ui.Context, items []catalog.Item, m *UIModel, a ViewActions, p nativePalette, compact, numbered bool, offset int) {
 	mode := nativeTrackRow
 	if numbered {
 		mode = nativeTrackNumbered
@@ -1366,7 +1374,7 @@ func nativeTrackList(c *ui.Context, items []catalog.Item, m *UIModel, a ViewActi
 			ui.Box(c).Height(1).Margin(0, 0, 8).Background(p.line)
 		}
 		for j, item := range items {
-			nativeTrack(c.Key(fmt.Sprintf("list-%d", j)), item, j, m, a, p, mode, compact)
+			nativeTrack(c.Key(fmt.Sprintf("list-%d", j)), item, offset+j, m, a, p, mode, compact)
 		}
 	})
 }

@@ -33,7 +33,7 @@ type manifest struct {
 
 func archiveInfo(out, platform string, cfg configuration) ([]byte, int64, string, error) {
 	if (platform != "windows-amd64" && platform != "linux-amd64") ||
-		!regexp.MustCompile(`^0\.6\.(0|[1-9][0-9]{0,2})$`).MatchString(cfg.Version) || cfg.Updates.GitHub != "mreasonyang/ytmgo" {
+		!regexp.MustCompile(`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]{0,2})$`).MatchString(cfg.Version) || cfg.Updates.GitHub != "mreasonyang/ytmgo" {
 		return nil, 0, "", errors.New("invalid release target")
 	}
 	name := "ytmgo-" + cfg.Version + "-" + platform + ".tar.gz"

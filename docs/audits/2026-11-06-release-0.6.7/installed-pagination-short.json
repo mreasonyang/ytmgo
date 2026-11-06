@@ -1,0 +1,13 @@
+{
+  "version": "0.6.7",
+  "source": "2a864bf7fc874ae32369fe3c1b634e45a25fb298",
+  "scope": "real signed-in installed app; native UI scrolling",
+  "initial_playable_tracks": 98,
+  "next_track_page": 26,
+  "playable_tracks_before_recommendations": 124,
+  "content_children_before_next": 102,
+  "content_children_after_track_page": 132,
+  "content_children_after_recommendations": 136,
+  "suggestions_after_track_exhaustion": true,
+  "related_playlists_preserved": true
+}

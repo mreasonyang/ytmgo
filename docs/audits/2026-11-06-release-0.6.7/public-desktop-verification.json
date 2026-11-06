@@ -1,0 +1,73 @@
+{
+  "version": "0.6.7",
+  "source": "2a864bf7fc874ae32369fe3c1b634e45a25fb298",
+  "unauthenticated_downloads": true,
+  "platforms": [
+    {
+      "platform": "windows-amd64",
+      "version": "0.6.7",
+      "source": "2a864bf7fc874ae32369fe3c1b634e45a25fb298",
+      "native_build": true,
+      "native_smoke": true,
+      "update_signature": true,
+      "all_asset_digests_match": true,
+      "assets": [
+        {
+          "name": "ytmgo-0.6.7-windows-amd64.tar.gz",
+          "sha256": "e10622ee0d522e82dca4d6a7ce113f831b2966eb7d7150c486d18787f9cf6e23"
+        },
+        {
+          "name": "build-windows-amd64.json",
+          "sha256": "6d5808245166583e7a9c7ae43be1cf235ba17cf6763338d2c8c0783143a4fc9b"
+        },
+        {
+          "name": "ytmgo-0.6.7-windows-amd64.zip",
+          "sha256": "d12982dff9b234c3bcf9b684ebeb4d20da7dfa35cd2cdbfbd593eb0621dc62c7"
+        },
+        {
+          "name": "ytmgo-setup-0.6.7-amd64.exe",
+          "sha256": "8a3f593cb1ce23fb79f06ee992afd177ca6ec43a1b6862b6e1c1edbd27b5b053"
+        },
+        {
+          "name": "update-windows-amd64.json",
+          "sha256": "90ac202d09fd478339171c062906444c3461b191237f57f931f3b8c728bba87c"
+        },
+        {
+          "name": "SHA256SUMS-windows-amd64",
+          "sha256": "ee55660a674fec377d2275117f634485eff6088e87e96c9d36101be0a3b3d4a5"
+        }
+      ]
+    },
+    {
+      "platform": "linux-amd64",
+      "version": "0.6.7",
+      "source": "2a864bf7fc874ae32369fe3c1b634e45a25fb298",
+      "native_build": true,
+      "native_smoke": true,
+      "update_signature": true,
+      "all_asset_digests_match": true,
+      "assets": [
+        {
+          "name": "ytmgo-0.6.7-linux-amd64.tar.gz",
+          "sha256": "718574dff46131ee53151fbbfc54ef16ce87c2e59dcac4d0167f14b6ed1ee742"
+        },
+        {
+          "name": "build-linux-amd64.json",
+          "sha256": "f32ef6331b62eef4d07b8e5b1793ed624375ef53deb7f8d29b697a3d9ab568db"
+        },
+        {
+          "name": "ytmgo_0.6.7_amd64.deb",
+          "sha256": "b18b7ae55330520d6318eae9103e17ee58dca2cb4bb693515290da200f5eba9b"
+        },
+        {
+          "name": "update-linux-amd64.json",
+          "sha256": "2c8772fe71e6f1dd76a8b1c42a5a0d3f2cc7d2da406edf6185b26902799d5e25"
+        },
+        {
+          "name": "SHA256SUMS-linux-amd64",
+          "sha256": "d498821e5d998ca0a0a5f0ac3fc78c9eaff36ea82aefbf56fa1b2c7f4ce64250"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "version": "0.6.7",
+  "continued_track_playback": true,
+  "long_tail_track_playback": true,
+  "playback_progress_during_pagination": true,
+  "seek_recovered_playback": true,
+  "paused_stable": true,
+  "next_track_played": true,
+  "previous_track_played": true,
+  "restart_restored_paused_position_seconds": 107.952367652,
+  "lyrics_displayed": true,
+  "video_frame_displayed": true,
+  "video_switch_kept_audio_playing": true,
+  "video_target_preference": 1080,
+  "actual_video_resolution_measured": false,
+  "original_playback_state_file_restored": true,
+  "temporary_probe_request_restored": true,
+  "original_paused_bookmark_observed_seconds": 93.5894255,
+  "original_volume_observed": 0.6591679453849792,
+  "premium_observed_after_final_restore": true
+}

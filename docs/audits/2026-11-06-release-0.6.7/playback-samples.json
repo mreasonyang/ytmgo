@@ -1,0 +1,62 @@
+[
+  {
+    "phase": "continued-track-started",
+    "Version": "0.6.7",
+    "Sequence": 19,
+    "ElapsedMS": 95713,
+    "PositionMS": 14477,
+    "DurationMS": 239894,
+    "Playing": true,
+    "Loading": false,
+    "Ended": false,
+    "Failed": false
+  },
+  {
+    "phase": "long-playlist-background-playback",
+    "Version": "0.6.7",
+    "Sequence": 53,
+    "ElapsedMS": 274212,
+    "PositionMS": 192973,
+    "DurationMS": 239894,
+    "Playing": true,
+    "Loading": false,
+    "Ended": false,
+    "Failed": false
+  },
+  {
+    "phase": "tail-track-seek-paused",
+    "Version": "0.6.7",
+    "Sequence": 73,
+    "ElapsedMS": 379212,
+    "PositionMS": 107952,
+    "DurationMS": 187401,
+    "Playing": false,
+    "Loading": false,
+    "Ended": false,
+    "Failed": false
+  },
+  {
+    "phase": "previous-track-readiness",
+    "Version": "0.6.7",
+    "Sequence": 25,
+    "ElapsedMS": 126989,
+    "PositionMS": 17976,
+    "DurationMS": 187401,
+    "Playing": true,
+    "Loading": false,
+    "Ended": false,
+    "Failed": false
+  },
+  {
+    "phase": "video-mode-active",
+    "Version": "0.6.7",
+    "Sequence": 33,
+    "ElapsedMS": 168988,
+    "PositionMS": 59981,
+    "DurationMS": 187401,
+    "Playing": true,
+    "Loading": false,
+    "Ended": false,
+    "Failed": false
+  }
+]

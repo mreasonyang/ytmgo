@@ -1,0 +1,9 @@
+{
+  "version": "0.6.7",
+  "architecture": "arm64",
+  "source": "2a864bf7fc874ae32369fe3c1b634e45a25fb298",
+  "executable_matches_public_zip": true,
+  "signature": true,
+  "stapled_ticket": true,
+  "gatekeeper": true
+}

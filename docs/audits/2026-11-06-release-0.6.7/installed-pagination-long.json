@@ -1,0 +1,17 @@
+{
+  "version": "0.6.7",
+  "scope": "real installed account; main playlist fully scrolled, then final main track played",
+  "initial_tracks": 96,
+  "first_next_tracks": 95,
+  "playback_queue_tracks": 2626,
+  "unique_playback_queue_tracks": 2474,
+  "selected_queue_index": 2618,
+  "position_seconds": 107.952367652,
+  "suggestions_tracks_at_end": 7,
+  "derived_main_track_rows": 2619,
+  "main_tail_page_rows": 22,
+  "recommendations_only_after_main_tail": true,
+  "related_playlists_preserved": true,
+  "accessibility_child_metadata_limited_for_large_content": true,
+  "large_list_interaction": "native scroll coordinates with visual confirmation"
+}

@@ -1,0 +1,75 @@
+{
+  "version": "0.6.7",
+  "source": "2a864bf7fc874ae32369fe3c1b634e45a25fb298",
+  "unauthenticated_downloads": true,
+  "github_asset_digests_match": true,
+  "architectures": [
+    {
+      "architecture": "arm64",
+      "version": "0.6.7",
+      "source": "2a864bf7fc874ae32369fe3c1b634e45a25fb298",
+      "zip_sha256": "8764938e0eb749ca2ab648319a168afca2f4d14ea5b2d8bc8f030249b91d7a06",
+      "apple_signature": true,
+      "stapled_ticket": true,
+      "gatekeeper": true,
+      "update_signature": true,
+      "minimum_macos": "13.0",
+      "binaries": [
+        {
+          "path": "Contents/Resources/login/ytmgo Account Login.app/Contents/MacOS/ytmgo-account-login",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ffmpeg",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ytmgo-playback-host",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/MacOS/ytmGO",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        }
+      ],
+      "cli_version": "0.6.7"
+    },
+    {
+      "architecture": "amd64",
+      "version": "0.6.7",
+      "source": "2a864bf7fc874ae32369fe3c1b634e45a25fb298",
+      "zip_sha256": "319315bb79d561105f01db517d825d3146db26be9679560d2572e832fdd45301",
+      "apple_signature": true,
+      "stapled_ticket": true,
+      "gatekeeper": true,
+      "update_signature": true,
+      "minimum_macos": "13.0",
+      "binaries": [
+        {
+          "path": "Contents/Resources/login/ytmgo Account Login.app/Contents/MacOS/ytmgo-account-login",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ffmpeg",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ytmgo-playback-host",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/MacOS/ytmGO",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        }
+      ]
+    }
+  ]
+}

@@ -24,3 +24,5 @@ __pycache__/
 
 /native/account-login/target/
 /native/playback-host/target/
+
+/site/dist/

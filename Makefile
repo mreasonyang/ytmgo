@@ -50,3 +50,15 @@ test-login:
 check: test test-runtime test-login test-licenses check-licenses
 	go vet ./...
 	go tool mygo i18n check
+
+# Website: render the real UI with the fictional site catalogue, encode the
+# screenshots, then build one static page per language into site/dist.
+site-shots:
+	rm -rf build/site-shots
+	YTMGO_SITE_SHOTS_DIR=$(CURDIR)/build/site-shots go test -run TestSiteScreenshots -count=1 .
+	python3 -I site/tools/encode_shots.py build/site-shots
+
+site:
+	go run ./site/gen
+
+.PHONY: site site-shots

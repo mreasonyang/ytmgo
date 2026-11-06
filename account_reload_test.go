@@ -63,3 +63,14 @@ func TestFocusRefreshAndAvatarRespectFreshness(t *testing.T) {
 		t.Fatal("avatar reset retained account data")
 	}
 }
+
+// Without the playback runtime there is no player. Signing in, refreshing and
+// signing out still configure "it", and must not crash the app.
+func TestAccountConfiguresWithoutPlayer(t *testing.T) {
+	a := &desktop{}
+	for _, session := range []player.AccountSession{{LoggedIn: true, Cookie: "SAPISID=x", Revision: 1}, {Revision: 2}} {
+		if err := a.configurePlayer(context.Background(), session); err != nil {
+			t.Fatalf("revision %d: %v", session.Revision, err)
+		}
+	}
+}

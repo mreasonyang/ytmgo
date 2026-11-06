@@ -329,7 +329,7 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 		if err == nil {
 			replay, err = a.beforeAccountConfigure(ctx, generation, next, newIdentity)
 			if err == nil {
-				err = a.player.SetAccount(ctx, next)
+				err = a.configurePlayer(ctx, next)
 			}
 		}
 		configured := err == nil
@@ -516,7 +516,7 @@ func (a *desktop) useAnonymousPlayback() {
 		// this against later account changes by revision.
 		replay, err := a.beforeAccountConfigure(ctx, generation, next, false)
 		if err == nil {
-			err = a.player.SetAccount(ctx, next)
+			err = a.configurePlayer(ctx, next)
 		}
 		a.post(func() {
 			if err != nil || !s.fallback || s.ready || s.revision != next.Revision || generation != a.accountGeneration {
@@ -528,6 +528,16 @@ func (a *desktop) useAnonymousPlayback() {
 			}
 		})
 	}()
+}
+
+// configurePlayer hands an account session to the player. Without a player,
+// as when the playback runtime is missing (which the view reports), there is
+// nothing to configure: the account still serves the catalogue.
+func (a *desktop) configurePlayer(ctx context.Context, session player.AccountSession) error {
+	if a.player == nil {
+		return nil
+	}
+	return a.player.SetAccount(ctx, session)
 }
 
 type accountReplay struct {
@@ -810,7 +820,7 @@ func (a *desktop) signOut() {
 				s.work.Lock()
 				storageErr := s.store.Delete(accountsession.AllowPrompt)
 				librarysnapshot.Remove(a.librarySnapshotPath)
-				configureErr := a.player.SetAccount(ctx, player.AccountSession{Revision: revision})
+				configureErr := a.configurePlayer(ctx, player.AccountSession{Revision: revision})
 				s.work.Unlock()
 				a.post(func() {
 					accepted, flowErr := s.flow.finish(ctx, generation, a.accountGeneration, nil, func() error { return nil })

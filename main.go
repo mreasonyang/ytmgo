@@ -21,7 +21,7 @@ import (
 	"ytmgo/locales"
 )
 
-const version = "0.6.7"
+const version = "0.6.8"
 
 //go:embed locales/en.json resources/icon.png resources/tray.png
 var assets embed.FS

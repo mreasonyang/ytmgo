@@ -2,7 +2,7 @@
 
 **English** · [简体中文](README.zh-CN.md)
 
-**ytmGO** is a cross-platform YouTube Music desktop client built with Go and **MyGo 0.7.1** (source version baseline **0.6.7**). The user-facing brand is **ytmGO**, while the repository, release artifact prefix, bundle identifier (`si.kyun.ytmgo`), helper identifiers, and local data directories retain the technical name `ytmgo`.
+**ytmGO** is a cross-platform YouTube Music desktop client built with Go and **MyGo 0.7.1** (source version baseline **0.6.8**). The user-facing brand is **ytmGO**, while the repository, release artifact prefix, bundle identifier (`si.kyun.ytmgo`), helper identifiers, and local data directories retain the technical name `ytmgo`.
 
 The main music window uses a custom-rendered Go/MyGo interface (`ui.View`), with controls drawn by the toolkit rather than each operating system's standard widget library. Separate system WebViews handle Google sign-in and on-demand anonymous/non-Premium playback verification. Go handles YouTube Music catalogue requests, session verification, format selection, and bounded media streaming; MyGo outputs decoded audio to the system audio device, and an on-demand FFmpeg decoder renders video only while a video view is visible.
 

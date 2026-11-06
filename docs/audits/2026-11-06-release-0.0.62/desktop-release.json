@@ -1,0 +1,29 @@
+{
+  "conclusion": "success",
+  "databaseId": 42221983793,
+  "headSha": "a91f2bd8c0bf6f029c90f1120aa93cea132aff7d",
+  "jobs": [
+    {
+      "name": "resolve",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "package (windows-latest, windows-amd64)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "package (ubuntu-24.04, linux-amd64)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "publish",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/mreasonyang/ytmgo/actions/runs/42221983793"
+}

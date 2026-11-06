@@ -2,11 +2,11 @@
 
 [English](README.md) · **简体中文**
 
-**ytmGO** 是使用 Go 与 **MyGo 0.7.1** 构建的跨平台 YouTube Music 桌面客户端（仓库源码版本基线 **0.0.61**）。应用对外品牌显示名统一为 **ytmGO**；仓库名、发行文件前缀、Bundle ID（`si.kyun.ytmgo`）、内部辅助进程标识以及本地用户数据目录保留技术标识 `ytmgo`。
+**ytmGO** 是使用 Go 与 **MyGo 0.7.1** 构建的跨平台 YouTube Music 桌面客户端（仓库源码版本基线 **0.0.62**）。应用对外品牌显示名统一为 **ytmGO**；仓库名、发行文件前缀、Bundle ID（`si.kyun.ytmgo`）、内部辅助进程标识以及本地用户数据目录保留技术标识 `ytmgo`。
 
 音乐主窗口采用 Go/MyGo 自绘界面（`ui.View`），控件由 MyGo 工具包绘制，而非各操作系统的标准控件库。Google 登录及未登录/普通账号按需播放验证使用独立的系统 WebView。曲库访问、账号状态核验、媒体格式选择与有界流式传输由 Go 直接处理；音频由 MyGo 输出到系统音频设备，视频仅在打开视频视图时由按需启动的 FFmpeg 解码器渲染。
 
-> **下载入口（2026-11-06 核验）：** [macOS **v0.0.61**](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.61) · [Windows / Linux **v0.0.61**](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.61)。下文链接指向各平台已公开的安装包，[发布列表](https://github.com/mreasonyang/ytmgo/releases)从 **0.0.61** 重新开始编号，早期安装包已移除。
+> **下载入口（2026-11-06 核验）：** [macOS **v0.0.62**](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62) · [Windows / Linux **v0.0.62**](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62)。下文链接指向各平台已公开的安装包，[发布列表](https://github.com/mreasonyang/ytmgo/releases)从 **0.0.61** 重新开始编号，早期安装包已移除。
 
 ---
 
@@ -15,8 +15,8 @@
 | 平台 | 支持架构 | 系统与运行环境要求 | 安装方式 |
 | --- | --- | --- | --- |
 | **macOS** | Apple Silicon（`arm64`）、Intel（`x86_64` / `amd64`） | **macOS 13 Ventura 及以上**（无需安装额外运行时依赖） | `brew install --cask mreasonyang/taps/ytmgo`，或从 [Latest Release](https://github.com/mreasonyang/ytmgo/releases/latest) 下载已签名并公证的 `.dmg` / `.zip` |
-| **Windows** | x64（`amd64` / `x86_64`） | 需要当前版本的 **Microsoft Edge WebView2 Runtime**（`>= 101.0.1210.39`）；单用户安装器**尚未进行 Authenticode 签名** | 从 [Windows 下载页](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.61) 下载安装器 `.exe` 或便携 `.zip` |
-| **Linux** | x64（`amd64` / `x86_64`） | 以 **Ubuntu 24.04 x64** 为原生构建与冒烟测试基线；兼容发行版需具备桌面显示与音频会话、**GTK 3**、**WebKitGTK 4.1 `>= 2.50.2`**，以及 **`libsecret >= 0.19` 与运行中的 Secret Service** | 从 [Linux 下载页](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.61) 下载 `.deb`（`sudo apt install`）或便携 `.tar.gz` |
+| **Windows** | x64（`amd64` / `x86_64`） | 需要当前版本的 **Microsoft Edge WebView2 Runtime**（`>= 101.0.1210.39`）；单用户安装器**尚未进行 Authenticode 签名** | 从 [Windows 下载页](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62) 下载安装器 `.exe` 或便携 `.zip` |
+| **Linux** | x64（`amd64` / `x86_64`） | 以 **Ubuntu 24.04 x64** 为原生构建与冒烟测试基线；兼容发行版需具备桌面显示与音频会话、**GTK 3**、**WebKitGTK 4.1 `>= 2.50.2`**，以及 **`libsecret >= 0.19` 与运行中的 Secret Service** | 从 [Linux 下载页](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62) 下载 `.deb`（`sudo apt install`）或便携 `.tar.gz` |
 
 - **已发布架构：** 暂不发布 Windows ARM64 与 Linux ARM64 预编译包。
 - **安装后无需开发工具链：** 打包后的应用已内含 Rust 播放脚本宿主、精简版 FFmpeg 9.0.2、登录辅助进程及 `legal/` 许可证目录，终端用户运行应用**无需**安装 Go、Rust、Python、C 编译器、Node.js 或 npm。
@@ -41,28 +41,28 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 #### 直接下载（DMG / ZIP）
 
 1. 前往 [Latest Release](https://github.com/mreasonyang/ytmgo/releases/latest) 按 Mac 处理器架构下载已签名并公证的安装包（要求 **macOS 13+**）：
-   - **Apple Silicon（`arm64`）：** [ytmgo-0.0.61-arm64-notarized.dmg](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.61/ytmgo-0.0.61-arm64-notarized.dmg) · [ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.61/ytmgo-0.0.61-arm64-notarized.zip)
-   - **Intel（`x86_64` / `amd64`）：** [ytmgo-0.0.61-amd64-notarized.dmg](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.61/ytmgo-0.0.61-amd64-notarized.dmg) · [ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.61/ytmgo-0.0.61-amd64-notarized.zip)
+   - **Apple Silicon（`arm64`）：** [ytmgo-0.0.62-arm64-notarized.dmg](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-arm64-notarized.dmg) · [ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-arm64-notarized.zip)
+   - **Intel（`x86_64` / `amd64`）：** [ytmgo-0.0.62-amd64-notarized.dmg](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-amd64-notarized.dmg) · [ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-amd64-notarized.zip)
 2. 挂载 DMG 或解压 ZIP 后，将 `ytmGO.app` 复制到可写的 `/Applications` 目录中再启动（直接在只读挂载的 DMG 卷或只读目录内运行将无法完成原地自我替换更新）。
 
 ### Windows x64（`amd64`）
 
-前往已公开的 [Windows 下载页](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.61) 下载：
+前往已公开的 [Windows 下载页](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62) 下载：
 
-- **单用户安装器（`ytmgo-setup-<version>-amd64.exe`）：** 下载并运行 [ytmgo-setup-0.0.61-amd64.exe](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.61/ytmgo-setup-0.0.61-amd64.exe)。安装器按当前用户目录安装，**尚未进行 Microsoft Authenticode 代码签名**（首次运行时 Windows SmartScreen 可能会弹出提示）。
-- **便携解压包（`ytmgo-<version>-windows-amd64.zip`）：** 下载 [ytmgo-0.0.61-windows-amd64.zip](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.61/ytmgo-0.0.61-windows-amd64.zip)，将**完整归档**解压到可写目录后运行其中的 `ytmGO.exe`。请将 `runtime/`、`login/`、`legal/` 及其他随包资源目录完整保留在 `ytmGO.exe` 同级目录旁。
+- **单用户安装器（`ytmgo-setup-<version>-amd64.exe`）：** 下载并运行 [ytmgo-setup-0.0.62-amd64.exe](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-setup-0.0.62-amd64.exe)。安装器按当前用户目录安装，**尚未进行 Microsoft Authenticode 代码签名**（首次运行时 Windows SmartScreen 可能会弹出提示）。
+- **便携解压包（`ytmgo-<version>-windows-amd64.zip`）：** 下载 [ytmgo-0.0.62-windows-amd64.zip](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-windows-amd64.zip)，将**完整归档**解压到可写目录后运行其中的 `ytmGO.exe`。请将 `runtime/`、`login/`、`legal/` 及其他随包资源目录完整保留在 `ytmGO.exe` 同级目录旁。
 - **运行环境依赖：** 需要当前版本的 [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)（`>= 101.0.1210.39`），用于 Google 账号登录以及未登录/普通账号播放证明生成。若系统尚未安装，请从微软下载页面安装 Evergreen Runtime。
 
 ### Linux x64（`amd64`）
 
-前往已公开的 [Linux 下载页](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.61) 下载：
+前往已公开的 [Linux 下载页](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62) 下载：
 
-- **Debian / Ubuntu DEB 包（`ytmgo_<version>_amd64.deb`）：** 在 **Ubuntu 24.04 x64** 上原生构建并通过安装启动冒烟测试。下载 [ytmgo_0.0.61_amd64.deb](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.61/ytmgo_0.0.61_amd64.deb) 后使用 `apt` 安装以自动解析系统依赖：
+- **Debian / Ubuntu DEB 包（`ytmgo_<version>_amd64.deb`）：** 在 **Ubuntu 24.04 x64** 上原生构建并通过安装启动冒烟测试。下载 [ytmgo_0.0.62_amd64.deb](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo_0.0.62_amd64.deb) 后使用 `apt` 安装以自动解析系统依赖：
   ```sh
-  sudo apt install ./ytmgo_0.0.61_amd64.deb
+  sudo apt install ./ytmgo_0.0.62_amd64.deb
   ```
   安装后可从桌面应用菜单启动 **ytmGO**，或直接运行 `/opt/ytmgo/ytmgo`。由于 DEB 包安装在系统所属的 `/opt/ytmgo` 目录，升级 DEB 安装版时请使用 `apt` 安装新版 `.deb` 包。
-- **便携解压包（`ytmgo-<version>-linux-amd64.tar.gz`）：** 下载 [ytmgo-0.0.61-linux-amd64.tar.gz](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.61/ytmgo-0.0.61-linux-amd64.tar.gz)，将**完整归档**解压至当前用户可写目录并在该目录内执行 `./ytmgo`。请将 `runtime/`、`login/`、`legal/` 及其他随包资源目录完整保留在 `./ytmgo` 同级目录旁。
+- **便携解压包（`ytmgo-<version>-linux-amd64.tar.gz`）：** 下载 [ytmgo-0.0.62-linux-amd64.tar.gz](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-linux-amd64.tar.gz)，将**完整归档**解压至当前用户可写目录并在该目录内执行 `./ytmgo`。请将 `runtime/`、`login/`、`legal/` 及其他随包资源目录完整保留在 `./ytmgo` 同级目录旁。
 - **运行环境依赖：** 需要可用的桌面显示与音频会话、**GTK 3**、**WebKitGTK 4.1（`>= 2.50.2`）**，以及 **`libsecret`（`>= 0.19`）与运行中的 Secret Service** 服务。DEB 包已声明 `libwebkit2gtk-4.1-0 (>= 2.50.2)` 与 `libsecret-1-0 (>= 0.19)` 依赖；其他发行版需提供兼容的系统动态库（该构建并非静态链接的通用 Linux 二进制）。
 
 ### 应用内自动更新、签名区分与数据保留
@@ -152,6 +152,8 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 
 详细界面与架构规范见 [DESIGN.md](DESIGN.md)，历史与阶段性实测记录见 [VERIFICATION.md](VERIFICATION.md) 与 [自动升级验收](docs/AUTO_UPDATE_VERIFICATION.md)。阅读与使用时请注意以下客观边界：
 
+- **v0.0.62 界面升级验收（2026-11-06）：** 本机正式安装的 macOS ARM 应用从 0.0.61 检测到公开的 0.0.62，经过原生更新界面完成下载、安装和自动重启，再次检查显示已是最新版本。升级后的完整应用包与公开 ZIP 一致，登录、暂停位置、音量和偏好均保留。详见[验收记录](docs/audits/2026-11-06-release-0.0.62/README.md)。
+
 - **v0.0.61 发版验收（2026-11-06）：** 版本从 0.0.61 重新开始编号。22 个公开资产、四平台更新签名、Windows/Linux 原生安装启动、macOS 签名公证及 ARM/Intel Homebrew 实装均通过校验；本机 ARM 安装与公开 ZIP 一致。详见[发版验收记录](docs/audits/2026-11-06-release-0.0.61/README.md)。
 
 - **历史 v0.6.10 验收（2026-11-06）：** 歌单和专辑行号跨页连续。本机 macOS ARM 已验证 98 → 99、96 → 97、四位数编号和主曲目末行 2619；公开包、更新和 Homebrew 检查均通过，详见[编号验收记录](docs/audits/2026-11-06-release-0.6.10/README.md)。
@@ -191,9 +193,9 @@ make build-app
 make dev
 ```
 
-执行 `make build` 会按当前宿主机系统与架构准备 `build/runtime`、`build/login` 和 `build/legal`，并根据 `mygo.json` 中的版本号（当前源码为 `0.0.61`）输出至 `build/<os>-<arch>/`：
+执行 `make build` 会按当前宿主机系统与架构准备 `build/runtime`、`build/login` 和 `build/legal`，并根据 `mygo.json` 中的版本号（当前源码为 `0.0.62`）输出至 `build/<os>-<arch>/`：
 
-- **macOS（`darwin/<arch>`）：** 生成 `build/darwin-<arch>/ytmGO.app` 与 `build/darwin-<arch>/ytmgo-<version>-<arch>.dmg`（采用 ad-hoc 应用签名 `-` 与未签名 DMG）。例如在 Apple Silicon（`darwin/arm64`）上基于当前源码版本 `0.0.61` 构建时，输出 `build/darwin-arm64/ytmGO.app` 与 `build/darwin-arm64/ytmgo-0.0.61-arm64.dmg`（在 macOS 上可通过 `open build/darwin-arm64/ytmGO.app` 启动）。注意：本地重新构建导致 ad-hoc 签名身份变化时，macOS 钥匙串可能会提示重新授权访问 `account-session-key`。
+- **macOS（`darwin/<arch>`）：** 生成 `build/darwin-<arch>/ytmGO.app` 与 `build/darwin-<arch>/ytmgo-<version>-<arch>.dmg`（采用 ad-hoc 应用签名 `-` 与未签名 DMG）。例如在 Apple Silicon（`darwin/arm64`）上基于当前源码版本 `0.0.62` 构建时，输出 `build/darwin-arm64/ytmGO.app` 与 `build/darwin-arm64/ytmgo-0.0.62-arm64.dmg`（在 macOS 上可通过 `open build/darwin-arm64/ytmGO.app` 启动）。注意：本地重新构建导致 ad-hoc 签名身份变化时，macOS 钥匙串可能会提示重新授权访问 `account-session-key`。
 - **Linux（`linux/amd64`）：** 生成 `build/linux-amd64/ytmgo` 与 `build/linux-amd64/ytmgo_<version>_amd64.deb`（在 Linux 上可直接执行 `./build/linux-amd64/ytmgo` 启动）。
 - **Windows（`windows/amd64`）：** 生成 `build/windows-amd64/ytmGO.exe` 与 `build/windows-amd64/ytmgo-setup-<version>-amd64.exe`（在 Windows 上可执行 `.\build\windows-amd64\ytmGO.exe` 启动）。
 

@@ -1,5 +1,11 @@
 # 自动升级验收
 
+## 0.0.61 → 0.0.62 — 2026-11-06
+
+**PASS（本机 macOS ARM 正式安装版的界面升级）**。公开发布 0.0.62 后，仍运行 0.0.61 的 `/Applications/ytmGO.app` 通过 **Check for Updates… → Install Update → Relaunch Now** 完成检测、下载、安装和自动重启。设置页显示 0.0.62，再次检查更新显示已是最新版本。安装前的基线检查曾显示 0.0.61 已是最新版本，因此本次覆盖了发布前后检测结果的变化。
+
+独立只读观察确认旧进程退出、新版本进程自动启动；重新绑定界面工具发生在新版已经运行之后。升级后的所有应用文件、权限及符号链接与独立公开 ZIP 一致，Apple 签名、公证票据及 Gatekeeper 检查通过。Premium 登录、暂停位置、音量、外观、语言及视频清晰度偏好保留。本次没有通过 Homebrew 重装或维护命令代替界面升级，也未将此结果扩展为 Intel、Windows、Linux 的交互升级验收。[界面升级回执](audits/2026-11-06-release-0.0.62/ui-upgrade.json) · [完整发版记录](audits/2026-11-06-release-0.0.62/README.md)
+
 ## 0.6.4 — 2026-11-04
 
 **PASS（macOS 包与原生启动）**。最低部署目标降至 macOS 13，新增 Intel 包及独立的 `update-darwin-amd64.json`。ARM 与 Intel 的签名、公证、Gatekeeper、随包组件和原生启动均通过；公开 Homebrew ZIP 在两种架构上实际安装、启动通过。独立公开下载验证了两套更新归档的摘要和 Ed25519 签名，以及全部 Mach-O 的架构与最低版本。

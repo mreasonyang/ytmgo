@@ -1,0 +1,44 @@
+{
+  "conclusion": "success",
+  "databaseId": 42219147406,
+  "headSha": "a91f2bd8c0bf6f029c90f1120aa93cea132aff7d",
+  "jobs": [
+    {
+      "name": "source",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Native build (arm64)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Native build (amd64)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "package",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Signed native startup (amd64)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Signed native startup (arm64)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "publish",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/mreasonyang/ytmgo/actions/runs/42219147406"
+}

@@ -1,0 +1,142 @@
+{
+  "tag_name": "v0.0.62",
+  "target_commitish": "a91f2bd8c0bf6f029c90f1120aa93cea132aff7d",
+  "html_url": "https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62",
+  "published_at": "2026-11-06T13:00:04Z",
+  "draft": false,
+  "prerelease": false,
+  "assets": [
+    {
+      "name": "build-amd64.json",
+      "digest": "sha256:d18bb83028fa57462be64c2a37d2b143d584fac5b046bd77ef4586fe61bdf834",
+      "size": 315,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/build-amd64.json"
+    },
+    {
+      "name": "build-linux-amd64.json",
+      "digest": "sha256:1338e4b1d044d129e87473ca4f8d44f7e747ec917d06cdd8cf3b3f94896812ad",
+      "size": 595,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/build-linux-amd64.json"
+    },
+    {
+      "name": "build-windows-amd64.json",
+      "digest": "sha256:0d37909c49a488a472c680cd40ed1215a1b8a51a4b60085e16ceeb85b74152f6",
+      "size": 597,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/build-windows-amd64.json"
+    },
+    {
+      "name": "build.json",
+      "digest": "sha256:9a069b8a95662cbadc1469a4a7fd16caa0ff464f6bd1cefd57717efceae36bba",
+      "size": 315,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/build.json"
+    },
+    {
+      "name": "SHA256SUMS",
+      "digest": "sha256:fc9d5f32204f708c2bdd065728692f8075c3b618ae94697cef664bc4bde49e77",
+      "size": 936,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/SHA256SUMS"
+    },
+    {
+      "name": "SHA256SUMS-linux-amd64",
+      "digest": "sha256:2f2782c11bdabae3f51018f56ce52ec4b4dd00cc893dd7b2c9f5ff0f3263fc55",
+      "size": 366,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/SHA256SUMS-linux-amd64"
+    },
+    {
+      "name": "SHA256SUMS-windows-amd64",
+      "digest": "sha256:d72c815c54ef7eaea97eb74055248cd34f068cc23fa676997ac7248d6442b406",
+      "size": 475,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/SHA256SUMS-windows-amd64"
+    },
+    {
+      "name": "update-darwin-amd64.json",
+      "digest": "sha256:749719c6779f759b894eab41cc3b79ae9c8d212f383ba63e9dacc15538d4eaf2",
+      "size": 377,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/update-darwin-amd64.json"
+    },
+    {
+      "name": "update-darwin-arm64.json",
+      "digest": "sha256:2ea2564d3720a31f2c8c2a5848688e6fe2eb0752ef4ec8d3ac099f2d63556d53",
+      "size": 377,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/update-darwin-arm64.json"
+    },
+    {
+      "name": "update-linux-amd64.json",
+      "digest": "sha256:73064ce6be956f93bf346ba055699b837475d71df9bd8623e23ec65a86408bbb",
+      "size": 378,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/update-linux-amd64.json"
+    },
+    {
+      "name": "update-windows-amd64.json",
+      "digest": "sha256:0d9debb5c374f2f06ce9d41dd1bb5a33f016549e88b2b3ed71123e3abceefaed",
+      "size": 380,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/update-windows-amd64.json"
+    },
+    {
+      "name": "ytmgo-0.0.62-amd64-notarized.dmg",
+      "digest": "sha256:62eb8c50a91a6b8f1c7514390e6a5f1446e22b0b8a7e797b77fa2dd74c3165e2",
+      "size": 25021986,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-amd64-notarized.dmg"
+    },
+    {
+      "name": "ytmgo-0.0.62-amd64-notarized.zip",
+      "digest": "sha256:483ed8fba0f6ca3f47521f366064cdc3ce25899fb426d640c94d7d420db9abb9",
+      "size": 24562140,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-amd64-notarized.zip"
+    },
+    {
+      "name": "ytmgo-0.0.62-arm64-notarized.dmg",
+      "digest": "sha256:3bc8ac484858d7c35a242cfad6d2bc3162cf17f6b6bc00a90fb5223ffb88b6e9",
+      "size": 23819567,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-arm64-notarized.dmg"
+    },
+    {
+      "name": "ytmgo-0.0.62-arm64-notarized.zip",
+      "digest": "sha256:c12740b09a27d0708f256e515526c1a8672ea23fee83d7f2b3b3cd79e80a297c",
+      "size": 23532666,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-arm64-notarized.zip"
+    },
+    {
+      "name": "ytmgo-0.0.62-darwin-amd64.tar.gz",
+      "digest": "sha256:040f5c72ed41a007f717e5adce50e5101bb06ad2abdb2ec81eda2772879966da",
+      "size": 23863859,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-darwin-amd64.tar.gz"
+    },
+    {
+      "name": "ytmgo-0.0.62-darwin-arm64.tar.gz",
+      "digest": "sha256:a603b34f67936881b293df2e21ea7342d8c5dfbe64c8c02e0d4e825cd6d8c61b",
+      "size": 22914682,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-darwin-arm64.tar.gz"
+    },
+    {
+      "name": "ytmgo-0.0.62-linux-amd64.tar.gz",
+      "digest": "sha256:301b4f21e8bdf44a0778a95e1572755838ff9be7b69e2e5066426e9649543566",
+      "size": 23252909,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-linux-amd64.tar.gz"
+    },
+    {
+      "name": "ytmgo-0.0.62-windows-amd64.tar.gz",
+      "digest": "sha256:238c7dc145191fc05acccc611622e9ee86a7e2b7a242ca6124de37ffaaefd124",
+      "size": 22788891,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-windows-amd64.tar.gz"
+    },
+    {
+      "name": "ytmgo-0.0.62-windows-amd64.zip",
+      "digest": "sha256:937aa85a6abe5dab03cd91bff4dc8a82c1d3494c5f96089a04e9408a8aaa1aaf",
+      "size": 23792365,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-windows-amd64.zip"
+    },
+    {
+      "name": "ytmgo-setup-0.0.62-amd64.exe",
+      "digest": "sha256:b7917f09cbc59edec80310900ad3f39285744e822ecacc5d57d28bed2a48a14a",
+      "size": 20336728,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-setup-0.0.62-amd64.exe"
+    },
+    {
+      "name": "ytmgo_0.0.62_amd64.deb",
+      "digest": "sha256:0edf467e3cf8764e22b0d66d799a2bb6e58cd911e9cab37ddbeeba1999487519",
+      "size": 23496834,
+      "browser_download_url": "https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo_0.0.62_amd64.deb"
+    }
+  ]
+}

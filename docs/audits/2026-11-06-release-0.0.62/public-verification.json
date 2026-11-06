@@ -1,0 +1,84 @@
+{
+  "version": "0.0.62",
+  "source": "a91f2bd8c0bf6f029c90f1120aa93cea132aff7d",
+  "unauthenticated_downloads": true,
+  "github_asset_digests_match": true,
+  "update_signatures_verified": [
+    "darwin-arm64",
+    "darwin-amd64",
+    "windows-amd64",
+    "linux-amd64"
+  ],
+  "macos": [
+    {
+      "architecture": "arm64",
+      "version": "0.0.62",
+      "minimum_macos": "13.0",
+      "binaries": [
+        {
+          "path": "Contents/Resources/login/ytmgo Account Login.app/Contents/MacOS/ytmgo-account-login",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ffmpeg",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ytmgo-playback-host",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/MacOS/ytmGO",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        }
+      ],
+      "apple_signature": true,
+      "stapled_ticket": true,
+      "gatekeeper": true,
+      "dmg_signature": true,
+      "dmg_ticket": true,
+      "dmg_gatekeeper": true,
+      "zip_sha256": "c12740b09a27d0708f256e515526c1a8672ea23fee83d7f2b3b3cd79e80a297c"
+    },
+    {
+      "architecture": "amd64",
+      "version": "0.0.62",
+      "minimum_macos": "13.0",
+      "binaries": [
+        {
+          "path": "Contents/Resources/login/ytmgo Account Login.app/Contents/MacOS/ytmgo-account-login",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ffmpeg",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ytmgo-playback-host",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/MacOS/ytmGO",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        }
+      ],
+      "apple_signature": true,
+      "stapled_ticket": true,
+      "gatekeeper": true,
+      "dmg_signature": true,
+      "dmg_ticket": true,
+      "dmg_gatekeeper": true,
+      "zip_sha256": "483ed8fba0f6ca3f47521f366064cdc3ce25899fb426d640c94d7d420db9abb9"
+    }
+  ],
+  "desktop_native_smoke_metadata_verified": true,
+  "asset_count": 22
+}

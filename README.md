@@ -2,11 +2,11 @@
 
 **English** · [简体中文](README.zh-CN.md)
 
-**ytmGO** is a cross-platform YouTube Music desktop client built with Go and **MyGo 0.7.1** (source version baseline **0.0.61**). The user-facing brand is **ytmGO**, while the repository, release artifact prefix, bundle identifier (`si.kyun.ytmgo`), helper identifiers, and local data directories retain the technical name `ytmgo`.
+**ytmGO** is a cross-platform YouTube Music desktop client built with Go and **MyGo 0.7.1** (source version baseline **0.0.62**). The user-facing brand is **ytmGO**, while the repository, release artifact prefix, bundle identifier (`si.kyun.ytmgo`), helper identifiers, and local data directories retain the technical name `ytmgo`.
 
 The main music window uses a custom-rendered Go/MyGo interface (`ui.View`), with controls drawn by the toolkit rather than each operating system's standard widget library. Separate system WebViews handle Google sign-in and on-demand anonymous/non-Premium playback verification. Go handles YouTube Music catalogue requests, session verification, format selection, and bounded media streaming; MyGo outputs decoded audio to the system audio device, and an on-demand FFmpeg decoder renders video only while a video view is visible.
 
-> **Downloads (verified 2026-11-06):** [macOS **v0.0.61**](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.61) · [Windows / Linux **v0.0.61**](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.61). The links below point to published packages for each platform. The [release history](https://github.com/mreasonyang/ytmgo/releases) restarts at **0.0.61**; earlier binary releases have been removed.
+> **Downloads (verified 2026-11-06):** [macOS **v0.0.62**](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62) · [Windows / Linux **v0.0.62**](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62). The links below point to published packages for each platform. The [release history](https://github.com/mreasonyang/ytmgo/releases) restarts at **0.0.61**; earlier binary releases have been removed.
 
 ---
 
@@ -15,8 +15,8 @@ The main music window uses a custom-rendered Go/MyGo interface (`ui.View`), with
 | Platform | Architectures | OS / Runtime Requirements | Installation Entry |
 | --- | --- | --- | --- |
 | **macOS** | Apple Silicon (`arm64`), Intel (`x86_64` / `amd64`) | **macOS 13 Ventura or newer** (no extra runtime dependencies) | `brew install --cask mreasonyang/taps/ytmgo` or signed & notarized `.dmg` / `.zip` from [Latest Release](https://github.com/mreasonyang/ytmgo/releases/latest) |
-| **Windows** | x64 (`amd64` / `x86_64`) | Current **Microsoft Edge WebView2 Runtime** (`>= 101.0.1210.39`); installer is per-user and **not Authenticode signed** | Setup `.exe` or portable `.zip` from [Windows downloads](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.61) |
-| **Linux** | x64 (`amd64` / `x86_64`) | **Ubuntu 24.04 x64** smoke-test baseline (or compatible distro with **GTK 3**, **WebKitGTK 4.1 `>= 2.50.2`**, **`libsecret >= 0.19` + running Secret Service**, and a desktop display/audio session) | `.deb` (`sudo apt install`) or portable `.tar.gz` from [Linux downloads](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.61) |
+| **Windows** | x64 (`amd64` / `x86_64`) | Current **Microsoft Edge WebView2 Runtime** (`>= 101.0.1210.39`); installer is per-user and **not Authenticode signed** | Setup `.exe` or portable `.zip` from [Windows downloads](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62) |
+| **Linux** | x64 (`amd64` / `x86_64`) | **Ubuntu 24.04 x64** smoke-test baseline (or compatible distro with **GTK 3**, **WebKitGTK 4.1 `>= 2.50.2`**, **`libsecret >= 0.19` + running Secret Service**, and a desktop display/audio session) | `.deb` (`sudo apt install`) or portable `.tar.gz` from [Linux downloads](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62) |
 
 - **Published architectures:** Windows ARM64 and Linux ARM64 packages are not published.
 - **Self-contained end-user bundles:** Installed packages include the Rust playback script host, minimal FFmpeg 9.0.2, login helper, and `legal/` notices. End users do **not** need Go, Rust, Python, C compilers, Node.js, or npm.
@@ -41,28 +41,28 @@ Quit ytmGO before switching between manual and Homebrew installation; if a manua
 #### Direct Download (DMG / ZIP)
 
 1. From [Latest Release](https://github.com/mreasonyang/ytmgo/releases/latest), download the signed and notarized package matching your Mac's CPU (requires **macOS 13+**):
-   - **Apple Silicon (`arm64`):** [ytmgo-0.0.61-arm64-notarized.dmg](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.61/ytmgo-0.0.61-arm64-notarized.dmg) · [ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.61/ytmgo-0.0.61-arm64-notarized.zip)
-   - **Intel (`x86_64` / `amd64`):** [ytmgo-0.0.61-amd64-notarized.dmg](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.61/ytmgo-0.0.61-amd64-notarized.dmg) · [ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.61/ytmgo-0.0.61-amd64-notarized.zip)
+   - **Apple Silicon (`arm64`):** [ytmgo-0.0.62-arm64-notarized.dmg](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-arm64-notarized.dmg) · [ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-arm64-notarized.zip)
+   - **Intel (`x86_64` / `amd64`):** [ytmgo-0.0.62-amd64-notarized.dmg](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-amd64-notarized.dmg) · [ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-amd64-notarized.zip)
 2. Mount the DMG or extract the ZIP, then copy `ytmGO.app` into a writable `/Applications` directory before launching (running directly from a read-only mounted DMG volume or read-only location prevents in-place updates).
 
 ### Windows x64 (`amd64`)
 
-From the published [Windows release](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.61):
+From the published [Windows release](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62):
 
-- **Per-User Installer (`ytmgo-setup-<version>-amd64.exe`):** Download [ytmgo-setup-0.0.61-amd64.exe](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.61/ytmgo-setup-0.0.61-amd64.exe) and run it. The installer runs per user and is **not Microsoft Authenticode signed** (Windows SmartScreen may prompt on first run).
-- **Portable Archive (`ytmgo-<version>-windows-amd64.zip`):** Download [ytmgo-0.0.61-windows-amd64.zip](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.61/ytmgo-0.0.61-windows-amd64.zip), extract the **complete** archive into a writable directory, and launch `ytmGO.exe` there. Keep `runtime/`, `login/`, `legal/`, and all other packaged resource directories beside `ytmGO.exe`.
+- **Per-User Installer (`ytmgo-setup-<version>-amd64.exe`):** Download [ytmgo-setup-0.0.62-amd64.exe](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-setup-0.0.62-amd64.exe) and run it. The installer runs per user and is **not Microsoft Authenticode signed** (Windows SmartScreen may prompt on first run).
+- **Portable Archive (`ytmgo-<version>-windows-amd64.zip`):** Download [ytmgo-0.0.62-windows-amd64.zip](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-windows-amd64.zip), extract the **complete** archive into a writable directory, and launch `ytmGO.exe` there. Keep `runtime/`, `login/`, `legal/`, and all other packaged resource directories beside `ytmGO.exe`.
 - **Runtime Dependency:** A current [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) (`>= 101.0.1210.39`) is required for Google sign-in and anonymous/non-Premium playback proof generation. If it is missing, install the Evergreen Runtime from Microsoft's download page.
 
 ### Linux x64 (`amd64`)
 
-From the published [Linux release](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.61):
+From the published [Linux release](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62):
 
-- **Debian / Ubuntu DEB (`ytmgo_<version>_amd64.deb`):** Built and smoke-tested on **Ubuntu 24.04 x64**. Download [ytmgo_0.0.61_amd64.deb](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.61/ytmgo_0.0.61_amd64.deb) and install via `apt` so system dependencies are resolved:
+- **Debian / Ubuntu DEB (`ytmgo_<version>_amd64.deb`):** Built and smoke-tested on **Ubuntu 24.04 x64**. Download [ytmgo_0.0.62_amd64.deb](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo_0.0.62_amd64.deb) and install via `apt` so system dependencies are resolved:
   ```sh
-  sudo apt install ./ytmgo_0.0.61_amd64.deb
+  sudo apt install ./ytmgo_0.0.62_amd64.deb
   ```
   Launch **ytmGO** from the desktop applications menu or run `/opt/ytmgo/ytmgo`. Because the DEB installs under root-owned `/opt/ytmgo`, update a DEB installation by installing the newer `.deb` with `apt`.
-- **Portable Tarball (`ytmgo-<version>-linux-amd64.tar.gz`):** Download [ytmgo-0.0.61-linux-amd64.tar.gz](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.61/ytmgo-0.0.61-linux-amd64.tar.gz), extract its **complete** contents into a user-writable directory, and run `./ytmgo` from that directory. Keep `runtime/`, `login/`, `legal/`, and all other packaged resource directories alongside `./ytmgo`.
+- **Portable Tarball (`ytmgo-<version>-linux-amd64.tar.gz`):** Download [ytmgo-0.0.62-linux-amd64.tar.gz](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-linux-amd64.tar.gz), extract its **complete** contents into a user-writable directory, and run `./ytmgo` from that directory. Keep `runtime/`, `login/`, `legal/`, and all other packaged resource directories alongside `./ytmgo`.
 - **Runtime Dependencies:** Requires a working desktop display and audio session, **GTK 3**, **WebKitGTK 4.1 (`>= 2.50.2`)**, and **`libsecret` (`>= 0.19`) with a running Secret Service** daemon. The DEB declares `libwebkit2gtk-4.1-0 (>= 2.50.2)` and `libsecret-1-0 (>= 0.19)`; other distributions must provide compatible shared libraries (the Linux build is not a statically linked universal binary).
 
 ### In-App Updates, Signing & Data Retention
@@ -152,6 +152,8 @@ From the published [Linux release](https://github.com/mreasonyang/ytmgo/releases
 
 Detailed design specifications live in [DESIGN.md](DESIGN.md); historical and local verification records live in [VERIFICATION.md](VERIFICATION.md) and [docs/AUTO_UPDATE_VERIFICATION.md](docs/AUTO_UPDATE_VERIFICATION.md). Current boundaries to keep in mind:
 
+- **v0.0.62 UI Upgrade Acceptance (2026-11-06):** The actual installed macOS ARM app detected the public 0.0.62 release from 0.0.61, downloaded and installed it through its native update UI, relaunched automatically, and then reported it was up to date. The updated bundle matches the public ZIP; login, paused position, volume and preferences were preserved. See the [verification record](docs/audits/2026-11-06-release-0.0.62/README.md).
+
 - **v0.0.61 Release Acceptance (2026-11-06):** Version numbering restarts at 0.0.61. All 22 public assets, four update signatures, native Windows/Linux installation/startup, macOS signing/notarization and ARM/Intel Homebrew installs passed verification. The local ARM installation matches the public ZIP. See the [release verification record](docs/audits/2026-11-06-release-0.0.61/README.md).
 
 - **Historical v0.6.10 Acceptance (2026-11-06):** Playlist and album numbering continues across track pages. Installed macOS ARM checks confirmed 98 → 99, 96 → 97, readable four-digit labels and a final main row of 2619. Public packages, updates and Homebrew checks passed; see the [numbering acceptance record](docs/audits/2026-11-06-release-0.6.10/README.md).
@@ -191,9 +193,9 @@ make build-app
 make dev
 ```
 
-`make build` stages `build/runtime`, `build/login`, and `build/legal` for the current host OS/architecture and outputs to `build/<os>-<arch>/` using the version in `mygo.json` (currently `0.0.61`):
+`make build` stages `build/runtime`, `build/login`, and `build/legal` for the current host OS/architecture and outputs to `build/<os>-<arch>/` using the version in `mygo.json` (currently `0.0.62`):
 
-- **macOS (`darwin/<arch>`):** Produces `build/darwin-<arch>/ytmGO.app` and `build/darwin-<arch>/ytmgo-<version>-<arch>.dmg` with ad-hoc app signing (`-`) and an unsigned DMG. For example, on Apple Silicon (`darwin/arm64`) at source version `0.0.61`, it writes `build/darwin-arm64/ytmGO.app` and `build/darwin-arm64/ytmgo-0.0.61-arm64.dmg` (launch on macOS with `open build/darwin-arm64/ytmGO.app`). When a local rebuild changes the ad-hoc signing identity on macOS, Keychain may prompt to re-authorize access to `account-session-key`.
+- **macOS (`darwin/<arch>`):** Produces `build/darwin-<arch>/ytmGO.app` and `build/darwin-<arch>/ytmgo-<version>-<arch>.dmg` with ad-hoc app signing (`-`) and an unsigned DMG. For example, on Apple Silicon (`darwin/arm64`) at source version `0.0.62`, it writes `build/darwin-arm64/ytmGO.app` and `build/darwin-arm64/ytmgo-0.0.62-arm64.dmg` (launch on macOS with `open build/darwin-arm64/ytmGO.app`). When a local rebuild changes the ad-hoc signing identity on macOS, Keychain may prompt to re-authorize access to `account-session-key`.
 - **Linux (`linux/amd64`):** Outputs `build/linux-amd64/ytmgo` and `build/linux-amd64/ytmgo_<version>_amd64.deb` (launch directly on Linux with `./build/linux-amd64/ytmgo`).
 - **Windows (`windows/amd64`):** Outputs `build/windows-amd64/ytmGO.exe` and `build/windows-amd64/ytmgo-setup-<version>-amd64.exe` (launch on Windows with `.\build\windows-amd64\ytmGO.exe`).
 

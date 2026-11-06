@@ -1,0 +1,19 @@
+{
+  "conclusion": "success",
+  "databaseId": 42222657264,
+  "headSha": "b661912010e3133c035bf86ef764004bf6533378",
+  "jobs": [
+    {
+      "name": "install (macos-15-intel, amd64)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "install (xcode-27, arm64)",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/mreasonyang/homebrew-taps/actions/runs/42222657264"
+}

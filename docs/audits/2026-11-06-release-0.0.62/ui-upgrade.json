@@ -1,0 +1,36 @@
+{
+  "baseline_version": "0.0.61",
+  "updated_version": "0.0.62",
+  "platform": "macOS arm64",
+  "installed_path": "/Applications/ytmGO.app",
+  "interaction": "native application UI via accessibility observations and button clicks",
+  "observed_ui": [
+    "Before publication: You're up to date; ytmGO 0.0.61 is currently the newest version available.",
+    "After publication: ytmGO 0.0.62 is now available; you have 0.0.61.",
+    "Clicked Install Update; observed Downloading update progress.",
+    "Observed Ready to Relaunch; clicked Relaunch Now.",
+    "New application Settings showed Version 0.0.62.",
+    "Checked again: You're up to date; ytmGO 0.0.62 is currently the newest version available."
+  ],
+  "automatic_relaunch_observed_before_any_ui_rebind": true,
+  "baseline_executable_matches_verified_0_0_61": true,
+  "installed_bundle_matches_public_zip": true,
+  "installed": {
+    "apple_signature": true,
+    "stapled_ticket": true,
+    "gatekeeper": true,
+    "version": "0.0.62",
+    "cli_version": "0.0.62",
+    "executable_sha256": "620b48a38109b4accd5e769e8ae11ac7b54b7fcc048cf17605caea101bb2f04e"
+  },
+  "preserved_ui_state": {
+    "premium_session": true,
+    "paused": true,
+    "position_matches_immediately_before_update": true,
+    "volume_matches_immediately_before_update": true,
+    "appearance_dark": true,
+    "language_english": true,
+    "video_quality_1080p": true
+  },
+  "verification_scope": "Actual installed macOS ARM application, production GitHub feed, UI check/download/install/relaunch and subsequent UI up-to-date result. Other platforms' interactive upgrade flows are outside this test."
+}

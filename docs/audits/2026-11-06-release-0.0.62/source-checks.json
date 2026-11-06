@@ -1,0 +1,58 @@
+{
+  "release_source": "a91f2bd8c0bf6f029c90f1120aa93cea132aff7d",
+  "local_checks": {
+    "release_script_tests": 40,
+    "go_update_package_tests": "passed",
+    "go_desktop_signature_tests": "passed"
+  },
+  "hosted_source_checks": [
+    {
+      "databaseId": 42219093339,
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "a91f2bd8c0bf6f029c90f1120aa93cea132aff7d",
+      "url": "https://github.com/mreasonyang/ytmgo/actions/runs/42219093339",
+      "jobs": [
+        {
+          "name": "Login helper on macos-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Login helper on windows-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Login helper on ubuntu-24.04",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "databaseId": 42219093442,
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "a91f2bd8c0bf6f029c90f1120aa93cea132aff7d",
+      "url": "https://github.com/mreasonyang/ytmgo/actions/runs/42219093442",
+      "jobs": [
+        {
+          "name": "native (windows-latest)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "native (ubuntu-24.04)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "native (xcode-27)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

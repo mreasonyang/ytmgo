@@ -162,10 +162,10 @@ and tooltip text.
   header is the title bar. It drags the window, keeps clear of the window
   controls (`c.TitleBar()`) and leads with a ⋯ application menu holding the
   menu bar's menus; Alt and F10 still open those, and their shortcuts keep
-  working. GTK's band is the global bar's 64; Windows keeps its 32-DIP caption
-  buttons in the corner. Narrow compact windows give Windows' controls and the
-  ⋯ button a strip of their own, and keep GTK's in the bar without the ⋯
-  button. macOS keeps its title bar and the app's menu bar.
+  working. The window controls take the bar's 64: GTK centres its buttons in
+  it and Windows' caption buttons fill it, so their glyphs line up with the
+  bar's. Narrow compact windows move the search field to a row below the
+  controls. macOS keeps its title bar and the app's menu bar.
 - Search: results lead their subtitle with their type (song, video, artist,
   album, playlist, podcast, episode); artist rows use round artwork. A top-result
   card is headed by its section header, never by the result's own title.

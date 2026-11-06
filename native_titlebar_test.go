@@ -16,7 +16,7 @@ func TestMainWindowTitleBarFollowsPlatform(t *testing.T) {
 		height int
 	}{
 		{"darwin", mygo.TitleBarDefault, 0},
-		{"windows", mygo.TitleBarHidden, 0},
+		{"windows", mygo.TitleBarHidden, nativeTopbarHeight},
 		{"linux", mygo.TitleBarHidden, nativeTopbarHeight},
 	} {
 		style, height := mainWindowTitleBar(tc.goos)
@@ -29,7 +29,7 @@ func TestMainWindowTitleBarFollowsPlatform(t *testing.T) {
 // Window controls as Windows 11 and GNOME (buttons on either side) report
 // them for a hidden title bar.
 var (
-	windowsTitleBar   = ui.TitleBar{Height: 32, Right: 138}
+	windowsTitleBar   = ui.TitleBar{Height: nativeTopbarHeight, Right: 138}
 	linuxTitleBar     = ui.TitleBar{Height: nativeTopbarHeight, Right: 46}
 	linuxLeftTitleBar = ui.TitleBar{Height: nativeTopbarHeight, Left: 104}
 )
@@ -69,8 +69,9 @@ func TestNativeTopbarIsTheTitleBar(t *testing.T) {
 				_, a, tt, opened := nativeTitleBarFixture(tc.bar, width, 900)
 				for _, key := range []string{"shellAppMenu", "shellBack", "shellForward", "shellNavHome", "shellSettings"} {
 					r := nativeAssertClearOfControls(t, tt, tc.bar, a.Tr(key), width)
-					if r.Y+r.H > nativeTopbarHeight {
-						t.Fatalf("%s at %+v left the %v-DIP bar", key, r, nativeTopbarHeight)
+					// The window controls' glyphs sit in the middle of their band.
+					if mid := r.Y + r.H/2; mid < tc.bar.Height/2-1 || mid > tc.bar.Height/2+1 {
+						t.Fatalf("%s at %+v is not level with the window controls (band %v)", key, r, tc.bar.Height)
 					}
 				}
 				menu := nativeAssertClearOfControls(t, tt, tc.bar, a.Tr("shellAppMenu"), width)
@@ -101,46 +102,39 @@ func TestNativeTopbarIsTheTitleBar(t *testing.T) {
 }
 
 func TestNativeCompactTitleBarKeepsSearchRoom(t *testing.T) {
-	const (
-		inline = "inline" // the menu button leads the compact bar
-		strip  = "strip"  // the menu button and the controls get a strip
-		none   = "none"   // tall controls fit, the menu button does not
-	)
 	for _, tc := range []struct {
-		name  string
-		bar   ui.TitleBar
-		width int
-		menu  string
+		name    string
+		bar     ui.TitleBar
+		width   int
+		stacked bool // the search field takes a row below the controls
 	}{
-		{"windows-380", windowsTitleBar, 380, strip},
-		{"windows-420", windowsTitleBar, 420, strip},
-		{"windows-700", windowsTitleBar, 700, inline},
-		{"linux-380", linuxTitleBar, 380, none},
-		{"linux-500", linuxTitleBar, 500, inline},
-		{"linux-left-420", linuxLeftTitleBar, 420, none},
+		{"windows-380", windowsTitleBar, 380, true},
+		{"windows-500", windowsTitleBar, 500, true},
+		{"windows-700", windowsTitleBar, 700, false},
+		{"linux-380", linuxTitleBar, 380, true},
+		{"linux-500", linuxTitleBar, 500, false},
+		{"linux-left-420", linuxLeftTitleBar, 420, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			m, a, tt, _ := nativeTitleBarFixture(tc.bar, tc.width, 900)
 			m.SignedIn = true
 			tt.Frame()
-			back := nativeAssertClearOfControls(t, tt, tc.bar, a.Tr("shellBack"), tc.width)
-			settings := nativeAssertClearOfControls(t, tt, tc.bar, a.Tr("shellSettings"), tc.width)
-			got := none
-			if r, ok := tt.Find(a.Tr("shellAppMenu")); ok {
-				nativeAssertClearOfControls(t, tt, tc.bar, a.Tr("shellAppMenu"), tc.width)
-				got = inline
-				if r.Y+r.H <= back.Y {
-					got = strip
+			for _, key := range []string{"shellAppMenu", "shellBack", "shellSettings"} {
+				r := nativeAssertClearOfControls(t, tt, tc.bar, a.Tr(key), tc.width)
+				if mid := r.Y + r.H/2; mid < tc.bar.Height/2-1 || mid > tc.bar.Height/2+1 {
+					t.Fatalf("%s at %+v is not level with the window controls", key, r)
 				}
 			}
-			if got != tc.menu {
-				t.Fatalf("application menu %s; want %s", got, tc.menu)
+			search, ok := tt.Find(a.Tr("shellNavSearch"))
+			if !ok {
+				t.Fatal("search field missing")
 			}
-			if got == strip && back.Y > tc.bar.Height+16 {
-				t.Fatalf("compact bar at %+v sits below a strip taller than the controls", back)
+			if stacked := search.Y >= tc.bar.Height; stacked != tc.stacked {
+				t.Fatalf("search field at %+v below the controls: %v; want %v", search, stacked, tc.stacked)
 			}
-			if room := settings.X - back.X - back.W; room < nativeCompactSearchMin {
-				t.Fatalf("search field has %v DIPs; want at least %v", room, nativeCompactSearchMin)
+			// The text input inside the pill, past its icon and padding.
+			if search.W < nativeCompactSearchMin-60 {
+				t.Fatalf("search field at %+v is too narrow to type in", search)
 			}
 			nativeSnapshot(t, tt, "titlebar-compact-"+tc.name)
 		})

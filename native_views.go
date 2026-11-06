@@ -338,31 +338,27 @@ func nativeTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wid
 
 func nativeCompactTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) {
 	bar := c.TitleBar()
-	// The bar takes the window controls in while the search field keeps
-	// room to type. A narrower window gives slim controls (Windows) a strip
-	// of their own, and keeps tall ones (GTK's band) in the bar without the
-	// application menu button, as Alt and F10 still open the menus.
+	left, right := nativeTitleBarInsets(bar, 8)
+	// The search field shares the bar with the window controls while it
+	// keeps room to type; a narrower window gives it a row below them.
 	buttons := float32(2)
 	if m.SignedIn {
 		buttons++
 	}
-	left, right := nativeTitleBarInsets(bar, 8)
-	fits := func(buttons float32) bool { return width-left-right-buttons*48 >= nativeCompactSearchMin }
-	menu := a.AppMenu != nil && (bar.Height == 0 || fits(buttons+1))
-	if a.AppMenu != nil && !menu && bar.Height <= 40 {
-		nativeTitleBarRow(c, bar).Height(bar.Height).Padding(0, right, 0, left).AlignItems(ui.Center).Children(func() {
-			nativeAppMenuButton(c, a, p, bar.Height)
-		})
-		bar, left, right = ui.TitleBar{}, 8, 8
+	if a.AppMenu != nil {
+		buttons++
 	}
+	stacked := bar.Height > 0 && width-left-right-buttons*48 < nativeCompactSearchMin
 	nativeTitleBarRow(c, bar).Height(max(60, bar.Height)).Padding(8, right, 8, left).Gap(4).AlignItems(ui.Center).Children(func() {
-		if menu {
-			nativeAppMenuButton(c, a, p, 44)
-		}
+		nativeAppMenuButton(c, a, p, 44)
 		if nativeIconButton(c, "back", a.Tr("shellBack"), p, false, 44).Disabled(!m.CanBack).Clicked() {
 			a.Back()
 		}
-		nativeSearchField(c, m, a, p, 44, false).Grow(1)
+		if stacked {
+			ui.Spacer(c)
+		} else {
+			nativeSearchField(c, m, a, p, 44, false).Grow(1)
+		}
 		if nativeIconButton(c, "settings", a.Tr("shellSettings"), p, m.Settings, 44).Clicked() {
 			m.Settings = !m.Settings
 		}
@@ -370,6 +366,11 @@ func nativeCompactTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalet
 			nativeAccount(c, m, a, p, false)
 		}
 	})
+	if stacked {
+		ui.Row(c).Shrink(0).Padding(0, 8, 8).Children(func() {
+			nativeSearchField(c, m, a, p, 44, false).Grow(1)
+		})
+	}
 }
 
 // nativeSearchField is the persistent search pill. On desktop it ends with the

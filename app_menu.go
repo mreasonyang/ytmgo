@@ -13,13 +13,11 @@ import (
 // the menu bar's (see native_titlebar.go). macOS keeps its title bar, and
 // its menu bar is the app's, at the top of the screen.
 func mainWindowTitleBar(goos string) (mygo.TitleBarStyle, int) {
-	switch goos {
-	case "linux":
-		// GTK centres its title buttons in the band: make it the top bar.
+	if goos == "linux" || goos == "windows" {
+		// The window controls take the top bar's height: GTK centres its
+		// title buttons in it, and Windows' caption buttons fill it, as in
+		// WinUI's tall title bars, so their glyphs line up with the bar's.
 		return mygo.TitleBarHidden, nativeTopbarHeight
-	case "windows":
-		// Windows 11's 32-DIP caption buttons, in the top bar's corner.
-		return mygo.TitleBarHidden, 0
 	}
 	return mygo.TitleBarDefault, 0
 }

@@ -10,7 +10,7 @@ import "github.com/egoist/mygo/ui"
 // AppMenu nil, which leave its layout as it was.
 
 // nativeCompactSearchMin is the narrowest search field the compact bar keeps
-// beside the window controls before they move to a strip of their own.
+// beside the window controls before it moves to a row of its own.
 const nativeCompactSearchMin = 160
 
 // nativeTitleBarInsets returns the horizontal padding of a bar along the top

@@ -173,6 +173,7 @@ type continuation struct {
 	visitorData     string
 	payload         map[string]any
 	album           *albumMetadata
+	deferred        *continuation
 	expires         time.Time
 }
 type lyricsReference struct {
@@ -304,9 +305,9 @@ func (c *Client) Continue(ctx context.Context, handle string) (Page, error) {
 		return Page{}, ErrExpiredContinuation
 	}
 	if entry.cursor.query {
-		return c.loadPage(ctx, entry.endpoint, entry.payload, entry.title, entry.cursor.token, entry.visitorData, entry.album)
+		return c.loadPage(ctx, entry.endpoint, entry.payload, entry.title, entry.cursor.token, entry.visitorData, entry.album, entry.deferred)
 	}
-	return c.loadPage(ctx, entry.endpoint, map[string]any{"continuation": entry.cursor.token}, entry.title, "", entry.visitorData, entry.album)
+	return c.loadPage(ctx, entry.endpoint, map[string]any{"continuation": entry.cursor.token}, entry.title, "", entry.visitorData, entry.album, entry.deferred)
 }
 
 func (c *Client) page(ctx context.Context, endpoint string, payload map[string]any, title string) (Page, error) {
@@ -316,7 +317,7 @@ func (c *Client) page(ctx context.Context, endpoint string, payload map[string]a
 	}
 	key, _ := json.Marshal(payload)
 	page, err := memoized(c, ctx, &c.pages, endpoint+":"+string(key), 2*time.Minute, 8<<20, pageBytes, func(work context.Context) (Page, error) {
-		return c.loadPage(work, endpoint, payload, title, "", "", album)
+		return c.loadPage(work, endpoint, payload, title, "", "", album, nil)
 	})
 	if err == nil && page.Continuation != "" {
 		c.mu.RLock()
@@ -329,7 +330,7 @@ func (c *Client) page(ctx context.Context, endpoint string, payload map[string]a
 	return clonePage(page), err
 }
 
-func (c *Client) loadPage(ctx context.Context, endpoint string, payload map[string]any, title, queryContinuation, visitorData string, album *albumMetadata) (Page, error) {
+func (c *Client) loadPage(ctx context.Context, endpoint string, payload map[string]any, title, queryContinuation, visitorData string, album *albumMetadata, deferred *continuation) (Page, error) {
 	ctx, scope, err := c.operation(ctx)
 	if err != nil {
 		return Page{}, err
@@ -360,10 +361,21 @@ func (c *Client) loadPage(ctx context.Context, endpoint string, payload map[stri
 		if visitor := textAt(response, "responseContext", "visitorData"); validVisitorData(visitor) {
 			visitorData = visitor
 		}
+		if token.deferred != nil {
+			// Freeze the outer cursor's original request and visitor. Later
+			// track pages may use a different body and refresh their visitor.
+			deferred = &continuation{endpoint: endpoint, cursor: *token.deferred, title: page.Title, payload: payload, visitorData: visitorData, deferred: deferred}
+			token.deferred = nil
+		}
 		if !token.trackShelf {
 			album = nil
 		}
-		page.Continuation, err = c.rememberContinuation(scope, endpoint, token, page.Title, payload, visitorData, album)
+		deferred = &continuation{endpoint: endpoint, cursor: token, title: page.Title, payload: payload, visitorData: visitorData, album: album, deferred: deferred}
+	}
+	// Exhausting the main track stream exposes the saved outer stream through
+	// the same opaque handle API. Failed requests leave the old handle usable.
+	if deferred != nil {
+		page.Continuation, err = c.rememberContinuation(scope, *deferred)
 		if err != nil {
 			return Page{}, err
 		}
@@ -627,7 +639,7 @@ func (c *Client) request(req *http.Request, stage string, limit int64) ([]byte, 
 	return data, nil
 }
 
-func (c *Client) rememberContinuation(scope sessionScope, endpoint string, cursor pageCursor, title string, payload map[string]any, visitorData string, album *albumMetadata) (string, error) {
+func (c *Client) rememberContinuation(scope sessionScope, entry continuation) (string, error) {
 	var random [16]byte
 	if _, err := rand.Read(random[:]); err != nil {
 		return "", nil
@@ -653,6 +665,7 @@ func (c *Client) rememberContinuation(scope sessionScope, endpoint string, curso
 		}
 		delete(c.continuations, oldestKey)
 	}
-	c.continuations[handle] = continuation{endpoint: endpoint, cursor: cursor, visitorData: visitorData, title: title, payload: payload, album: album, expires: time.Now().Add(30 * time.Minute)}
+	entry.expires = time.Now().Add(30 * time.Minute)
+	c.continuations[handle] = entry
 	return handle, nil
 }

@@ -64,6 +64,7 @@ type pageCursor struct {
 	token      string
 	query      bool
 	trackShelf bool
+	deferred   *pageCursor
 }
 
 func parsePage(response map[string]any) (Page, pageCursor, error) {
@@ -80,6 +81,7 @@ func parsePage(response map[string]any) (Page, pageCursor, error) {
 		}
 	}
 	token := pageCursor{}
+	playlistCursor := pageCursor{}
 	seen := make(map[string]bool)
 	appendShelf := func(title string, items []Item) {
 		if len(items) == 0 {
@@ -123,8 +125,16 @@ func parsePage(response map[string]any) (Page, pageCursor, error) {
 			}
 			for _, kind := range []string{"musicCarouselShelfRenderer", "musicImmersiveCarouselShelfRenderer", "musicShelfRenderer", "musicPlaylistShelfRenderer", "gridRenderer", "musicShelfContinuation", "musicPlaylistShelfContinuation", "gridContinuation", "musicCardShelfRenderer"} {
 				if shelf, ok := node[kind].(map[string]any); ok {
+					origin := continuationToken(shelf)
 					if token.token == "" {
-						token = continuationToken(shelf)
+						token = origin
+					}
+					// A playlist's section-list cursor loads recommendations;
+					// its own shelf cursor loads the remaining tracks. Keep both,
+					// including when every row on this page is unplayable.
+					if (kind == "musicPlaylistShelfRenderer" || kind == "musicPlaylistShelfContinuation") && playlistCursor.token == "" && origin.token != "" {
+						playlistCursor = origin
+						playlistCursor.trackShelf = true
 					}
 					items := collectItems(shelf)
 					title := shelfTitle(shelf)
@@ -137,7 +147,6 @@ func parsePage(response map[string]any) (Page, pageCursor, error) {
 						title = joinedText(at(shelf, "header", "musicCardShelfHeaderBasicRenderer", "title"))
 					}
 					if title == "" && len(page.Shelves) == 0 && (kind == "musicShelfRenderer" || kind == "musicPlaylistShelfRenderer" || kind == "musicShelfContinuation" || kind == "musicPlaylistShelfContinuation") {
-						origin := continuationToken(shelf)
 						for _, item := range items {
 							if item.ID != "" && token.token != "" && token.token == origin.token && token.query == origin.query {
 								token.trackShelf = true
@@ -182,6 +191,13 @@ func parsePage(response map[string]any) (Page, pageCursor, error) {
 	walk(contents, 0)
 	walk(continuationContents, 0)
 	walk(actions, 0)
+	if playlistCursor.token != "" {
+		if token.token != "" && (token.token != playlistCursor.token || token.query != playlistCursor.query) {
+			outer := token
+			playlistCursor.deferred = &outer
+		}
+		token = playlistCursor
+	}
 	return page, token, nil
 }
 

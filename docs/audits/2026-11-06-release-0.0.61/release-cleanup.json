@@ -1,0 +1,67 @@
+{
+  "checked_at": "2026-11-06T09:42:53.658264+00:00",
+  "removed_releases": [
+    {
+      "id": 436179675,
+      "tag": "v0.6.10"
+    },
+    {
+      "id": 436136114,
+      "tag": "v0.6.9"
+    },
+    {
+      "id": 436105238,
+      "tag": "v0.6.7"
+    },
+    {
+      "id": 435321911,
+      "tag": "v0.6.6"
+    },
+    {
+      "id": 434296874,
+      "tag": "v0.6.5"
+    },
+    {
+      "id": 434047660,
+      "tag": "v0.6.4"
+    },
+    {
+      "id": 433839294,
+      "tag": "v0.6.3"
+    },
+    {
+      "id": 432961295,
+      "tag": "v0.6.2"
+    },
+    {
+      "id": 432395788,
+      "tag": "v0.6.1"
+    },
+    {
+      "id": 431030919,
+      "tag": "v0.6.0"
+    },
+    {
+      "id": 428667879,
+      "tag": "v0.5.1"
+    },
+    {
+      "id": 427597574,
+      "tag": "v0.5.0"
+    },
+    {
+      "id": 427589478,
+      "tag": "v0.5.0-rc.1"
+    }
+  ],
+  "removed_count": 13,
+  "source_tags_retained": true,
+  "remaining_release_tags": [],
+  "temporary_backup_removed": true,
+  "reason": "User requested deletion without retaining a backup; no existing-user migration required.",
+  "final_checked_at": "2026-11-06T10:15:57.857702+00:00",
+  "final_release_tags": [
+    "v0.0.61"
+  ],
+  "final_asset_count": 22
+}

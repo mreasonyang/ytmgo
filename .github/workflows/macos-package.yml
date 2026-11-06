@@ -13,7 +13,7 @@ on:
           - developer-id
           - notarized
       release_version:
-        description: Optional version override (for example 0.6.1-rc.1; patch 0-999, no leading zeros)
+        description: Optional version override (for example 0.0.62-rc.1; patch 0-999, no leading zeros)
         required: false
         type: string
       publish_release:

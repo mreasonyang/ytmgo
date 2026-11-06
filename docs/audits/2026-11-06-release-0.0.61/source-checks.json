@@ -1,0 +1,104 @@
+{
+  "release_source": "6d31b0a93bfdf60026a4825736f81f783bb7efe9",
+  "packaging_tools_source": "86d9757aa4d2aedd97e2bd6d15068c5130ed5d44",
+  "local_checks": {
+    "release_script_tests": 40,
+    "homebrew_validation_tests": 9,
+    "go_update_package_tests": "passed",
+    "go_desktop_signature_tests": "passed"
+  },
+  "hosted_checks": [
+    {
+      "databaseId": 42196431078,
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "6d31b0a93bfdf60026a4825736f81f783bb7efe9",
+      "url": "https://github.com/mreasonyang/ytmgo/actions/runs/42196431078",
+      "jobs": [
+        {
+          "name": "source",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Native build (amd64)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Native build (arm64)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "package",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Signed native startup (arm64)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Signed native startup (amd64)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "publish",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "databaseId": 42197715769,
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "86d9757aa4d2aedd97e2bd6d15068c5130ed5d44",
+      "url": "https://github.com/mreasonyang/ytmgo/actions/runs/42197715769",
+      "jobs": [
+        {
+          "name": "native (ubuntu-24.04)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "native (windows-latest)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "native (xcode-27)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "databaseId": 42197715599,
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "86d9757aa4d2aedd97e2bd6d15068c5130ed5d44",
+      "url": "https://github.com/mreasonyang/ytmgo/actions/runs/42197715599",
+      "jobs": [
+        {
+          "name": "Login helper on ubuntu-24.04",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Login helper on windows-latest",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Login helper on macos-latest",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "conclusion": "success",
+  "headSha": "95c0344425a041a1a3a39448c5f441b29b8df30d",
+  "status": "completed",
+  "note": "The receipt commit identifies the Homebrew workflow repository revision; the workflow checks out ytmGO v0.0.61 for bundle validation."
+}

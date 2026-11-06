@@ -1,0 +1,19 @@
+{
+  "apple_signature": true,
+  "stapled_ticket": true,
+  "gatekeeper": true,
+  "version": "0.0.61",
+  "cli_version": "0.0.61",
+  "executable_sha256": "285aca580a5ff766048bf7c8788eb9d2120f3c599ad53f4c727f35e2d56e33ec",
+  "update_check": {
+    "version": "0.0.61",
+    "enabled": true,
+    "available": false
+  },
+  "homebrew_version": "0.0.61",
+  "homebrew_installed": "0.0.61",
+  "installed_process_started": true,
+  "startup_observation_seconds": 8,
+  "public_executable_sha256": "285aca580a5ff766048bf7c8788eb9d2120f3c599ad53f4c727f35e2d56e33ec",
+  "matches_public_zip": true
+}

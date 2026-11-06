@@ -1,0 +1,35 @@
+{
+  "source": "1684e8e8e727c4bbea3dc2a9f01d995bcd366701",
+  "go_race_all_packages": "pass",
+  "root_race_seconds": 173.844,
+  "go_vet_all_packages": "pass",
+  "release_script_tests_passed": 40,
+  "rendering_regression_before": [
+    1,
+    2,
+    1,
+    2,
+    3,
+    1
+  ],
+  "rendering_regression_after": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "coverage": [
+    "playlist",
+    "album",
+    "wide",
+    "compact",
+    "empty continuation shelf",
+    "multiple appended shelves",
+    "repeated frames",
+    "independent named section boundary",
+    "row playback target",
+    "four-digit label bounds"
+  ]
+}

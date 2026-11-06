@@ -1,0 +1,63 @@
+{
+  "version": "0.6.10",
+  "source": "1684e8e8e727c4bbea3dc2a9f01d995bcd366701",
+  "scope": "real signed-in macOS ARM app; visual confirmation",
+  "short_playlist_boundary": [
+    96,
+    97,
+    98,
+    99,
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107
+  ],
+  "short_playlist_last_number": 124,
+  "short_playlist_recommendations_unnumbered": true,
+  "short_boundary_source": "native screenshot after continuation load",
+  "long_playlist_boundary": [
+    94,
+    95,
+    96,
+    97,
+    98,
+    99,
+    100,
+    101,
+    102,
+    103,
+    104,
+    105
+  ],
+  "four_digit_ranges_observed": [
+    [
+      1233,
+      1244
+    ],
+    [
+      2003,
+      2013
+    ],
+    [
+      2489,
+      2500
+    ]
+  ],
+  "long_playlist_last_number": 2619,
+  "long_playlist_recommendations_unnumbered": true,
+  "premium_retained": true,
+  "appearance": "Dark",
+  "language": "English",
+  "video_quality_preference": 1080,
+  "paused_position_seconds": 93.5894255,
+  "volume": 0.6591679453849792,
+  "playing": false,
+  "account_and_playlist_writes": false,
+  "playback_actions_performed": false,
+  "returned_to_home": true,
+  "playback_state_file_unchanged": true
+}

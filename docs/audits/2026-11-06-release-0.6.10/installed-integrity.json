@@ -1,0 +1,8 @@
+{
+  "version": "0.6.10",
+  "source": "1684e8e8e727c4bbea3dc2a9f01d995bcd366701",
+  "executable_matches_public_zip": true,
+  "signature": true,
+  "stapled_ticket": true,
+  "gatekeeper": true
+}

@@ -1381,6 +1381,22 @@ func (msgs Messages) ShellSettings() string {
 	return Catalog.Format(msgs.locale, "shellSettings", nil)
 }
 
+// ShellAppMenu says "Application menu"
+// in the language the app shows.
+//
+// Icon button (Linux, Windows): opens the menu bar's menus, which the
+// window's custom title bar has no room for.
+func ShellAppMenu() string { return In(i18n.Locale()).ShellAppMenu() }
+
+// ShellAppMenu says "Application menu"
+// in the language of msgs.
+//
+// Icon button (Linux, Windows): opens the menu bar's menus, which the
+// window's custom title bar has no room for.
+func (msgs Messages) ShellAppMenu() string {
+	return Catalog.Format(msgs.locale, "shellAppMenu", nil)
+}
+
 // ShellSearchPlaceholder says "What do you want to play?"
 // in the language the app shows.
 //

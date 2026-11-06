@@ -157,6 +157,15 @@ and tooltip text.
   `account.go`.
 - Global bar: back/forward history, Home, the persistent search field and
   Explore. Search submits on Enter; ⌘K focuses it from anywhere.
+- Window header (Linux, Windows): the main window hides the system title bar
+  (`mainWindowTitleBar`), so the global bar, the compact bar or the immersive
+  header is the title bar. It drags the window, keeps clear of the window
+  controls (`c.TitleBar()`) and leads with a ⋯ application menu holding the
+  menu bar's menus; Alt and F10 still open those, and their shortcuts keep
+  working. GTK's band is the global bar's 64; Windows keeps its 32-DIP caption
+  buttons in the corner. Narrow compact windows give Windows' controls and the
+  ⋯ button a strip of their own, and keep GTK's in the bar without the ⋯
+  button. macOS keeps its title bar and the app's menu bar.
 - Search: results lead their subtitle with their type (song, video, artist,
   album, playlist, podcast, episode); artist rows use round artwork. A top-result
   card is headed by its section header, never by the result's own title.

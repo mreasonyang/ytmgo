@@ -109,9 +109,12 @@ type ViewActions struct {
 	LoadMore                                            func()
 	BeginShortcut, CancelShortcut                       func()
 	SetShortcut                                         func(string)
-	artViewport                                         ui.Rect
-	viewportScroll                                      *ui.ScrollState
-	secondaryArtwork                                    bool
+	// AppMenu fills the application menu button, where a hidden title bar
+	// leaves the window no menu bar (Linux, Windows); nil hides the button.
+	AppMenu          func(*ui.Menu)
+	artViewport      ui.Rect
+	viewportScroll   *ui.ScrollState
+	secondaryArtwork bool
 }
 
 // Window geometry. Above 1180 DIPs the library is a full panel and Now Playing
@@ -178,9 +181,14 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 // window frame, three rounded panels, and the player bar across the bottom.
 func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {
 	ui.Column(c).Fill().Background(p.base).TextColor(p.text).Children(func() {
-		top := float32(8)
+		// Immersive mode drops the global bar. Under a hidden title bar its
+		// header moves out of the panel to take the bar's place instead.
+		top, header := float32(8), float32(0)
 		if !m.Immersive {
 			nativeTopbar(c, m, a, p, width)
+			top = 0
+		} else if c.TitleBar().Height > 0 {
+			header = nativeImmersiveHeader(c, m, a, p, width)
 			top = 0
 		}
 		ui.Row(c).Grow(1).MinHeight(0).AlignItems(ui.Stretch).Gap(8).Padding(top, 8, 0).Children(func() {
@@ -191,7 +199,7 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 				nativeBackdrop(c, m, a, p)
 				nativePageLayer(c).Children(func() {
 					if m.Immersive {
-						nativeImmersive(c, m, a, p, width, height-nativePlayerHeight-top)
+						nativeImmersive(c, m, a, p, width, height-nativePlayerHeight-top-header, header == 0)
 					} else {
 						nativeContent(c, m, a, p, false)
 					}
@@ -213,9 +221,9 @@ func nativeCompactFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 			nativeBackdrop(c, m, a, p)
 			nativePageLayer(c).Children(func() {
 				if m.Immersive {
-					nativeImmersive(c, m, a, p, width, height-nativeExpandedBar-nativeCompactTabbar)
+					nativeImmersive(c, m, a, p, width, height-nativeExpandedBar-nativeCompactTabbar, true)
 				} else {
-					nativeCompactTopbar(c, m, a, p)
+					nativeCompactTopbar(c, m, a, p, width)
 					nativeContent(c, m, a, p, true)
 				}
 			})
@@ -292,9 +300,15 @@ func nativeChip(c *ui.Context, label string, p nativePalette, selected bool) ui.
 	return b
 }
 
+// nativeTopbar is the global bar. Under a hidden title bar (Linux, Windows)
+// it is the window's title bar too: it drags the window, keeps clear of the
+// window controls and leads with the application menu.
 func nativeTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) {
-	ui.Row(c).Height(nativeTopbarHeight).Shrink(0).PaddingX(16).Gap(16).AlignItems(ui.Center).Children(func() {
+	bar := c.TitleBar()
+	left, right := nativeTitleBarInsets(bar, 16)
+	nativeTitleBarRow(c, bar).Height(max(nativeTopbarHeight, bar.Height)).Padding(0, right, 0, left).Gap(16).AlignItems(ui.Center).Children(func() {
 		ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
+			nativeAppMenuButton(c, a, p, 32)
 			brand := ui.ButtonBase(c).Size(32, 32).Shrink(0).Radius(16).Background(p.accent).TextColor(p.onAccent).Label(a.Tr("shellBrandHome")).Tooltip(a.Tr("shellBrandHome")).Children(func() { ui.Icon(c, nativeIcons["play"]).Size(18, 18) })
 			if brand.Clicked() {
 				a.Navigate("home")
@@ -327,8 +341,29 @@ func nativeTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wid
 	})
 }
 
-func nativeCompactTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
-	ui.Row(c).Height(60).Shrink(0).Padding(8, 8).Gap(4).AlignItems(ui.Center).Children(func() {
+func nativeCompactTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) {
+	bar := c.TitleBar()
+	// The bar takes the window controls in while the search field keeps
+	// room to type. A narrower window gives slim controls (Windows) a strip
+	// of their own, and keeps tall ones (GTK's band) in the bar without the
+	// application menu button, as Alt and F10 still open the menus.
+	buttons := float32(2)
+	if m.SignedIn {
+		buttons++
+	}
+	left, right := nativeTitleBarInsets(bar, 8)
+	fits := func(buttons float32) bool { return width-left-right-buttons*48 >= nativeCompactSearchMin }
+	menu := a.AppMenu != nil && (bar.Height == 0 || fits(buttons+1))
+	if a.AppMenu != nil && !menu && bar.Height <= 40 {
+		nativeTitleBarRow(c, bar).Height(bar.Height).Padding(0, right, 0, left).AlignItems(ui.Center).Children(func() {
+			nativeAppMenuButton(c, a, p, bar.Height)
+		})
+		bar, left, right = ui.TitleBar{}, 8, 8
+	}
+	nativeTitleBarRow(c, bar).Height(max(60, bar.Height)).Padding(8, right, 8, left).Gap(4).AlignItems(ui.Center).Children(func() {
+		if menu {
+			nativeAppMenuButton(c, a, p, 44)
+		}
 		if nativeIconButton(c, "back", a.Tr("shellBack"), p, false, 44).Disabled(!m.CanBack).Clicked() {
 			a.Back()
 		}
@@ -1882,19 +1917,42 @@ func nativePanelBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 	})
 }
 
-func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {
-	compact := width <= 760
-	ui.Row(c).Height(64).Shrink(0).Padding(12, 20).AlignItems(ui.Center).Children(func() {
+// nativeImmersiveHeader is the immersive view's bar, and its title bar under
+// a hidden one. It returns its height.
+func nativeImmersiveHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) float32 {
+	bar := c.TitleBar()
+	left, right := nativeTitleBarInsets(bar, 20)
+	height := max(64, bar.Height)
+	buttons := float32(2)
+	if a.AppMenu != nil {
+		buttons++
+	}
+	nativeTitleBarRow(c, bar).Height(height).Padding(12, right, 12, left).Gap(4).AlignItems(ui.Center).Children(func() {
+		nativeAppMenuButton(c, a, p, 40)
 		if nativeIconButton(c, "chevron-down", a.Tr("shellExitImmersive"), p, false, 40).Clicked() {
 			m.Immersive = false
 		}
 		ui.Spacer(c)
-		ui.Text(c, a.Tr("shellNowPlaying")).FontSize(12).FontWeight(700).LetterSpacing(1).TextColor(p.secondary)
-		ui.Spacer(c)
+		// Window controls can leave the title too little room: it goes first.
+		if width-left-right-buttons*44 >= 120 {
+			ui.Text(c, a.Tr("shellNowPlaying")).FontSize(12).FontWeight(700).LetterSpacing(1).TextColor(p.secondary)
+			ui.Spacer(c)
+		}
 		if nativeIconButton(c, "settings", a.Tr("shellSettings"), p, false, 40).Clicked() {
 			m.Settings = true
 		}
 	})
+	return height
+}
+
+// nativeImmersive lays out the immersive view in height, under its own header
+// unless the frame drew it in the title bar.
+func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32, header bool) {
+	compact := width <= 760
+	headerHeight := float32(0)
+	if header {
+		headerHeight = nativeImmersiveHeader(c, m, a, p, width)
+	}
 	if compact {
 		scroll := ui.Scroll(c).Grow(1).Padding(20).Gap(24)
 		a = nativeArtworkViewport(c, a, scroll)
@@ -1915,7 +1973,7 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 		return
 	}
 	panelWidth := min(float32(380), width*0.32)
-	contentHeight := max(float32(0), height-64-48)
+	contentHeight := max(float32(0), height-headerHeight-48)
 	mediaWidth := max(float32(1), width-16-80-40-panelWidth)
 	ui.Row(c).Grow(1).MinHeight(0).Padding(24, 40).Gap(40).AlignItems(ui.Center).Children(func() {
 		scroll := ui.Scroll(c).Grow(1).MinWidth(0).MinHeight(0).HeightPercent(100).Label(a.Tr("shellContent"))

@@ -202,7 +202,8 @@ func main() {
 		if dir, err := mygo.App.Path(mygo.PathCache); err == nil {
 			a.art.disk = &artworkDisk{dir: filepath.Join(dir, "artwork-v1")}
 		}
-		a.window = mygo.NewWindow(mygo.WindowOptions{Title: locales.AppName(), Width: 1440, Height: 940, MinWidth: 380, MinHeight: 640, StateKey: "native-main", BackgroundColor: "light-dark(#e7e7ea, #050506)", Content: ui.View(a.view)})
+		titleBar, titleBarHeight := mainWindowTitleBar(runtime.GOOS)
+		a.window = mygo.NewWindow(mygo.WindowOptions{Title: locales.AppName(), Width: 1440, Height: 940, MinWidth: 380, MinHeight: 640, StateKey: "native-main", TitleBarStyle: titleBar, TitleBarHeight: titleBarHeight, BackgroundColor: "light-dark(#e7e7ea, #050506)", Content: ui.View(a.view)})
 		a.windowVisible = true
 		a.window.OnHide(func() { a.cancelShortcut(); a.windowVisible = false; a.syncVideo() })
 		a.window.OnShow(func() { a.windowVisible = true; a.syncVideo() })
@@ -278,7 +279,11 @@ func (a *desktop) prefetchNextCover(frame *artworkFrame) {
 }
 
 func (a *desktop) actions(artwork func(string, int, artworkPriority) ui.ImageSource) ViewActions {
-	return ViewActions{LyricsClock: a.lyricsClock, BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, SetVideoQuality: a.setVideoQuality, SetLyricsExpanded: a.setLyricsExpanded, RetryPlayback: a.retryPlayback, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: artwork}
+	actions := ViewActions{LyricsClock: a.lyricsClock, BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, SetVideoQuality: a.setVideoQuality, SetLyricsExpanded: a.setLyricsExpanded, RetryPlayback: a.retryPlayback, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: artwork}
+	if style, _ := mainWindowTitleBar(runtime.GOOS); style == mygo.TitleBarHidden {
+		actions.AppMenu = a.appMenu
+	}
+	return actions
 }
 
 func (a *desktop) pollPlayback() {

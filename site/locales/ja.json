@@ -26,7 +26,7 @@
   "facts.languages": "English · 简体中文 · 繁體中文 · 日本語",
 
   "lyrics.kicker": "同期歌詞",
-  "lyrics.title": "歌詞が、リズムに乗って。",
+  "lyrics.title": "歌詞が、リズムに乗って",
   "lyrics.body": "再生中の行がハイライトされ、常に中央に表示されます。先を読みたいときは自由にスクロールし、「再生に合わせる」をクリックすれば今の位置に戻ります。",
   "lyrics.tick1": "歌詞をドラッグして離すと、その行へジャンプ",
   "lyrics.tick2": "最初に再生したときは歌詞を自動で表示",
@@ -36,7 +36,7 @@
   "lyrics.queue": "再生キュー",
 
   "library.kicker": "ライブラリ",
-  "library.title": "やめたところから、そのまま。",
+  "library.title": "やめたところから、そのまま",
   "library.body": "ytmGO を開いた瞬間にプレイリスト、アルバム、アーティストが表示され、裏側で静かに更新されます。曲の途中で終了しても、次に開けば同じ秒で一時停止したまま、再生を待っています。",
   "library.tick1": "ホーム・探索・検索・ライブラリを YouTube Music から直接表示",
   "library.tick2": "スクロールを続ければ、次のページはもう読み込み中",
@@ -44,7 +44,7 @@
   "shot.album": "ytmGO のアルバムページ：大きなカバー、再生ボタン、番号付きの曲リスト。",
 
   "immersive.kicker": "没入モードと動画",
-  "immersive.title": "画面いっぱいに、音楽を。",
+  "immersive.title": "画面いっぱいに、音楽を",
   "immersive.body": "没入モードでは、カバー・歌詞・再生キューがウィンドウ全体に広がります。いつでもカバーからミュージックビデオに切り替えられ、映像は音声とぴったり同期。動画を隠した瞬間にデコーダーは止まり、音楽はそのまま流れ続けます。",
   "immersive.tick1": "144p から 1080p まで、標準は 720p",
   "immersive.tick2": "選んだ画質は曲が変わっても再起動しても維持",
@@ -52,12 +52,12 @@
   "shot.immersive": "没入モード：大きなカバーの横に同期歌詞が並び、現在の行がハイライトされています。",
 
   "layout.kicker": "どんなウィンドウでも、どんな外観でも",
-  "layout.title": "聴き方に合わせて、かたちを変える。",
+  "layout.title": "聴き方に合わせて、かたちを変える",
   "layout.body": "広い画面ではサイドバーをすべて表示し、中くらいの幅ではスリムなレールに、狭いウィンドウではミニプレーヤーとタブバーに切り替わります。ライトでもダークでも、4 つの言語で。切り替えても曲は止まりません。",
   "shot.light": "ライト外観の ytmGO。ライブラリのサイドバーを全表示。",
   "shot.compact": "狭いウィンドウの ytmGO。下部タブバーの上にミニプレーヤー。",
 
-  "more.title": "細部にまで、こだわりを。",
+  "more.title": "細部にまで、こだわりを",
   "more.keys.title": "キーボードで快適に",
   "more.keys.body": "⌘K または Ctrl+K で検索、マウスを使わずに再生を操作。グローバルショートカットを設定すれば、どのアプリからでも再生・一時停止できます。",
   "more.system.title": "システムになじむ",
@@ -72,7 +72,7 @@
   "more.proxy.body": "HTTP_PROXY・HTTPS_PROXY・NO_PROXY はすべての通信に適用され、macOS ではシステムのプロキシ設定にも従います。",
 
   "privacy.kicker": "プライバシーとセキュリティ",
-  "privacy.title": "あなたのアカウントは、あなたのもの。",
+  "privacy.title": "あなたのアカウントは、あなたのもの",
   "privacy.lead": "ytmGO は保存するものを最小限にし、保存が必要なものは暗号化し、そのすべてをあなたが削除できるようにしています。",
   "privacy.signin.title": "Google 自身のページでログイン",
   "privacy.signin.body": "ログインは別ウィンドウに表示される Google の正式なページで行い、完了するとウィンドウは閉じます。ブラウザ拡張機能もローカルのログインサーバーもありません。",
@@ -84,7 +84,7 @@
   "privacy.signout.body": "「ログアウトしてデータを消去」で、暗号化されたセッションとその鍵が削除されます。ほかのブラウザでの Google へのログインには影響しません。",
 
   "download.kicker": "ダウンロード",
-  "download.title": "ytmGO を入手。",
+  "download.title": "ytmGO を入手",
   "download.lead": "macOS・Windows・Linux 版はすべて無料。ダウンロードはプロジェクトの GitHub リリースから直接行われます。",
   "download.recommended": "このコンピュータ向け",
   "download.copy": "コピー",
@@ -121,7 +121,7 @@
   "faq.data.q": "ytmGO はコンピュータに何を保存しますか？",
   "faq.data.a": "続きから再開するのに必要なものだけです：暗号化されたセッション、ライブラリのスナップショット、再生キューの位置、設定。YouTube が公開と示したカバー画像は最大 1 日キャッシュされますが、アバターはキャッシュされません。",
 
-  "closing.title": "さあ、再生しよう。",
+  "closing.title": "さあ、再生しよう",
   "closing.cta": "ytmGO をダウンロード",
 
   "footer.disclaimer": "ytmGO は独立したプロジェクトであり、Google LLC および YouTube とは関係ありません。YouTube および YouTube Music は Google LLC の商標です。",

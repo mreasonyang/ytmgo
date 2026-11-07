@@ -26,7 +26,7 @@
   "facts.languages": "English · 简体中文 · 繁體中文 · 日本語",
 
   "lyrics.kicker": "同步歌詞",
-  "lyrics.title": "歌詞，與旋律同拍。",
+  "lyrics.title": "歌詞，與旋律同拍",
   "lyrics.body": "播放時，目前的歌詞逐行亮起並保持置中。想往後看就隨手捲動，按一下「跟隨播放」就能回到目前位置。",
   "lyrics.tick1": "在歌詞上拖曳，放開即跳到那一句",
   "lyrics.tick2": "第一次播放時自動開啟歌詞",
@@ -36,7 +36,7 @@
   "lyrics.queue": "播放佇列",
 
   "library.kicker": "音樂庫",
-  "library.title": "一切都在你離開的地方。",
+  "library.title": "一切都在你離開的地方",
   "library.body": "打開 ytmGO，你的播放清單、專輯和藝人立刻出現，並在背景悄悄更新。歌聽到一半離開，下次開啟時會停在同一秒，暫停等你按下播放。",
   "library.tick1": "首頁、探索、搜尋與音樂庫，內容直接來自 YouTube Music",
   "library.tick2": "往下捲動，下一頁已在載入",
@@ -44,7 +44,7 @@
   "shot.album": "ytmGO 的專輯頁面：大幅封面、播放按鈕與編號曲目清單。",
 
   "immersive.kicker": "沉浸模式與影片",
-  "immersive.title": "讓音樂佔滿整個螢幕。",
+  "immersive.title": "讓音樂佔滿整個螢幕",
   "immersive.body": "沉浸模式把封面、歌詞與播放佇列鋪滿整個視窗。隨時可以從封面切換到音樂影片，畫面與聲音保持同步；一旦隱藏影片，解碼器立即停止，音樂照常播放。",
   "immersive.tick1": "影片畫質 144p 至 1080p，預設 720p",
   "immersive.tick2": "選定的畫質在切換歌曲與重新啟動後都會保留",
@@ -52,12 +52,12 @@
   "shot.immersive": "沉浸模式：大幅封面旁是同步歌詞，目前的句子醒目顯示。",
 
   "layout.kicker": "任何視窗，任何外觀",
-  "layout.title": "怎麼聽，都合適。",
+  "layout.title": "怎麼聽，都合適",
   "layout.body": "寬螢幕時顯示完整側邊欄，中等寬度時收成窄欄，視窗變窄時換成迷你播放器與底部分頁列。淺色或深色，四種語言，切換時音樂不中斷。",
   "shot.light": "淺色外觀下的 ytmGO，左側為完整音樂庫側邊欄。",
   "shot.compact": "窄視窗中的 ytmGO：迷你播放器位於底部分頁列上方。",
 
-  "more.title": "細節處，同樣用心。",
+  "more.title": "細節處，同樣用心",
   "more.keys.title": "鍵盤優先",
   "more.keys.body": "用 ⌘K 或 Ctrl+K 搜尋，不碰滑鼠也能控制播放，還能設定全域快速鍵，在任何應用程式中播放或暫停。",
   "more.system.title": "融入你的系統",
@@ -72,7 +72,7 @@
   "more.proxy.body": "HTTP_PROXY、HTTPS_PROXY 與 NO_PROXY 對所有要求生效；在 macOS 上也會遵循系統代理伺服器設定。",
 
   "privacy.kicker": "隱私與安全",
-  "privacy.title": "你的帳號，只屬於你。",
+  "privacy.title": "你的帳號，只屬於你",
   "privacy.lead": "ytmGO 盡量少保存資料，必須保存的都會加密，而且你可以把它們全部刪除。",
   "privacy.signin.title": "在 Google 官方頁面登入",
   "privacy.signin.body": "登入在獨立視窗中的 Google 官方頁面完成，結束後視窗自動關閉。不需要瀏覽器擴充功能，也沒有本機登入伺服器。",
@@ -84,7 +84,7 @@
   "privacy.signout.body": "「登出並清除本機資料」會刪除加密的工作階段及其金鑰，其他瀏覽器中的 Google 登入狀態不受影響。",
 
   "download.kicker": "下載",
-  "download.title": "取得 ytmGO。",
+  "download.title": "取得 ytmGO",
   "download.lead": "macOS、Windows 與 Linux 版皆免費，安裝檔直接來自專案的 GitHub 發行頁面。",
   "download.recommended": "適合這台電腦",
   "download.copy": "複製",
@@ -121,7 +121,7 @@
   "faq.data.q": "ytmGO 會在我的電腦上保存什麼？",
   "faq.data.a": "只保存從上次位置繼續所需的內容：加密的工作階段、音樂庫快照、播放佇列中的位置與你的偏好設定。YouTube 標示為公開的封面最多快取一天，你的大頭貼從不快取。",
 
-  "closing.title": "按下播放。",
+  "closing.title": "按下播放",
   "closing.cta": "下載 ytmGO",
 
   "footer.disclaimer": "ytmGO 是獨立專案，與 Google LLC 或 YouTube 無關。YouTube 與 YouTube Music 是 Google LLC 的商標。",

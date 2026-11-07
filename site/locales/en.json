@@ -26,7 +26,7 @@
   "facts.languages": "English · 简体中文 · 繁體中文 · 日本語",
 
   "lyrics.kicker": "Synced lyrics",
-  "lyrics.title": "Lyrics that keep time.",
+  "lyrics.title": "Lyrics that keep time",
   "lyrics.body": "The current line lights up and stays centred as the song plays. Scroll to read ahead whenever you like; one click on Follow playback brings you back to the beat.",
   "lyrics.tick1": "Drag through the lyrics and let go to jump to that line",
   "lyrics.tick2": "Opens to the lyrics the first time you press play",
@@ -36,7 +36,7 @@
   "lyrics.queue": "Queue",
 
   "library.kicker": "Your library",
-  "library.title": "Right where you left it.",
+  "library.title": "Right where you left it",
   "library.body": "Your playlists, albums and artists appear the moment ytmGO opens, then refresh quietly in the background. Quit in the middle of a song, and next time it waits at the same second, paused until you press play.",
   "library.tick1": "Home, Explore, Search and Library, straight from YouTube Music",
   "library.tick2": "Keep scrolling and the next page is already loading",
@@ -44,7 +44,7 @@
   "shot.album": "An album page in ytmGO with a large cover, a play button and a numbered track list.",
 
   "immersive.kicker": "Immersive mode and video",
-  "immersive.title": "Let the music take the whole screen.",
+  "immersive.title": "Let the music take the whole screen",
   "immersive.body": "Immersive mode puts the cover, the lyrics and the queue across the whole window. Switch from the cover to the music video at any time: it stays in step with the audio, and the moment you hide it, the decoder stops while the music plays on.",
   "immersive.tick1": "Video from 144p up to 1080p, 720p by default",
   "immersive.tick2": "Your chosen quality is kept across tracks and restarts",
@@ -52,12 +52,12 @@
   "shot.immersive": "Immersive mode: a large cover beside synchronized lyrics with the current line highlighted.",
 
   "layout.kicker": "Any window, any light",
-  "layout.title": "Fits however you listen.",
+  "layout.title": "Fits however you listen",
   "layout.body": "A full sidebar on a wide screen, a slim rail in between, and a mini player with tabs when the window is narrow. Light or dark, in four languages, and it switches without interrupting the song.",
   "shot.light": "ytmGO in light appearance with the full library sidebar.",
   "shot.compact": "ytmGO in a narrow window, with a mini player above a bottom tab bar.",
 
-  "more.title": "Thoughtful down to the details.",
+  "more.title": "Thoughtful down to the details",
   "more.keys.title": "Keyboard first",
   "more.keys.body": "Search with ⌘K or Ctrl+K, control playback without the mouse, and set a global shortcut to play or pause from any app.",
   "more.system.title": "Part of your system",
@@ -72,7 +72,7 @@
   "more.proxy.body": "HTTP_PROXY, HTTPS_PROXY and NO_PROXY apply to every request, and on macOS ytmGO follows the system proxy settings too.",
 
   "privacy.kicker": "Privacy and security",
-  "privacy.title": "Your account stays yours.",
+  "privacy.title": "Your account stays yours",
   "privacy.lead": "ytmGO keeps as little as it can, encrypts what it must keep, and lets you remove all of it.",
   "privacy.signin.title": "Sign in on Google's own page",
   "privacy.signin.body": "Sign-in happens on Google's real page in a separate window that closes when you're done. There's no browser extension and no local login server.",
@@ -84,7 +84,7 @@
   "privacy.signout.body": "Sign out and clear local data deletes the encrypted session and its key. Your Google session in other browsers stays untouched.",
 
   "download.kicker": "Download",
-  "download.title": "Get ytmGO.",
+  "download.title": "Get ytmGO",
   "download.lead": "Free for macOS, Windows and Linux. Each download comes straight from the project's GitHub releases.",
   "download.recommended": "For this computer",
   "download.copy": "Copy",
@@ -105,7 +105,7 @@
   "download.all": "All releases",
   "download.guide": "Installation guide",
 
-  "faq.title": "Questions, answered.",
+  "faq.title": "Questions, answered",
   "faq.official.q": "Is ytmGO made by Google or YouTube?",
   "faq.official.a": "No. ytmGO is an independent open-source project. It isn't affiliated with, endorsed by or sponsored by Google LLC or YouTube.",
   "faq.premium.q": "Do I need YouTube Music Premium?",
@@ -121,7 +121,7 @@
   "faq.data.q": "What does ytmGO keep on my computer?",
   "faq.data.a": "Only what it needs to start where you left off: the encrypted session, a snapshot of your library, your place in the queue and your preferences. Covers that YouTube marks as public are cached for up to a day; your avatar never is.",
 
-  "closing.title": "Press play.",
+  "closing.title": "Press play",
   "closing.cta": "Download ytmGO",
 
   "footer.disclaimer": "ytmGO is an independent project and is not affiliated with Google LLC or YouTube. YouTube and YouTube Music are trademarks of Google LLC.",

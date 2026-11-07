@@ -1,6 +1,6 @@
 # ytmGO
 
-**English** · [简体中文](README.zh-CN.md)
+**English** · [简体中文](README.zh-CN.md) · [Website](https://ytmgo.kyun.si/)
 
 **ytmGO** is a cross-platform YouTube Music desktop client built with Go and **MyGo 0.7.1** (source version baseline **0.0.62**). The user-facing brand is **ytmGO**, while the repository, release artifact prefix, bundle identifier (`si.kyun.ytmgo`), helper identifiers, and local data directories retain the technical name `ytmgo`.
 

@@ -1,6 +1,6 @@
 # ytmGO
 
-[English](README.md) · **简体中文**
+[English](README.md) · **简体中文** · [官网](https://ytmgo.kyun.si/)
 
 **ytmGO** 是使用 Go 与 **MyGo 0.7.1** 构建的跨平台 YouTube Music 桌面客户端（仓库源码版本基线 **0.0.62**）。应用对外品牌显示名统一为 **ytmGO**；仓库名、发行文件前缀、Bundle ID（`si.kyun.ytmgo`）、内部辅助进程标识以及本地用户数据目录保留技术标识 `ytmgo`。
 

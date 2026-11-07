@@ -1,5 +1,14 @@
 # Native playback verification
 
+## 0.6.x release acceptance summaries
+
+Moved from the README on 2026-11-07. These releases were published before version numbering restarted at 0.0.61; their binaries are no longer offered for download.
+
+- **v0.6.10 Acceptance (2026-11-06):** Playlist and album numbering continues across track pages. Installed macOS ARM checks confirmed 98 → 99, 96 → 97, readable four-digit labels and a final main row of 2619. Public packages, updates and Homebrew checks passed; see the [numbering acceptance record](docs/audits/2026-11-06-release-0.6.10/README.md).
+- **v0.6.9 Release Acceptance (2026-11-06):** Windows/Linux manual updates and platform shortcut conflicts are fixed. Public packages, four target update signatures, the 0.6.7 → 0.6.9 ARM upgrade and Homebrew ARM/Intel installation checks passed. The unpublished 0.6.8 test failure and Intel ticket-check discrepancy are retained in the [release record](docs/audits/2026-11-06-release-0.6.9/README.md).
+- **v0.6.7 Release Acceptance (2026-11-06):** Large playlists load all main track pages before recommendations. Public macOS/Windows/Linux packages, update signatures, the 0.6.6 → 0.6.7 upgrade and both Homebrew architectures passed. Installed macOS ARM acceptance covered two real playlists, continuation-track playback, seek/pause/restart, lyrics and video mode. See the [release acceptance record](docs/audits/2026-11-06-release-0.6.7/README.md) for receipts and limits.
+- **v0.6.5 Release Acceptance (2026-11-05):** Native macOS ARM/Intel and Windows/Linux installation/startup, public package digests and update signatures, macOS public 0.6.4 → 0.6.5 upgrade, and both Homebrew architectures passed. The local official macOS installation retained the signed-in Premium account, appearance, language, volume, paused bookmark and 1080p video preference. See the [release acceptance record](docs/audits/2026-11-05-release-0.6.5/README.md) for source bindings, receipts and verification limits.
+
 ## Linux 0.6.5 accept-2218 follow-up — 2026-11-05 (Asia/Shanghai)
 
 Addressed the two remaining regressions from the third independent acceptance

@@ -2,13 +2,23 @@
 
 [English](README.md) · **简体中文** · [官网](https://ytmgo.kyun.si/)
 
-**ytmGO** 是使用 Go 与 **MyGo 0.7.1** 构建的跨平台 YouTube Music 桌面客户端（仓库源码版本基线 **0.0.62**）。应用对外品牌显示名统一为 **ytmGO**；仓库名、发行文件前缀、Bundle ID（`si.kyun.ytmgo`）、内部辅助进程标识以及本地用户数据目录保留技术标识 `ytmgo`。
+**免费开源的 YouTube Music 桌面客户端，支持 macOS、Windows 与 Linux**——歌词随歌声同步，想看视频随时切换，打开应用的那一刻，你的音乐库就已就位。
 
-音乐主窗口采用 Go/MyGo 自绘界面（`ui.View`），控件由 MyGo 工具包绘制，而非各操作系统的标准控件库。Google 登录及未登录/普通账号按需播放验证使用独立的系统 WebView。曲库访问、账号状态核验、媒体格式选择与有界流式传输由 Go 直接处理；音频由 MyGo 输出到系统音频设备，视频仅在打开视频视图时由按需启动的 FFmpeg 解码器渲染。
-
-> **下载入口（2026-11-06 核验）：** [macOS **v0.0.62**](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62) · [Windows / Linux **v0.0.62**](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62)。下文链接指向各平台已公开的安装包，[发布列表](https://github.com/mreasonyang/ytmgo/releases)从 **0.0.61** 重新开始编号，早期安装包已移除。
+**[下载最新版本](https://github.com/mreasonyang/ytmgo/releases/latest)** · `brew install --cask mreasonyang/taps/ytmgo` · [全部版本](https://github.com/mreasonyang/ytmgo/releases)
 
 ![ytmGO 主界面，展示音乐库与播放控制](site/assets/shots/zh-Hans/home@1x.webp)
+
+> ytmGO 是独立项目，与 Google LLC 或 YouTube 无关，也未获其认可或赞助。YouTube 和 YouTube Music 是 Google LLC 的商标。
+
+## 亮点
+
+- **歌词，与旋律同拍：** 当前歌词随播放点亮并保持居中；在歌词上拖动，松开即跳到那一句。
+- **沉浸模式与视频：** 封面、歌词和播放队列铺满整个窗口，随时切换到 MV（144p 至 1080p）。
+- **一切都在你离开的地方：** 打开 ytmGO，你的音乐库立刻出现并在后台悄悄刷新；歌放到一半退出，下次打开会停在同一秒，暂停等你按下播放。
+- **怎么听，都合适：** 完整侧边栏、窄栏或迷你播放器；浅色或深色；English、简体中文、繁體中文、日本語，切换时音乐不中断。
+- **键盘优先，融入系统：** 用 `⌘K` / `Ctrl+K` 搜索，用全局快捷键在任何应用里播放或暂停，系统媒体控制与托盘图标都能直接操控。
+- **原生应用，不是网页套壳：** 音乐窗口由 Go 与 MyGo 直接绘制，不内置浏览器；会话以 AES-256-GCM 加密保存在本机。
+- **安全地自我更新：** 每个更新在安装前都会校验 Ed25519 签名，账号和设置原样保留。
 
 ---
 
@@ -17,8 +27,8 @@
 | 平台 | 支持架构 | 系统与运行环境要求 | 安装方式 |
 | --- | --- | --- | --- |
 | **macOS** | Apple Silicon（`arm64`）、Intel（`x86_64` / `amd64`） | **macOS 13 Ventura 及以上**（无需安装额外运行时依赖） | `brew install --cask mreasonyang/taps/ytmgo`，或从 [Latest Release](https://github.com/mreasonyang/ytmgo/releases/latest) 下载已签名并公证的 `.dmg` / `.zip` |
-| **Windows** | x64（`amd64` / `x86_64`） | 需要当前版本的 **Microsoft Edge WebView2 Runtime**（`>= 101.0.1210.39`）；单用户安装器**尚未进行 Authenticode 签名** | 从 [Windows 下载页](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62) 下载安装器 `.exe` 或便携 `.zip` |
-| **Linux** | x64（`amd64` / `x86_64`） | 以 **Ubuntu 24.04 x64** 为原生构建与冒烟测试基线；兼容发行版需具备桌面显示与音频会话、**GTK 3**、**WebKitGTK 4.1 `>= 2.50.2`**，以及 **`libsecret >= 0.19` 与运行中的 Secret Service** | 从 [Linux 下载页](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62) 下载 `.deb`（`sudo apt install`）或便携 `.tar.gz` |
+| **Windows** | x64（`amd64` / `x86_64`） | 需要当前版本的 **Microsoft Edge WebView2 Runtime**（`>= 101.0.1210.39`）；单用户安装器**尚未进行 Authenticode 签名** | 从 [Latest Release](https://github.com/mreasonyang/ytmgo/releases/latest) 下载安装器 `.exe` 或便携 `.zip` |
+| **Linux** | x64（`amd64` / `x86_64`） | 以 **Ubuntu 24.04 x64** 为原生构建与冒烟测试基线；兼容发行版需具备桌面显示与音频会话、**GTK 3**、**WebKitGTK 4.1 `>= 2.50.2`**，以及 **`libsecret >= 0.19` 与运行中的 Secret Service** | 从 [Latest Release](https://github.com/mreasonyang/ytmgo/releases/latest) 下载 `.deb`（`sudo apt install`）或便携 `.tar.gz` |
 
 - **已发布架构：** 暂不发布 Windows ARM64 与 Linux ARM64 预编译包。
 - **安装后无需开发工具链：** 打包后的应用已内含 Rust 播放脚本宿主、精简版 FFmpeg 9.0.2、登录辅助进程及 `legal/` 许可证目录，终端用户运行应用**无需**安装 Go、Rust、Python、C 编译器、Node.js 或 npm。
@@ -43,33 +53,33 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 #### 直接下载（DMG / ZIP）
 
 1. 前往 [Latest Release](https://github.com/mreasonyang/ytmgo/releases/latest) 按 Mac 处理器架构下载已签名并公证的安装包（要求 **macOS 13+**）：
-   - **Apple Silicon（`arm64`）：** [ytmgo-0.0.62-arm64-notarized.dmg](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-arm64-notarized.dmg) · [ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-arm64-notarized.zip)
-   - **Intel（`x86_64` / `amd64`）：** [ytmgo-0.0.62-amd64-notarized.dmg](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-amd64-notarized.dmg) · [ZIP](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-amd64-notarized.zip)
+   - **Apple Silicon（`arm64`）：** `ytmgo-<version>-arm64-notarized.dmg`（或 `.zip`）
+   - **Intel（`x86_64` / `amd64`）：** `ytmgo-<version>-amd64-notarized.dmg`（或 `.zip`）
 2. 挂载 DMG 或解压 ZIP 后，将 `ytmGO.app` 复制到可写的 `/Applications` 目录中再启动（直接在只读挂载的 DMG 卷或只读目录内运行将无法完成原地自我替换更新）。
 
 ### Windows x64（`amd64`）
 
-前往已公开的 [Windows 下载页](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62) 下载：
+前往 [最新版本](https://github.com/mreasonyang/ytmgo/releases/latest) 下载：
 
-- **单用户安装器（`ytmgo-setup-<version>-amd64.exe`）：** 下载并运行 [ytmgo-setup-0.0.62-amd64.exe](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-setup-0.0.62-amd64.exe)。安装器按当前用户目录安装，**尚未进行 Microsoft Authenticode 代码签名**（首次运行时 Windows SmartScreen 可能会弹出提示）。
-- **便携解压包（`ytmgo-<version>-windows-amd64.zip`）：** 下载 [ytmgo-0.0.62-windows-amd64.zip](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-windows-amd64.zip)，将**完整归档**解压到可写目录后运行其中的 `ytmGO.exe`。请将 `runtime/`、`login/`、`legal/` 及其他随包资源目录完整保留在 `ytmGO.exe` 同级目录旁。
+- **单用户安装器（`ytmgo-setup-<version>-amd64.exe`）：** 运行安装器即可，安装器按当前用户目录安装，**尚未进行 Microsoft Authenticode 代码签名**（首次运行时 Windows SmartScreen 可能会弹出提示）。
+- **便携解压包（`ytmgo-<version>-windows-amd64.zip`）：** 将**完整归档**解压到可写目录后运行其中的 `ytmGO.exe`。请将 `runtime/`、`login/`、`legal/` 及其他随包资源目录完整保留在 `ytmGO.exe` 同级目录旁。
 - **运行环境依赖：** 需要当前版本的 [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)（`>= 101.0.1210.39`），用于 Google 账号登录以及未登录/普通账号播放证明生成。若系统尚未安装，请从微软下载页面安装 Evergreen Runtime。
 
 ### Linux x64（`amd64`）
 
-前往已公开的 [Linux 下载页](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62) 下载：
+前往 [最新版本](https://github.com/mreasonyang/ytmgo/releases/latest) 下载：
 
-- **Debian / Ubuntu DEB 包（`ytmgo_<version>_amd64.deb`）：** 在 **Ubuntu 24.04 x64** 上原生构建并通过安装启动冒烟测试。下载 [ytmgo_0.0.62_amd64.deb](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo_0.0.62_amd64.deb) 后使用 `apt` 安装以自动解析系统依赖：
+- **Debian / Ubuntu DEB 包（`ytmgo_<version>_amd64.deb`）：** 在 **Ubuntu 24.04 x64** 上原生构建并通过安装启动冒烟测试。在下载目录中使用 `apt` 安装以自动解析系统依赖：
   ```sh
-  sudo apt install ./ytmgo_0.0.62_amd64.deb
+  sudo apt install ./ytmgo_*_amd64.deb
   ```
   安装后可从桌面应用菜单启动 **ytmGO**，或直接运行 `/opt/ytmgo/ytmgo`。由于 DEB 包安装在系统所属的 `/opt/ytmgo` 目录，升级 DEB 安装版时请使用 `apt` 安装新版 `.deb` 包。
-- **便携解压包（`ytmgo-<version>-linux-amd64.tar.gz`）：** 下载 [ytmgo-0.0.62-linux-amd64.tar.gz](https://github.com/mreasonyang/ytmgo/releases/download/v0.0.62/ytmgo-0.0.62-linux-amd64.tar.gz)，将**完整归档**解压至当前用户可写目录并在该目录内执行 `./ytmgo`。请将 `runtime/`、`login/`、`legal/` 及其他随包资源目录完整保留在 `./ytmgo` 同级目录旁。
+- **便携解压包（`ytmgo-<version>-linux-amd64.tar.gz`）：** 将**完整归档**解压至当前用户可写目录并在该目录内执行 `./ytmgo`。请将 `runtime/`、`login/`、`legal/` 及其他随包资源目录完整保留在 `./ytmgo` 同级目录旁。
 - **运行环境依赖：** 需要可用的桌面显示与音频会话、**GTK 3**、**WebKitGTK 4.1（`>= 2.50.2`）**，以及 **`libsecret`（`>= 0.19`）与运行中的 Secret Service** 服务。DEB 包已声明 `libwebkit2gtk-4.1-0 (>= 2.50.2)` 与 `libsecret-1-0 (>= 0.19)` 依赖；其他发行版需提供兼容的系统动态库（该构建并非静态链接的通用 Linux 二进制）。
 
 ### 应用内自动更新、签名区分与数据保留
 
-- **自动与手动更新：** 在当前用户可写目录中运行时，应用会在启动后最早 10 秒自动检查更新（之后每 24 小时检查一次），macOS 可通过菜单 **ytmGO → 检查更新（Check for Updates…）** 手动触发。Windows/Linux 截至 `0.6.7` 的正式版会隐藏手动更新菜单；**0.6.9** 已提供 **帮助 → 检查更新**。现有安装仍可使用 `--check-for-updates` 与 `--install-update` 命令行维护参数。MyGo 更新窗口支持 **立即安装**、**稍后提醒**、**跳过此版本** 及可选的自动下载；重启后原地替换应用，并完整保留加密账号会话（`account/session.enc`）、曲库快照、播放进度断点与个性化设置。安装在系统目录下的 Linux DEB 版本请通过 `apt` 安装新版 `.deb` 升级。（`0.4.0` 不含自动更新器，需先手动安装一次 `0.5.0` 或更高版本。）
+- **自动与手动更新：** 在当前用户可写目录中运行时，应用会在启动后最早 10 秒自动检查更新（之后每 24 小时检查一次），macOS 可通过菜单 **ytmGO → 检查更新（Check for Updates…）** 手动触发，Windows/Linux 则使用 **帮助 → 检查更新**；也可在终端使用 `--check-for-updates` 与 `--install-update` 维护参数完成同样操作。MyGo 更新窗口支持 **立即安装**、**稍后提醒**、**跳过此版本** 及可选的自动下载；重启后原地替换应用，并完整保留加密账号会话（`account/session.enc`）、曲库快照、播放进度断点与个性化设置。安装在系统目录下的 Linux DEB 版本请通过 `apt` 安装新版 `.deb` 升级。
 - **更新包签名与系统代码签名的区别：** 四个已发布桌面目标（`darwin-arm64`、`darwin-amd64`、`windows-amd64`、`linux-amd64`）均提供 `update-<platform>.json` 更新清单，内含 `.tar.gz` 更新归档地址及其 **Ed25519 签名**，安装更新前由应用内置公钥（见 `mygo.json`）验签。macOS 正式版在此基础上同时具备 Apple **Developer ID Application 签名、Apple 公证与 stapled ticket**；而在 Windows 上，Ed25519 更新归档签名仅用于核验更新载荷来源，**不代表**安装器或 `.exe` 具备 Microsoft Authenticode 系统代码签名。
 - **跨平台发布与维护文档：** 详见 [Windows 与 Linux 发布说明](docs/DESKTOP_RELEASES.md)、[Homebrew 维护文档](docs/HOMEBREW.md) 及 [macOS Actions 打包指南](docs/MACOS_ACTIONS.md)。
 
@@ -147,6 +157,10 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 
 ## 播放架构、网络代理与隐私边界
 
+**ytmGO** 是使用 Go 与 **MyGo 0.7.1** 构建的跨平台 YouTube Music 桌面客户端。应用对外品牌显示名统一为 **ytmGO**；仓库名、发行文件前缀、Bundle ID（`si.kyun.ytmgo`）、内部辅助进程标识以及本地用户数据目录保留技术标识 `ytmgo`。
+
+音乐主窗口采用 Go/MyGo 自绘界面（`ui.View`），控件由 MyGo 工具包绘制，而非各操作系统的标准控件库。Google 登录及未登录/普通账号按需播放验证使用独立的系统 WebView。曲库访问、账号状态核验、媒体格式选择与有界流式传输由 Go 直接处理；音频由 MyGo 输出到系统音频设备，视频仅在打开视频视图时由按需启动的 FFmpeg 解码器渲染。
+
 - **无 Node/jsdom 的播放运行时：** `make build` 打包 Go 主程序、轻量 Rust 脚本宿主（`ytmgo-playback-host`）和精简版 **FFmpeg 9.0.2**。播放器脚本提取在临时 **QuickJS** 进程中运行锁定的 MIT **YouTube.js** 提取器子集与 ISC **Meriyah** 解析器，返回有界转换代码后立即退出；签名求值每次使用全新 QuickJS 领域（32 MiB 内存上限与 3 秒中断保护）。普通账号与未登录模式的播放证明（MIT **BgUtils**）在独立、隐藏、非持久化的系统 WebView 中按需生成，并通过 CSP 禁止网络与媒体加载。安装包不分发 Node、npm 依赖树、jsdom 或完整 YouTube.js SDK。详见 [scripts/runtime/README.md](scripts/runtime/README.md)。
 - **有界流式传输与地址隔离：** 远端签名媒体地址与账号凭据只留在 Go 进程内存中；FFmpeg 仅通过 `stdin` 接收每个解码器独立的随机本地回环（loopback）能力地址。Go 直接按音频 **64 KiB**、视频 **512 KiB** 字节区间请求远端媒体，并以 **32 KiB** 背压转发；同时最多保持 4 个媒体租约与 4 条活动请求，不在磁盘上缓存整首歌曲。
 - **统一代理与封面缓存策略：** 曲库、账号核验、封面与媒体流请求共用 `internal/netproxy`：各平台优先读取显式 `HTTP_PROXY`、`HTTPS_PROXY` 和 `NO_PROXY` 环境变量；macOS 普通启动也会读取系统 HTTP、HTTPS 与 SOCKS 代理及排除规则；本地解码器回环连接始终直连。当前不执行 PAC 自动代理脚本，也不读取代理密码。封面加载优先调度当前视口内的可见图片，失败后按 2 秒至 1 分钟指数退避重试。明确允许公开缓存的封面会写入本地磁盘缓存（上限 **64 MiB / 512 个文件**，有效期最长 **24 小时**）；账号头像不写入磁盘封面缓存。
@@ -159,16 +173,11 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 详细界面与架构规范见 [DESIGN.md](DESIGN.md)，历史与阶段性实测记录见 [VERIFICATION.md](VERIFICATION.md) 与 [自动升级验收](docs/AUTO_UPDATE_VERIFICATION.md)。阅读与使用时请注意以下客观边界：
 
 - **v0.0.62 界面升级验收（2026-11-06）：** 本机正式安装的 macOS ARM 应用从 0.0.61 检测到公开的 0.0.62，经过原生更新界面完成下载、安装和自动重启，再次检查显示已是最新版本。升级后的完整应用包与公开 ZIP 一致，登录、暂停位置、音量和偏好均保留。详见[验收记录](docs/audits/2026-11-06-release-0.0.62/README.md)。
-
 - **v0.0.61 发版验收（2026-11-06）：** 版本从 0.0.61 重新开始编号。22 个公开资产、四平台更新签名、Windows/Linux 原生安装启动、macOS 签名公证及 ARM/Intel Homebrew 实装均通过校验；本机 ARM 安装与公开 ZIP 一致。详见[发版验收记录](docs/audits/2026-11-06-release-0.0.61/README.md)。
-
-- **历史 v0.6.10 验收（2026-11-06）：** 歌单和专辑行号跨页连续。本机 macOS ARM 已验证 98 → 99、96 → 97、四位数编号和主曲目末行 2619；公开包、更新和 Homebrew 检查均通过，详见[编号验收记录](docs/audits/2026-11-06-release-0.6.10/README.md)。
-- **v0.6.9 发版验收（2026-11-06）：** 已修复 Windows/Linux 手动更新入口和平台快捷键冲突。三平台公开包、四个目标的更新签名、0.6.7 → 0.6.9 ARM 升级及 Homebrew ARM/Intel 安装检查均通过。未公开的 0.6.8 测试失败及 Intel 票据校验环境差异见[发版验收记录](docs/audits/2026-11-06-release-0.6.9/README.md)。
-- **v0.6.7 发版验收（2026-11-06）：** 大歌单会先取完主曲目续页，再加载推荐内容。macOS/Windows/Linux 公开包、更新签名、0.6.6 → 0.6.7 升级及 Homebrew 双架构安装均已通过。本机 macOS ARM 完成两个真实歌单的分页、续页曲目播放、跳转、暂停重启恢复、歌词及视频模式验收，回执和边界见[发版验收记录](docs/audits/2026-11-06-release-0.6.7/README.md)。
-- **v0.6.5 发版验收（2026-11-05）：** macOS ARM/Intel、Windows/Linux 原生安装启动、公开包校验和与更新签名、macOS 公开源 0.6.4 → 0.6.5 升级，以及 Homebrew 双架构安装均已通过。本机正式版保留了 Premium 登录状态、外观、语言、音量、暂停位置和 1080p 清晰度偏好。源码绑定、回执与验收边界见[发版验收记录](docs/audits/2026-11-05-release-0.6.5/README.md)。
+- **更早的 0.6.x 发版验收：** 版本重新编号前已发布版本的验收摘要保存在 [VERIFICATION.md](VERIFICATION.md#06x-release-acceptance-summaries)（英文）。
 - **跨平台运行验收边界：** 2026-11-04 三平台 GitHub Actions 工作流——[Native playback runtime](https://github.com/mreasonyang/ytmgo/actions/runs/41800458515) 与 [Native account login](https://github.com/mreasonyang/ytmgo/actions/runs/41800458464)——在 macOS、Windows 和 Linux 上均已全部通过。针对 **v0.6.4**（[验收记录](docs/audits/2026-11-04-macos-compat-0.6.4/README.md)），**macOS 27 Apple Silicon（`arm64`）** 与 **macOS 15 Intel（`amd64`）** 双架构原生打包、Developer ID 签名/公证/staple、Gatekeeper 校验、辅助进程执行、空配置冷启动以及[双架构 Homebrew Cask 实装校验](https://github.com/mreasonyang/homebrew-taps/actions/runs/41850617166)均已通过，同时完成了 [Intel 模拟 WebView 登录生命周期校验](https://github.com/mreasonyang/ytmgo/actions/runs/41848250319)、[0.6.3 → 0.6.4 ARM 公开源升级验收](https://github.com/mreasonyang/ytmgo/actions/runs/41850200341) 以及 [Windows/Linux 原生安装包工作流](https://github.com/mreasonyang/ytmgo/actions/runs/41849890402)（在对应系统原生构建、实际安装 NSIS/DEB 包，并核对安装后的资源与空账号启动）。请注意：**CI 与原生安装包安装/空配置启动冒烟测试不等于已完成 Windows、Linux 或 Intel macOS 上的真实登录播放、完整界面交互、实体音频硬件输出或跨版本升级验收**；同理，所有随包 Mach-O 二进制已核验 `13.0` 部署目标，但**编译部署目标（macOS 13.0）不等于在 macOS 13 或 macOS 14 实体系统上完成了运行验收**。
 - **账号类型与广告流程边界：** macOS 已完成未登录匿名整曲播放及真实 **YouTube Music Premium** 账号的首页、曲库恢复、同步歌词、跳播与暂停恢复实测。**普通（非 Premium）账号**及**官方广告流程**尚未完成验收：当前实现没有官方广告素材序列与真实广告进度上报，不使用推算等待时间模拟广告，也不能将公开歌曲播放成功视为广告流程验收通过。
-- **内存占用现状：** 目前**不能宣称低内存优化已经完成**。当前工作区尚未进行新的整应用内存基准测试；针对早期构建的带日期实测记录见 [VERIFICATION.md](VERIFICATION.md)，旧版基于 Node 的历史数据也不作为当前运行时的对比结论。
+- **内存占用现状：** 目前**不能宣称低内存优化已经完成**。本仓库尚未记录当前 Go/MyGo 运行时的整应用内存基准；针对早期构建的带日期实测记录见 [VERIFICATION.md](VERIFICATION.md)，旧版基于 Node 的历史数据也不作为当前运行时的对比结论。
 - **全局快捷键与长时稳定性边界：** 应用内快捷键（如空格键播放/暂停、`⌘K` 搜索等）与 MyGo UI 测试器状态机已验证，但 macOS 实体全局快捷键（`⇧⌘Space`）跨应用触发尚未通过端到端实机确认。此外，本地实机验收中曾记录到偶发的 `audio_stream_failed` 与 `bootstrap_network_timeout`（点击 **Retry** 后均恢复正常播放），其上游或网络根因尚未最终定论；崩溃/强制终止持久化、睡眠唤醒以及多日长时耐久运行仍待后续验收。
 
 ---

@@ -1,6 +1,6 @@
 {
   "meta.title": "ytmGO — a native YouTube Music app for your desktop",
-  "meta.description": "ytmGO is a free, open-source YouTube Music desktop client for macOS, Windows and Linux, with synced lyrics, on-demand video and an encrypted account session that never leaves your device.",
+  "meta.description": "ytmGO is a free, open-source YouTube Music desktop client for macOS, Windows and Linux that brings Spotify's desktop design language to YouTube Music, with synced lyrics, on-demand video and an encrypted account session that never leaves your device.",
 
   "nav.skip": "Skip to content",
   "nav.label": "Main",
@@ -13,7 +13,7 @@
   "hero.eyebrow": "Free and open source · macOS · Windows · Linux",
   "hero.title.a": "Your music deserves",
   "hero.title.b": "more than a browser tab",
-  "hero.lead": "ytmGO is a fast, native YouTube Music client for your desktop, with lyrics that keep time, video when you want it, and a library that's there the moment you open the app.",
+  "hero.lead": "YouTube Music has no official desktop app on macOS, Windows or Linux. ytmGO brings Spotify's desktop design language to the YouTube Music catalogue, with lyrics that keep time, video when you want it, and a library that's there the moment you open the app.",
   "hero.cta": "Download ytmGO",
   "hero.source": "View source",
   "hero.note": "Apache-2.0 · No account needed to start listening",
@@ -56,6 +56,17 @@
   "layout.body": "A full sidebar on a wide screen, a slim rail in between, and a mini player with tabs when the window is narrow. Light or dark, in four languages, and it switches without interrupting the song.",
   "shot.light": "ytmGO in light appearance with the full library sidebar.",
   "shot.compact": "ytmGO in a narrow window, with a mini player above a bottom tab bar.",
+
+  "speed.kicker": "Fast and light",
+  "speed.title": "Smooth at 60fps, easy on memory",
+  "speed.body": "Scroll through a playlist of 2,600+ tracks, resize from a wide desktop down to a mini player, and switch theme or language live without interrupting the music.",
+  "speed.fps.value": "60fps",
+  "speed.fps.label": "Scrolling 2,600+ track playlists and resizing live",
+  "speed.paused.value": "90.81 MiB",
+  "speed.paused.label": "Restored session, paused",
+  "speed.playing.value": "322.11 MiB",
+  "speed.playing.label": "Median while playing with synced lyrics",
+  "speed.note": "Measured on Apple Silicon across the whole process tree, every helper process included, with scripts/diagnostics/measure.py from the repository.",
 
   "more.title": "Thoughtful down to the details",
   "more.keys.title": "Keyboard first",
@@ -106,8 +117,8 @@
   "download.guide": "Installation guide",
 
   "faq.title": "Questions, answered",
-  "faq.official.q": "Is ytmGO made by Google or YouTube?",
-  "faq.official.a": "No. ytmGO is an independent open-source project. It isn't affiliated with, endorsed by or sponsored by Google LLC or YouTube.",
+  "faq.official.q": "Is ytmGO made by Google, YouTube or Spotify?",
+  "faq.official.a": "No. ytmGO is an unofficial, independent open-source client. It isn't affiliated with, endorsed by or sponsored by Google LLC, YouTube or Spotify.",
   "faq.premium.q": "Do I need YouTube Music Premium?",
   "faq.premium.a": "No. You can listen without signing in, with a free account, or with Premium. Signing in brings in your own library and likes.",
   "faq.free.q": "Does ytmGO cost anything?",
@@ -124,7 +135,7 @@
   "closing.title": "Press play",
   "closing.cta": "Download ytmGO",
 
-  "footer.disclaimer": "ytmGO is an independent project and is not affiliated with Google LLC or YouTube. YouTube and YouTube Music are trademarks of Google LLC.",
+  "footer.disclaimer": "ytmGO is an unofficial open-source client and is not affiliated with Google LLC, YouTube or Spotify. YouTube and YouTube Music are trademarks of Google LLC.",
   "footer.copyright": "ytmGO contributors · Apache License 2.0",
   "footer.project": "Project",
   "footer.releases": "Releases",

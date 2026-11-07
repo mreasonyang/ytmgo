@@ -1,6 +1,6 @@
 {
   "meta.title": "ytmGO — デスクトップのためのネイティブ YouTube Music アプリ",
-  "meta.description": "ytmGO は macOS・Windows・Linux 向けの無料でオープンソースの YouTube Music デスクトップクライアントです。同期歌詞、必要なときだけの動画再生に対応し、アカウントのセッションは暗号化してこのデバイスだけに保存します。",
+  "meta.description": "ytmGO は macOS・Windows・Linux 向けの無料でオープンソースの YouTube Music デスクトップクライアントです。Spotify のデスクトップ版のデザイン言語を YouTube Music に持ち込み、同期歌詞、必要なときだけの動画再生に対応し、アカウントのセッションは暗号化してこのデバイスだけに保存します。",
 
   "nav.skip": "本文へ移動",
   "nav.label": "メイン",
@@ -13,7 +13,7 @@
   "hero.eyebrow": "無料・オープンソース · macOS · Windows · Linux",
   "hero.title.a": "あなたの音楽に、",
   "hero.title.b": "ブラウザのタブ以上の場所を",
-  "hero.lead": "ytmGO は高速なネイティブの YouTube Music デスクトップクライアント。歌詞は歌声に合わせて流れ、動画は観たいときだけ。アプリを開いた瞬間から、ライブラリはもうそこにあります。",
+  "hero.lead": "YouTube Music には macOS・Windows・Linux 向けの公式デスクトップアプリがありません。ytmGO は Spotify のデスクトップ版のデザイン言語を YouTube Music のカタログに持ち込みます。歌詞は歌声に合わせて流れ、動画は観たいときだけ。アプリを開いた瞬間から、ライブラリはもうそこにあります。",
   "hero.cta": "ytmGO をダウンロード",
   "hero.source": "ソースコードを見る",
   "hero.note": "Apache-2.0 · ログインしなくてもすぐに聴けます",
@@ -56,6 +56,17 @@
   "layout.body": "広い画面ではサイドバーをすべて表示し、中くらいの幅ではスリムなレールに、狭いウィンドウではミニプレーヤーとタブバーに切り替わります。ライトでもダークでも、4 つの言語で。切り替えても曲は止まりません。",
   "shot.light": "ライト外観の ytmGO。ライブラリのサイドバーを全表示。",
   "shot.compact": "狭いウィンドウの ytmGO。下部タブバーの上にミニプレーヤー。",
+
+  "speed.kicker": "速く、軽く",
+  "speed.title": "60fps でなめらか、メモリは控えめ",
+  "speed.body": "2,600 曲を超えるプレイリストもなめらかにスクロール。ウィンドウはワイドなデスクトップからミニプレーヤーまでライブでリサイズでき、テーマや言語の切り替えも再生を止めません。",
+  "speed.fps.value": "60fps",
+  "speed.fps.label": "2,600 曲超のプレイリストのスクロールとライブリサイズ",
+  "speed.paused.value": "90.81 MiB",
+  "speed.paused.label": "セッションを復元して一時停止中",
+  "speed.playing.value": "322.11 MiB",
+  "speed.playing.label": "同期歌詞を表示しながら再生中（中央値）",
+  "speed.note": "リポジトリの scripts/diagnostics/measure.py を使い、Apple Silicon 上ですべての補助プロセスを含むプロセスツリー全体を計測しました。",
 
   "more.title": "細部にまで、こだわりを",
   "more.keys.title": "キーボードで快適に",
@@ -106,8 +117,8 @@
   "download.guide": "インストールガイド",
 
   "faq.title": "よくある質問",
-  "faq.official.q": "ytmGO は Google や YouTube が作ったものですか？",
-  "faq.official.a": "いいえ。ytmGO は独立したオープンソースプロジェクトで、Google LLC や YouTube とは提携しておらず、承認や後援も受けていません。",
+  "faq.official.q": "ytmGO は Google、YouTube、Spotify が作ったものですか？",
+  "faq.official.a": "いいえ。ytmGO は非公式の独立したオープンソースクライアントで、Google LLC、YouTube、Spotify とは提携しておらず、承認や後援も受けていません。",
   "faq.premium.q": "YouTube Music Premium は必要ですか？",
   "faq.premium.a": "いいえ。ログインなし、無料アカウント、Premium のどれでも聴けます。ログインすると、あなたのライブラリと高評価が使えるようになります。",
   "faq.free.q": "料金はかかりますか？",
@@ -124,7 +135,7 @@
   "closing.title": "さあ、再生しよう",
   "closing.cta": "ytmGO をダウンロード",
 
-  "footer.disclaimer": "ytmGO は独立したプロジェクトであり、Google LLC および YouTube とは関係ありません。YouTube および YouTube Music は Google LLC の商標です。",
+  "footer.disclaimer": "ytmGO は非公式のオープンソースクライアントであり、Google LLC、YouTube、Spotify とは関係ありません。YouTube および YouTube Music は Google LLC の商標です。",
   "footer.copyright": "ytmGO コントリビューター · Apache License 2.0",
   "footer.project": "プロジェクト",
   "footer.releases": "リリース",

@@ -1,6 +1,6 @@
 {
   "meta.title": "ytmGO — 桌面上的原生 YouTube Music 應用程式",
-  "meta.description": "ytmGO 是免費開源的 YouTube Music 桌面用戶端，支援 macOS、Windows 與 Linux，提供同步歌詞、隨選影片，帳號工作階段加密保存在本機、絕不外傳。",
+  "meta.description": "ytmGO 是免費開源的 YouTube Music 桌面用戶端，支援 macOS、Windows 與 Linux，將 Spotify 桌面版的互動與設計語言帶到 YouTube Music，提供同步歌詞、隨選影片，帳號工作階段加密保存在本機、絕不外傳。",
 
   "nav.skip": "跳至主要內容",
   "nav.label": "主要導覽",
@@ -13,7 +13,7 @@
   "hero.eyebrow": "免費開源 · macOS · Windows · Linux",
   "hero.title.a": "你的音樂，",
   "hero.title.b": "值得不只一個瀏覽器分頁",
-  "hero.lead": "ytmGO 是一款快速的原生 YouTube Music 桌面用戶端：歌詞跟著歌聲同步，想看影片隨時切換，打開應用程式的那一刻，你的音樂庫就已就緒。",
+  "hero.lead": "YouTube Music 在 macOS、Windows 與 Linux 上一直沒有官方桌面版。ytmGO 將 Spotify 桌面版的互動與設計語言帶到 YouTube Music 曲庫：歌詞跟著歌聲同步，想看影片隨時切換，打開應用程式的那一刻，你的音樂庫就已就緒。",
   "hero.cta": "下載 ytmGO",
   "hero.source": "檢視原始碼",
   "hero.note": "Apache-2.0 授權 · 不必登入即可開始聆聽",
@@ -56,6 +56,17 @@
   "layout.body": "寬螢幕時顯示完整側邊欄，中等寬度時收成窄欄，視窗變窄時換成迷你播放器與底部分頁列。淺色或深色，四種語言，切換時音樂不中斷。",
   "shot.light": "淺色外觀下的 ytmGO，左側為完整音樂庫側邊欄。",
   "shot.compact": "窄視窗中的 ytmGO：迷你播放器位於底部分頁列上方。",
+
+  "speed.kicker": "又快又輕",
+  "speed.title": "60fps 流暢順手，記憶體佔用很低",
+  "speed.body": "流暢捲動 2,600+ 首超長播放清單，視窗從桌面三欄平滑縮放至迷你播放器，深淺色與介面語言即時切換，音樂絕不中斷。",
+  "speed.fps.value": "60fps",
+  "speed.fps.label": "捲動 2,600+ 首超長播放清單與即時縮放視窗",
+  "speed.paused.value": "90.81 MiB",
+  "speed.paused.label": "還原工作階段並暫停",
+  "speed.playing.value": "322.11 MiB",
+  "speed.playing.label": "連續播放 + 同步歌詞（中位數）",
+  "speed.note": "在 Apple Silicon 上使用儲存庫中的 scripts/diagnostics/measure.py 測量，涵蓋整個程序樹及所有輔助程序。",
 
   "more.title": "細節處，同樣用心",
   "more.keys.title": "鍵盤優先",
@@ -106,8 +117,8 @@
   "download.guide": "安裝指南",
 
   "faq.title": "常見問題",
-  "faq.official.q": "ytmGO 是 Google 或 YouTube 推出的嗎？",
-  "faq.official.a": "不是。ytmGO 是獨立的開源專案，與 Google LLC 或 YouTube 沒有關聯，也未獲得其認可或贊助。",
+  "faq.official.q": "ytmGO 是 Google、YouTube 或 Spotify 推出的嗎？",
+  "faq.official.a": "不是。ytmGO 是獨立的非官方開源用戶端，與 Google LLC、YouTube 及 Spotify 沒有關聯，也未獲得其認可或贊助。",
   "faq.premium.q": "需要 YouTube Music Premium 嗎？",
   "faq.premium.a": "不需要。不登入、使用免費帳號或 Premium 都能聆聽。登入後可以使用你自己的音樂庫與「喜歡」。",
   "faq.free.q": "ytmGO 要付費嗎？",
@@ -124,7 +135,7 @@
   "closing.title": "按下播放",
   "closing.cta": "下載 ytmGO",
 
-  "footer.disclaimer": "ytmGO 是獨立專案，與 Google LLC 或 YouTube 無關。YouTube 與 YouTube Music 是 Google LLC 的商標。",
+  "footer.disclaimer": "ytmGO 是非官方開源用戶端，與 Google LLC、YouTube 及 Spotify 無關。YouTube 與 YouTube Music 是 Google LLC 的商標。",
   "footer.copyright": "ytmGO 貢獻者 · Apache License 2.0",
   "footer.project": "專案",
   "footer.releases": "發行版本",

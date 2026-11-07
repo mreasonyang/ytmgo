@@ -8,6 +8,8 @@ The main music window uses a custom-rendered Go/MyGo interface (`ui.View`), with
 
 > **Downloads (verified 2026-11-06):** [macOS **v0.0.62**](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62) · [Windows / Linux **v0.0.62**](https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.62). The links below point to published packages for each platform. The [release history](https://github.com/mreasonyang/ytmgo/releases) restarts at **0.0.61**; earlier binary releases have been removed.
 
+![ytmGO home screen with the library and playback controls](site/assets/shots/en/home@1x.webp)
+
 ---
 
 ## Supported Platforms & Installation
@@ -89,6 +91,8 @@ From the published [Linux release](https://github.com/mreasonyang/ytmgo/releases
 
 ### Now Playing, Synchronized Lyrics & Video
 
+![ytmGO immersive mode with cover art and synchronized lyrics](site/assets/shots/en/immersive@1x.webp)
+
 - **Now Playing Views:** Click the artwork/title in the bottom player bar (or press `⌘J` / `Ctrl+J`, or click the **Lyrics** / **Queue** buttons) to open the **Now Playing** panel, or toggle full-window **Immersive Mode** (`⇧⌘F` / `Ctrl+Shift+F`).
 - **Default Lyrics on First Play:** When playback starts for the first time in a session, Now Playing opens automatically on the **Lyrics** tab—unless you have already opened or dismissed Now Playing or Immersive Mode during that session.
 - **Live Follow & Manual Reading:** When synchronized lyrics are available, the current cue is highlighted and kept centered inside the lyrics viewport without moving the outer panel. Scrolling with a mouse wheel, trackpad, keyboard, or scrollbar switches to manual reading and reveals a **Follow playback** button below the lyrics viewport; clicking it (or pressing `Tab` then `Return`) returns to live following. Tracks without synchronized timing display plain lyrics or an unavailable notice.
@@ -97,6 +101,8 @@ From the published [Linux release](https://github.com/mreasonyang/ytmgo/releases
 - **On-Demand Video:** Switch between **Cover** and **Video** in Now Playing or Immersive Mode. Video is decoded on demand by a dedicated FFmpeg decoder (**720p by default**, with **144p–1080p** selectable beside the Video switch or in Settings; rendered at 24fps, synchronized to the audio clock, preserving aspect ratio). Your last choice is saved immediately and retained across track changes and app restarts; changing it restarts only video at the current audio position. If the selected resolution is unavailable, a lower source resolution is used when available. Hiding or minimizing the window, closing Now Playing/Immersive Mode, or switching back to **Cover** immediately releases the video decoder while audio continues uninterrupted.
 
 ### Responsive Layout, Localization & Shortcuts
+
+![ytmGO home screen in light appearance](site/assets/shots/en/light@1x.webp)
 
 - **Adaptive Window Geometry:**
   - **Wide (`>1180` DIP):** Full collapsible library sidebar (`⌘B` / `Ctrl+B`), main page panel, and docked right-hand Now Playing panel.

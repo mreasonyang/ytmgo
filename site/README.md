@@ -22,9 +22,31 @@ python3 -m http.server 8000 --directory site/dist
   to the newest release that carries each platform's file, since a release
   does not always include every platform.
 - `-base` sets the absolute URL used for canonical, `hreflang`, the sitemap and
-  the social card (default `https://mreasonyang.github.io/ytmgo/`); page links
-  and assets are relative, so the site also works from any sub-path.
+  the social card (default `https://ytmgo.kyun.si/`); page links and assets are
+  relative, so previews work from any address.
+- The generator also writes Cloudflare's `_headers`: a Content-Security-Policy
+  that allows only the site's own files plus the GitHub API, the usual
+  hardening headers, and a week of caching for screenshots.
 
 On the English page, a first-time visitor whose browser prefers Chinese or
 Japanese is sent to that page; choosing a language in the switcher is
 remembered and always wins.
+
+## Deploying on Cloudflare Pages
+
+The site deploys through Cloudflare Pages' Git integration: Cloudflare builds
+from this repository on every push to `main` that touches `site/`.
+
+| Setting | Value |
+| --- | --- |
+| Production branch | `main` |
+| Framework preset | None |
+| Build command | `go run ./site/gen` |
+| Build output directory | `site/dist` |
+| Root directory | *(empty: the repository root)* |
+| Environment variable | `GO_VERSION` = the `go` version in `go.mod` |
+| Build watch paths | Include `site/*` |
+| Custom domain | `ytmgo.kyun.si` |
+
+The build needs only Go's standard library, so it downloads no modules and
+runs nothing else from the repository.

@@ -1,7 +1,10 @@
 // Command gen builds the ytmGO website: one static page per language from
 // site/template.html and site/locales/*.json, plus the shared assets.
 //
-//	go run ./site/gen -base https://example.org/
+//	go run ./site/gen
+//
+// The output is a static folder for Cloudflare Pages: _headers carries the
+// security and cache headers, 404.html the not-found page.
 //
 // Every locale must carry exactly the English keys, and the template must use
 // every key, so a translation can be neither missing nor stale.
@@ -9,6 +12,8 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -49,7 +54,7 @@ type page struct {
 func main() {
 	src := flag.String("src", "site", "site source directory")
 	out := flag.String("out", "site/dist", "output directory")
-	base := flag.String("base", "https://mreasonyang.github.io/ytmgo/", "absolute URL the site is served from")
+	base := flag.String("base", "https://ytmgo.kyun.si/", "absolute URL the site is served from")
 	flag.Parse()
 	if !strings.HasSuffix(*base, "/") {
 		*base += "/"
@@ -148,7 +153,10 @@ func checkKeys(strs map[string]map[string]string) error {
 	return errors.Join(errs...)
 }
 
-// extras writes what a static host expects beside the pages.
+// notFoundStyle is the 404 page's only style; _headers allows it by hash.
+const notFoundStyle = `body{margin:0;min-height:100vh;display:grid;place-content:center;gap:16px;text-align:center;background:#0a0a0b;color:#fff;font:16px/1.5 system-ui,sans-serif}a{color:#ff7a6e}nav{display:flex;gap:16px;justify-content:center}`
+
+// extras writes what Cloudflare Pages expects beside the pages.
 func extras(out, base string) error {
 	var sm strings.Builder
 	sm.WriteString(`<?xml version="1.0" encoding="UTF-8"?>` + "\n")
@@ -164,14 +172,15 @@ func extras(out, base string) error {
 	files := map[string]string{
 		"sitemap.xml": sm.String(),
 		"robots.txt":  "User-agent: *\nAllow: /\nSitemap: " + base + "sitemap.xml\n",
-		".nojekyll":   "",
+		"_headers":    headers(),
 	}
 	var links []string
 	for _, l := range locales {
-		links = append(links, fmt.Sprintf(`<a href="%s%s" lang="%s">%s</a>`, base, l.Slug, l.Lang, l.Name))
+		// Root-relative, so preview deployments link within themselves.
+		links = append(links, fmt.Sprintf(`<a href="/%s" lang="%s">%s</a>`, l.Slug, l.Lang, l.Name))
 	}
 	files["404.html"] = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ytmGO — page not found</title>` +
-		`<style>body{margin:0;min-height:100vh;display:grid;place-content:center;gap:16px;text-align:center;background:#0a0a0b;color:#fff;font:16px/1.5 system-ui,sans-serif}a{color:#ff7a6e}nav{display:flex;gap:16px;justify-content:center}</style>` +
+		`<style>` + notFoundStyle + `</style>` +
 		`<h1>404</h1><nav>` + strings.Join(links, "") + `</nav></html>` + "\n"
 	for name, body := range files {
 		if err := write(filepath.Join(out, name), []byte(body)); err != nil {
@@ -179,6 +188,32 @@ func extras(out, base string) error {
 		}
 	}
 	return nil
+}
+
+// headers is Cloudflare's _headers file. The pages load only their own
+// files; the one outside request is the GitHub API for release links. The
+// inline JSON blocks are data, which script-src does not govern.
+func headers() string {
+	sum := sha256.Sum256([]byte(notFoundStyle))
+	csp := strings.Join([]string{
+		"default-src 'self'",
+		"img-src 'self' data:",
+		"style-src 'self' 'sha256-" + base64.StdEncoding.EncodeToString(sum[:]) + "'",
+		"connect-src 'self' https://api.github.com",
+		"object-src 'none'",
+		"base-uri 'self'",
+		"form-action 'none'",
+		"frame-ancestors 'none'",
+	}, "; ")
+	return "/*\n" +
+		"  Content-Security-Policy: " + csp + "\n" +
+		"  X-Content-Type-Options: nosniff\n" +
+		"  Referrer-Policy: strict-origin-when-cross-origin\n" +
+		"  Permissions-Policy: camera=(), microphone=(), geolocation=()\n" +
+		"  X-Frame-Options: DENY\n" +
+		"\n" +
+		"/assets/shots/*\n" +
+		"  Cache-Control: public, max-age=604800\n"
 }
 
 func write(path string, data []byte) error {

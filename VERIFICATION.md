@@ -1,5 +1,24 @@
 # Native playback verification
 
+## ytmGO v0.0.62 process-tree memory
+
+Measured on Apple Silicon (Mac16,8) with `scripts/diagnostics/measure.py`, summing
+`ri_phys_footprint` over the root process, its descendants and macOS
+responsibility-owned helpers, counting only `coverage_complete: true` samples.
+
+| ytmGO state | Processes | Median | Range |
+| --- | --- | ---: | --- |
+| v0.0.62 `/Applications/ytmGO.app`, restored paused session (2026-11-07 00:16 +08:00) | `ytmGO` 87.80 MiB + `SetStoreUpdateService.xpc` 3.02 MiB | 90.81 MiB | peak 90.81 MiB |
+| Active playback + synced lyrics & UI navigation, 432 complete samples | 4–6: `ytmGO`, bounded FFmpeg, Rust/QuickJS host | 322.11 MiB | 157.07–353.88 MiB |
+
+The paused sample's total footprint is 95,225,752 bytes (`ytmGO` 92,063,256 bytes,
+`SetStoreUpdateService` 3,162,496 bytes). Compare other apps with:
+
+```sh
+python3 scripts/diagnostics/measure.py --pid <ROOT_PID> --seconds 180 --out /tmp/bench
+python3 scripts/diagnostics/summarize.py /tmp/bench/samples.jsonl
+```
+
 ## 0.6.x release acceptance summaries
 
 Moved from the README on 2026-11-07. These releases were published before version numbering restarted at 0.0.61; their binaries are no longer offered for download.

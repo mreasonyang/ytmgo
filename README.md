@@ -2,23 +2,23 @@
 
 **English** · [简体中文](README.zh-CN.md) · [Website](https://ytmgo.kyun.si/)
 
-**A free, open-source YouTube Music desktop app for macOS, Windows and Linux** — with lyrics that keep time, video when you want it, and a library that's there the moment you open it.
+YouTube Music has no official desktop app on macOS, Windows, or Linux. **ytmGO** is a free, open-source desktop client that brings Spotify's desktop design language to the YouTube Music catalogue.
 
 **[Download the latest release](https://github.com/mreasonyang/ytmgo/releases/latest)** · `brew install --cask mreasonyang/taps/ytmgo` · [All releases](https://github.com/mreasonyang/ytmgo/releases)
 
 ![ytmGO home screen with the library and playback controls](site/assets/shots/en/home@1x.webp)
 
-> ytmGO is an independent project and is not affiliated with, endorsed by or sponsored by Google LLC or YouTube. YouTube and YouTube Music are trademarks of Google LLC.
+> ytmGO is an unofficial open-source client under Apache-2.0. It is not affiliated with, endorsed by or sponsored by Google, YouTube, or Spotify. YouTube and YouTube Music are trademarks of Google LLC.
 
 ## Highlights
 
-- **Lyrics that keep time:** the current line lights up and stays centred as the song plays. Drag through the lyrics and let go to jump to that line.
-- **Immersive mode and video:** put the cover, lyrics and queue across the whole window, and switch to the music video (144p–1080p) whenever you like.
-- **Right where you left it:** your library appears the moment ytmGO opens and refreshes in the background. Quit mid-song and it reopens paused at the same second.
-- **Fits any window:** a full sidebar, a slim rail or a mini player; light or dark; English, 简体中文, 繁體中文 and 日本語, switched without stopping the music.
-- **Keyboard first, part of your system:** search with `⌘K` / `Ctrl+K`, play or pause from any app with a global shortcut, and use your system's media controls and tray icon.
-- **Native, not a wrapper:** the music window is drawn by Go with MyGo, not a bundled browser. Your session is encrypted on your device with AES-256-GCM.
-- **Updates itself, safely:** every update is checked against an Ed25519 signature before it installs, and your account and settings carry over.
+- **Synced lyrics that follow playback:** the active line is auto-centred in coral; drag vertically inside the lyrics to preview any line's timestamp (`<time> · Release to seek`) and jump right to it.
+- **One-click Now Playing (`⌘J`) & full-window Immersive Mode (`⇧⌘F`).**
+- **On-demand 144p–1080p music video:** switching back to Cover or minimizing releases the video decoder immediately while audio continues uninterrupted.
+- **Instant `⌘K` search & 2,600+ track playlists at 60fps.**
+- **Live resize from wide desktop down to a mini player**, with Dark/Light themes and English, 简体中文, 繁體中文 and 日本語 switching live without interrupting playback.
+- **Native macOS, Windows 11 & Linux apps:** system Now Playing media controls and media keys, system tray, a global play/pause shortcut (`⇧⌘Space` / `Ctrl+Shift+Space`), an AES-256-GCM encrypted session with its key in the OS secret store, and Ed25519-signed in-app updates.
+- **Light on memory:** **90.81 MiB** for a restored paused session and **322.11 MiB** median during active playback with synced lyrics, measured across the whole process tree. See [Memory Footprint](#memory-footprint).
 
 ---
 
@@ -177,8 +177,26 @@ Detailed design specifications live in [DESIGN.md](DESIGN.md); historical and lo
 - **Earlier 0.6.x Acceptance:** Summaries for releases published before the version reset are kept in [VERIFICATION.md](VERIFICATION.md#06x-release-acceptance-summaries).
 - **Platform Acceptance:** On 2026-11-04, both 3-platform GitHub Actions suites—[Native playback runtime](https://github.com/mreasonyang/ytmgo/actions/runs/41800458515) and [Native account login](https://github.com/mreasonyang/ytmgo/actions/runs/41800458464)—passed across macOS, Windows, and Linux. For **v0.6.4** ([audit record](docs/audits/2026-11-04-macos-compat-0.6.4/README.md)), native packaging, Developer ID signing/notarization/stapling, Gatekeeper checks, helper execution, empty-profile startup, and [actual Homebrew cask installs](https://github.com/mreasonyang/homebrew-taps/actions/runs/41850617166) passed on both **macOS 27 Apple Silicon (`arm64`)** and **macOS 15 Intel (`amd64`)**, alongside an [Intel synthetic WebView login lifecycle run](https://github.com/mreasonyang/ytmgo/actions/runs/41848250319), a [public 0.6.3 → 0.6.4 ARM upgrade](https://github.com/mreasonyang/ytmgo/actions/runs/41850200341), and the [Windows/Linux native package workflow](https://github.com/mreasonyang/ytmgo/actions/runs/41849890402) (which builds on the target OS, installs the NSIS/DEB package, and verifies installed resources and empty-profile startup). However, **CI and native package install/startup smoke tests are not live signed-in playback, complete UI interaction, hardware audio output, or version-to-version upgrade acceptance on Windows, Linux, or Intel macOS**; likewise, verifying a **macOS 13.0 deployment target** across all shipped Mach-O binaries is **not** physical runtime acceptance on macOS 13 or macOS 14.
 - **Account Tiers & Advertising:** Anonymous full-track playback and real **YouTube Music Premium** browsing, library restoration, and playback have been verified on macOS. **Standard (free/non-Premium) accounts** and **official advertising flows** are **not** accepted: ytmGO does not implement official ad asset sequencing or ad progress reporting, does not simulate ads with artificial wait timers, and does not treat public track playback as ad-flow validation.
-- **Memory Footprint:** Low-memory optimization is **not** claimed complete. No whole-app memory benchmark of the current Go/MyGo runtime has been recorded in this repository yet; dated measurements for earlier builds are recorded in [VERIFICATION.md](VERIFICATION.md), and historical Node-based figures are not comparable to the current runtime.
+- **Memory Footprint:** See [Memory Footprint](#memory-footprint) below for the measured v0.0.62 process-tree figures.
 - **Global Shortcuts & Long-Run Stability:** In-app shortcuts (`Space`, `⌘K`, etc.) and UI Tester state machines pass, but physical global shortcut key injection (`⇧⌘Space`) has not yet been confirmed end-to-end on macOS. Local E2E runs also recorded isolated transient playback errors (`audio_stream_failed`, `bootstrap_network_timeout`) that recovered via **Retry** whose upstream/network root causes remain open. Crash/force-kill persistence, sleep/wake endurance, and multi-day stability are not yet certified.
+
+### Memory Footprint
+
+Measured on Apple Silicon (Mac16,8) with [`scripts/diagnostics/measure.py`](scripts/diagnostics/measure.py), which traverses the root PID, all child PIDs (`proc_listchildpids`) and all macOS responsibility-owned helpers (`responsibility_get_pid_responsible_for_pid`), and sums kernel `proc_pid_rusage` `ri_phys_footprint` across `coverage_complete: true` samples:
+
+| ytmGO state | Processes | Memory |
+| --- | --- | --- |
+| v0.0.62, restored paused session | 2 (main app + `SetStoreUpdateService.xpc`) | **90.81 MiB** median / 90.81 MiB peak |
+| Active playback + synced lyrics & UI navigation (432 complete samples) | 4–6 (ytmGO, bounded FFmpeg & Rust/QuickJS host) | **322.11 MiB** median (157.07 MiB min – 353.88 MiB max) |
+
+To compare against a browser or another music app on your own machine, run the same collector against its root process:
+
+```sh
+python3 scripts/diagnostics/measure.py --pid <ROOT_PID> --seconds 180 --out /tmp/bench
+python3 scripts/diagnostics/summarize.py /tmp/bench/samples.jsonl
+```
+
+Details are recorded in [VERIFICATION.md](VERIFICATION.md#ytmgo-v0062-process-tree-memory).
 
 ---
 

@@ -2,23 +2,23 @@
 
 [English](README.md) · **简体中文** · [官网](https://ytmgo.kyun.si/)
 
-**免费开源的 YouTube Music 桌面客户端，支持 macOS、Windows 与 Linux**——歌词随歌声同步，想看视频随时切换，打开应用的那一刻，你的音乐库就已就位。
+YouTube Music 在 macOS、Windows 和 Linux 上一直没有官方桌面端。**ytmGO** 是一款免费开源的桌面客户端，将 Spotify 桌面端的交互与设计语言带到 YouTube Music 曲库。
 
 **[下载最新版本](https://github.com/mreasonyang/ytmgo/releases/latest)** · `brew install --cask mreasonyang/taps/ytmgo` · [全部版本](https://github.com/mreasonyang/ytmgo/releases)
 
 ![ytmGO 主界面，展示音乐库与播放控制](site/assets/shots/zh-Hans/home@1x.webp)
 
-> ytmGO 是独立项目，与 Google LLC 或 YouTube 无关，也未获其认可或赞助。YouTube 和 YouTube Music 是 Google LLC 的商标。
+> ytmGO 是 Apache-2.0 开源的非官方客户端，与 Google、YouTube 及 Spotify 无关，也未获其认可或赞助。YouTube 和 YouTube Music 是 Google LLC 的商标。
 
 ## 亮点
 
-- **歌词，与旋律同拍：** 当前歌词随播放点亮并保持居中；在歌词上拖动，松开即跳到那一句。
-- **沉浸模式与视频：** 封面、歌词和播放队列铺满整个窗口，随时切换到 MV（144p 至 1080p）。
-- **一切都在你离开的地方：** 打开 ytmGO，你的音乐库立刻出现并在后台悄悄刷新；歌放到一半退出，下次打开会停在同一秒，暂停等你按下播放。
-- **怎么听，都合适：** 完整侧边栏、窄栏或迷你播放器；浅色或深色；English、简体中文、繁體中文、日本語，切换时音乐不中断。
-- **键盘优先，融入系统：** 用 `⌘K` / `Ctrl+K` 搜索，用全局快捷键在任何应用里播放或暂停，系统媒体控制与托盘图标都能直接操控。
-- **原生应用，不是网页套壳：** 音乐窗口由 Go 与 MyGo 直接绘制，不内置浏览器；会话以 AES-256-GCM 加密保存在本机。
-- **安全地自我更新：** 每个更新在安装前都会校验 Ed25519 签名，账号和设置原样保留。
+- **实时居中同步歌词：** 当前歌词以珊瑚红居中高亮；在歌词区域上下拖拽可预览任意一句的时间（`<时间> · 松开跳转`），松开即精准跳转。
+- **一键展开「正在播放」（`⌘J`）与全窗口沉浸模式（`⇧⌘F`）。**
+- **按需切换 144p–1080p 官方 MV 视频：** 切回封面或最小化窗口会立即释放视频解码器，音频零中断。
+- **`⌘K` 毫秒级搜索，2,600+ 首超长歌单 60fps 丝滑滚动。**
+- **窗口宽度从桌面三栏平滑自适应至迷你悬浮播放器**，深浅色主题与 English、简体中文、繁體中文、日本語 四种界面语言实时切换，音乐不中断。
+- **原生支持 macOS、Windows 11 与 Linux：** 系统媒体中心与媒体键、系统托盘、全局播放/暂停快捷键（`⇧⌘Space` / `Ctrl+Shift+Space`）、AES-256-GCM 加密会话（密钥存于系统密钥库），以及 Ed25519 签名的应用内更新。
+- **内存占用低：** 恢复会话并暂停时仅 **90.81 MiB**，连续播放 + 同步歌词时中位数 **322.11 MiB**，均为包含所有辅助进程的整个进程树实测。详见[内存占用](#内存占用)。
 
 ---
 
@@ -177,8 +177,26 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 - **更早的 0.6.x 发版验收：** 版本重新编号前已发布版本的验收摘要保存在 [VERIFICATION.md](VERIFICATION.md#06x-release-acceptance-summaries)（英文）。
 - **跨平台运行验收边界：** 2026-11-04 三平台 GitHub Actions 工作流——[Native playback runtime](https://github.com/mreasonyang/ytmgo/actions/runs/41800458515) 与 [Native account login](https://github.com/mreasonyang/ytmgo/actions/runs/41800458464)——在 macOS、Windows 和 Linux 上均已全部通过。针对 **v0.6.4**（[验收记录](docs/audits/2026-11-04-macos-compat-0.6.4/README.md)），**macOS 27 Apple Silicon（`arm64`）** 与 **macOS 15 Intel（`amd64`）** 双架构原生打包、Developer ID 签名/公证/staple、Gatekeeper 校验、辅助进程执行、空配置冷启动以及[双架构 Homebrew Cask 实装校验](https://github.com/mreasonyang/homebrew-taps/actions/runs/41850617166)均已通过，同时完成了 [Intel 模拟 WebView 登录生命周期校验](https://github.com/mreasonyang/ytmgo/actions/runs/41848250319)、[0.6.3 → 0.6.4 ARM 公开源升级验收](https://github.com/mreasonyang/ytmgo/actions/runs/41850200341) 以及 [Windows/Linux 原生安装包工作流](https://github.com/mreasonyang/ytmgo/actions/runs/41849890402)（在对应系统原生构建、实际安装 NSIS/DEB 包，并核对安装后的资源与空账号启动）。请注意：**CI 与原生安装包安装/空配置启动冒烟测试不等于已完成 Windows、Linux 或 Intel macOS 上的真实登录播放、完整界面交互、实体音频硬件输出或跨版本升级验收**；同理，所有随包 Mach-O 二进制已核验 `13.0` 部署目标，但**编译部署目标（macOS 13.0）不等于在 macOS 13 或 macOS 14 实体系统上完成了运行验收**。
 - **账号类型与广告流程边界：** macOS 已完成未登录匿名整曲播放及真实 **YouTube Music Premium** 账号的首页、曲库恢复、同步歌词、跳播与暂停恢复实测。**普通（非 Premium）账号**及**官方广告流程**尚未完成验收：当前实现没有官方广告素材序列与真实广告进度上报，不使用推算等待时间模拟广告，也不能将公开歌曲播放成功视为广告流程验收通过。
-- **内存占用现状：** 目前**不能宣称低内存优化已经完成**。本仓库尚未记录当前 Go/MyGo 运行时的整应用内存基准；针对早期构建的带日期实测记录见 [VERIFICATION.md](VERIFICATION.md)，旧版基于 Node 的历史数据也不作为当前运行时的对比结论。
+- **内存占用：** v0.0.62 的进程树实测数据见下方[内存占用](#内存占用)。
 - **全局快捷键与长时稳定性边界：** 应用内快捷键（如空格键播放/暂停、`⌘K` 搜索等）与 MyGo UI 测试器状态机已验证，但 macOS 实体全局快捷键（`⇧⌘Space`）跨应用触发尚未通过端到端实机确认。此外，本地实机验收中曾记录到偶发的 `audio_stream_failed` 与 `bootstrap_network_timeout`（点击 **Retry** 后均恢复正常播放），其上游或网络根因尚未最终定论；崩溃/强制终止持久化、睡眠唤醒以及多日长时耐久运行仍待后续验收。
+
+### 内存占用
+
+在 Apple Silicon（Mac16,8）上使用 [`scripts/diagnostics/measure.py`](scripts/diagnostics/measure.py) 测量：遍历根进程、全部子进程（`proc_listchildpids`）以及 macOS 归属于本应用的辅助进程（`responsibility_get_pid_responsible_for_pid`），并对 `coverage_complete: true` 的采样累加内核 `proc_pid_rusage` 的 `ri_phys_footprint`：
+
+| ytmGO 状态 | 进程数 | 内存 |
+| --- | --- | --- |
+| v0.0.62，恢复会话并暂停 | 2（主程序 + `SetStoreUpdateService.xpc`） | 中位数 **90.81 MiB** / 峰值 90.81 MiB |
+| 连续播放 + 同步歌词与界面操作（432 个完整采样） | 4–6（ytmGO、有界 FFmpeg 与 Rust/QuickJS 宿主） | 中位数 **322.11 MiB**（最低 157.07 MiB – 最高 353.88 MiB） |
+
+想在自己的机器上与浏览器或其他音乐应用对比，可对其根进程运行同一采集脚本：
+
+```sh
+python3 scripts/diagnostics/measure.py --pid <ROOT_PID> --seconds 180 --out /tmp/bench
+python3 scripts/diagnostics/summarize.py /tmp/bench/samples.jsonl
+```
+
+详细记录见 [VERIFICATION.md](VERIFICATION.md#ytmgo-v0062-process-tree-memory)。
 
 ---
 

@@ -28,9 +28,15 @@ python3 -m http.server 8000 --directory site/dist
   that allows only the site's own files plus the GitHub API, the usual
   hardening headers, and a week of caching for screenshots.
 
-On the English page, a first-time visitor whose browser prefers Chinese or
-Japanese is sent to that page; choosing a language in the switcher is
-remembered and always wins.
+The root URL restores a language chosen in the switcher; without a valid saved
+choice, it follows the first supported browser language. Redirects keep query
+parameters and fragments. Direct links to a localized page stay in that language.
+
+Run the language regression checks with Node.js (not required to build the site):
+
+```sh
+node --test site/tests/language.test.mjs
+```
 
 ## Deploying on Cloudflare Pages
 

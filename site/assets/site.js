@@ -10,15 +10,17 @@
     set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* private mode */ } },
   };
 
-  // Language. A visitor who lands on the English page for the first time is
-  // sent to their browser's language; an explicit choice always wins.
+  // Language. The root restores a saved choice, otherwise it follows the
+  // browser's language. Explicit localized URLs keep their requested language.
   const LANG_KEY = "ytmgo-site-lang";
   document.querySelectorAll("a[data-lang]").forEach((a) => {
     a.addEventListener("click", () => store.set(LANG_KEY, a.dataset.lang || "en"));
   });
   const here = document.documentElement.lang;
-  if (here === "en" && !store.get(LANG_KEY) && !/bot|crawl|spider/i.test(navigator.userAgent)) {
-    const pick = (navigator.languages || [navigator.language]).map((l) => l.toLowerCase()).map((l) => {
+  if (here === "en" && !/bot|crawl|spider/i.test(navigator.userAgent)) {
+    const saved = store.get(LANG_KEY);
+    const pick = ["en", "zh-hans/", "zh-hant/", "ja/"].includes(saved) ? saved
+      : (navigator.languages || [navigator.language]).map((l) => l.toLowerCase()).map((l) => {
       if (/^zh-(tw|hk|mo|hant)/.test(l)) return "zh-hant/";
       if (l.startsWith("zh")) return "zh-hans/";
       if (l.startsWith("ja")) return "ja/";
@@ -26,7 +28,7 @@
       return null;
     }).find(Boolean);
     if (pick && pick !== "en") {
-      location.replace(pick + location.hash);
+      location.replace(pick + location.search + location.hash);
       return;
     }
   }

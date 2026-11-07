@@ -27,6 +27,8 @@ python3 -m http.server 8000 --directory site/dist
 - The generator also writes Cloudflare's `_headers`: a Content-Security-Policy
   that allows only the site's own files plus the GitHub API, the usual
   hardening headers, and a week of caching for screenshots.
+- The JavaScript URL includes a content hash, so a new deployment loads the
+  updated script even when a visitor has an earlier version cached.
 
 The root URL restores a language chosen in the switcher; without a valid saved
 choice, it follows the first supported browser language. Redirects keep query

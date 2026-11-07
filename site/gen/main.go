@@ -43,12 +43,13 @@ var locales = []locale{
 }
 
 type page struct {
-	Locale  locale
-	Locales []locale
-	Root    string // relative path from the page to the site root
-	Base    string // absolute site URL, ending in a slash
-	Year    int
-	JS      map[string]string
+	Locale     locale
+	Locales    []locale
+	Root       string // relative path from the page to the site root
+	Base       string // absolute site URL, ending in a slash
+	Year       int
+	JS         map[string]string
+	ScriptHash string // changes the script URL whenever its contents change
 }
 
 func main() {
@@ -84,6 +85,11 @@ func build(src, out, base string) error {
 	if err != nil {
 		return err
 	}
+	script, err := os.ReadFile(filepath.Join(src, "assets", "site.js"))
+	if err != nil {
+		return err
+	}
+	scriptHash := fmt.Sprintf("%x", sha256.Sum256(script))[:12]
 	if err := os.RemoveAll(out); err != nil {
 		return err
 	}
@@ -112,7 +118,7 @@ func build(src, out, base string) error {
 		}
 		root := strings.Repeat("../", strings.Count(l.Slug, "/"))
 		var buf bytes.Buffer
-		if err := t.Execute(&buf, page{Locale: l, Locales: locales, Root: root, Base: base, Year: time.Now().Year(), JS: js}); err != nil {
+		if err := t.Execute(&buf, page{Locale: l, Locales: locales, Root: root, Base: base, Year: time.Now().Year(), JS: js, ScriptHash: scriptHash}); err != nil {
 			return fmt.Errorf("%s: %w", l.Code, err)
 		}
 		if err := write(filepath.Join(out, l.Slug, "index.html"), buf.Bytes()); err != nil {

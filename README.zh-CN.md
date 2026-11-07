@@ -79,7 +79,7 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 
 ### 应用内自动更新、签名区分与数据保留
 
-- **自动与手动更新：** 在当前用户可写目录中运行时，应用会在启动后最早 10 秒自动检查更新（之后每 24 小时检查一次），macOS 可通过菜单 **ytmGO → 检查更新（Check for Updates…）** 手动触发，Windows/Linux 则使用 **帮助 → 检查更新**；也可在终端使用 `--check-for-updates` 与 `--install-update` 维护参数完成同样操作。MyGo 更新窗口支持 **立即安装**、**稍后提醒**、**跳过此版本** 及可选的自动下载；重启后原地替换应用，并完整保留加密账号会话（`account/session.enc`）、曲库快照、播放进度断点与个性化设置。安装在系统目录下的 Linux DEB 版本请通过 `apt` 安装新版 `.deb` 升级。
+- **自动与手动更新：** 在当前用户可写目录中运行时，应用会在启动后最早 10 秒自动检查更新（之后每 24 小时检查一次），macOS 可通过菜单 **ytmGO → 检查更新（Check for Updates…）** 手动触发，Windows/Linux 则使用顶栏的 **⋯ → 帮助 → 检查更新**；也可在终端使用 `--check-for-updates` 与 `--install-update` 维护参数完成同样操作。MyGo 更新窗口支持 **立即安装**、**稍后提醒**、**跳过此版本** 及可选的自动下载；重启后原地替换应用，并完整保留加密账号会话（`account/session.enc`）、曲库快照、播放进度断点与个性化设置。安装在系统目录下的 Linux DEB 版本请通过 `apt` 安装新版 `.deb` 升级。
 - **更新包签名与系统代码签名的区别：** 四个已发布桌面目标（`darwin-arm64`、`darwin-amd64`、`windows-amd64`、`linux-amd64`）均提供 `update-<platform>.json` 更新清单，内含 `.tar.gz` 更新归档地址及其 **Ed25519 签名**，安装更新前由应用内置公钥（见 `mygo.json`）验签。macOS 正式版在此基础上同时具备 Apple **Developer ID Application 签名、Apple 公证与 stapled ticket**；而在 Windows 上，Ed25519 更新归档签名仅用于核验更新载荷来源，**不代表**安装器或 `.exe` 具备 Microsoft Authenticode 系统代码签名。
 - **跨平台发布与维护文档：** 详见 [Windows 与 Linux 发布说明](docs/DESKTOP_RELEASES.md)、[Homebrew 维护文档](docs/HOMEBREW.md) 及 [macOS Actions 打包指南](docs/MACOS_ACTIONS.md)。
 
@@ -119,7 +119,7 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
   - **中等窗口（`761–1180` DIP）：** 72 DIP 图标侧栏与浮动正在播放面板。
   - **紧凑窗口（`≤760` DIP）：** 单列页面、底部浮动迷你播放器与底部导航标签栏。
 - **四语言与深浅色外观：** 设置（`设置 → 通用`）支持 **English**、**简体中文**、**繁體中文**、**日本語**（含**跟随系统**）以及 **深色**、**浅色**、**跟随系统** 三种外观。切换语言或外观会即时重绘当前应用窗口，不中断正在播放的音乐。
-- **系统集成与全局快捷键：** 原生应用菜单、系统托盘、系统媒体中心（Now Playing）与全局播放/暂停快捷键（默认 `⇧⌘Space` / `Ctrl+Shift+Space`，可在 `设置 → 键盘` 中直接点击录入或停用）共用同一播放控制器。按 `⌘/`（`Ctrl+/`）或在设置中点击 **查看全部** 可浏览全部应用内快捷键。
+- **系统集成与全局快捷键：** 应用菜单（macOS 为系统菜单栏；Windows 与 Linux 为顶栏最左侧的 **⋯** 按钮，也可按 `Alt` 或 `F10` 打开）、系统托盘、系统媒体中心（Now Playing）与全局播放/暂停快捷键（默认 `⇧⌘Space` / `Ctrl+Shift+Space`，可在 `设置 → 键盘` 中直接点击录入或停用）共用同一播放控制器。按 `⌘/`（`Ctrl+/`）或在设置中点击 **查看全部** 可浏览全部应用内快捷键。
 
 ---
 

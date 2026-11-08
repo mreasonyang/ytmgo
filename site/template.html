@@ -65,7 +65,7 @@
      track table, then the page, washed in one of the app's header tints. -->
 <section class="track track--hero tint-rust" id="intro" data-time="2:48">
   <div class="wrap">
-    <p class="track__head" aria-hidden="true"><span class="track__n">01</span><span class="track__t">{{t "track.intro"}}</span><span class="track__d">2:48</span></p>
+    <p class="track__head" aria-hidden="true"><span class="track__n mono">01</span><span class="track__t">{{t "track.intro"}}</span><span class="track__d mono">2:48</span></p>
     <h1 class="hero__title" data-sing>{{wbr "hero.title"}}</h1>
     <div class="hero__below">
       <p class="hero__lead">{{t "hero.lead"}}</p>
@@ -79,7 +79,7 @@
           {{t "hero.source"}}
         </a>
       </div>
-      <p class="mono hero__note">{{t "hero.eyebrow"}} · {{t "hero.note"}}</p>
+      <p class="note hero__note">{{t "hero.eyebrow"}} · {{t "hero.note"}}</p>
     </div>
   </div>
   <figure class="wrap--wide shot shot--hero">
@@ -90,7 +90,7 @@
 <section class="album" id="tracks" aria-labelledby="tracks-title">
   <div class="wrap">
     <div class="album__head">
-      <img class="album__cover" src="{{.Root}}assets/icon-512.png" alt="" width="200" height="200" loading="lazy">
+      <img class="album__cover" src="{{.Root}}assets/icon-512.png" alt="" width="176" height="176" loading="lazy">
       <div>
         <p class="album__kind">{{t "tracks.kind"}}</p>
         <h2 class="album__title" id="tracks-title">ytm<b>GO</b></h2>
@@ -98,31 +98,35 @@
       </div>
     </div>
     <div class="album__actions">
-      <a class="playbtn" href="#lyrics" aria-label="{{t "tracks.play"}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg></a>
+      <a class="round playbtn" href="#lyrics" aria-label="{{t "tracks.play"}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg></a>
     </div>
     <ol class="tracklist" aria-label="{{t "tracks.label"}}">
       <li class="tracklist__head" aria-hidden="true"><span>#</span><span>{{t "tracks.col.title"}}</span><span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span></li>
-      <li><a href="#intro" data-track-link><span class="n">1</span><span class="t"><b>{{t "track.intro"}}</b><span>{{t "hero.title"}}</span></span><span class="d">2:48</span></a></li>
-      <li><a href="#lyrics" data-track-link><span class="n">2</span><span class="t"><b>{{t "lyrics.kicker"}}</b><span>{{t "lyrics.title"}}</span></span><span class="d">3:41</span></a></li>
-      <li><a href="#immersive" data-track-link><span class="n">3</span><span class="t"><b>{{t "immersive.kicker"}}</b><span>{{t "immersive.title"}}</span></span><span class="d">4:12</span></a></li>
-      <li><a href="#library" data-track-link><span class="n">4</span><span class="t"><b>{{t "library.kicker"}}</b><span>{{t "library.title"}}</span></span><span class="d">3:05</span></a></li>
-      <li><a href="#layout" data-track-link><span class="n">5</span><span class="t"><b>{{t "layout.kicker"}}</b><span>{{t "layout.title"}}</span></span><span class="d">3:27</span></a></li>
-      <li><a href="#speed" data-track-link><span class="n">6</span><span class="t"><b>{{t "speed.kicker"}}</b><span>{{t "speed.title"}}</span></span><span class="d">2:16</span></a></li>
-      <li><a href="#privacy" data-track-link><span class="n">7</span><span class="t"><b>{{t "privacy.kicker"}}</b><span>{{t "privacy.title"}}</span></span><span class="d">3:58</span></a></li>
-      <li><a href="#details" data-track-link><span class="n">8</span><span class="t"><b>{{t "track.details"}}</b><span>{{t "more.title"}}</span></span><span class="d">4:31</span></a></li>
-      <li><a href="#download" data-track-link><span class="n">9</span><span class="t"><b>{{t "download.kicker"}}</b><span>{{t "closing.title"}}</span></span><span class="d">1:52</span></a></li>
+      <li><a href="#intro" data-track-link><span class="n mono">1</span><span class="t"><b>{{t "track.intro"}}</b><span>{{t "hero.title"}}</span></span><span class="d mono">2:48</span></a></li>
+      <li><a href="#lyrics" data-track-link><span class="n mono">2</span><span class="t"><b>{{t "lyrics.kicker"}}</b><span>{{t "lyrics.title"}}</span></span><span class="d mono">3:41</span></a></li>
+      <li><a href="#immersive" data-track-link><span class="n mono">3</span><span class="t"><b>{{t "immersive.kicker"}}</b><span>{{t "immersive.title"}}</span></span><span class="d mono">4:12</span></a></li>
+      <li><a href="#library" data-track-link><span class="n mono">4</span><span class="t"><b>{{t "library.kicker"}}</b><span>{{t "library.title"}}</span></span><span class="d mono">3:05</span></a></li>
+      <li><a href="#layout" data-track-link><span class="n mono">5</span><span class="t"><b>{{t "layout.kicker"}}</b><span>{{t "layout.title"}}</span></span><span class="d mono">3:27</span></a></li>
+      <li><a href="#speed" data-track-link><span class="n mono">6</span><span class="t"><b>{{t "speed.kicker"}}</b><span>{{t "speed.title"}}</span></span><span class="d mono">2:16</span></a></li>
+      <li><a href="#privacy" data-track-link><span class="n mono">7</span><span class="t"><b>{{t "privacy.kicker"}}</b><span>{{t "privacy.title"}}</span></span><span class="d mono">3:58</span></a></li>
+      <li><a href="#details" data-track-link><span class="n mono">8</span><span class="t"><b>{{t "track.details"}}</b><span>{{t "more.title"}}</span></span><span class="d mono">4:31</span></a></li>
+      <li><a href="#download" data-track-link><span class="n mono">9</span><span class="t"><b>{{t "download.kicker"}}</b><span>{{t "closing.title"}}</span></span><span class="d mono">1:52</span></a></li>
     </ol>
   </div>
 </section>
 
 <section class="track tint-violet" id="lyrics" data-time="3:41">
   <div class="wrap">
-    <p class="track__head" aria-hidden="true"><span class="track__n">02</span><span class="track__t">{{t "lyrics.kicker"}}</span><span class="track__d">3:41</span></p>
+    <p class="track__head" aria-hidden="true"><span class="track__n mono">02</span><span class="track__t">{{t "lyrics.kicker"}}</span><span class="track__d mono">3:41</span></p>
     <div class="split">
       <div class="split__copy">
         <h2>{{wbr "lyrics.title"}}</h2>
         <p class="body">{{t "lyrics.body"}}</p>
-        <p class="mono hint">↳ {{t "lyrics.tick1"}}</p>
+        <ul class="points">
+          <li>{{t "lyrics.tick1"}}</li>
+          <li>{{t "lyrics.tick2"}}</li>
+          <li>{{t "lyrics.tick3"}}</li>
+        </ul>
       </div>
       <div class="lyrics" role="img" aria-label="{{t "lyrics.demo"}}">
         <div class="lyrics__head" aria-hidden="true">
@@ -152,7 +156,7 @@
 
 <section class="track tint-raspberry" id="immersive" data-time="4:12">
   <div class="wrap">
-    <p class="track__head" aria-hidden="true"><span class="track__n">03</span><span class="track__t">{{t "immersive.kicker"}}</span><span class="track__d">4:12</span></p>
+    <p class="track__head" aria-hidden="true"><span class="track__n mono">03</span><span class="track__t">{{t "immersive.kicker"}}</span><span class="track__d mono">4:12</span></p>
     <div class="lede">
       <h2>{{wbr "immersive.title"}}</h2>
       <p class="body">{{t "immersive.body"}}</p>
@@ -161,7 +165,7 @@
   <figure class="wrap--wide shot">
     <img src="{{.Root}}assets/shots/{{.Locale.Code}}/immersive@1x.webp" srcset="{{.Root}}assets/shots/{{.Locale.Code}}/immersive@1x.webp 1440w, {{.Root}}assets/shots/{{.Locale.Code}}/immersive@2x.webp 2880w" sizes="(min-width: 1300px) 1240px, 96vw" width="1440" height="900" alt="{{t "shot.immersive"}}" loading="lazy">
   </figure>
-  <ul class="wrap specs">
+  <ul class="wrap points points--row">
     <li>{{t "immersive.tick1"}}</li>
     <li>{{t "immersive.tick2"}}</li>
     <li>{{t "immersive.tick3"}}</li>
@@ -170,15 +174,15 @@
 
 <section class="track tint-blue" id="library" data-time="3:05">
   <div class="wrap">
-    <p class="track__head" aria-hidden="true"><span class="track__n">04</span><span class="track__t">{{t "library.kicker"}}</span><span class="track__d">3:05</span></p>
-    <div class="split split--wide">
+    <p class="track__head" aria-hidden="true"><span class="track__n mono">04</span><span class="track__t">{{t "library.kicker"}}</span><span class="track__d mono">3:05</span></p>
+    <div class="split split--top">
       <div class="split__copy">
         <h2>{{wbr "library.title"}}</h2>
         <p class="body">{{t "library.body"}}</p>
-        <ul class="sung-list" data-lines>
-          <li>{{wbr "library.tick1"}}</li>
-          <li>{{wbr "library.tick2"}}</li>
-          <li>{{wbr "library.tick3"}}</li>
+        <ul class="points">
+          <li>{{t "library.tick1"}}</li>
+          <li>{{t "library.tick2"}}</li>
+          <li>{{t "library.tick3"}}</li>
         </ul>
       </div>
       <figure class="shot shot--sticky">
@@ -190,7 +194,7 @@
 
 <section class="track tint-teal" id="layout" data-time="3:27">
   <div class="wrap">
-    <p class="track__head" aria-hidden="true"><span class="track__n">05</span><span class="track__t">{{t "layout.kicker"}}</span><span class="track__d">3:27</span></p>
+    <p class="track__head" aria-hidden="true"><span class="track__n mono">05</span><span class="track__t">{{t "layout.kicker"}}</span><span class="track__d mono">3:27</span></p>
     <div class="lede">
       <h2>{{wbr "layout.title"}}</h2>
       <p class="body">{{t "layout.body"}}</p>
@@ -208,7 +212,7 @@
 
 <section class="track tint-steel" id="speed" data-time="2:16">
   <div class="wrap">
-    <p class="track__head" aria-hidden="true"><span class="track__n">06</span><span class="track__t">{{t "speed.kicker"}}</span><span class="track__d">2:16</span></p>
+    <p class="track__head" aria-hidden="true"><span class="track__n mono">06</span><span class="track__t">{{t "speed.kicker"}}</span><span class="track__d mono">2:16</span></p>
     <div class="lede">
       <h2>{{wbr "speed.title"}}</h2>
       <p class="body">{{t "speed.body"}}</p>
@@ -218,57 +222,39 @@
       <div><dt>{{t "speed.paused.label"}}</dt><dd>{{t "speed.paused.value"}}</dd></div>
       <div><dt>{{t "speed.playing.label"}}</dt><dd>{{t "speed.playing.value"}}</dd></div>
     </dl>
-    <p class="footnote">{{t "speed.note"}}</p>
+    <p class="note footnote">{{t "speed.note"}}</p>
   </div>
 </section>
 
 <section class="track tint-slate" id="privacy" data-time="3:58">
   <div class="wrap">
-    <p class="track__head" aria-hidden="true"><span class="track__n">07</span><span class="track__t">{{t "privacy.kicker"}}</span><span class="track__d">3:58</span></p>
-    <div class="split">
-      <div class="split__copy">
-        <h2>{{wbr "privacy.title"}}</h2>
-        <p class="body">{{t "privacy.lead"}}</p>
-      </div>
-      <ul class="settings">
-        <li>
-          <div><h3>{{wbr "privacy.signin.title"}}</h3><p>{{t "privacy.signin.body"}}</p></div>
-          <span class="settings__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><path d="M3.5 9h17M7 7h.01M9.5 7h.01"/></svg></span>
-        </li>
-        <li>
-          <div><h3>{{wbr "privacy.encrypt.title"}}</h3><p>{{t "privacy.encrypt.body"}}</p></div>
-          <span class="settings__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5M12 14.5v2"/></svg></span>
-        </li>
-        <li>
-          <div><h3>{{wbr "privacy.diag.title"}}</h3><p>{{t "privacy.diag.body"}}</p></div>
-          <span class="settings__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4.5" width="16" height="11" rx="2"/><path d="M8.5 19.5h7M12 15.5v4"/></svg></span>
-        </li>
-        <li>
-          <div><h3>{{wbr "privacy.signout.title"}}</h3><p>{{t "privacy.signout.body"}}</p></div>
-          <span class="settings__icon settings__icon--danger" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 7h14M10 4h4M7 7l.8 12a1.5 1.5 0 0 0 1.5 1.4h5.4a1.5 1.5 0 0 0 1.5-1.4L17 7M10.5 11v5.5M13.5 11v5.5"/></svg></span>
-        </li>
-      </ul>
+    <p class="track__head" aria-hidden="true"><span class="track__n mono">07</span><span class="track__t">{{t "privacy.kicker"}}</span><span class="track__d mono">3:58</span></p>
+    <div class="lede">
+      <h2>{{wbr "privacy.title"}}</h2>
+      <p class="body">{{t "privacy.lead"}}</p>
     </div>
+    <ul class="points points--grid">
+      <li><h3>{{wbr "privacy.signin.title"}}</h3>{{t "privacy.signin.body"}}</li>
+      <li><h3>{{wbr "privacy.encrypt.title"}}</h3>{{t "privacy.encrypt.body"}}</li>
+      <li><h3>{{wbr "privacy.diag.title"}}</h3>{{t "privacy.diag.body"}}</li>
+      <li><h3>{{wbr "privacy.signout.title"}}</h3>{{t "privacy.signout.body"}}</li>
+    </ul>
   </div>
 </section>
 
 <section class="track tint-brown" id="details" data-time="4:31">
   <div class="wrap">
-    <p class="track__head" aria-hidden="true"><span class="track__n">08</span><span class="track__t">{{t "track.details"}}</span><span class="track__d">4:31</span></p>
+    <p class="track__head" aria-hidden="true"><span class="track__n mono">08</span><span class="track__t">{{t "track.details"}}</span><span class="track__d mono">4:31</span></p>
     <h2 class="lede">{{wbr "more.title"}}</h2>
     <table class="table">
-      <thead><tr><th scope="col">#</th><th scope="col">{{t "tracks.col.title"}}</th><th scope="col">{{t "details.col.area"}}</th><th scope="col"><span class="sr">{{t "details.col.detail"}}</span></th></tr></thead>
+      <thead><tr><th scope="col">#</th><th scope="col">{{t "tracks.col.title"}}</th></tr></thead>
       <tbody>
-        <tr><td>1</td><th scope="row"><b>{{wbr "more.keys.title"}}</b><span>{{t "more.keys.body"}}</span></th><td>{{t "area.keyboard"}}</td><td><kbd>⌘</kbd><kbd>K</kbd></td></tr>
-        <tr><td>2</td><th scope="row"><b>{{wbr "more.system.title"}}</b><span>{{t "more.system.body"}}</span></th><td>{{t "area.system"}}</td><td></td></tr>
-        <tr><td>3</td><th scope="row"><b>{{wbr "more.native.title"}}</b><span>{{t "more.native.body"}}</span></th><td>{{t "area.engine"}}</td><td>Go</td></tr>
-        <tr><td>4</td><th scope="row"><b>{{wbr "more.updates.title"}}</b><span>{{t "more.updates.body"}}</span></th><td>{{t "area.updates"}}</td><td>Ed25519</td></tr>
-        <tr><td>5</td><th scope="row"><b>{{wbr "more.accounts.title"}}</b><span>{{t "more.accounts.body"}}</span></th><td>{{t "area.account"}}</td><td></td></tr>
-        <tr><td>6</td><th scope="row"><b>{{wbr "more.proxy.title"}}</b><span>{{t "more.proxy.body"}}</span></th><td>{{t "area.network"}}</td><td>HTTP_PROXY</td></tr>
-        <tr><td>7</td><th scope="row"><b>{{wbr "facts.notarized"}}</b></th><td>{{t "area.security"}}</td><td>Developer ID</td></tr>
-        <tr><td>8</td><th scope="row"><b>{{wbr "lyrics.tick2"}}</b></th><td>{{t "lyrics.tab"}}</td><td></td></tr>
-        <tr><td>9</td><th scope="row"><b>{{wbr "lyrics.tick3"}}</b></th><td>{{t "lyrics.tab"}}</td><td></td></tr>
-        <tr><td>10</td><th scope="row"><b>{{wbr "facts.languages"}}</b></th><td>{{t "nav.language"}}</td><td>4</td></tr>
+        <tr><td class="mono">1</td><th scope="row"><b>{{wbr "more.keys.title"}}</b><span>{{t "more.keys.body"}}</span></th></tr>
+        <tr><td class="mono">2</td><th scope="row"><b>{{wbr "more.system.title"}}</b><span>{{t "more.system.body"}}</span></th></tr>
+        <tr><td class="mono">3</td><th scope="row"><b>{{wbr "more.native.title"}}</b><span>{{t "more.native.body"}}</span></th></tr>
+        <tr><td class="mono">4</td><th scope="row"><b>{{wbr "more.updates.title"}}</b><span>{{t "more.updates.body"}}</span></th></tr>
+        <tr><td class="mono">5</td><th scope="row"><b>{{wbr "more.accounts.title"}}</b><span>{{t "more.accounts.body"}}</span></th></tr>
+        <tr><td class="mono">6</td><th scope="row"><b>{{wbr "more.proxy.title"}}</b><span>{{t "more.proxy.body"}}</span></th></tr>
       </tbody>
     </table>
   </div>
@@ -276,19 +262,18 @@
 
 <section class="track tint-rust" id="download" data-time="1:52">
   <div class="wrap">
-    <p class="track__head" aria-hidden="true"><span class="track__n">09</span><span class="track__t">{{t "download.kicker"}}</span><span class="track__d">1:52</span></p>
+    <p class="track__head" aria-hidden="true"><span class="track__n mono">09</span><span class="track__t">{{t "download.kicker"}}</span><span class="track__d mono">1:52</span></p>
     <div class="get">
-      <img src="{{.Root}}assets/icon-512.png" alt="" width="132" height="132" loading="lazy">
       <h2>{{wbr "closing.title"}}</h2>
       <p class="body">{{t "download.lead"}}</p>
       <div class="get__buttons">
-        <a class="btn btn--accent btn--lg" href="https://github.com/mreasonyang/ytmgo/releases" data-pick="primary">
+        <a class="btn btn--accent" href="https://github.com/mreasonyang/ytmgo/releases" data-pick="primary">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14"/></svg>
           <span data-pick-label>{{t "hero.cta"}}</span>
         </a>
-        <a class="btn btn--outline btn--lg" href="https://github.com/mreasonyang/ytmgo/releases" data-pick="secondary" hidden><span data-pick-label></span></a>
+        <a class="btn btn--outline" href="https://github.com/mreasonyang/ytmgo/releases" data-pick="secondary" hidden><span data-pick-label></span></a>
       </div>
-      <p class="mono get__req" data-pick="req"></p>
+      <p class="note get__req" data-pick="req"></p>
     </div>
 
     <details class="others" open data-others>
@@ -305,10 +290,10 @@
             <a class="btn btn--light" data-asset="mac-arm64" href="https://github.com/mreasonyang/ytmgo/releases">{{t "download.mac.arm"}}</a>
             <a class="btn btn--outline" data-asset="mac-amd64" href="https://github.com/mreasonyang/ytmgo/releases">{{t "download.mac.intel"}}</a>
           </div>
-          <p class="platform__version" data-version="mac-arm64" aria-live="polite"></p>
+          <p class="note platform__version" data-version="mac-arm64" aria-live="polite"></p>
           <p class="platform__label">{{t "download.mac.brew"}}</p>
           <div class="cmd"><code>brew install --cask mreasonyang/taps/ytmgo</code><button type="button" class="cmd__copy" data-copy>{{t "download.copy"}}</button></div>
-          <p class="platform__note">{{t "download.mac.note"}}</p>
+          <p class="note platform__note">{{t "download.mac.note"}}</p>
         </article>
         <article class="platform" id="download-windows" data-os="windows">
           <header>
@@ -321,8 +306,8 @@
             <a class="btn btn--light" data-asset="win-setup" href="https://github.com/mreasonyang/ytmgo/releases">{{t "download.win.setup"}}</a>
             <a class="btn btn--outline" data-asset="win-zip" href="https://github.com/mreasonyang/ytmgo/releases">{{t "download.win.zip"}}</a>
           </div>
-          <p class="platform__version" data-version="win-setup" aria-live="polite"></p>
-          <p class="platform__note">{{t "download.win.note"}} <a href="https://developer.microsoft.com/microsoft-edge/webview2/" rel="noopener">{{t "download.win.webview"}}</a></p>
+          <p class="note platform__version" data-version="win-setup" aria-live="polite"></p>
+          <p class="note platform__note">{{t "download.win.note"}} <a href="https://developer.microsoft.com/microsoft-edge/webview2/" rel="noopener">{{t "download.win.webview"}}</a></p>
         </article>
         <article class="platform" id="download-linux" data-os="linux">
           <header>
@@ -335,13 +320,13 @@
             <a class="btn btn--light" data-asset="linux-deb" href="https://github.com/mreasonyang/ytmgo/releases">{{t "download.linux.deb"}}</a>
             <a class="btn btn--outline" data-asset="linux-tar" href="https://github.com/mreasonyang/ytmgo/releases">{{t "download.linux.tar"}}</a>
           </div>
-          <p class="platform__version" data-version="linux-deb" aria-live="polite"></p>
+          <p class="note platform__version" data-version="linux-deb" aria-live="polite"></p>
           <p class="platform__label">{{t "download.linux.apt"}}</p>
           <div class="cmd"><code data-apt>sudo apt install ./ytmgo_VERSION_amd64.deb</code><button type="button" class="cmd__copy" data-copy>{{t "download.copy"}}</button></div>
         </article>
       </div>
     </details>
-    <p class="get__all"><a href="https://github.com/mreasonyang/ytmgo/releases" rel="noopener">{{t "download.all"}}</a> · <a href="https://github.com/mreasonyang/ytmgo/blob/main/README.md" rel="noopener">{{t "download.guide"}}</a></p>
+    <p class="get__all"><a class="link" href="https://github.com/mreasonyang/ytmgo/releases" rel="noopener">{{t "download.all"}}</a> <span class="note" aria-hidden="true">·</span> <a class="link" href="https://github.com/mreasonyang/ytmgo/blob/main/README.md" rel="noopener">{{t "download.guide"}}</a></p>
   </div>
 </section>
 
@@ -366,8 +351,8 @@
   <div class="wrap footer__grid">
     <div>
       <a class="brand" href="#top"><img src="{{.Root}}assets/icon-180.png" alt="" width="28" height="28"><span>ytm<b>GO</b></span></a>
-      <p class="footer__legal">{{t "footer.disclaimer"}}</p>
-      <p class="footer__legal">© {{.Year}} {{t "footer.copyright"}}</p>
+      <p class="note footer__legal">{{t "footer.disclaimer"}}</p>
+      <p class="note footer__legal">© {{.Year}} {{t "footer.copyright"}}</p>
     </div>
     <nav aria-label="{{t "footer.project"}}">
       <h3>{{t "footer.project"}}</h3>
@@ -388,13 +373,13 @@
      in, seeks through the page, and its play button pauses every animation. -->
 <div class="player" role="region" aria-label="{{t "player.label"}}" data-player hidden>
   <div class="player__now">
-    <span class="player__art" aria-hidden="true" data-now-n>01</span>
+    <span class="player__art mono" aria-hidden="true" data-now-n>01</span>
     <span class="player__meta"><b data-now-title>{{t "track.intro"}}</b><span>ytmGO</span></span>
   </div>
   <div class="player__mid">
     <div class="player__ctrls">
       <button type="button" class="iconbtn" data-prev aria-label="{{t "player.prev"}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M7 5.5a1 1 0 0 0-2 0v13a1 1 0 0 0 2 0zM19 6.2v11.6a1 1 0 0 1-1.55.83L9.2 13.03a1.2 1.2 0 0 1 0-2.06l8.25-5.6A1 1 0 0 1 19 6.2z"/></svg></button>
-      <button type="button" class="player__toggle" data-toggle aria-label="{{t "js.pause"}}"><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M8 5h2.5a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm5.5 0H16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-2.5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg></button>
+      <button type="button" class="round player__toggle" data-toggle aria-label="{{t "js.pause"}}"><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M8 5h2.5a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm5.5 0H16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-2.5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg></button>
       <button type="button" class="iconbtn" data-next aria-label="{{t "player.next"}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M17 5.5a1 1 0 0 1 2 0v13a1 1 0 0 1-2 0zM5 6.2v11.6a1 1 0 0 0 1.55.83l8.25-5.6a1.2 1.2 0 0 0 0-2.06l-8.25-5.6A1 1 0 0 0 5 6.2z"/></svg></button>
     </div>
     <div class="player__seek">

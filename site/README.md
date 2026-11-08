@@ -17,11 +17,15 @@ python3 -m http.server 8000 --directory site/dist
   colours in `native_style.go`). A fixed player bar, the app's player bar,
   follows the scroll, skips between tracks, and its play button pauses every
   animation. Without JavaScript the bar is hidden and everything is static.
-- Motion is opacity and transforms only. Content eases up as it scrolls into
-  view (`.rv`, added by `site.js` only when motion is on), the measured
-  figures count up, disclosures open smoothly, and the hero screenshot settles
-  with scroll. Reduced motion, the player's pause and no JavaScript all show
-  everything in place; the pause freezes only the decorative loops.
+- Design rules live at the top of `assets/site.css`, with the reasoning in
+  `docs/audits/2026-11-08-website-design`: use the tokens (type sizes, radii,
+  spacing), one component per kind of content, coral only for the brand
+  mark, the primary action and playback, and hover effects only on things
+  that act.
+- Motion shows the product or the state: the sung headline, the lyrics demo
+  and the playing equalizer. Everything else only fades in once as a block
+  (`.rv`, added by `site.js` only when motion is on). Reduced motion, the
+  player's pause and no JavaScript all show everything in place.
 - `assets/fonts/` holds Latin subsets of Bricolage Grotesque (headings) and
   JetBrains Mono (numbers and times), both under the SIL Open Font License
   (texts beside them). Other scripts fall back to the system fonts.

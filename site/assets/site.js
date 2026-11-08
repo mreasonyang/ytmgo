@@ -46,7 +46,6 @@
     card.parentNode.prepend(card);
     const others = document.querySelector("[data-others]");
     if (others) others.open = false;
-    document.querySelectorAll("[data-cta-label]").forEach((label) => { label.textContent = fmt(`cta.${os}`); });
   }
   // Phones and tablets can't run ytmGO: say so where the requirements go.
   if (!os) {
@@ -204,18 +203,6 @@
     addEventListener("resize", show);
   }
 
-  // Lines sung as you scroll past them.
-  const sung = [...document.querySelectorAll("[data-lines] li")];
-  const singLines = () => {
-    const y = innerHeight * 0.62;
-    let k = still ? sung.length - 1 : -1;
-    if (!still) sung.forEach((li, i) => { if (li.getBoundingClientRect().top < y) k = i; });
-    sung.forEach((li, i) => {
-      li.classList.toggle("is-on", i === k || (still && i <= k));
-      li.classList.toggle("is-past", !still && i < k);
-    });
-  };
-
   // The page player. Each track's length is in data-time; scrolling through a
   // track plays through its length, and the seek bar scrolls back. A track
   // starts playing once its top passes 40% of the window, so the clock runs
@@ -297,27 +284,22 @@
   // Reveals: content eases up as it scrolls into view, groups in a short
   // stagger. Only with motion; otherwise nothing is ever hidden.
   if (!still && typeof IntersectionObserver === "function") {
+    // Blocks, not rows: each section's head, its title and text, its media
+    // and its points fade in once.
     const groups = [
       [".track--hero .track__head", 0, 0],
       [".hero__below > *", 380, 110],
       [".shot--hero", 620, 0],
-      [".track:not(.track--hero) .track__head", 0, 0],
+      [".track:not(.track--hero) .track__head, .album__head, .album__actions, .tracklist, .faq h2", 0, 0],
       ["div.lede > *, h2.lede, .split__copy > *", 60, 90],
-      [".lyrics, .shot:not(.shot--hero), .settings", 160, 0],
-      [".specs li, .meters > div, .pair > *", 80, 90],
-      [".footnote, .table thead, .get__all, .faq h2", 0, 0],
-      [".album__head, .album__actions", 0, 80],
-      [".tracklist li", 40, 35],
-      [".table tbody tr", 40, 40],
+      [".lyrics, .shot:not(.shot--hero), .points--row, .points--grid, .meters, .table, .footnote", 160, 0],
       [".get > *", 0, 80],
-      [".others", 120, 0],
-      [".faq details", 60, 45],
+      [".others, .get__all, .faq__grid > div", 120, 0],
     ];
     const reveal = new IntersectionObserver((entries) => entries.forEach((entry) => {
       if (!entry.isIntersecting) return;
       entry.target.classList.add("is-in");
       reveal.unobserve(entry.target);
-      if (entry.target.matches(".meters > div")) count(entry.target.querySelector("dd"));
     }), { rootMargin: "0px 0px -6% 0px" });
     for (const [selector, delay, step] of groups) {
       const seen = new Map();
@@ -334,23 +316,6 @@
     document.querySelectorAll(".rv").forEach((el) => reveal.observe(el));
   }
 
-  // The measured figures count up once, landing on the exact text.
-  function count(dd) {
-    const final = dd.textContent;
-    const m = final.match(/^(\d+(?:\.(\d+))?)(.*)$/);
-    if (!m || !moving) return;
-    const target = Number(m[1]);
-    const places = (m[2] || "").length;
-    const start = performance.now();
-    const tick = (now) => {
-      const p = Math.min(1, (now - start) / 1100);
-      dd.textContent = p < 1 && moving ? (target * (1 - (1 - p) ** 3)).toFixed(places) + m[3] : final;
-      if (p < 1 && moving) requestAnimationFrame(tick);
-    };
-    dd.textContent = (0).toFixed(places) + m[3];
-    requestAnimationFrame(tick);
-  }
-
   // Disclosures animate only after the first paint, so closing the download
   // list for a detected platform doesn't play on load.
   if (typeof requestAnimationFrame === "function") {
@@ -361,10 +326,9 @@
   const frame = () => {
     queued = false;
     follow();
-    singLines();
   };
   const schedule = () => { if (!queued) { queued = true; requestAnimationFrame(frame); } };
-  if (player || sung.length) {
+  if (player) {
     addEventListener("scroll", schedule, { passive: true });
     addEventListener("resize", schedule);
     frame();

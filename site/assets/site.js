@@ -140,7 +140,8 @@
       try {
         await navigator.clipboard.writeText(text);
         button.textContent = fmt("copied");
-        setTimeout(() => { button.textContent = original; }, 1600);
+        button.classList.add("is-done");
+        setTimeout(() => { button.textContent = original; button.classList.remove("is-done"); }, 1600);
       } catch { /* Clipboard unavailable: the text stays selectable. */ }
     });
   });
@@ -151,6 +152,7 @@
   const onMotion = [];
   const setMoving = (on) => {
     moving = on;
+    if (!on) document.querySelectorAll(".rv:not(.is-in)").forEach((el) => el.classList.add("is-in"));
     document.documentElement.classList?.toggle("is-paused", !on);
     onMotion.forEach((f) => f());
   };
@@ -260,12 +262,18 @@
       if (!seeking) seek.value = String(Math.round((now / total) * 1000));
       seek.style.setProperty("--p", `${(now / total) * 100}%`);
       if (k === current) return;
+      const changed = current !== -1;
       current = k;
       tracks.forEach((track, i) => track.classList.toggle("is-playing", i === k));
       links.forEach((a, i) => a.classList.toggle("is-playing", i === k));
       player.querySelector("[data-now-title]").textContent = tracks[k].querySelector(".track__t").textContent;
       player.querySelector("[data-now-n]").textContent = tracks[k].querySelector(".track__n").textContent;
       player.style.setProperty("--tint", getComputedStyle(tracks[k]).getPropertyValue("--tint"));
+      if (changed && moving && player.animate) {
+        player.querySelectorAll("[data-now-title], [data-now-n]").forEach((el) => el.animate(
+          [{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }],
+          { duration: 320, easing: "cubic-bezier(.2, .7, .2, 1)" }));
+      }
     };
     const go = (k) => {
       const behavior = still ? "auto" : "smooth";
@@ -293,6 +301,69 @@
     toggle.addEventListener("click", () => { setMoving(!moving); label(); });
     setMoving(moving);
     label();
+  }
+
+  // Reveals: content eases up as it scrolls into view, groups in a short
+  // stagger. Only with motion; otherwise nothing is ever hidden.
+  if (!still && typeof IntersectionObserver === "function") {
+    const groups = [
+      [".track--hero .track__head", 0, 0],
+      [".hero__below > *", 380, 110],
+      [".shot--hero", 620, 0],
+      [".track:not(.track--hero) .track__head", 0, 0],
+      ["div.lede > *, h2.lede, .split__copy > *", 60, 90],
+      [".lyrics, .shot:not(.shot--hero), .settings", 160, 0],
+      [".specs li, .meters > div, .pair > *", 80, 90],
+      [".footnote, .table thead, .get__all, .faq h2", 0, 0],
+      [".album__head, .album__actions", 0, 80],
+      [".tracklist li", 40, 35],
+      [".table tbody tr", 40, 40],
+      [".get > *", 0, 80],
+      [".others", 120, 0],
+      [".faq details", 60, 45],
+    ];
+    const reveal = new IntersectionObserver((entries) => entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("is-in");
+      reveal.unobserve(entry.target);
+      if (entry.target.matches(".meters > div")) count(entry.target.querySelector("dd"));
+    }), { rootMargin: "0px 0px -6% 0px" });
+    for (const [selector, delay, step] of groups) {
+      const seen = new Map();
+      document.querySelectorAll(selector).forEach((el) => {
+        const i = seen.get(el.parentNode) || 0;
+        seen.set(el.parentNode, i + 1);
+        el.classList.add("rv");
+        el.style.setProperty("--rv-delay", `${delay + Math.min(i, 8) * step}ms`);
+      });
+    }
+    // Commit the hidden state before observing, so what's already on screen
+    // (the hero) eases in rather than appearing in place.
+    void document.body.offsetHeight;
+    document.querySelectorAll(".rv").forEach((el) => reveal.observe(el));
+  }
+
+  // The measured figures count up once, landing on the exact text.
+  function count(dd) {
+    const final = dd.textContent;
+    const m = final.match(/^(\d+(?:\.(\d+))?)(.*)$/);
+    if (!m || !moving) return;
+    const target = Number(m[1]);
+    const places = (m[2] || "").length;
+    const start = performance.now();
+    const tick = (now) => {
+      const p = Math.min(1, (now - start) / 1100);
+      dd.textContent = p < 1 && moving ? (target * (1 - (1 - p) ** 3)).toFixed(places) + m[3] : final;
+      if (p < 1 && moving) requestAnimationFrame(tick);
+    };
+    dd.textContent = (0).toFixed(places) + m[3];
+    requestAnimationFrame(tick);
+  }
+
+  // Disclosures animate only after the first paint, so closing the download
+  // list for a detected platform doesn't play on load.
+  if (typeof requestAnimationFrame === "function") {
+    requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.classList?.add("is-ready")));
   }
 
   let queued = false;

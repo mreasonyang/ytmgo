@@ -17,6 +17,11 @@ python3 -m http.server 8000 --directory site/dist
   colours in `native_style.go`). A fixed player bar, the app's player bar,
   follows the scroll, skips between tracks, and its play button pauses every
   animation. Without JavaScript the bar is hidden and everything is static.
+- Motion is opacity and transforms only. Content eases up as it scrolls into
+  view (`.rv`, added by `site.js` only when motion is on), the measured
+  figures count up, disclosures open smoothly, and the hero screenshot settles
+  with scroll. Reduced motion, the player's pause and no JavaScript all show
+  everything in place; the pause freezes only the decorative loops.
 - `assets/fonts/` holds Latin subsets of Bricolage Grotesque (headings) and
   JetBrains Mono (numbers and times), both under the SIL Open Font License
   (texts beside them). Other scripts fall back to the system fonts.

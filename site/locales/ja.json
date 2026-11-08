@@ -17,13 +17,16 @@
   "hero.cta": "ytmGO をダウンロード",
   "hero.source": "ソースコードを見る",
   "hero.note": "Apache-2.0 · ログインしなくてもすぐに聴けます",
+  "track.intro": "イントロ",
   "shot.home": "ytmGO のホーム画面：ライブラリのサイドバー、クイックアクセス、「もう一度聴く」の棚、プレーヤーバー。",
 
-  "facts.label": "概要",
-  "facts.native": "Go で開発、ネイティブ描画",
   "facts.notarized": "macOS 版は署名・公証済み",
-  "facts.signed": "アップデートは Ed25519 で署名",
   "facts.languages": "English · 简体中文 · 繁體中文 · 日本語",
+  "tracks.label": "曲目リスト",
+  "tracks.kind": "アルバム",
+  "tracks.count": "9 曲、30 分",
+  "tracks.col.title": "タイトル",
+  "tracks.play": "1 曲目から再生",
 
   "lyrics.kicker": "同期歌詞",
   "lyrics.title": "歌詞が、リズムに乗って",
@@ -69,6 +72,16 @@
   "speed.note": "リポジトリの scripts/diagnostics/measure.py を使い、Apple Silicon 上ですべての補助プロセスを含むプロセスツリー全体を計測しました。",
 
   "more.title": "細部にまで、こだわりを",
+  "track.details": "ディテール",
+  "details.col.area": "カテゴリ",
+  "details.col.detail": "詳細",
+  "area.keyboard": "キーボード",
+  "area.system": "システム",
+  "area.engine": "エンジン",
+  "area.updates": "アップデート",
+  "area.account": "アカウント",
+  "area.network": "ネットワーク",
+  "area.security": "セキュリティ",
   "more.keys.title": "キーボードで快適に",
   "more.keys.body": "⌘K または Ctrl+K で検索、マウスを使わずに再生を操作。グローバルショートカットを設定すれば、どのアプリからでも再生・一時停止できます。",
   "more.system.title": "システムになじむ",
@@ -95,7 +108,6 @@
   "privacy.signout.body": "「ログアウトしてデータを消去」で、暗号化されたセッションとその鍵が削除されます。ほかのブラウザでの Google へのログインには影響しません。",
 
   "download.kicker": "ダウンロード",
-  "download.title": "ytmGO を入手",
   "download.lead": "macOS・Windows・Linux 版はすべて無料。ダウンロードはプロジェクトの GitHub リリースから直接行われます。",
   "download.recommended": "このコンピュータ向け",
   "download.copy": "コピー",
@@ -115,6 +127,7 @@
   "download.linux.apt": "Ubuntu 24.04 でテスト済み。依存関係を解決するため apt でインストールしてください：",
   "download.all": "すべてのリリース",
   "download.guide": "インストールガイド",
+  "download.other": "すべてのプラットフォームとインストール方法",
 
   "faq.title": "よくある質問",
   "faq.official.q": "ytmGO は Google、YouTube、Spotify が作ったものですか？",
@@ -133,7 +146,6 @@
   "faq.data.a": "続きから再開するのに必要なものだけです：暗号化されたセッション、ライブラリのスナップショット、再生キューの位置、設定。YouTube が公開と示したカバー画像は最大 1 日キャッシュされますが、アバターはキャッシュされません。",
 
   "closing.title": "さあ、再生しよう",
-  "closing.cta": "ytmGO をダウンロード",
 
   "footer.disclaimer": "ytmGO は非公式のオープンソースクライアントであり、Google LLC、YouTube、Spotify とは関係ありません。YouTube および YouTube Music は Google LLC の商標です。",
   "footer.copyright": "ytmGO コントリビューター · Apache License 2.0",
@@ -141,11 +153,17 @@
   "footer.releases": "リリース",
   "footer.issues": "問題を報告",
   "footer.license": "ライセンス",
+  "player.label": "ページプレーヤー",
+  "player.prev": "前のセクション",
+  "player.next": "次のセクション",
+  "player.seek": "このページ内の位置",
 
   "js.cta.mac": "macOS 版をダウンロード",
   "js.cta.windows": "Windows 版をダウンロード",
   "js.cta.linux": "Linux 版をダウンロード",
   "js.version": "バージョン {version} · {date} リリース",
   "js.copied": "コピーしました",
-  "js.unavailable": "現在のリリースにはありません。すべてのリリースをご覧ください。"
+  "js.unavailable": "現在のリリースにはありません。すべてのリリースをご覧ください。",
+  "js.pause": "アニメーションを一時停止",
+  "js.play": "アニメーションを再生"
 }

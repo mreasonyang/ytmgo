@@ -17,13 +17,16 @@
   "hero.cta": "下載 ytmGO",
   "hero.source": "檢視原始碼",
   "hero.note": "Apache-2.0 授權 · 不必登入即可開始聆聽",
+  "track.intro": "開場",
   "shot.home": "ytmGO 首頁：左側音樂庫、快速入口、「再聽一次」歌曲列與底部播放列。",
 
-  "facts.label": "一覽",
-  "facts.native": "以 Go 打造，原生繪製",
   "facts.notarized": "macOS 版已簽署並經過公證",
-  "facts.signed": "更新檔經 Ed25519 簽署",
   "facts.languages": "English · 简体中文 · 繁體中文 · 日本語",
+  "tracks.label": "曲目",
+  "tracks.kind": "專輯",
+  "tracks.count": "9 首歌曲，30 分鐘",
+  "tracks.col.title": "標題",
+  "tracks.play": "從第一首開始播放",
 
   "lyrics.kicker": "同步歌詞",
   "lyrics.title": "歌詞，與旋律同拍",
@@ -69,6 +72,16 @@
   "speed.note": "在 Apple Silicon 上使用儲存庫中的 scripts/diagnostics/measure.py 測量，涵蓋整個程序樹及所有輔助程序。",
 
   "more.title": "細節處，同樣用心",
+  "track.details": "細節",
+  "details.col.area": "類別",
+  "details.col.detail": "說明",
+  "area.keyboard": "鍵盤",
+  "area.system": "系統",
+  "area.engine": "引擎",
+  "area.updates": "更新",
+  "area.account": "帳號",
+  "area.network": "網路",
+  "area.security": "安全",
   "more.keys.title": "鍵盤優先",
   "more.keys.body": "用 ⌘K 或 Ctrl+K 搜尋，不碰滑鼠也能控制播放，還能設定全域快速鍵，在任何應用程式中播放或暫停。",
   "more.system.title": "融入你的系統",
@@ -95,7 +108,6 @@
   "privacy.signout.body": "「登出並清除本機資料」會刪除加密的工作階段及其金鑰，其他瀏覽器中的 Google 登入狀態不受影響。",
 
   "download.kicker": "下載",
-  "download.title": "取得 ytmGO",
   "download.lead": "macOS、Windows 與 Linux 版皆免費，安裝檔直接來自專案的 GitHub 發行頁面。",
   "download.recommended": "適合這台電腦",
   "download.copy": "複製",
@@ -115,6 +127,7 @@
   "download.linux.apt": "已在 Ubuntu 24.04 上測試。請用 apt 安裝以自動處理相依套件：",
   "download.all": "所有版本",
   "download.guide": "安裝指南",
+  "download.other": "所有平台與安裝方式",
 
   "faq.title": "常見問題",
   "faq.official.q": "ytmGO 是 Google、YouTube 或 Spotify 推出的嗎？",
@@ -133,7 +146,6 @@
   "faq.data.a": "只保存從上次位置繼續所需的內容：加密的工作階段、音樂庫快照、播放佇列中的位置與你的偏好設定。YouTube 標示為公開的封面最多快取一天，你的大頭貼從不快取。",
 
   "closing.title": "按下播放",
-  "closing.cta": "下載 ytmGO",
 
   "footer.disclaimer": "ytmGO 是非官方開源用戶端，與 Google LLC、YouTube 及 Spotify 無關。YouTube 與 YouTube Music 是 Google LLC 的商標。",
   "footer.copyright": "ytmGO 貢獻者 · Apache License 2.0",
@@ -141,11 +153,17 @@
   "footer.releases": "發行版本",
   "footer.issues": "回報問題",
   "footer.license": "授權條款",
+  "player.label": "頁面播放器",
+  "player.prev": "上一部分",
+  "player.next": "下一部分",
+  "player.seek": "在本頁中的位置",
 
   "js.cta.mac": "下載 macOS 版",
   "js.cta.windows": "下載 Windows 版",
   "js.cta.linux": "下載 Linux 版",
   "js.version": "版本 {version} · {date} 發行",
   "js.copied": "已複製",
-  "js.unavailable": "目前的版本沒有這個安裝檔，請查看所有版本。"
+  "js.unavailable": "目前的版本沒有這個安裝檔，請查看所有版本。",
+  "js.pause": "暫停動畫",
+  "js.play": "播放動畫"
 }

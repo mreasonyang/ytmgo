@@ -11,6 +11,15 @@ python3 -m http.server 8000 --directory site/dist
 ```
 
 - `template.html` is the page; every visible string is a `{{t "key"}}` lookup.
+  The page is laid out as an album in the app's own visual language: each
+  section is a track (`section.track` with `data-time`) under a row from the
+  app's track table, washed in one of the app's header tints (`tint-*`, the
+  colours in `native_style.go`). A fixed player bar, the app's player bar,
+  follows the scroll, skips between tracks, and its play button pauses every
+  animation. Without JavaScript the bar is hidden and everything is static.
+- `assets/fonts/` holds Latin subsets of Bricolage Grotesque (headings) and
+  JetBrains Mono (numbers and times), both under the SIL Open Font License
+  (texts beside them). Other scripts fall back to the system fonts.
 - `locales/<locale>.json` holds the copy. `go run ./site/gen` fails if a locale
   misses or adds a key, or if the template stops using one, so the four
   languages stay in step. Keys starting with `js.` are passed to `site.js`.

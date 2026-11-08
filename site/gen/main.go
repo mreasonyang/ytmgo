@@ -50,6 +50,7 @@ type page struct {
 	Year       int
 	JS         map[string]string
 	ScriptHash string // changes the script URL whenever its contents change
+	StyleHash  string // the same for the stylesheet
 }
 
 func main() {
@@ -90,6 +91,11 @@ func build(src, out, base string) error {
 		return err
 	}
 	scriptHash := fmt.Sprintf("%x", sha256.Sum256(script))[:12]
+	style, err := os.ReadFile(filepath.Join(src, "assets", "site.css"))
+	if err != nil {
+		return err
+	}
+	styleHash := fmt.Sprintf("%x", sha256.Sum256(style))[:12]
 	if err := os.RemoveAll(out); err != nil {
 		return err
 	}
@@ -118,7 +124,7 @@ func build(src, out, base string) error {
 		}
 		root := strings.Repeat("../", strings.Count(l.Slug, "/"))
 		var buf bytes.Buffer
-		if err := t.Execute(&buf, page{Locale: l, Locales: locales, Root: root, Base: base, Year: time.Now().Year(), JS: js, ScriptHash: scriptHash}); err != nil {
+		if err := t.Execute(&buf, page{Locale: l, Locales: locales, Root: root, Base: base, Year: time.Now().Year(), JS: js, ScriptHash: scriptHash, StyleHash: styleHash}); err != nil {
 			return fmt.Errorf("%s: %w", l.Code, err)
 		}
 		if err := write(filepath.Join(out, l.Slug, "index.html"), buf.Bytes()); err != nil {
@@ -219,7 +225,10 @@ func headers() string {
 		"  X-Frame-Options: DENY\n" +
 		"\n" +
 		"/assets/shots/*\n" +
-		"  Cache-Control: public, max-age=604800\n"
+		"  Cache-Control: public, max-age=604800\n" +
+		"\n" +
+		"/assets/fonts/*\n" +
+		"  Cache-Control: public, max-age=2592000\n"
 }
 
 func write(path string, data []byte) error {

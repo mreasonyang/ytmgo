@@ -47,10 +47,13 @@ python3 -m http.server 8000 --directory site/dist
 - The generator also writes Cloudflare's `_headers`: a Content-Security-Policy
   that allows only the site's own files plus the GitHub API, the usual
   hardening headers, and a week of caching for screenshots.
-- The JavaScript URL includes a content hash, so a new deployment loads the
+- The social card (`assets/social.png`) is drawn by `encode_shots.py`;
+  `python3 -I site/tools/encode_shots.py --social` redraws only the card.
+- The script and stylesheet URLs include a content hash, so a new deployment loads the
   updated script even when a visitor has an earlier version cached.
 
-The root URL restores a language chosen in the switcher; without a valid saved
+`assets/boot.js` runs in `<head>` before the page paints, so a redirect never
+shows the English page first. The root URL restores a language chosen in the switcher; without a valid saved
 choice, it follows the first supported browser language. Redirects keep query
 parameters and fragments. Direct links to a localized page stay in that language.
 

@@ -25,7 +25,7 @@
   "tracks.kind": "专辑",
   "tracks.count": "9 首歌曲，30 分钟",
   "tracks.col.title": "标题",
-  "tracks.play": "从第一首开始播放",
+  "tracks.play": "播放下一首",
 
   "lyrics.kicker": "同步歌词",
   "lyrics.title": "歌词，|与旋律同拍",
@@ -68,7 +68,7 @@
   "speed.paused.label": "恢复会话并暂停",
   "speed.playing.value": "322.11 MiB",
   "speed.playing.label": "连续播放 + 同步歌词（中位数）",
-  "speed.note": "在 Apple Silicon 上使用仓库中的 scripts/diagnostics/measure.py 测量，涵盖整个进程树及所有辅助进程。",
+  "speed.note": "在 Apple 芯片上使用仓库中的 scripts/diagnostics/measure.py 测量，涵盖整个进程树及所有辅助进程。",
 
   "more.title": "细节处，|同样用心",
   "track.details": "细节",
@@ -140,7 +140,7 @@
   "faq.smartscreen.q": "为什么 Windows 会对|安装程序|发出警告？",
   "faq.smartscreen.a": "安装程序暂未进行 Authenticode 签名，因此 SmartScreen 可能请你确认。通过应用内更新下载的安装包在安装前仍会校验 Ed25519 签名。",
   "faq.updates.q": "如何更新？",
-  "faq.updates.a": "ytmGO 会在启动后不久检查一次更新，之后每天检查一次，每个更新都可以选择安装、稍后或跳过。Homebrew 用户也可以运行 brew upgrade，Linux 的 .deb 安装则通过 apt 更新。",
+  "faq.updates.a": "ytmGO 会在启动后不久检查一次更新，之后每天检查一次，每个更新都可以选择安装、稍后或跳过。使用 Homebrew 也可以运行 brew upgrade --cask --greedy。Linux 的 .deb 安装需用 apt 安装新版 .deb 来更新。",
   "faq.data.q": "ytmGO 会在|我的电脑上|保存什么？",
   "faq.data.a": "只保存从上次位置继续所需的内容：加密会话、音乐库快照、播放队列中的位置以及你的偏好设置。YouTube 标记为公开的封面最多缓存一天，你的头像从不缓存。",
 
@@ -163,6 +163,7 @@
   "js.version": "版本 {version} · {date} 发布",
   "js.copied": "已复制",
   "js.unavailable": "当前版本暂无此安装包，请查看全部版本。",
+  "js.desktop": "ytmGO 是桌面应用。请在 Mac、Windows 或 Linux 电脑上打开本页下载。",
   "js.pause": "暂停动画",
   "js.play": "播放动画"
 }

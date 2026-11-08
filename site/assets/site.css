@@ -261,7 +261,7 @@ figure.shot:not([class*=wrap]) { margin-inline: 0; }
 /* 04 Library: three lines sung as you scroll past them. */
 .sung-list { margin: 48px 0 0; padding: 0; list-style: none; }
 .sung-list li { padding: 16px 0; font: 650 clamp(22px, 2.4vw, 32px)/1.2 var(--display); letter-spacing: -0.015em; transition: color .5s; }
-.js .sung-list li { color: rgb(255 255 255 / .3); }
+.js .sung-list li { color: rgb(255 255 255 / .42); }
 .js .sung-list li.is-past { color: rgb(255 255 255 / .6); }
 .js .sung-list li.is-on { color: #fff; }
 .shot--sticky { position: sticky; top: 96px; }
@@ -427,6 +427,9 @@ kbd { display: inline-grid; place-items: center; min-width: 26px; height: 26px; 
 
 @media print {
   .rv { opacity: 1; translate: none; scale: none; }
+  .nav, .player, .skip, .hero__actions, .get__buttons, .others { display: none; }
+  .js body { padding-bottom: 0; }
+  .js .sung-list li { color: #fff; }
 }
 
 /* Smaller screens */

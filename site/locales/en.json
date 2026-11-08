@@ -25,11 +25,11 @@
   "tracks.kind": "Album",
   "tracks.count": "9 songs, 30 min",
   "tracks.col.title": "Title",
-  "tracks.play": "Play from the first track",
+  "tracks.play": "Play the next track",
 
   "lyrics.kicker": "Synced lyrics",
   "lyrics.title": "Lyrics that keep time",
-  "lyrics.body": "The current line lights up and stays centred as the song plays. Scroll to read ahead whenever you like; one click on Follow playback brings you back to the beat.",
+  "lyrics.body": "The current line lights up and stays centred as the song plays. Scroll to read ahead whenever you like; one click on “Follow playback” brings you back to the beat.",
   "lyrics.tick1": "Drag through the lyrics and let go to jump to that line",
   "lyrics.tick2": "Opens to the lyrics the first time you press play",
   "lyrics.tick3": "Make room for the words by shrinking the cover",
@@ -68,7 +68,7 @@
   "speed.paused.label": "Restored session, paused",
   "speed.playing.value": "322.11 MiB",
   "speed.playing.label": "Median while playing with synced lyrics",
-  "speed.note": "Measured on Apple Silicon across the whole process tree, every helper process included, with scripts/diagnostics/measure.py from the repository.",
+  "speed.note": "Measured on Apple silicon across the whole process tree, every helper process included, with scripts/diagnostics/measure.py from the repository.",
 
   "more.title": "Thoughtful down to the details",
   "track.details": "The details",
@@ -104,7 +104,7 @@
   "privacy.diag.title": "Diagnostics stay local",
   "privacy.diag.body": "Diagnostic files record only fixed status codes: no addresses, cookies, account IDs or logs, and nothing is uploaded.",
   "privacy.signout.title": "Signing out means gone",
-  "privacy.signout.body": "Sign out and clear local data deletes the encrypted session and its key. Your Google session in other browsers stays untouched.",
+  "privacy.signout.body": "“Sign out and clear local data” deletes the encrypted session and its key. Your Google session in other browsers stays untouched.",
 
   "download.kicker": "Download",
   "download.lead": "Free for macOS, Windows and Linux. Each download comes straight from the project's GitHub releases.",
@@ -120,7 +120,7 @@
   "download.win.zip": "Portable (.zip)",
   "download.win.note": "The installer isn't Authenticode-signed yet, so SmartScreen may ask before it runs. Sign-in needs the WebView2 Runtime:",
   "download.win.webview": "get it from Microsoft",
-  "download.linux.req": "x64 · GTK 3, WebKitGTK 4.1 2.50.2 or later, libsecret",
+  "download.linux.req": "x64 · GTK 3, WebKitGTK 4.1 (2.50.2 or later), libsecret",
   "download.linux.deb": "Debian / Ubuntu (.deb)",
   "download.linux.tar": "Portable (.tar.gz)",
   "download.linux.apt": "Tested on Ubuntu 24.04. Install with apt so dependencies resolve:",
@@ -140,7 +140,7 @@
   "faq.smartscreen.q": "Why does Windows warn me about the installer?",
   "faq.smartscreen.a": "The installer isn't Authenticode-signed yet, so SmartScreen may ask you to confirm. Updates delivered inside the app are still verified with an Ed25519 signature before they install.",
   "faq.updates.q": "How do updates work?",
-  "faq.updates.a": "ytmGO checks shortly after it starts and then once a day, and lets you install, postpone or skip each update. Homebrew users can also run brew upgrade, and Linux .deb installs update through apt.",
+  "faq.updates.a": "ytmGO checks shortly after it starts and then once a day, and lets you install, postpone or skip each update. With Homebrew you can also run brew upgrade --cask --greedy. A Linux .deb install updates when you install the newer .deb with apt.",
   "faq.data.q": "What does ytmGO keep on my computer?",
   "faq.data.a": "Only what it needs to start where you left off: the encrypted session, a snapshot of your library, your place in the queue and your preferences. Covers that YouTube marks as public are cached for up to a day; your avatar never is.",
 
@@ -163,6 +163,7 @@
   "js.version": "Version {version} · released {date}",
   "js.copied": "Copied",
   "js.unavailable": "Not in a current release. See all releases.",
+  "js.desktop": "ytmGO is a desktop app. Open this page on a Mac, Windows or Linux computer to download it.",
   "js.pause": "Pause animations",
   "js.play": "Play animations"
 }

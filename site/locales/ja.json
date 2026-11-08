@@ -25,7 +25,7 @@
   "tracks.kind": "アルバム",
   "tracks.count": "9 曲、30 分",
   "tracks.col.title": "タイトル",
-  "tracks.play": "1 曲目から再生",
+  "tracks.play": "次の曲を再生",
 
   "lyrics.kicker": "同期歌詞",
   "lyrics.title": "歌詞が、|リズムに|乗って",
@@ -68,7 +68,7 @@
   "speed.paused.label": "セッションを復元して一時停止中",
   "speed.playing.value": "322.11 MiB",
   "speed.playing.label": "同期歌詞を表示しながら再生中（中央値）",
-  "speed.note": "リポジトリの scripts/diagnostics/measure.py を使い、Apple Silicon 上ですべての補助プロセスを含むプロセスツリー全体を計測しました。",
+  "speed.note": "リポジトリの scripts/diagnostics/measure.py を使い、Apple シリコン上ですべての補助プロセスを含むプロセスツリー全体を計測しました。",
 
   "more.title": "細部にまで、|こだわりを",
   "track.details": "ディテール",
@@ -140,7 +140,7 @@
   "faq.smartscreen.q": "Windows で|インストーラーに|警告が出るのは|なぜですか？",
   "faq.smartscreen.a": "インストーラーはまだ Authenticode 署名されていないため、SmartScreen が確認を求めることがあります。アプリ内で配信されるアップデートは、インストール前に Ed25519 署名で検証されます。",
   "faq.updates.q": "アップデートは|どのように|行われますか？",
-  "faq.updates.a": "ytmGO は起動して間もなく、その後は 1 日 1 回アップデートを確認し、アップデートごとにインストール・後で・スキップを選べます。Homebrew なら brew upgrade、Linux の .deb は apt でもアップデートできます。",
+  "faq.updates.a": "ytmGO は起動して間もなく、その後は 1 日 1 回アップデートを確認し、アップデートごとにインストール・後で・スキップを選べます。Homebrew なら brew upgrade --cask --greedy でも更新できます。Linux の .deb は、新しい .deb を apt でインストールするとアップデートされます。",
   "faq.data.q": "ytmGO は|コンピュータに|何を|保存しますか？",
   "faq.data.a": "続きから再開するのに必要なものだけです：暗号化されたセッション、ライブラリのスナップショット、再生キューの位置、設定。YouTube が公開と示したカバー画像は最大 1 日キャッシュされますが、アバターはキャッシュされません。",
 
@@ -163,6 +163,7 @@
   "js.version": "バージョン {version} · {date} リリース",
   "js.copied": "コピーしました",
   "js.unavailable": "現在のリリースにはありません。すべてのリリースをご覧ください。",
+  "js.desktop": "ytmGO はデスクトップアプリです。Mac・Windows・Linux のパソコンでこのページを開いてダウンロードしてください。",
   "js.pause": "アニメーションを一時停止",
   "js.play": "アニメーションを再生"
 }

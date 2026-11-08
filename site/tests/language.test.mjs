@@ -3,11 +3,13 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
 
-const source = readFileSync(new URL("../assets/site.js", import.meta.url), "utf8");
+const boot = readFileSync(new URL("../assets/boot.js", import.meta.url), "utf8");
+const site = readFileSync(new URL("../assets/site.js", import.meta.url), "utf8");
 const key = "ytmgo-site-lang";
 
-// Run the shipped script with just the browser interfaces it uses. No network
-// requests or real browser preferences are changed by these checks.
+// Run the shipped scripts as a page does: boot.js in <head>, then site.js
+// unless boot.js navigated away, with just the browser interfaces they use.
+// No network requests or real browser preferences are changed by these checks.
 function visit({ saved = null, languages = ["en-US"], here = "en", search = "", hash = "", blocked = false, userAgent = "Browser" } = {}) {
   const storage = new Map(saved === null ? [] : [[key, saved]]);
   const clicks = new Map();
@@ -16,9 +18,9 @@ function visit({ saved = null, languages = ["en-US"], here = "en", search = "", 
     addEventListener: (event, handler) => { if (event === "click") clicks.set(slug, handler); },
   }));
   let redirect = null;
-  vm.runInNewContext(source, {
+  const context = vm.createContext({
     document: {
-      documentElement: { lang: here },
+      documentElement: { lang: here, classList: { add() {}, toggle() {} } },
       getElementById: () => ({ textContent: "{}" }),
       querySelectorAll: (selector) => selector === "a[data-lang]" ? links : [],
       querySelector: (selector) => selector === ".nav" ? { classList: { toggle() {} } } : null,
@@ -34,7 +36,9 @@ function visit({ saved = null, languages = ["en-US"], here = "en", search = "", 
     fetch: async () => ({ ok: true, json: async () => [] }),
     addEventListener() {},
     scrollY: 0,
-  }, { timeout: 1000 });
+  });
+  vm.runInContext(boot, context, { timeout: 1000 });
+  if (redirect === null) vm.runInContext(site, context, { timeout: 1000 });
   return { redirect, choose: (slug) => clicks.get(slug)(), saved: () => storage.get(key) };
 }
 

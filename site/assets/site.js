@@ -1,4 +1,4 @@
-// ytmGO website: language choice, platform detection, live release links,
+// ytmGO website: the language switcher, platform detection, live release links,
 // copy buttons, the sung headline, the lyrics demo and the page player.
 // The page works without it.
 (() => {
@@ -11,28 +11,12 @@
     set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* private mode */ } },
   };
 
-  // Language. The root restores a saved choice, otherwise it follows the
-  // browser's language. Explicit localized URLs keep their requested language.
-  const LANG_KEY = "ytmgo-site-lang";
+  // Language. The switcher saves the choice; boot.js restores it on the next
+  // visit to the root.
   document.querySelectorAll("a[data-lang]").forEach((a) => {
-    a.addEventListener("click", () => store.set(LANG_KEY, a.dataset.lang || "en"));
+    a.addEventListener("click", () => store.set("ytmgo-site-lang", a.dataset.lang || "en"));
   });
   const here = document.documentElement.lang;
-  if (here === "en" && !/bot|crawl|spider/i.test(navigator.userAgent)) {
-    const saved = store.get(LANG_KEY);
-    const pick = ["en", "zh-hans/", "zh-hant/", "ja/"].includes(saved) ? saved
-      : (navigator.languages || [navigator.language]).map((l) => l.toLowerCase()).map((l) => {
-      if (/^zh-(tw|hk|mo|hant)/.test(l)) return "zh-hant/";
-      if (l.startsWith("zh")) return "zh-hans/";
-      if (l.startsWith("ja")) return "ja/";
-      if (l.startsWith("en")) return "en";
-      return null;
-    }).find(Boolean);
-    if (pick && pick !== "en") {
-      location.replace(pick + location.search + location.hash);
-      return;
-    }
-  }
   document.addEventListener("click", (e) => {
     document.querySelectorAll("details.lang[open]").forEach((d) => { if (!d.contains(e.target)) d.open = false; });
   });
@@ -40,7 +24,6 @@
     if (e.key === "Escape") document.querySelectorAll("details.lang[open]").forEach((d) => { d.open = false; d.querySelector("summary").focus(); });
   });
 
-  document.documentElement.classList?.add("js");
   const still = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const nav = document.querySelector(".nav");
@@ -64,6 +47,11 @@
     const others = document.querySelector("[data-others]");
     if (others) others.open = false;
     document.querySelectorAll("[data-cta-label]").forEach((label) => { label.textContent = fmt(`cta.${os}`); });
+  }
+  // Phones and tablets can't run ytmGO: say so where the requirements go.
+  if (!os) {
+    const req = document.querySelector('[data-pick="req"]');
+    if (req) req.textContent = fmt("desktop");
   }
   // The download track's buttons mirror this computer's platform card. Only
   // macOS keeps the card's labels, since its two buttons differ by chip.
@@ -229,7 +217,9 @@
   };
 
   // The page player. Each track's length is in data-time; scrolling through a
-  // track plays through its length, and the seek bar scrolls back.
+  // track plays through its length, and the seek bar scrolls back. A track
+  // starts playing once its top passes 40% of the window, so the clock runs
+  // from 0:00 at the top of the page to the full length at the bottom.
   const player = document.querySelector("[data-player]");
   const tracks = [...document.querySelectorAll("section.track[data-time]")];
   let follow = () => {};
@@ -243,23 +233,26 @@
     const elapsed = player.querySelector("[data-elapsed]");
     const toggle = player.querySelector("[data-toggle]");
     const tops = () => tracks.map((t) => t.getBoundingClientRect().top + scrollY);
-    const ends = (t, i) => (i + 1 < t.length ? t[i + 1] : document.documentElement.scrollHeight);
-    const mark = () => innerHeight * 0.4;
+    // Scroll positions where each track starts and ends.
+    const spans = () => {
+      const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+      const starts = tops().map((top, i) => (i ? Math.min(max, Math.max(0, top - innerHeight * 0.4)) : 0));
+      return starts.map((a, i) => [a, Math.max(a + 1, i + 1 < starts.length ? starts[i + 1] : max)]);
+    };
     let current = -1;
     let seeking = false;
     player.querySelector("[data-total]").textContent = clock(total);
     player.hidden = false;
 
     follow = () => {
-      const t = tops();
-      const y = scrollY + mark();
+      const s = spans();
       let k = 0;
-      t.forEach((top, i) => { if (top <= y) k = i; });
-      const f = Math.min(1, Math.max(0, (y - t[k]) / (ends(t, k) - t[k])));
-      const atEnd = scrollY + innerHeight >= document.documentElement.scrollHeight - 2;
-      const now = atEnd ? total : starts[k] + f * lengths[k];
+      s.forEach(([a], i) => { if (a <= scrollY) k = i; });
+      const f = Math.min(1, Math.max(0, (scrollY - s[k][0]) / (s[k][1] - s[k][0])));
+      const now = starts[k] + f * lengths[k];
       elapsed.textContent = clock(now);
       if (!seeking) seek.value = String(Math.round((now / total) * 1000));
+      seek.setAttribute("aria-valuetext", `${clock(now)} / ${clock(total)}`);
       seek.style.setProperty("--p", `${(now / total) * 100}%`);
       if (k === current) return;
       const changed = current !== -1;
@@ -276,15 +269,14 @@
       }
     };
     const go = (k) => {
-      const behavior = still ? "auto" : "smooth";
+      const behavior = still ? "instant" : "smooth";
       if (k <= 0) scrollTo({ top: 0, behavior });
       else tracks[Math.min(k, tracks.length - 1)].scrollIntoView({ behavior });
     };
     player.querySelector("[data-prev]").addEventListener("click", () => {
-      const t = tops();
       // Like a player: back to the start of this track, or the previous one
       // if you're already there.
-      go(scrollY > t[current] + 80 && current > 0 ? current : current - 1);
+      go(scrollY > tops()[current] + 80 && current > 0 ? current : current - 1);
     });
     player.querySelector("[data-next]").addEventListener("click", () => go(current + 1));
     seek.addEventListener("input", () => {
@@ -292,9 +284,8 @@
       const want = (Number(seek.value) / 1000) * total;
       let k = 0;
       starts.forEach((s, i) => { if (s <= want) k = i; });
-      const t = tops();
-      const f = (want - starts[k]) / lengths[k];
-      scrollTo({ top: t[k] + f * (ends(t, k) - t[k]) - mark(), behavior: "auto" });
+      const [a, b] = spans()[k];
+      scrollTo({ top: a + ((want - starts[k]) / lengths[k]) * (b - a), behavior: "instant" });
     });
     seek.addEventListener("change", () => { seeking = false; });
     const label = () => toggle.setAttribute("aria-label", fmt(moving ? "pause" : "play"));

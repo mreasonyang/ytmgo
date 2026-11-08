@@ -56,7 +56,8 @@ type page struct {
 	Year       int
 	JS         map[string]string
 	ScriptHash string // changes the script URL whenever its contents change
-	StyleHash  string // the same for the stylesheet
+	BootHash   string // the same for boot.js
+	StyleHash  string // and for the stylesheet
 }
 
 func main() {
@@ -92,16 +93,14 @@ func build(src, out, base string) error {
 	if err != nil {
 		return err
 	}
-	script, err := os.ReadFile(filepath.Join(src, "assets", "site.js"))
-	if err != nil {
-		return err
+	hashes := map[string]string{}
+	for _, name := range []string{"site.js", "boot.js", "site.css"} {
+		data, err := os.ReadFile(filepath.Join(src, "assets", name))
+		if err != nil {
+			return err
+		}
+		hashes[name] = fmt.Sprintf("%x", sha256.Sum256(data))[:12]
 	}
-	scriptHash := fmt.Sprintf("%x", sha256.Sum256(script))[:12]
-	style, err := os.ReadFile(filepath.Join(src, "assets", "site.css"))
-	if err != nil {
-		return err
-	}
-	styleHash := fmt.Sprintf("%x", sha256.Sum256(style))[:12]
 	if err := os.RemoveAll(out); err != nil {
 		return err
 	}
@@ -142,7 +141,7 @@ func build(src, out, base string) error {
 		}
 		root := strings.Repeat("../", strings.Count(l.Slug, "/"))
 		var buf bytes.Buffer
-		if err := t.Execute(&buf, page{Locale: l, Locales: locales, Root: root, Base: base, Year: time.Now().Year(), JS: js, ScriptHash: scriptHash, StyleHash: styleHash}); err != nil {
+		if err := t.Execute(&buf, page{Locale: l, Locales: locales, Root: root, Base: base, Year: time.Now().Year(), JS: js, ScriptHash: hashes["site.js"], BootHash: hashes["boot.js"], StyleHash: hashes["site.css"]}); err != nil {
 			return fmt.Errorf("%s: %w", l.Code, err)
 		}
 		if err := write(filepath.Join(out, l.Slug, "index.html"), buf.Bytes()); err != nil {
@@ -187,7 +186,7 @@ func checkKeys(strs map[string]map[string]string) error {
 }
 
 // notFoundStyle is the 404 page's only style; _headers allows it by hash.
-const notFoundStyle = `body{margin:0;min-height:100vh;display:grid;place-content:center;gap:16px;text-align:center;background:#0a0a0b;color:#fff;font:16px/1.5 system-ui,sans-serif}a{color:#ff7a6e}nav{display:flex;gap:16px;justify-content:center}`
+const notFoundStyle = `body{margin:0;min-height:100vh;display:grid;place-content:center;justify-items:center;gap:20px;padding:24px;text-align:center;background:linear-gradient(#5f2a1c,#000 60%) #000;color:#fff;font:16px/1.5 system-ui,sans-serif}img{border-radius:22%}h1{margin:0;font-size:56px;line-height:1}p{margin:0;color:#b3b3b3}nav{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}a{padding:8px 16px;border-radius:999px;background:rgb(255 255 255/.1);color:#fff;text-decoration:none;font-weight:600}a:hover{background:rgb(255 255 255/.18)}`
 
 // extras writes what Cloudflare Pages expects beside the pages.
 func extras(out, base string) error {
@@ -212,9 +211,11 @@ func extras(out, base string) error {
 		// Root-relative, so preview deployments link within themselves.
 		links = append(links, fmt.Sprintf(`<a href="/%s" lang="%s">%s</a>`, l.Slug, l.Lang, l.Name))
 	}
-	files["404.html"] = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ytmGO — page not found</title>` +
+	files["404.html"] = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ytmGO — page not found</title><link rel="icon" href="/assets/icon-32.png" sizes="32x32">` +
 		`<style>` + notFoundStyle + `</style>` +
-		`<h1>404</h1><nav>` + strings.Join(links, "") + `</nav></html>` + "\n"
+		`<img src="/assets/icon-180.png" alt="" width="88" height="88"><h1>404</h1>` +
+		`<p>This page isn't here.<br><span lang="zh-Hans">找不到此页面。</span> <span lang="zh-Hant">找不到此頁面。</span> <span lang="ja">このページは見つかりません。</span></p>` +
+		`<nav>` + strings.Join(links, "") + `</nav></html>` + "\n"
 	for name, body := range files {
 		if err := write(filepath.Join(out, name), []byte(body)); err != nil {
 			return err

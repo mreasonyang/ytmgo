@@ -38,7 +38,19 @@
 }
 :lang(zh-Hans) { --sans: ui-sans-serif, -apple-system, "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans SC", "Noto Sans CJK SC", sans-serif; }
 :lang(zh-Hant) { --sans: ui-sans-serif, -apple-system, "PingFang TC", "Microsoft JhengHei UI", "Microsoft JhengHei", "Noto Sans TC", "Noto Sans CJK TC", sans-serif; }
-:lang(ja) { word-break: auto-phrase; line-break: strict; --sans: ui-sans-serif, -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, "Noto Sans JP", "Noto Sans CJK JP", sans-serif; }
+:lang(ja) { --sans: ui-sans-serif, -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, "Noto Sans JP", "Noto Sans CJK JP", sans-serif; }
+
+/* Chinese and Japanese. Headings and other short lines keep their phrases
+   whole: they break only at the <wbr> phrase marks from the locale files, at
+   spaces and at punctuation, falling back to any character only when a phrase
+   can't fit. Running text breaks between any characters as usual, with strict
+   kinsoku, more leading, and a little air between CJK and Latin. */
+:is(:lang(zh-Hans), :lang(zh-Hant), :lang(ja)) { line-break: strict; text-autospace: normal; }
+:is(:lang(zh-Hans), :lang(zh-Hant), :lang(ja)) :is(h1, h2, h3, summary, .sung-list li, .table b, .album__meta, .hero__note) { word-break: keep-all; overflow-wrap: break-word; }
+:is(summary, .sung-list li, .table b) { text-wrap: balance; }
+.nowrap { white-space: nowrap; }
+:is(:lang(zh-Hans), :lang(zh-Hant), :lang(ja)) :is(p, .table span, .meters dt, .specs li) { line-height: 1.8; letter-spacing: .02em; }
+:is(:lang(zh-Hans), :lang(zh-Hant), :lang(ja)) .mono { letter-spacing: 0; }
 
 /* The app's header tints (native_style.go), one per track. */
 .tint-blue { --tint: #2d46b9; }
@@ -137,12 +149,13 @@ html:not(.js) .nav, .nav.is-scrolled { background: rgb(0 0 0 / .78); backdrop-fi
   background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 78%, #000) 0, color-mix(in srgb, var(--tint) 34%, #000) 260px, var(--base) 100%);
 }
 .track__head {
-  display: grid; grid-template-columns: 44px 1fr auto; align-items: center;
+  display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 0 16px; align-items: center;
   height: 56px; margin-bottom: 72px; border-bottom: 1px solid rgb(255 255 255 / .16);
   font-size: 15px; font-weight: 600;
 }
 .track__n, .track__d { font: 500 14px/1 var(--mono); color: rgb(255 255 255 / .7); }
 .track__n { display: flex; align-items: center; height: 14px; }
+.track__t, .tracklist .t b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .track.is-playing .track__t { color: var(--accent); }
 .track.is-playing .track__n, .tracklist a.is-playing .n { font-size: 0; }
 .track.is-playing .track__n::before, .tracklist a.is-playing .n::before {
@@ -164,7 +177,10 @@ html:not(.js) .nav, .nav.is-scrolled { background: rgb(0 0 0 / .78); backdrop-fi
 .track--hero::before { height: 980px; }
 .track--hero .track__head { margin-bottom: 48px; }
 .hero__title { font-size: clamp(54px, 9.2vw, 136px); max-width: 12.5em; }
-:is(:lang(zh-Hans), :lang(zh-Hant), :lang(ja)) .hero__title { font-size: clamp(44px, 7.4vw, 108px); }
+:is(:lang(zh-Hans), :lang(zh-Hant), :lang(ja)) .hero__title { font-size: clamp(40px, 6.6vw, 96px); }
+/* Full-width glyphs run about twice as wide as the condensed Latin face. */
+:is(:lang(zh-Hans), :lang(zh-Hant), :lang(ja)) h2 { font-size: clamp(32px, 3.9vw, 56px); }
+:is(:lang(zh-Hans), :lang(zh-Hant), :lang(ja)) .get h2 { font-size: clamp(56px, 8vw, 120px); }
 .hero__below { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px 72px; align-items: end; margin-top: 48px; }
 .hero__lead { max-width: 54ch; color: rgb(255 255 255 / .82); font-size: clamp(17px, 1.5vw, 19px); }
 .hero__actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 14px 28px; }

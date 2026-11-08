@@ -8,6 +8,11 @@
 //
 // Every locale must carry exactly the English keys, and the template must use
 // every key, so a translation can be neither missing nor stale.
+//
+// A "|" in a string marks a phrase boundary. Chinese and Japanese headings
+// keep their phrases whole and break only there (or at spaces and
+// punctuation): {{wbr "key"}} turns each mark into <wbr>, while {{t "key"}}
+// and the strings passed to the script drop the marks.
 package main
 
 import (
@@ -18,6 +23,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"html"
 	"html/template"
 	"io/fs"
 	"log"
@@ -105,18 +111,30 @@ func build(src, out, base string) error {
 		js := map[string]string{}
 		for k, v := range s {
 			if strings.HasPrefix(k, "js.") {
-				js[strings.TrimPrefix(k, "js.")] = v
+				js[strings.TrimPrefix(k, "js.")] = plain(v)
 				used[k] = true
 			}
 		}
+		lookup := func(key string) (string, error) {
+			v, ok := s[key]
+			if !ok {
+				return "", fmt.Errorf("unknown key %q", key)
+			}
+			used[key] = true
+			return v, nil
+		}
 		t, err := template.New("page").Funcs(template.FuncMap{
 			"t": func(key string) (string, error) {
-				v, ok := s[key]
-				if !ok {
-					return "", fmt.Errorf("unknown key %q", key)
+				v, err := lookup(key)
+				return plain(v), err
+			},
+			"wbr": func(key string) (template.HTML, error) {
+				v, err := lookup(key)
+				parts := strings.Split(v, "|")
+				for i, p := range parts {
+					parts[i] = html.EscapeString(p)
 				}
-				used[key] = true
-				return v, nil
+				return template.HTML(strings.Join(parts, "<wbr>")), err
 			},
 		}).Parse(string(raw))
 		if err != nil {
@@ -146,6 +164,9 @@ func build(src, out, base string) error {
 	}
 	return extras(out, base)
 }
+
+// plain drops the phrase marks from a string.
+func plain(s string) string { return strings.ReplaceAll(s, "|", "") }
 
 // checkKeys requires every locale to carry exactly the English keys.
 func checkKeys(strs map[string]map[string]string) error {

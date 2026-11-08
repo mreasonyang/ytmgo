@@ -23,6 +23,12 @@ python3 -m http.server 8000 --directory site/dist
 - `locales/<locale>.json` holds the copy. `go run ./site/gen` fails if a locale
   misses or adds a key, or if the template stops using one, so the four
   languages stay in step. Keys starting with `js.` are passed to `site.js`.
+- Chinese and Japanese headings never break inside a word: they break only at
+  spaces, punctuation and `|` phrase marks in the locale strings (for example
+  `"你的音乐，|值得不止一个|浏览器标签页"`). Headings use `{{wbr "key"}}`, which
+  turns each `|` into `<wbr>`; `{{t "key"}}` and the script's strings drop the
+  marks. When you add or reword a CJK heading, mark its phrase boundaries, and
+  use a no-break space (`\u00a0`) to keep a name like YouTube Music together.
 - `assets/shots/<locale>/` are screenshots of the real interface, rendered by
   `TestSiteScreenshots` (`site_shots_test.go`) through MyGo's software renderer
   with a fictional catalogue: invented artists, titles and lyrics with

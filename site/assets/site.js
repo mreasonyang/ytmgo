@@ -160,23 +160,25 @@
     const segmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter(here, { granularity: "word" }) : null;
     document.querySelectorAll("[data-sing]").forEach((line) => {
       let n = 0;
-      line.querySelectorAll("span").forEach((span) => {
-        const text = span.textContent;
+      // Only text is split into words; the <wbr> phrase breaks stay put.
+      [...line.childNodes].filter((node) => node.nodeType === 3).forEach((node) => {
+        const text = node.textContent;
         const parts = segmenter ? [...segmenter.segment(text)].map((s) => ({ text: s.segment, word: s.isWordLike }))
           : text.split(/(\s+)/).map((t) => ({ text: t, word: /\S/.test(t) }));
-        span.textContent = "";
+        const words = document.createDocumentFragment();
         let last = null;
         for (const part of parts) {
           if (!part.text) continue;
-          if (/^\s+$/.test(part.text)) { span.append(part.text); last = null; continue; }
+          if (/^\s+$/.test(part.text)) { words.append(part.text); last = null; continue; }
           if (!part.word && last) { last.textContent += part.text; continue; }
           const w = document.createElement("span");
           w.className = "w";
           w.textContent = part.text;
           w.style.setProperty("--at", `${0.3 + n++ * 0.28}s`);
-          span.append(w);
+          words.append(w);
           last = w;
         }
+        node.replaceWith(words);
       });
       requestAnimationFrame(() => line.classList.add("is-sung"));
     });

@@ -65,7 +65,7 @@
 <section class="track track--hero tint-rust" id="intro" data-time="2:48">
   <div class="wrap">
     <p class="track__head" aria-hidden="true"><span class="track__n">01</span><span class="track__t">{{t "track.intro"}}</span><span class="track__d">2:48</span></p>
-    <h1 class="hero__title" data-sing><span>{{t "hero.title.a"}}</span> <span>{{t "hero.title.b"}}</span></h1>
+    <h1 class="hero__title" data-sing>{{wbr "hero.title"}}</h1>
     <div class="hero__below">
       <p class="hero__lead">{{t "hero.lead"}}</p>
       <div class="hero__actions">
@@ -93,7 +93,7 @@
       <div>
         <p class="album__kind">{{t "tracks.kind"}}</p>
         <h2 class="album__title" id="tracks-title">ytm<b>GO</b></h2>
-        <p class="album__meta">{{t "hero.eyebrow"}} · {{t "tracks.count"}}</p>
+        <p class="album__meta">{{t "hero.eyebrow"}} · <span class="nowrap">{{t "tracks.count"}}</span></p>
       </div>
     </div>
     <div class="album__actions">
@@ -101,7 +101,7 @@
     </div>
     <ol class="tracklist" aria-label="{{t "tracks.label"}}">
       <li class="tracklist__head" aria-hidden="true"><span>#</span><span>{{t "tracks.col.title"}}</span><span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span></li>
-      <li><a href="#intro" data-track-link><span class="n">1</span><span class="t"><b>{{t "track.intro"}}</b><span>{{t "hero.title.a"}} {{t "hero.title.b"}}</span></span><span class="d">2:48</span></a></li>
+      <li><a href="#intro" data-track-link><span class="n">1</span><span class="t"><b>{{t "track.intro"}}</b><span>{{t "hero.title"}}</span></span><span class="d">2:48</span></a></li>
       <li><a href="#lyrics" data-track-link><span class="n">2</span><span class="t"><b>{{t "lyrics.kicker"}}</b><span>{{t "lyrics.title"}}</span></span><span class="d">3:41</span></a></li>
       <li><a href="#immersive" data-track-link><span class="n">3</span><span class="t"><b>{{t "immersive.kicker"}}</b><span>{{t "immersive.title"}}</span></span><span class="d">4:12</span></a></li>
       <li><a href="#library" data-track-link><span class="n">4</span><span class="t"><b>{{t "library.kicker"}}</b><span>{{t "library.title"}}</span></span><span class="d">3:05</span></a></li>
@@ -119,7 +119,7 @@
     <p class="track__head" aria-hidden="true"><span class="track__n">02</span><span class="track__t">{{t "lyrics.kicker"}}</span><span class="track__d">3:41</span></p>
     <div class="split">
       <div class="split__copy">
-        <h2>{{t "lyrics.title"}}</h2>
+        <h2>{{wbr "lyrics.title"}}</h2>
         <p class="body">{{t "lyrics.body"}}</p>
         <p class="mono hint">↳ {{t "lyrics.tick1"}}</p>
       </div>
@@ -153,7 +153,7 @@
   <div class="wrap">
     <p class="track__head" aria-hidden="true"><span class="track__n">03</span><span class="track__t">{{t "immersive.kicker"}}</span><span class="track__d">4:12</span></p>
     <div class="lede">
-      <h2>{{t "immersive.title"}}</h2>
+      <h2>{{wbr "immersive.title"}}</h2>
       <p class="body">{{t "immersive.body"}}</p>
     </div>
   </div>
@@ -172,12 +172,12 @@
     <p class="track__head" aria-hidden="true"><span class="track__n">04</span><span class="track__t">{{t "library.kicker"}}</span><span class="track__d">3:05</span></p>
     <div class="split split--wide">
       <div class="split__copy">
-        <h2>{{t "library.title"}}</h2>
+        <h2>{{wbr "library.title"}}</h2>
         <p class="body">{{t "library.body"}}</p>
         <ul class="sung-list" data-lines>
-          <li>{{t "library.tick1"}}</li>
-          <li>{{t "library.tick2"}}</li>
-          <li>{{t "library.tick3"}}</li>
+          <li>{{wbr "library.tick1"}}</li>
+          <li>{{wbr "library.tick2"}}</li>
+          <li>{{wbr "library.tick3"}}</li>
         </ul>
       </div>
       <figure class="shot shot--sticky">
@@ -191,7 +191,7 @@
   <div class="wrap">
     <p class="track__head" aria-hidden="true"><span class="track__n">05</span><span class="track__t">{{t "layout.kicker"}}</span><span class="track__d">3:27</span></p>
     <div class="lede">
-      <h2>{{t "layout.title"}}</h2>
+      <h2>{{wbr "layout.title"}}</h2>
       <p class="body">{{t "layout.body"}}</p>
     </div>
     <div class="pair">
@@ -209,7 +209,7 @@
   <div class="wrap">
     <p class="track__head" aria-hidden="true"><span class="track__n">06</span><span class="track__t">{{t "speed.kicker"}}</span><span class="track__d">2:16</span></p>
     <div class="lede">
-      <h2>{{t "speed.title"}}</h2>
+      <h2>{{wbr "speed.title"}}</h2>
       <p class="body">{{t "speed.body"}}</p>
     </div>
     <dl class="meters">
@@ -226,24 +226,24 @@
     <p class="track__head" aria-hidden="true"><span class="track__n">07</span><span class="track__t">{{t "privacy.kicker"}}</span><span class="track__d">3:58</span></p>
     <div class="split">
       <div class="split__copy">
-        <h2>{{t "privacy.title"}}</h2>
+        <h2>{{wbr "privacy.title"}}</h2>
         <p class="body">{{t "privacy.lead"}}</p>
       </div>
       <ul class="settings">
         <li>
-          <div><h3>{{t "privacy.signin.title"}}</h3><p>{{t "privacy.signin.body"}}</p></div>
+          <div><h3>{{wbr "privacy.signin.title"}}</h3><p>{{t "privacy.signin.body"}}</p></div>
           <span class="settings__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><path d="M3.5 9h17M7 7h.01M9.5 7h.01"/></svg></span>
         </li>
         <li>
-          <div><h3>{{t "privacy.encrypt.title"}}</h3><p>{{t "privacy.encrypt.body"}}</p></div>
+          <div><h3>{{wbr "privacy.encrypt.title"}}</h3><p>{{t "privacy.encrypt.body"}}</p></div>
           <span class="settings__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5M12 14.5v2"/></svg></span>
         </li>
         <li>
-          <div><h3>{{t "privacy.diag.title"}}</h3><p>{{t "privacy.diag.body"}}</p></div>
+          <div><h3>{{wbr "privacy.diag.title"}}</h3><p>{{t "privacy.diag.body"}}</p></div>
           <span class="settings__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4.5" width="16" height="11" rx="2"/><path d="M8.5 19.5h7M12 15.5v4"/></svg></span>
         </li>
         <li>
-          <div><h3>{{t "privacy.signout.title"}}</h3><p>{{t "privacy.signout.body"}}</p></div>
+          <div><h3>{{wbr "privacy.signout.title"}}</h3><p>{{t "privacy.signout.body"}}</p></div>
           <span class="settings__icon settings__icon--danger" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 7h14M10 4h4M7 7l.8 12a1.5 1.5 0 0 0 1.5 1.4h5.4a1.5 1.5 0 0 0 1.5-1.4L17 7M10.5 11v5.5M13.5 11v5.5"/></svg></span>
         </li>
       </ul>
@@ -254,20 +254,20 @@
 <section class="track tint-brown" id="details" data-time="4:31">
   <div class="wrap">
     <p class="track__head" aria-hidden="true"><span class="track__n">08</span><span class="track__t">{{t "track.details"}}</span><span class="track__d">4:31</span></p>
-    <h2 class="lede">{{t "more.title"}}</h2>
+    <h2 class="lede">{{wbr "more.title"}}</h2>
     <table class="table">
       <thead><tr><th scope="col">#</th><th scope="col">{{t "tracks.col.title"}}</th><th scope="col">{{t "details.col.area"}}</th><th scope="col"><span class="sr">{{t "details.col.detail"}}</span></th></tr></thead>
       <tbody>
-        <tr><td>1</td><th scope="row"><b>{{t "more.keys.title"}}</b><span>{{t "more.keys.body"}}</span></th><td>{{t "area.keyboard"}}</td><td><kbd>⌘</kbd><kbd>K</kbd></td></tr>
-        <tr><td>2</td><th scope="row"><b>{{t "more.system.title"}}</b><span>{{t "more.system.body"}}</span></th><td>{{t "area.system"}}</td><td></td></tr>
-        <tr><td>3</td><th scope="row"><b>{{t "more.native.title"}}</b><span>{{t "more.native.body"}}</span></th><td>{{t "area.engine"}}</td><td>Go</td></tr>
-        <tr><td>4</td><th scope="row"><b>{{t "more.updates.title"}}</b><span>{{t "more.updates.body"}}</span></th><td>{{t "area.updates"}}</td><td>Ed25519</td></tr>
-        <tr><td>5</td><th scope="row"><b>{{t "more.accounts.title"}}</b><span>{{t "more.accounts.body"}}</span></th><td>{{t "area.account"}}</td><td></td></tr>
-        <tr><td>6</td><th scope="row"><b>{{t "more.proxy.title"}}</b><span>{{t "more.proxy.body"}}</span></th><td>{{t "area.network"}}</td><td>HTTP_PROXY</td></tr>
-        <tr><td>7</td><th scope="row"><b>{{t "facts.notarized"}}</b></th><td>{{t "area.security"}}</td><td>Developer ID</td></tr>
-        <tr><td>8</td><th scope="row"><b>{{t "lyrics.tick2"}}</b></th><td>{{t "lyrics.tab"}}</td><td></td></tr>
-        <tr><td>9</td><th scope="row"><b>{{t "lyrics.tick3"}}</b></th><td>{{t "lyrics.tab"}}</td><td></td></tr>
-        <tr><td>10</td><th scope="row"><b>{{t "facts.languages"}}</b></th><td>{{t "nav.language"}}</td><td>4</td></tr>
+        <tr><td>1</td><th scope="row"><b>{{wbr "more.keys.title"}}</b><span>{{t "more.keys.body"}}</span></th><td>{{t "area.keyboard"}}</td><td><kbd>⌘</kbd><kbd>K</kbd></td></tr>
+        <tr><td>2</td><th scope="row"><b>{{wbr "more.system.title"}}</b><span>{{t "more.system.body"}}</span></th><td>{{t "area.system"}}</td><td></td></tr>
+        <tr><td>3</td><th scope="row"><b>{{wbr "more.native.title"}}</b><span>{{t "more.native.body"}}</span></th><td>{{t "area.engine"}}</td><td>Go</td></tr>
+        <tr><td>4</td><th scope="row"><b>{{wbr "more.updates.title"}}</b><span>{{t "more.updates.body"}}</span></th><td>{{t "area.updates"}}</td><td>Ed25519</td></tr>
+        <tr><td>5</td><th scope="row"><b>{{wbr "more.accounts.title"}}</b><span>{{t "more.accounts.body"}}</span></th><td>{{t "area.account"}}</td><td></td></tr>
+        <tr><td>6</td><th scope="row"><b>{{wbr "more.proxy.title"}}</b><span>{{t "more.proxy.body"}}</span></th><td>{{t "area.network"}}</td><td>HTTP_PROXY</td></tr>
+        <tr><td>7</td><th scope="row"><b>{{wbr "facts.notarized"}}</b></th><td>{{t "area.security"}}</td><td>Developer ID</td></tr>
+        <tr><td>8</td><th scope="row"><b>{{wbr "lyrics.tick2"}}</b></th><td>{{t "lyrics.tab"}}</td><td></td></tr>
+        <tr><td>9</td><th scope="row"><b>{{wbr "lyrics.tick3"}}</b></th><td>{{t "lyrics.tab"}}</td><td></td></tr>
+        <tr><td>10</td><th scope="row"><b>{{wbr "facts.languages"}}</b></th><td>{{t "nav.language"}}</td><td>4</td></tr>
       </tbody>
     </table>
   </div>
@@ -278,7 +278,7 @@
     <p class="track__head" aria-hidden="true"><span class="track__n">09</span><span class="track__t">{{t "download.kicker"}}</span><span class="track__d">1:52</span></p>
     <div class="get">
       <img src="{{.Root}}assets/icon-512.png" alt="" width="132" height="132" loading="lazy">
-      <h2>{{t "closing.title"}}</h2>
+      <h2>{{wbr "closing.title"}}</h2>
       <p class="body">{{t "download.lead"}}</p>
       <div class="get__buttons">
         <a class="btn btn--accent btn--lg" href="https://github.com/mreasonyang/ytmgo/releases" data-pick="primary">
@@ -291,7 +291,7 @@
     </div>
 
     <details class="others" open data-others>
-      <summary>{{t "download.other"}}</summary>
+      <summary>{{wbr "download.other"}}</summary>
       <div class="platforms">
         <article class="platform" id="download-mac" data-os="mac">
           <header>
@@ -346,15 +346,15 @@
 
 <section class="faq" id="faq">
   <div class="wrap faq__grid">
-    <h2>{{t "faq.title"}}</h2>
+    <h2>{{wbr "faq.title"}}</h2>
     <div>
-      <details><summary>{{t "faq.official.q"}}</summary><p>{{t "faq.official.a"}}</p></details>
-      <details><summary>{{t "faq.premium.q"}}</summary><p>{{t "faq.premium.a"}}</p></details>
-      <details><summary>{{t "faq.free.q"}}</summary><p>{{t "faq.free.a"}}</p></details>
-      <details><summary>{{t "faq.passkey.q"}}</summary><p>{{t "faq.passkey.a"}}</p></details>
-      <details><summary>{{t "faq.smartscreen.q"}}</summary><p>{{t "faq.smartscreen.a"}}</p></details>
-      <details><summary>{{t "faq.updates.q"}}</summary><p>{{t "faq.updates.a"}}</p></details>
-      <details><summary>{{t "faq.data.q"}}</summary><p>{{t "faq.data.a"}}</p></details>
+      <details><summary>{{wbr "faq.official.q"}}</summary><p>{{t "faq.official.a"}}</p></details>
+      <details><summary>{{wbr "faq.premium.q"}}</summary><p>{{t "faq.premium.a"}}</p></details>
+      <details><summary>{{wbr "faq.free.q"}}</summary><p>{{t "faq.free.a"}}</p></details>
+      <details><summary>{{wbr "faq.passkey.q"}}</summary><p>{{t "faq.passkey.a"}}</p></details>
+      <details><summary>{{wbr "faq.smartscreen.q"}}</summary><p>{{t "faq.smartscreen.a"}}</p></details>
+      <details><summary>{{wbr "faq.updates.q"}}</summary><p>{{t "faq.updates.a"}}</p></details>
+      <details><summary>{{wbr "faq.data.q"}}</summary><p>{{t "faq.data.a"}}</p></details>
     </div>
   </div>
 </section>

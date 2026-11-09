@@ -96,6 +96,8 @@ gh workflow run macos-package.yml --repo mreasonyang/ytmgo --ref main -f mode=no
 
 仅测试打包时保持 `publish_release=false`，不会影响线上更新。验证预发行版时可填写 `release_version=0.5.0-rc.1`。客户端默认只接收稳定版，预发行版也能升级到版本号更高的稳定版。
 
+`mygo.json` 中的版本用于下一开发目标，不复用当前正式版号。例如正式发布 `0.0.65` 成功后，将源码中的开发目标推进到 `0.0.66`；普通构建会显示 `0.0.66 DEV`，仍不接收自动更新。该源码改动不会创建正式发布或修改线上更新源。
+
 0.4.0 需要从 [Releases](https://github.com/mreasonyang/ytmgo/releases) 手动安装一次。将应用从 DMG 拖入自己可写的 Applications 目录再运行；只读 DMG 内运行无法替换自身。安装 0.5.0 后启动自动检查，菜单可随时检查。更新窗口内可开启自动下载，默认先征询安装；更新替换 App bundle，不主动清理账号、语言或外观数据。
 
 维护命令不启动音乐窗口或读取账号，用于隔离的已发布包验收：

@@ -26,3 +26,14 @@ func TestDevelopmentBuildCannotEnableUpdates(t *testing.T) {
 		t.Fatal("development update action must not invoke the updater")
 	}
 }
+
+func TestNativeAboutShowsDevelopmentIdentity(t *testing.T) {
+	options := developmentAboutOptions()
+	if !strings.Contains(options.ApplicationVersion, "DEV") || options.ApplicationName != "ytmGO Dev" {
+		t.Fatal("native About panel must distinguish development builds")
+	}
+	about := applicationMenuWithUpdates(updateMenuItem).Submenu[0]
+	if about.Role != "" || about.Click == nil {
+		t.Fatal("native default About action would hide development identity")
+	}
+}

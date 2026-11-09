@@ -283,7 +283,10 @@ Everything else is flat and separated by `line` hairlines or surface steps.
 One 24 px grid, 1.8 px round strokes, adapted from Lucide (ISC; its
 Feather-derived icons MIT, notice in `resources/notices`). New icons come
 from the same set, redrawn to the same stroke, or are drawn to match it;
-never from another app's interface. Filled variants mark the active
+never from another app's interface. **One glyph, one meaning:** the
+diagonal expand arrows always mean immersive mode; a panel that grows or
+shrinks in place uses vertical chevrons, and a control whose glyph changes
+with its state needs no active dot. Filled variants mark the active
 destination and the primary transport glyphs. Icons label actions; they
 don't decorate. Icon-only buttons always have an accessible name and a
 tooltip. The website uses icons only on actions and platform names.

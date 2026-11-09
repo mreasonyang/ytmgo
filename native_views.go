@@ -1864,7 +1864,7 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 
 func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32, overlay, revealLyrics bool, windowHeight, gap float32) {
 	{
-		ui.Row(c).Height(32).Shrink(0).Gap(4).AlignItems(ui.Center).Children(func() {
+		ui.Row(c).Height(32).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, a.Tr("shellNowPlaying")).FontSize(tokenSizeBody).FontWeight(700).Grow(1).MinWidth(0).MaxLines(1).Ellipsis("…")
 			if nativeIconButton(c, "expand", a.Tr("shellImmersive")+" · "+a.Tr("shellNowPlaying"), p, false, 32).Clicked() {
 				m.Immersive = true
@@ -1957,11 +1957,18 @@ func nativePanelTabs(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 		}
 		if !m.Immersive && !m.Video && m.selectedPanelTab() == "lyrics" {
 			ui.Spacer(c)
-			icon, label := "expand", "nativeLyricsExpand"
+			// The lyrics card grows over the cover, or gives the space back.
+			// Its glyph says which, so it needs no active dot; it sits in the
+			// chips' row in the chips' style, part of that control row.
+			icon, label := "grow-vertical", "nativeLyricsExpand"
 			if m.LyricsExpanded {
-				icon, label = "collapse", "nativeLyricsRestore"
+				icon, label = "shrink-vertical", "nativeLyricsRestore"
 			}
-			if nativeIconButton(c.Key("lyrics-layout"), icon, a.Tr(label), p, m.LyricsExpanded, 32).Disabled(a.SetLyricsExpanded == nil).Clicked() {
+			b := nativeIconButton(c.Key("lyrics-layout"), icon, a.Tr(label), p, false, tokenProductChip).TextColor(p.text).Background(p.hover)
+			if b.Hovered() {
+				b.Background(p.press)
+			}
+			if b.Disabled(a.SetLyricsExpanded == nil).Clicked() {
 				a.SetLyricsExpanded(!m.LyricsExpanded)
 			}
 		}

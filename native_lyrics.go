@@ -113,7 +113,7 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 	state.width, state.height, state.language = width, height, m.Language
 	return body.Children(func() {
 		if len(m.LyricLines) == 0 && m.LyricsAvailable {
-			ui.Text(c, a.Tr("nativeLyricsUnsynced")).Shrink(0).FontSize(12).TextColor(p.secondary)
+			ui.Text(c, a.Tr("nativeLyricsUnsynced")).Shrink(0).FontSize(tokenSizeMicro).TextColor(p.secondary)
 		}
 		scroll := ui.Scroll(c.Key("lyrics-scroll")).Grow(1).MinHeight(0).Gap(12).TrackScroll(&state.scroll).Focusable().Label(a.Tr("shellLyrics") + " · " + a.Tr("shellContent"))
 		scroll.HandleInput(func(ev ui.InputEvent) bool {
@@ -146,7 +146,7 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 				if lyrics == "" {
 					lyrics, color = a.Tr("nativeLyricsUnavailable"), p.secondary
 				}
-				ui.Text(c, lyrics).FontSize(20).FontWeight(700).LineHeight(1.6).TextColor(color)
+				ui.Text(c, lyrics).FontSize(tokenSizeLineMin).FontWeight(700).LineHeight(1.6).TextColor(color)
 			} else {
 				// Leave enough room to center even the first and last cues. Keep
 				// these spaces fixed during manual reading so resizing the panel
@@ -162,7 +162,7 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 					if state.drag.moved && i == state.drag.selected {
 						color = p.accent
 					}
-					row := ui.Text(c.Key(fmt.Sprintf("lyric-%d", i)), line.Text).Shrink(0).FontSize(20).FontWeight(700).LineHeight(1.6).TextColor(color)
+					row := ui.Text(c.Key(fmt.Sprintf("lyric-%d", i)), line.Text).Shrink(0).FontSize(tokenSizeLineMin).FontWeight(700).LineHeight(1.6).TextColor(color)
 					if i == 0 {
 						first = row.LayoutBounds()
 					}
@@ -192,7 +192,7 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 				}
 			}
 			if m.LyricsSource != "" {
-				ui.Text(c, m.LyricsSource).FontSize(12).TextColor(p.secondary).Shrink(0)
+				ui.Text(c, m.LyricsSource).FontSize(tokenSizeMicro).TextColor(p.secondary).Shrink(0)
 			}
 		})
 		nativeLyricsDragPreview(c, scroll, state, m, a, p)

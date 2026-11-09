@@ -313,7 +313,7 @@ func nativePill(c *ui.Context, label string, p nativePalette, primary bool) ui.E
 
 // nativeChip is a filter chip: translucent at rest, inverted when selected.
 func nativeChip(c *ui.Context, label string, p nativePalette, selected bool) ui.Element {
-	b := ui.Button(c, label).Height(32).MinHeight(32).Padding(0, 12).Radius(16).BorderWidth(0).FontSize(13).FontWeight(500).Background(p.hover).TextColor(p.text)
+	b := ui.Button(c, label).Height(32).MinHeight(32).Padding(0, 12).Radius(16).BorderWidth(0).FontSize(tokenSizeMeta).FontWeight(500).Background(p.hover).TextColor(p.text)
 	if selected {
 		b.Selected(true).Background(p.text).TextColor(p.base)
 	} else if b.Hovered() {
@@ -406,7 +406,7 @@ func nativeSearchField(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 	}
 	return field.Children(func() {
 		ui.Icon(c, nativeIcons["search"]).Size(22, 22).TextColor(p.secondary)
-		input := ui.TextInput(c.Key("search-input"), &m.Query).Grow(1).MinWidth(0).Height(h - 6).Padding(0).BorderWidth(0).Background(ui.Transparent).Placeholder(a.Tr("shellSearchPlaceholder")).Label(a.Tr("shellNavSearch")).FontSize(15)
+		input := ui.TextInput(c.Key("search-input"), &m.Query).Grow(1).MinWidth(0).Height(h - 6).Padding(0).BorderWidth(0).Background(ui.Transparent).Placeholder(a.Tr("shellSearchPlaceholder")).Label(a.Tr("shellNavSearch")).FontSize(tokenSizeSmall)
 		if m.FocusSearch {
 			input.Focus()
 			m.FocusSearch = false
@@ -477,7 +477,7 @@ func nativeAccount(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, ba
 		ui.Row(c).Height(36).MinWidth(0).Shrink(1).PaddingX(12).Gap(8).Radius(18).Background(p.raised).AlignItems(ui.Center).Label(status).Tooltip(status).Children(func() {
 			ui.Spinner(c).Size(16, 16)
 			if badge {
-				ui.Text(c, status).MinWidth(0).FontSize(13).FontWeight(600).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+				ui.Text(c, status).MinWidth(0).FontSize(tokenSizeMeta).FontWeight(600).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
 			}
 		})
 		return
@@ -625,7 +625,7 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 				}
 				b.Children(func() {
 					ui.Icon(c, nativeIcons[libraryIcon]).Size(24, 24)
-					ui.Text(c, a.Tr("shellLibraryTitle")).FontSize(16).FontWeight(700).MaxLines(1).Ellipsis("…")
+					ui.Text(c, a.Tr("shellLibraryTitle")).FontSize(tokenSizeBody).FontWeight(700).MaxLines(1).Ellipsis("…")
 				})
 				if b.Clicked() {
 					a.Navigate("library")
@@ -734,7 +734,7 @@ func nativeLibraryCacheStatus(c *ui.Context, m *UIModel, a ViewActions, p native
 		if m.LibraryRefreshing {
 			ui.Spinner(c).Size(14, 14).Label(a.Tr(key))
 		}
-		ui.Text(c, a.Tr(key)).Grow(1).MinWidth(0).FontSize(12).TextColor(p.secondary).MaxLines(2)
+		ui.Text(c, a.Tr(key)).Grow(1).MinWidth(0).FontSize(tokenSizeMicro).TextColor(p.secondary).MaxLines(2)
 		if m.LibraryErrorKey != "" && m.SignedIn && a.RetryLibrary != nil {
 			if nativeIconButton(c, "refresh", a.Tr("buttonRetry"), p, false, 28).Clicked() {
 				a.RetryLibrary()
@@ -775,8 +775,8 @@ func nativeLibraryPrompt(c *ui.Context, m *UIModel, a ViewActions, p nativePalet
 	ui.Column(c).Padding(8, 8).Children(func() {
 		ui.Column(c).Padding(20).Gap(12).Radius(8).Background(p.raised).Children(func() {
 			title, hint := nativeLibraryPromptText(m)
-			ui.Text(c, a.Tr(title)).FontSize(16).FontWeight(700)
-			ui.Text(c, a.Tr(hint)).FontSize(14).LineHeight(1.5).TextColor(p.secondary)
+			ui.Text(c, a.Tr(title)).FontSize(tokenSizeBody).FontWeight(700)
+			ui.Text(c, a.Tr(hint)).FontSize(tokenSizeSmall).LineHeight(1.5).TextColor(p.secondary)
 			switch {
 			case nativeRestoring(m):
 				// The Library page and Settings carry the slow-restore detail.
@@ -842,11 +842,11 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 			return
 		}
 		ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
-			title := ui.Text(c, item.Title).FontSize(15).FontWeight(500).MaxLines(1).Ellipsis("…")
+			title := ui.Text(c, item.Title).FontSize(tokenSizeSmall).FontWeight(500).MaxLines(1).Ellipsis("…")
 			if playing {
 				title.TextColor(p.accentText)
 			}
-			ui.Text(c, nativeLibrarySubtitle(item, a)).FontSize(13).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+			ui.Text(c, nativeLibrarySubtitle(item, a)).FontSize(tokenSizeMeta).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
 		})
 		if playing {
 			ui.Icon(c, nativeIcons["volume"]).Size(16, 16).TextColor(p.accent)
@@ -891,13 +891,13 @@ func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, co
 				top = 8
 			}
 			ui.Column(c).Padding(top, inset, 0).Gap(8).Children(func() {
-				size := float32(32)
+				size := float32(tokenSizeH2)
 				if compact {
-					size = 26
+					size = tokenSizeH3
 				}
 				ui.Text(c, m.Page.Title).FontSize(size).FontWeight(800).LineHeight(1.15).MaxLines(2).Ellipsis("…").Role(ui.RoleHeading)
 				if m.Page.Subtitle != "" {
-					ui.Text(c, m.Page.Subtitle).TextColor(p.secondary).FontSize(14)
+					ui.Text(c, m.Page.Subtitle).TextColor(p.secondary).FontSize(tokenSizeMeta)
 				}
 			})
 		}
@@ -983,12 +983,12 @@ func nativePageBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, c
 		ui.Column(c).Padding(48, 16).Gap(12).AlignItems(ui.Center).Children(func() {
 			if m.Route == "library" && m.SignedIn {
 				ui.Icon(c, nativeIcons["library"]).Size(48, 48).TextColor(p.muted)
-				ui.Text(c, a.Tr("nativeLibraryEmptyTitle")).FontSize(20).FontWeight(700)
+				ui.Text(c, a.Tr("nativeLibraryEmptyTitle")).FontSize(tokenSizeH3).FontWeight(700)
 				ui.Text(c, a.Tr("nativeLibraryEmptyBody")).TextColor(p.secondary)
 				return
 			}
 			ui.Icon(c, nativeIcons["search"]).Size(48, 48).TextColor(p.muted)
-			ui.Text(c, a.Tr("nativeEmptyResults")).FontSize(20).FontWeight(700)
+			ui.Text(c, a.Tr("nativeEmptyResults")).FontSize(tokenSizeH3).FontWeight(700)
 			ui.Text(c, a.Tr("shellSearchPlaceholder")).TextColor(p.secondary)
 		})
 	}
@@ -1023,7 +1023,7 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 			if m.LibraryCached {
 				body = "nativeLibraryReconnectBody"
 			}
-			ui.Text(c, a.Tr(title)).FontSize(24).FontWeight(800)
+			ui.Text(c, a.Tr(title)).FontSize(tokenSizeH3).FontWeight(800)
 			ui.Text(c, a.Tr(body)).TextColor(p.secondary)
 			if m.AccountRestore == accountRestoreSlow {
 				ui.Text(c, a.Tr("nativeAccountRestoreSlow")).TextColor(p.secondary)
@@ -1065,10 +1065,7 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 		}
 		ui.Column(c.Key(fmt.Sprintf("shelf-%d", i))).Gap(12).Children(func() {
 			if shelf.Title != "" {
-				size := float32(24)
-				if compact {
-					size = 20
-				}
+				size := float32(tokenSizeH3)
 				ui.Text(c, shelf.Title).FontSize(size).FontWeight(800).MaxLines(1).Ellipsis("…").Role(ui.RoleHeading)
 			}
 			switch {
@@ -1136,10 +1133,10 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 	title := func(size float32) {
 		ui.Text(c, m.Page.Title).FontSize(size).FontWeight(800).LineHeight(1.08).MaxLines(2).Ellipsis("…").Role(ui.RoleHeading)
 		if creator := strings.TrimSpace(m.Page.Creator); creator != "" && !nativeMetadataHasCreator(m.Page.Subtitle, creator) {
-			ui.Text(c, creator).FontSize(14).FontWeight(600).MaxLines(1).Ellipsis("…")
+			ui.Text(c, creator).FontSize(tokenSizeSmall).FontWeight(600).MaxLines(1).Ellipsis("…")
 		}
 		if m.Page.Subtitle != "" {
-			ui.Text(c, m.Page.Subtitle).FontSize(14).FontWeight(500).TextColor(p.secondary).MaxLines(2).Ellipsis("…")
+			ui.Text(c, m.Page.Subtitle).FontSize(tokenSizeMeta).FontWeight(500).TextColor(p.secondary).MaxLines(2).Ellipsis("…")
 		}
 	}
 	if compact && short {
@@ -1233,7 +1230,7 @@ func nativeShortcutTile(c *ui.Context, item catalog.Item, m *UIModel, a ViewActi
 	}
 	b.Children(func() {
 		nativeArtwork(c, item.Artwork, 64, 0, a, p)
-		t := ui.Text(c, item.Title).Grow(1).MinWidth(0).FontSize(14).FontWeight(700).MaxLines(2).Ellipsis("…")
+		t := ui.Text(c, item.Title).Grow(1).MinWidth(0).FontSize(tokenSizeSmall).FontWeight(700).MaxLines(2).Ellipsis("…")
 		if playing {
 			t.TextColor(p.accentText)
 			ui.Icon(c, nativeIcons["volume"]).Size(16, 16).TextColor(p.accent)
@@ -1381,7 +1378,7 @@ func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p n
 				})
 			}
 		})
-		title := ui.Text(c, item.Title).FontSize(15).FontWeight(700).MaxLines(1).Ellipsis("…")
+		title := ui.Text(c, item.Title).FontSize(tokenSizeSmall).FontWeight(700).MaxLines(1).Ellipsis("…")
 		if item.ID != "" && item.ID == m.Current.ID {
 			title.TextColor(p.accentText)
 		}
@@ -1389,7 +1386,7 @@ func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p n
 		if subtitle == "" {
 			subtitle = nativeKindLabel(item, a)
 		}
-		ui.Text(c, subtitle).FontSize(13).LineHeight(1.4).TextColor(p.secondary).MaxLines(2).Ellipsis("…")
+		ui.Text(c, subtitle).FontSize(tokenSizeMeta).LineHeight(1.4).TextColor(p.secondary).MaxLines(2).Ellipsis("…")
 	})
 	b.ContextMenu(nativeTrackMenu(item, a))
 	if b.Clicked() {
@@ -1417,9 +1414,9 @@ func nativeTrackList(c *ui.Context, items []catalog.Item, m *UIModel, a ViewActi
 	ui.Column(c).Children(func() {
 		if numbered && !compact {
 			ui.Row(c).Height(36).PaddingX(16).Gap(16).AlignItems(ui.Center).TextColor(p.secondary).Children(func() {
-				ui.Text(c, "#").Width(24).Shrink(0).FontSize(14).TextAlign(ui.Center)
-				ui.Text(c, a.Tr("shellColumnTitle")).Grow(1).Basis(0).MinWidth(0).FontSize(13).MaxLines(1).Ellipsis("…")
-				ui.Text(c, a.Tr("shellColumnAlbum")).Grow(0.75).Basis(0).MinWidth(0).FontSize(13).MaxLines(1).Ellipsis("…")
+				ui.Text(c, "#").Width(24).Shrink(0).FontSize(tokenSizeMeta).TextAlign(ui.Center)
+				ui.Text(c, a.Tr("shellColumnTitle")).Grow(1).Basis(0).MinWidth(0).FontSize(tokenSizeMeta).MaxLines(1).Ellipsis("…")
+				ui.Text(c, a.Tr("shellColumnAlbum")).Grow(0.75).Basis(0).MinWidth(0).FontSize(tokenSizeMeta).MaxLines(1).Ellipsis("…")
 				ui.Row(c).Width(48).Shrink(0).Justify(ui.End).Label(a.Tr("shellColumnDuration")).Children(func() {
 					ui.Icon(c, nativeIcons["clock"]).Size(16, 16)
 				})
@@ -1458,7 +1455,7 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 				case hovered:
 					ui.Icon(c, nativeIcons["play"]).Size(14, 14).TextColor(p.text)
 				default:
-					ui.Text(c, fmt.Sprint(index+1)).FontSize(15).TextColor(p.secondary)
+					ui.Text(c, fmt.Sprint(index+1)).FontSize(tokenSizeSmall).TextColor(p.secondary)
 				}
 			})
 		}
@@ -1469,7 +1466,7 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 			}
 			nativeArtwork(c, item.Artwork, 40, radius, a, p)
 			ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
-				t := ui.Text(c, item.Title).FontSize(15).FontWeight(500).MaxLines(1).Ellipsis("…")
+				t := ui.Text(c, item.Title).FontSize(tokenSizeSmall).FontWeight(500).MaxLines(1).Ellipsis("…")
 				if playing {
 					t.TextColor(p.accentText)
 				}
@@ -1477,14 +1474,14 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 				if mode == nativeTrackRow {
 					subtitle = nativeResultSubtitle(item, m, a)
 				}
-				artist := ui.Text(c, subtitle).FontSize(13).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+				artist := ui.Text(c, subtitle).FontSize(tokenSizeMeta).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
 				if hovered {
 					artist.TextColor(p.text)
 				}
 			})
 		})
 		if !compact && mode != nativeTrackQueue {
-			ui.Text(c, item.Album).Grow(0.75).Basis(0).MinWidth(0).FontSize(13).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+			ui.Text(c, item.Album).Grow(0.75).Basis(0).MinWidth(0).FontSize(tokenSizeMeta).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
 		}
 		if playing && mode != nativeTrackNumbered {
 			ui.Icon(c, nativeIcons["volume"]).Size(16, 16).TextColor(p.accent)
@@ -1494,7 +1491,7 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 			if item.Duration > 0 {
 				duration = nativeTime(item.Duration.Seconds())
 			}
-			ui.Text(c, duration).Width(48).Shrink(0).FontSize(13).TextColor(p.secondary).TextAlign(ui.End)
+			ui.Text(c, duration).Width(48).Shrink(0).FontSize(tokenSizeMeta).TextColor(p.secondary).TextAlign(ui.End)
 		}
 	})
 	b.ContextMenu(nativeTrackMenu(item, a))
@@ -1595,7 +1592,7 @@ func nativeTrackCaption(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 		if title == "" {
 			title, artist = a.Tr("shellIdleTitle"), a.Tr("shellIdleSubtitle")
 		}
-		ui.Text(c, title).FontSize(14).FontWeight(600).MaxLines(1).Ellipsis("…")
+		ui.Text(c, title).FontSize(tokenSizeSmall).FontWeight(600).MaxLines(1).Ellipsis("…")
 		if m.PlaybackError != "" {
 			artist = a.Tr("nativePlaybackFailedStatus")
 			if !m.Panel && !m.Immersive {
@@ -1604,7 +1601,7 @@ func nativeTrackCaption(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 		} else if nativeAwaitingAccount(m) {
 			artist = a.Tr("nativePlaybackAwaitingAccount")
 		}
-		caption := ui.Text(c, artist).FontSize(12).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+		caption := ui.Text(c, artist).FontSize(tokenSizeMicro).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
 		if m.PlaybackError != "" {
 			caption.TextColor(p.attention)
 			caption.Tooltip(m.PlaybackError)
@@ -1684,7 +1681,7 @@ func nativeSeek(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 		state.value = m.Position
 	}
 	row.Children(func() {
-		ui.Text(c, nativeTime(state.value)).Width(40).TextAlign(ui.End).FontSize(12).TextColor(p.secondary)
+		ui.Text(c, nativeTime(state.value)).Width(40).TextAlign(ui.End).FontSize(tokenSizeMicro).TextColor(p.secondary)
 		s := nativeSlider(c.Key("seek"), &state.value, max(1, m.Duration), p).Grow(1).Label(a.Tr("shellProgress")).Disabled(!enabled)
 		changed, pressed := s.Changed(), s.Pressed()
 		if changed {
@@ -1712,7 +1709,7 @@ func nativeSeek(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 			}
 			nativeSliderReadout(c.Key("seek-readout"), s, p, nativeTime(math.Round(preview)), preview/m.Duration)
 		}
-		ui.Text(c, nativeTime(m.Duration)).Width(40).FontSize(12).TextColor(p.secondary)
+		ui.Text(c, nativeTime(m.Duration)).Width(40).FontSize(tokenSizeMicro).TextColor(p.secondary)
 	})
 }
 
@@ -1743,7 +1740,7 @@ func nativeSliderReadout(c *ui.Context, slider ui.Element, p nativePalette, text
 	x := 5 + max(0, slider.LayoutBounds().W-10)*float32(max(0, min(1, fraction)))
 	ui.Overlay(c, func() {
 		ui.Text(c, text).AttachTo(slider, ui.AnchorTopLeft, ui.AnchorBottom).Margin(0, 0, 6, x).
-			Padding(4, 8).Radius(tokenRadiusPill).Background(p.raised).TextColor(p.text).FontSize(12).FontWeight(600).
+			Padding(4, 8).Radius(tokenRadiusPill).Background(p.raised).TextColor(p.text).FontSize(tokenSizeMicro).FontWeight(600).
 			Shadow(0, 2, 8, 0, ui.RGBA(0, 0, 0, 0.25)).PassThrough().Role(ui.RoleTooltip)
 	})
 }
@@ -1794,7 +1791,7 @@ func nativeTabbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 					icon += "-fill"
 				}
 				ui.Icon(c, nativeIcons[icon]).Size(24, 24)
-				ui.Text(c, a.Tr(nav.key)).FontSize(11).FontWeight(600).MaxLines(1).Ellipsis("…")
+				ui.Text(c, a.Tr(nav.key)).FontSize(tokenSizeMicro).FontWeight(600).MaxLines(1).Ellipsis("…")
 			})
 			if b.Clicked() {
 				m.Immersive = false
@@ -1819,7 +1816,7 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 	}
 	return ui.Column(c).Background(p.surface).Radius(tokenRadiusPanel).Padding(16).Gap(gap).MinHeight(0).Children(func() {
 		ui.Row(c).Height(32).Shrink(0).Gap(4).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, a.Tr("shellNowPlaying")).FontSize(16).FontWeight(700).Grow(1).MinWidth(0).MaxLines(1).Ellipsis("…")
+			ui.Text(c, a.Tr("shellNowPlaying")).FontSize(tokenSizeBody).FontWeight(700).Grow(1).MinWidth(0).MaxLines(1).Ellipsis("…")
 			if nativeIconButton(c, "expand", a.Tr("shellImmersive")+" · "+a.Tr("shellNowPlaying"), p, false, 32).Clicked() {
 				m.Immersive = true
 				m.Panel = false
@@ -1831,7 +1828,7 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 		if m.Current.ID == "" {
 			ui.Column(c).Grow(1).Gap(16).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
 				nativeArtwork(c, "", 112, 8, a, p)
-				ui.Text(c, a.Tr("shellEmptyTitle")).FontSize(20).FontWeight(800)
+				ui.Text(c, a.Tr("shellEmptyTitle")).FontSize(tokenSizeH3).FontWeight(800)
 				ui.Text(c, a.TrArgs("shellEmptyBody", map[string]any{"shortcut": "⌘ K"})).TextColor(p.secondary).TextAlign(ui.Center)
 			})
 			return
@@ -1851,8 +1848,8 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 			nativeMediaSwitch(c, m, a, p)
 			ui.Row(c).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 				ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
-					ui.Text(c, m.Current.Title).FontSize(22).FontWeight(800).LineHeight(1.2).MaxLines(2).Ellipsis("…")
-					ui.Text(c, m.Current.Artist).FontSize(15).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+					ui.Text(c, m.Current.Title).FontSize(tokenSizeH3).FontWeight(800).LineHeight(1.2).MaxLines(2).Ellipsis("…")
+					ui.Text(c, m.Current.Artist).FontSize(tokenSizeSmall).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
 				})
 				if nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 36).Clicked() {
 					a.Like()
@@ -1953,7 +1950,7 @@ func nativeImmersiveHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePal
 		ui.Spacer(c)
 		// Window controls can leave the title too little room: it goes first.
 		if width-left-right-buttons*44 >= 120 {
-			ui.Text(c, a.Tr("shellNowPlaying")).FontSize(12).FontWeight(700).LetterSpacing(1).TextColor(p.secondary)
+			ui.Text(c, a.Tr("shellNowPlaying")).FontSize(tokenSizeMicro).FontWeight(700).LetterSpacing(1).TextColor(p.secondary)
 			ui.Spacer(c)
 		}
 		if nativeIconButton(c, "settings", a.Tr("shellSettings"), p, false, 40).Clicked() {
@@ -2031,12 +2028,12 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 func nativeImmersiveTitle(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool) {
 	ui.Column(c).Gap(8).AlignItems(ui.Center).Children(func() {
 		title, artist := nativeImmersiveTitleText(m, a)
-		size := float32(40)
+		size := float32(tokenSizeH2)
 		if compact {
-			size = 28
+			size = tokenSizeH3
 		}
 		ui.Text(c, title).FontSize(size).FontWeight(800).LineHeight(1.1).TextAlign(ui.Center).MaxLines(2).Ellipsis("…")
-		ui.Text(c, artist).FontSize(17).FontWeight(500).TextColor(p.secondary).TextAlign(ui.Center)
+		ui.Text(c, artist).FontSize(tokenSizeBody).FontWeight(500).TextColor(p.secondary).TextAlign(ui.Center)
 	})
 }
 
@@ -2054,11 +2051,11 @@ func nativeImmersiveTitleText(m *UIModel, a ViewActions) (title, artist string) 
 // artist out of a short window.
 func nativeImmersiveTitleHeight(m *UIModel, a ViewActions, width float32) float32 {
 	title, artist := nativeImmersiveTitleText(m, a)
-	titleFont := ui.Font{Size: 40, Weight: 800, LineHeight: 1.1}
+	titleFont := ui.Font{Size: tokenSizeH2, Weight: 800, LineHeight: 1.1}
 	_, titleHeight := ui.ShapeText(title, titleFont, width).Size()
 	// A single unwrapped line has the tallest font any wrapped line uses.
 	_, titleLine := ui.ShapeText(title, titleFont, 0).Size()
-	_, artistLine := ui.ShapeText(artist, ui.Font{Size: 17, Weight: 500}, 0).Size()
+	_, artistLine := ui.ShapeText(artist, ui.Font{Size: tokenSizeBody, Weight: 500}, 0).Size()
 	return min(titleHeight, 2*titleLine) + 8 + artistLine
 }
 
@@ -2271,7 +2268,7 @@ func nativeMedia(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, size
 	return ui.Box(c).Size(size, size*9/16).Shrink(0).Radius(8).Background(ui.Hex("#000000")).Clip().Center().Label(a.Tr("nativeVideo")).Children(func() {
 		if m.VideoError != "" {
 			ui.Column(c).WidthPercent(100).Padding(8).Gap(8).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, m.VideoError).TextAlign(ui.Center).TextColor(ui.Hex("#b3b3b3")).FontSize(13).MaxLines(2).Ellipsis("…")
+				ui.Text(c, m.VideoError).TextAlign(ui.Center).TextColor(ui.Hex("#b3b3b3")).FontSize(tokenSizeMeta).MaxLines(2).Ellipsis("…")
 				if nativePill(c, a.Tr("buttonRetry"), p, false).Disabled(a.Video == nil || m.Current.ID == "").Clicked() {
 					a.Video(true)
 				}
@@ -2281,7 +2278,7 @@ func nativeMedia(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, size
 		} else if m.VideoFrame != nil {
 			ui.Image(c, m.VideoFrame).Size(size, size*9/16).Fit(ui.Contain)
 		} else {
-			ui.Text(c, a.Tr("nativeVideoUnavailable")).Padding(16).TextAlign(ui.Center).TextColor(ui.Hex("#b3b3b3")).FontSize(13)
+			ui.Text(c, a.Tr("nativeVideoUnavailable")).Padding(16).TextAlign(ui.Center).TextColor(ui.Hex("#b3b3b3")).FontSize(tokenSizeMeta)
 		}
 	})
 }
@@ -2324,7 +2321,7 @@ func nativePlaybackNotice(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 		ui.Column(c).Shrink(0).Gap(8).Padding(10).Radius(8).Background(p.raised).Children(func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 				ui.Spinner(c).Size(16, 16)
-				ui.Text(c, a.Tr("nativePlaybackAwaitingAccount")).Grow(1).MinWidth(0).FontSize(12).TextColor(p.secondary)
+				ui.Text(c, a.Tr("nativePlaybackAwaitingAccount")).Grow(1).MinWidth(0).FontSize(tokenSizeMicro).TextColor(p.secondary)
 			})
 			ui.Row(c).Gap(8).Wrap().Children(func() { nativeRestoreActions(c, m, a, p, true) })
 		})
@@ -2335,7 +2332,7 @@ func nativePlaybackNotice(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 	}
 	ui.Row(c).Shrink(0).Gap(8).Padding(10).Radius(8).Background(p.raised).AlignItems(ui.Center).Children(func() {
 		ui.Icon(c, nativeIcons["alert"]).Size(16, 16).Shrink(0).TextColor(p.attention)
-		ui.Text(c, m.PlaybackError).Grow(1).MinWidth(0).FontSize(12).TextColor(p.text)
+		ui.Text(c, m.PlaybackError).Grow(1).MinWidth(0).FontSize(tokenSizeMicro).TextColor(p.text)
 		if nativePill(c, a.Tr("buttonRetry"), p, false).Width(72).PaddingX(6).Disabled(a.RetryPlayback == nil).Clicked() {
 			a.RetryPlayback()
 		}

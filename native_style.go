@@ -65,7 +65,7 @@ func nativeTheme(dark bool) *ui.Theme {
 	t.AccentText = p.base
 	t.Selection = p.text.Alpha(0.2)
 	t.Focus = p.text
-	t.FontSize = 14
+	t.FontSize = tokenSizeSmall
 	t.Radius = tokenRadiusControl
 	t.ScrollbarWidth = 6
 	return t

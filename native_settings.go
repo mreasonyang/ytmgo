@@ -40,9 +40,9 @@ func nativeSheet(c *ui.Context, open *bool, scroll *ui.ScrollState, title string
 	}
 	compact := width <= 760
 	sheet := min(maxWidth, width-48)
-	titleSize := float32(24)
+	titleSize := float32(tokenSizeH3)
 	if compact {
-		sheet, titleSize = width, 20
+		sheet = width
 	}
 	ui.DialogBase(c, open, func(backdrop, panel ui.Element) {
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.6))
@@ -79,7 +79,7 @@ func nativeSheet(c *ui.Context, open *bool, scroll *ui.ScrollState, title string
 func nativeSettingsGroup(c *ui.Context, p nativePalette, title string, inset float32, rows ...func()) ui.Element {
 	return ui.Column(c).Gap(10).Children(func() {
 		if title != "" {
-			ui.Text(c, title).FontSize(15).FontWeight(700).PaddingX(4)
+			ui.Text(c, title).FontSize(tokenSizeSmall).FontWeight(700).PaddingX(4)
 		}
 		ui.Column(c).Radius(tokenRadiusControl).Background(p.raised).Clip().Children(func() {
 			first := true
@@ -112,7 +112,7 @@ func nativeSettingRow(c *ui.Context, p nativePalette, narrow bool, icon, title, 
 			ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
 				ui.Text(c, title).FontWeight(600)
 				if detail != "" {
-					ui.Text(c, detail).FontSize(13).LineHeight(1.4).TextColor(p.secondary)
+					ui.Text(c, detail).FontSize(tokenSizeMeta).LineHeight(1.4).TextColor(p.secondary)
 				}
 			})
 		})
@@ -135,11 +135,11 @@ func nativeKeycaps(c *ui.Context, p nativePalette, chord string) ui.Element {
 	return ui.Row(c).Shrink(0).Gap(4).AlignItems(ui.Center).Label(chord).Children(func() {
 		for _, key := range strings.Fields(chord) {
 			if key == "/" {
-				ui.Text(c, key).FontSize(12).PaddingX(2).TextColor(p.muted)
+				ui.Text(c, key).FontSize(tokenSizeMicro).PaddingX(2).TextColor(p.muted)
 				continue
 			}
 			ui.Box(c).MinWidth(26).Height(26).PaddingX(7).Radius(tokenRadiusArt).Background(p.surface).Border(1, p.line).Center().Children(func() {
-				ui.Text(c, key).FontSize(12).FontWeight(600).TextColor(p.text)
+				ui.Text(c, key).FontSize(tokenSizeMicro).FontWeight(600).TextColor(p.text)
 			})
 		}
 	})
@@ -153,7 +153,7 @@ func nativeLinkButton(c *ui.Context, label string, p nativePalette, icon string)
 		b.Background(p.highlight)
 	}
 	b.Children(func() {
-		ui.Text(c, label).FontSize(13).FontWeight(600)
+		ui.Text(c, label).FontSize(tokenSizeMeta).FontWeight(600)
 		if icon != "" {
 			ui.Icon(c, nativeIcons[icon]).Size(14, 14).TextColor(p.secondary)
 		}
@@ -201,12 +201,12 @@ func nativeSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, w
 					ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
 						ui.Text(c, a.Tr("appName")).FontWeight(700)
 						if m.Version != "" {
-							ui.Text(c, a.TrArgs("nativeSettingsVersion", map[string]any{"version": m.Version})).FontSize(13).TextColor(p.secondary)
+							ui.Text(c, a.TrArgs("nativeSettingsVersion", map[string]any{"version": m.Version})).FontSize(tokenSizeMeta).TextColor(p.secondary)
 						}
 					})
 				})
 			})
-			ui.Text(c, a.Tr("shellFooter")).FontSize(12).LineHeight(1.5).PaddingX(4).TextColor(p.muted)
+			ui.Text(c, a.Tr("shellFooter")).FontSize(tokenSizeMicro).LineHeight(1.5).PaddingX(4).TextColor(p.muted)
 		})
 	})
 }
@@ -243,9 +243,9 @@ func nativeAccountSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePal
 		ui.Row(c).Gap(14).AlignItems(ui.Center).Children(func() {
 			nativeAvatar(c, m, a, p, 48)
 			ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(4).Children(func() {
-				ui.Text(c, nativeAccountStatus(m, a)).FontSize(16).FontWeight(700).MaxLines(2).Ellipsis("…")
+				ui.Text(c, nativeAccountStatus(m, a)).FontSize(tokenSizeBody).FontWeight(700).MaxLines(2).Ellipsis("…")
 				if detail != "" {
-					ui.Text(c, detail).FontSize(13).LineHeight(1.4).TextColor(p.secondary)
+					ui.Text(c, detail).FontSize(tokenSizeMeta).LineHeight(1.4).TextColor(p.secondary)
 				}
 			})
 			if !stack {
@@ -307,7 +307,7 @@ func nativeAppearanceControl(c *ui.Context, m *UIModel, a ViewActions, p nativeP
 			if narrow {
 				// Share spare space after each label's natural width, so longer
 				// system labels also fit with Linux's CJK fallback fonts.
-				w, _ := ui.ShapeText(label, ui.Font{Size: 13, Weight: 600}, 0).Size()
+				w, _ := ui.ShapeText(label, ui.Font{Size: tokenSizeMeta, Weight: 600}, 0).Size()
 				b.Grow(1).Basis(w + 16 + 6 + 20)
 			}
 			if i == chosen {
@@ -317,7 +317,7 @@ func nativeAppearanceControl(c *ui.Context, m *UIModel, a ViewActions, p nativeP
 			}
 			b.Children(func() {
 				ui.Icon(c, nativeIcons[option.icon]).Size(16, 16).Shrink(0)
-				ui.Text(c, label).FontSize(13).FontWeight(600).SingleLine().MinWidth(0).Ellipsis("…")
+				ui.Text(c, label).FontSize(tokenSizeMeta).FontWeight(600).SingleLine().MinWidth(0).Ellipsis("…")
 			})
 		}
 	})
@@ -373,7 +373,7 @@ func nativeLanguageControl(c *ui.Context, m *UIModel, a ViewActions, p nativePal
 // Settings configures.
 func nativeShortcuts(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {
 	nativeSheet(c, &m.Shortcuts, &m.shortcutsScroll, a.Tr("shellShortcuts"), a, p, width, height, nativeShortcutsWidth, func(narrow bool) {
-		ui.Text(c, a.Tr("nativeShortcutLocalHint")).FontSize(13).LineHeight(1.5).PaddingX(4).TextColor(p.secondary)
+		ui.Text(c, a.Tr("nativeShortcutLocalHint")).FontSize(tokenSizeMeta).LineHeight(1.5).PaddingX(4).TextColor(p.secondary)
 		nativeSettingsGroup(c, p, "", 64, func() {
 			nativeSettingRow(c, p, narrow, "play", a.Tr("nativeShortcutGlobal"), "", func() {
 				if m.GlobalShortcut == disabledGlobalShortcut {

@@ -275,11 +275,22 @@ func nativeToggleIcon(c *ui.Context, name, label string, p nativePalette, active
 	return b
 }
 
-// nativePress gives a control the guidebook's press feedback: every control
-// presses to 96 %.
+// nativePress gives a button the guidebook's press feedback: every button
+// presses to 96 %. Rows and cards answer with the press wash instead.
 func nativePress(e ui.Element) {
 	if e.Pressed() {
 		e.TransformOrigin(0.5, 0.5).Scale(tokenPressScale, tokenPressScale)
+	}
+}
+
+// nativePlayFeedback is a round play control's: it grows on hover, as in the
+// guidebook, keeping its colour, and presses like every button.
+func nativePlayFeedback(e ui.Element) {
+	switch {
+	case e.Pressed():
+		nativePress(e)
+	case e.Hovered():
+		e.TransformOrigin(0.5, 0.5).Scale(tokenGrowScale, tokenGrowScale)
 	}
 }
 
@@ -292,6 +303,7 @@ func nativeCircleButton(c *ui.Context, name, label string, p nativePalette, size
 	if b.Hovered() {
 		b.Background(p.highlight).TextColor(p.text)
 	}
+	nativePress(b)
 	b.Children(func() { ui.Icon(c, nativeIcons[name]).Size(size/2, size/2) })
 	return b
 }
@@ -308,6 +320,7 @@ func nativePill(c *ui.Context, label string, p nativePalette, primary bool) ui.E
 	} else if b.Hovered() {
 		b.Background(p.highlight)
 	}
+	nativePress(b)
 	return b
 }
 
@@ -319,6 +332,7 @@ func nativeChip(c *ui.Context, label string, p nativePalette, selected bool) ui.
 	} else if b.Hovered() {
 		b.Background(p.press)
 	}
+	nativePress(b)
 	return b
 }
 
@@ -1189,9 +1203,7 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 			icon, key = "pause", "shellPause"
 		}
 		b := ui.ButtonBase(c).Size(buttonSize, buttonSize).Shrink(0).Radius(buttonSize/2).Background(p.accent).TextColor(p.onAccent).Shadow(0, 8, 16, 0, ui.RGBA(0, 0, 0, 0.3)).Label(a.Tr(key) + " · " + m.Page.Title).Tooltip(a.Tr(key)).Disabled(inPage && m.PlaybackLoading)
-		if b.Hovered() {
-			b.Background(p.accent.Mix(ui.Hex("#ffffff"), 0.12))
-		}
+		nativePlayFeedback(b)
 		b.Children(func() { ui.Icon(c, nativeIcons[icon]).Size(26, 26) })
 		if b.Clicked() {
 			if inPage {
@@ -1655,9 +1667,7 @@ func nativePlayButton(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 		icon, key = "pause", "shellPause"
 	}
 	b := ui.ButtonBase(c).Size(size, size).Shrink(0).Radius(size / 2).Label(a.Tr(key)).Tooltip(a.Tr(key)).Background(p.text).TextColor(p.base).Disabled(m.Current.ID == "")
-	if b.Hovered() {
-		b.Background(p.text.Alpha(0.86))
-	}
+	nativePlayFeedback(b)
 	b.Children(func() { ui.Icon(c, nativeIcons[icon]).Size(size*0.5, size*0.5) })
 	if b.Clicked() {
 		a.Toggle()

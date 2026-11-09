@@ -17,124 +17,55 @@ Every decision below exists to protect that model.
 
 ## 1. Design system foundations
 
-> **Superseded for future work.** The design guidebook in
-> [`design/README.md`](design/README.md), with its values in
-> [`design/tokens.json`](design/tokens.json), is the target this app will be
-> redesigned against. This section describes the app as it is today; the
-> guidebook's *Adoption* table lists where the two differ. Sections 2 and 3
-> (screens, interactions and runtime ownership) remain current.
+The visual design follows the **design guidebook** in
+[`design/README.md`](design/README.md): colour roles and what coral means,
+typography, the radius and spacing scales, motion, interaction and
+components. Its values live in [`design/tokens.json`](design/tokens.json);
+`go generate` turns them into `native_tokens_gen.go`, and
+`TestDesignTokensAreGenerated` fails if that file is stale. Change a value
+in the tokens, never in code, and read the guidebook before changing how
+something looks or behaves. This section keeps only what is specific to the
+native implementation.
 
-The interface follows Spotify's desktop language: a black window frame, three
-rounded near-black panels, a global bar with a centred search pill, and a
-three-zone player bar. ytmGO keeps its own accent for playback state and the
-primary play actions. The palette and vector icons live in `native_style.go`;
-layout and type live in `native_views.go`, exercised by the MyGo
-software-renderer tests in `native_views_test.go`.
+The structure follows Spotify's desktop language: a black window frame,
+three rounded near-black panels, a global bar with a centred search pill, a
+library panel and a three-zone player bar. The palette, icons and theme live
+in `native_style.go`, the display face in `native_fonts.go`, layout in
+`native_views.go`, exercised by the MyGo software-renderer tests.
 
-### 1.1 Color roles
+### 1.1 Native notes
 
-Dark is the primary theme. Light uses the same roles with inverted values.
-
-| Role | Field | Dark | Light | Use |
-|---|---|---|---|---|
-| Base | `base` | `#000000` | `#e9e9eb` | Window frame, global bar, player bar, tab bar |
-| Surface | `surface` | `#121212` | `#ffffff` | Library, page and Now Playing panels |
-| Raised | `raised` | `#1f1f1f` | `#f2f2f3` | Search pill, round buttons, cards on hover, panel cards, dialogs |
-| Input | `input` | `#242424` | `#ececee` | Secondary pills |
-| Highlight | `highlight` | `#2a2a2a` | `#e1e1e4` | Hovered round buttons, artwork placeholders |
-| Text | `text` / `secondary` / `muted` | `#fff` / `#b3b3b3` / `#8f8f8f` | `#121212` / `#5a5a5f` / `#6b6b70` | Titles / artists, meta / placeholders |
-| Accent | `accent` / `onAccent` | `#ff5a4f` / `#000` | `#e8382d` / `#fff` | Active toggles, playing glyphs, collection play, Premium avatar |
-| Accent text | `accentText` | `#ff5a4f` | `#b8261c` | Playing titles, Premium badge, error and selected text (≥4.5:1 on every light surface) |
-| Washes | `hover` / `press` / `line` | 7% / 12% / 10% white | 5% / 9% / 10% black | Row and chip states, hairlines |
-
-The primary call to action (sign in, play/pause) is an inverted pill or circle
-in `text` on `base`. Accent is never the only carrier of state: active toggles
-also get a dot, and the playing row also gets a wash and a speaker glyph.
-
-**Header wash.** Collections blur their cover into the top of the page panel
-and fade it into the surface. Pages without artwork use a stable per-route
-tint from `nativeHeaderTints`. Immersive mode blurs the current track across
-the whole panel. MyGo paints absolute elements above in-flow siblings, so the
-page sits in an absolute layer after the wash.
-
-### 1.2 Typography
-
-System stack (SF Pro / PingFang SC on macOS, Noto Sans CJK on Linux,
-Microsoft YaHei on Windows).
-
-| Use | Spec |
-|---|---|
-| Collection title | 800 · 32–72 (5.5% of the page width), 2 lines |
-| Page title, immersive title | 800 · 32 (26 compact) / 40 (28 compact) |
-| Shelf heading, settings title | 800 · 24 (20 compact) |
-| Now Playing title | 800 · 22 |
-| Library title, section heading | 700 · 16 |
-| Row and card title | 500–700 · 15 |
-| Artist, meta, table headings | 400–500 · 13 |
-| Player title / artist | 600 · 14 / 12 |
-
-Time readouts occupy fixed-width slots so progress labels do not shift
-adjacent controls.
-
-### 1.3 Layout
-
-| Region | Wide (>1180) | Medium (761–1180) | Compact (≤760) |
-|---|---|---|---|
-| Global bar | 64: back/forward · home + search (Explore inside) · settings, account | same | 60 in-page: back, search, settings |
-| Library | 300 panel, collapsible to 72 | 72 rail | Library tab |
-| Page panel | rounded 8, inset 24 | same | full bleed, inset 16 |
-| Now Playing | 360 docked | 380 floating | fitted sheet |
-| Player | 80 three-zone bar | same | 60 mini player card + 64 tab bar |
-
-Panels sit 8 apart on the black frame. Minimum hit targets are 32 on desktop
-and 44 in compact windows.
-
-### 1.4 Components
-
-- **Library row:** 64 high, 48 cover (round for artists), title and
-  "kind · owner". The open collection is washed and its title accented.
-  Filter chips (playlists, albums, artists, songs) appear when the library holds
-  at least two kinds; a selected chip hides the others and gains a clear button.
-- **Quick-access tiles:** signed-in Home leads with up to eight library items in
-  a 4- or 2-column grid of 64-high tiles.
-- **Card:** 164 cover (140 compact), title and two-line subtitle; playable
-  cards raise an accent play button on hover.
-- **Track row:** 56 high, 40 cover. Collections number their rows under a
-  `#  Title  Album  ⏱` heading; the number becomes a play glyph on hover and a
-  speaker while playing.
-- **Collection header:** 232 cover (192 medium) beside the display title, then
-  a 56 accent play button that starts the first track or toggles the page's
-  own playback.
-- **Chips and pills:** chips are 32-high translucent capsules, inverted when
-  selected; pills are 36-high buttons with the primary form inverted.
-
-### 1.5 Radii and elevation
-
-`4` thumbnails and table covers · `6` rows, cards' covers, tiles · `8` panels,
-cards, Now Playing art · `12` dialogs · capsule for pills, chips, search and
-round buttons. Shadows are used only on covers, the collection play button,
-dialogs and the floating Now Playing panel.
-
-### 1.6 Native feedback
-
-Native controls provide focus, hover and pressed feedback. Page, panel and
-appearance changes update the current view tree without destroying the window.
-Audio position changes update the fixed-width transport. Video frames redraw
-only while a visible video presentation is active.
-
-### 1.7 Typography across scripts
-
-English, Simplified Chinese, Traditional Chinese and Japanese use MyGo's
-native text shaping and locale selection. Labels, menus and accessible names
-come from the same four-language catalog. Text input remains a native editing
-control; layout tests cover long text and CJK content at narrow widths.
-
-### 1.8 Iconography
-
-One 24 px grid, 1.8 px round strokes (`native_style.go`). Filled
-variants mark the active destination (home/explore/library) and the
-primary transport glyphs. Icon-only buttons carry native accessible names
-and tooltip text.
+- **Coral is play.** Apply `p.accent` / `p.accentText` only where something
+  plays or starts playing. Playback modes use `nativeModeButton`; every
+  other toggle uses `nativeIconButton`, which draws an active state in
+  `text` with a dot. MyGo's theme accent is the inverted text colour, so
+  built-in selected states invert.
+- **Errors** use `p.attention` beside the `alert` icon and words.
+- **Header wash.** Collections blur their cover into the top of the page
+  panel and fade it into the surface. Pages without artwork use a stable
+  per-route tint from `nativeHeaderTints` (the tokens' order matters to the
+  hash). Immersive mode blurs the current track across the whole panel.
+  MyGo paints absolute elements above in-flow siblings, so the page sits in
+  an absolute layer after the wash.
+- **Display titles** (page, collection, immersive) go through
+  `nativeDisplay`; measure them with `nativeDisplayMetrics`, so a layout
+  budget measures the face that is drawn.
+- **Feedback.** Buttons call `nativePress` (96 % while pressed); round play
+  controls call `nativePlayFeedback` (105 % on hover). Rows and cards use the
+  `hover` and `press` washes.
+- **Layout regions** (global bar 64, library 300 or a 72 rail, panels 8
+  apart, Now Playing 360 docked or 380 floating, player 80, compact mini
+  player 60 and tab bar 64, targets 32 and 44 compact) come from the
+  tokens' `product` measures.
+- **Time readouts** occupy fixed-width slots, so progress labels don't shift
+  adjacent controls.
+- **Scripts.** English, Simplified Chinese, Traditional Chinese and Japanese
+  use MyGo's native shaping and locale selection; labels, menus and
+  accessible names come from the four-language catalog. Layout tests cover
+  long text and CJK content at narrow widths.
+- **Icons:** one 24 px grid, 1.8 px round strokes; filled variants mark the
+  active destination and the primary transport glyphs. Icon-only buttons
+  carry accessible names and tooltips.
 
 ---
 
@@ -157,7 +88,7 @@ and tooltip text.
   encrypted session format is read and written; no migration or fallback exists.
 - Account: three states. Signed out shows an inverted "Sign in" pill and
   sign-in prompts in the library panel and on the Library route. Signed in
-  shows a neutral avatar; Music Premium shows an accent avatar and a "Premium"
+  shows a muted avatar; Music Premium shows an inverted avatar and a "Premium"
   badge on wide windows. The avatar's menu states the plan and offers account
   management, settings and sign-out; Settings repeats the plan. The view only
   reads `SignedIn` and `MusicPremium`; detection and transitions stay in

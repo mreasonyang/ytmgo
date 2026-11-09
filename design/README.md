@@ -240,7 +240,9 @@ tooltip. The website uses icons only on actions and platform names.
   `hover` wash; text and tables that don't, get nothing.
 - **Hover response by kind:** capsule buttons change colour; round play
   controls grow to 105 %; icon buttons go from `secondary` to `text`;
-  rows wash. **Every** control presses to 96 %.
+  rows wash. Every **button** (capsules, chips, icon and play buttons)
+  presses to 96 %; rows and cards answer with the `press` wash, since a
+  whole row shrinking would jump.
 - **Button hierarchy:** accent (play, one in view) → inverted (primary) →
   outline (secondary) → plain link (tertiary). Brand buttons are 48 high,
   the player bar's 36; product pills 36, chips 32.
@@ -248,6 +250,9 @@ tooltip. The website uses icons only on actions and platform names.
 - **Labels tell the truth.** A button that downloads names the file or
   platform; a button that only navigates says where it goes ("Download
   ytmGO" leads to the download section).
+- **Destructive actions are neutral:** signing out or clearing data is
+  `text`, never coral (play) or `attention` (errors); the confirmation
+  names what will be lost.
 - **Selection is inversion:** a selected chip, tab or segment is `text` on
   `base`. A playing item is coral.
 - **Focus** is a 2 px `text` ring, 3 px out, on every focusable element.
@@ -326,21 +331,20 @@ tooltip. The website uses icons only on actions and platform names.
 and fails if `site.css` hard-codes a colour, radius or font size outside the
 marked artwork rules.
 
-**App:** to adopt when it is redesigned. Known gaps against this guidebook:
+**App:** adopted on the `app-guidebook-redesign` branch:
 
-| Area | App today | Guidebook |
+| Area | Before | Now |
 | --- | --- | --- |
-| Tokens | Hand-written in `native_style.go` | Generated from `tokens.json` |
-| Panels | Radius 8 | `panel` 12 |
-| Rows, tiles, card art | Radius 6 | `control` 8 (card art inside padding: nested) |
-| Dialogs | Radius 14 | `panel` 12 |
-| Menus, segmented tracks | Radius 10 | `control` 8 |
-| Coral | Also error text, selected text, the Premium avatar, the open library item's title | Play only; errors `attention`, selection inverted, Premium neutral, navigation `text` |
-| Errors | Accent text | `attention` with an icon and words |
-| Type | Base 14; sizes 11, 14, 16, 20, 22 in use | The scale: 12, 13, 15, 17, 24, 32, display |
-| Display titles | System font 800 | Bricolage Grotesque for Latin display titles |
-| CJK headings | No phrase marks in the locale catalogue | Phrase marks, kept whole |
-| Press feedback | Each control's native default | 96 % for every control |
+| Tokens | Hand-written in `native_style.go` | Generated from `tokens.json` (`native_tokens_gen.go`), checked by a test |
+| Coral | Also errors, selection, Premium, open library item, every active toggle | Play only; errors `attention` with an icon, selection inverted, Premium neutral, non-playback toggles `text` with a dot |
+| Radii | 6, 8, 10, 12, 14 | `art` 4, `control` 8, `panel` 12, nested inner corners |
+| Type | Base 14; 11, 14, 16, 20, 22 in use | The scale: 12, 13, 15, 17, 22, 24, 32, title |
+| Display titles | System font 800 | Bricolage Grotesque for Latin; system heavy for CJK |
+| Feedback | Native defaults | Buttons press to 96 %; play controls grow 105 % |
+
+**Not yet adopted:** CJK phrase marks in the app. MyGo has no line-break
+control, and most large titles are catalogue names that can't be marked;
+the app keeps MyGo's default breaking until the toolkit offers one.
 
 ## 14. Changing the guidebook
 

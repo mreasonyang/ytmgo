@@ -55,8 +55,16 @@ func applicationMenuWithUpdates(newUpdateItem func() *mygo.MenuItem) *mygo.MenuI
 
 func developmentAboutOptions() mygo.AboutPanelOptions {
 	b := currentBuildIdentity()
-	return mygo.AboutPanelOptions{ApplicationName: "ytmGO Dev", ApplicationVersion: b.displayVersion(),
-		Version: b.BuildNumber, Credits: b.Commit}
+	label := b.Version + " DEV"
+	if b.Dirty {
+		label += " (dirty)"
+	}
+	commit := b.Commit
+	if len(commit) > 12 {
+		commit = commit[:12]
+	}
+	return mygo.AboutPanelOptions{ApplicationName: "ytmGO Dev", ApplicationVersion: label,
+		Version: commit, Credits: b.Branch}
 }
 
 func helpMenuWithUpdates(items []*mygo.MenuItem, newUpdateItem func() *mygo.MenuItem) *mygo.MenuItem {

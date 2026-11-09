@@ -19,17 +19,22 @@ import (
 var updaterSetup sync.Once
 
 func setupUpdater() {
+	if buildKind != "release" {
+		return
+	}
 	updaterSetup.Do(func() { mygo.Use(updatenative.Plugin) })
 }
 
 func applicationVersion() string {
-	if packaged := mygo.App.Version(); packaged != "" {
-		return packaged
-	}
-	return version
+	return currentBuildIdentity().Version
 }
 
+func applicationBuildLabel() string { return currentBuildIdentity().displayVersion() }
+
 func updateMenuItem() *mygo.MenuItem {
+	if buildKind != "release" {
+		return &mygo.MenuItem{Label: locales.MenuDevelopmentUpdatesDisabled(), Disabled: true}
+	}
 	setupUpdater()
 	return updater.MenuItem()
 }
@@ -61,8 +66,15 @@ type updateCommands struct {
 // account store starts. Installation targets only the executing app bundle.
 // This also permits update acceptance in an isolated copy of a released app.
 func runUpdateCommand() (bool, int) {
+	if len(os.Args) > 1 && os.Args[1] == "--build-info" {
+		if len(os.Args) != 2 {
+			return true, 1
+		}
+		_ = json.NewEncoder(os.Stdout).Encode(currentBuildIdentity())
+		return true, 0
+	}
 	return handleUpdateCommand(os.Args[1:], os.Stdout, updateCommands{
-		current: applicationVersion(), enabled: mygo.Updater.Enabled, check: mygo.Updater.Check,
+		current: applicationBuildLabel(), enabled: updatesEnabled, check: mygo.Updater.Check,
 		install: func(ctx context.Context, update *mygo.Update) error { return update.Install(ctx, nil) },
 	})
 }

@@ -21,8 +21,6 @@ import (
 	"ytmgo/locales"
 )
 
-const version = "0.0.62"
-
 //go:embed locales/en.json resources/icon.png resources/tray.png
 var assets embed.FS
 
@@ -123,7 +121,7 @@ func main() {
 	a.librarySnapshotPath = filepath.Join(dataDir, "account", "library-snapshot.json")
 	recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 	recordPlaybackDiagnostic(a.diagnosticPath, "video", "ready")
-	a.model = UIModel{Route: "home", Appearance: a.prefs.Appearance(), Language: language.Load(a.languagePath), Volume: 0.7, Version: applicationVersion()}
+	a.model = UIModel{Route: "home", Appearance: a.prefs.Appearance(), Language: language.Load(a.languagePath), Volume: 0.7, Version: applicationBuildLabel()}
 	a.lyricsLayoutPath = filepath.Join(dataDir, "lyrics-layout")
 	a.model.LyricsExpanded = loadLyricsExpanded(a.lyricsLayoutPath)
 	a.videoQualityPath = filepath.Join(dataDir, "video-quality")
@@ -379,7 +377,7 @@ func (a *desktop) menuWithUpdates(newUpdateItem func() *mygo.MenuItem) *mygo.Men
 		{Label: locales.MenuAccount(), Submenu: a.accountMenuItems()},
 		helpMenuWithUpdates([]*mygo.MenuItem{a.menuItem(locales.MenuShortcuts(), "CmdOrCtrl+/", func() { a.model.Shortcuts = true; a.invalidate() }), a.menuItem(locales.MenuAbout(), "", func() {
 			go func() {
-				_, _ = mygo.Dialog.Message(mygo.MessageOptions{Parent: a.window, Title: locales.MenuAbout(), Message: locales.AboutMessage(applicationVersion()), Detail: a.tr("nativeAbout"), Buttons: []string{locales.ButtonOK()}})
+				_, _ = mygo.Dialog.Message(mygo.MessageOptions{Parent: a.window, Title: locales.MenuAbout(), Message: locales.AboutMessage(applicationBuildLabel()), Detail: a.tr("nativeAbout"), Buttons: []string{locales.ButtonOK()}})
 			}()
 		})}, newUpdateItem),
 	})

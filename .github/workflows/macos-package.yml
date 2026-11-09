@@ -13,8 +13,8 @@ on:
           - developer-id
           - notarized
       release_version:
-        description: Optional version override (for example 0.0.62-rc.1; patch 0-999, no leading zeros)
-        required: false
+        description: Required release version (X.Y.Z or X.Y.Z-rc.N; patch 0-999)
+        required: true
         type: string
       publish_release:
         description: Publish the notarized package and signed update feed to GitHub Releases
@@ -101,7 +101,9 @@ jobs:
           go vet ./...
           go tool mygo i18n check
       - name: Build complete native app with locked runtime
-        run: make build-app
+        run: make build-app BUILD_TYPE=release
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
       - name: Test bundled media runtime
         run: |
           python3 scripts/runtime/test_runtime_manifest.py

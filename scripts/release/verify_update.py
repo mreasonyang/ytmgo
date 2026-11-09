@@ -121,7 +121,7 @@ def main():
     EVIDENCE.mkdir(parents=True, exist_ok=False)
     app, baseline, baseline_digest = release(args.from_version)
     before = integrity(app)
-    if before["cli_version"] != args.from_version or before["version"] != args.from_version:
+    if before["cli_version"] != args.from_version or before["version"] != args.from_version.split("-", 1)[0]:
         raise CheckError("baseline_version_mismatch")
     print("Public baseline verified", flush=True)
     checked = json.loads(command([bundle_executable(app), "--check-for-updates"]))
@@ -132,7 +132,8 @@ def main():
         raise CheckError("update_not_staged")
     for _ in range(200):
         try:
-            if plistlib.loads((app / "Contents/Info.plist").read_bytes())["CFBundleShortVersionString"] == args.to_version:
+            if (plistlib.loads((app / "Contents/Info.plist").read_bytes())["CFBundleShortVersionString"] == args.to_version.split("-", 1)[0]
+                    and sha(bundle_executable(app)) != before["executable_sha256"]):
                 break
         except (FileNotFoundError, plistlib.InvalidFileException):
             pass

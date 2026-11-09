@@ -10,9 +10,10 @@ import subprocess
 import sys
 import tempfile
 
+from build_config import VERSION, release_config
+
 ROOT = Path(__file__).resolve().parents[2]
 REPOSITORY = "mreasonyang/ytmgo"
-VERSION = re.compile(r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]{0,2})(?:-rc\.[1-9][0-9]*)?")
 
 
 class ReleaseError(Exception):
@@ -24,10 +25,11 @@ def configure():
         raise ReleaseError("Publishing requires notarized mode")
     path = ROOT / "mygo.json"
     config = json.loads(path.read_text())
-    version = os.environ.get("RELEASE_VERSION") or config["version"]
-    if not VERSION.fullmatch(version):
-        raise ReleaseError("Invalid release version; use X.Y.Z or X.Y.Z-rc.N with Z from 0 to 999 and no leading zeros")
-    config["version"] = version
+    version = os.environ.get("RELEASE_VERSION")
+    try:
+        config = release_config(config, version, os.environ.get("RELEASE_BUILD_NUMBER") or os.environ.get("GITHUB_RUN_NUMBER"))
+    except ValueError as error:
+        raise ReleaseError(str(error)) from None
     path.write_text(json.dumps(config, indent=2) + "\n")
     print("Configured release version: " + version)
 

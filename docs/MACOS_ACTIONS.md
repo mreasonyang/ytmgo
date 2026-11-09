@@ -88,10 +88,10 @@ https://github.com/mreasonyang/ytmgo/releases/latest/download/update-darwin-arm6
 
 工作流先给最终 App 完成签名、公证和 staple，再生成 `ytmgo-X.Y.Z-darwin-arm64.tar.gz` 与 `update-darwin-arm64.json`。签名覆盖压缩包的 SHA-256；包保留完整 `.app`、执行权限和内部符号链接。发布前使用公钥独立验签，并核对 GitHub 返回的每个资产摘要。失败会保留未公开 draft，不发布部分更新。修正失败后如已存在 draft/tag，先检查该 draft，使用新版本号重新构建，不覆盖已公开版本。
 
-发布新稳定版：修改 `mygo.json` 和 `main.go` 的开发版本并推送 `main`，运行 **macOS package → notarized → publish_release**。或使用：
+发布新稳定版：推送已验收的源码到 `main`，运行 **macOS package → notarized → publish_release** 并显式填写 `release_version`。版本由构建注入，无须修改 Go 源码；普通本地构建为禁用更新的开发包。或使用：
 
 ```sh
-gh workflow run macos-package.yml --repo mreasonyang/ytmgo --ref main -f mode=notarized -F publish_release=true
+gh workflow run macos-package.yml --repo mreasonyang/ytmgo --ref main -f mode=notarized -f release_version=0.0.65 -F publish_release=true
 ```
 
 仅测试打包时保持 `publish_release=false`，不会影响线上更新。验证预发行版时可填写 `release_version=0.5.0-rc.1`。客户端默认只接收稳定版，预发行版也能升级到版本号更高的稳定版。

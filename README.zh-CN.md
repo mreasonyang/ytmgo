@@ -172,12 +172,12 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 
 详细界面与架构规范见 [DESIGN.md](DESIGN.md)，历史与阶段性实测记录见 [VERIFICATION.md](VERIFICATION.md) 与 [自动升级验收](docs/AUTO_UPDATE_VERIFICATION.md)。阅读与使用时请注意以下客观边界：
 
-- **v0.0.62 界面升级验收（2026-11-06）：** 本机正式安装的 macOS ARM 应用从 0.0.61 检测到公开的 0.0.62，经过原生更新界面完成下载、安装和自动重启，再次检查显示已是最新版本。升级后的完整应用包与公开 ZIP 一致，登录、暂停位置、音量和偏好均保留。详见[验收记录](docs/audits/2026-11-06-release-0.0.62/README.md)。
+- **v0.0.64 界面升级验收（2026-11-06）：** 本机正式安装的 macOS ARM 应用从 0.0.61 检测到公开的 0.0.64，经过原生更新界面完成下载、安装和自动重启，再次检查显示已是最新版本。升级后的完整应用包与公开 ZIP 一致，登录、暂停位置、音量和偏好均保留。详见[验收记录](docs/audits/2026-11-06-release-0.0.64/README.md)。
 - **v0.0.61 发版验收（2026-11-06）：** 版本从 0.0.61 重新开始编号。22 个公开资产、四平台更新签名、Windows/Linux 原生安装启动、macOS 签名公证及 ARM/Intel Homebrew 实装均通过校验；本机 ARM 安装与公开 ZIP 一致。详见[发版验收记录](docs/audits/2026-11-06-release-0.0.61/README.md)。
 - **更早的 0.6.x 发版验收：** 版本重新编号前已发布版本的验收摘要保存在 [VERIFICATION.md](VERIFICATION.md#06x-release-acceptance-summaries)（英文）。
 - **跨平台运行验收边界：** 2026-11-04 三平台 GitHub Actions 工作流——[Native playback runtime](https://github.com/mreasonyang/ytmgo/actions/runs/41800458515) 与 [Native account login](https://github.com/mreasonyang/ytmgo/actions/runs/41800458464)——在 macOS、Windows 和 Linux 上均已全部通过。针对 **v0.6.4**（[验收记录](docs/audits/2026-11-04-macos-compat-0.6.4/README.md)），**macOS 27 Apple Silicon（`arm64`）** 与 **macOS 15 Intel（`amd64`）** 双架构原生打包、Developer ID 签名/公证/staple、Gatekeeper 校验、辅助进程执行、空配置冷启动以及[双架构 Homebrew Cask 实装校验](https://github.com/mreasonyang/homebrew-taps/actions/runs/41850617166)均已通过，同时完成了 [Intel 模拟 WebView 登录生命周期校验](https://github.com/mreasonyang/ytmgo/actions/runs/41848250319)、[0.6.3 → 0.6.4 ARM 公开源升级验收](https://github.com/mreasonyang/ytmgo/actions/runs/41850200341) 以及 [Windows/Linux 原生安装包工作流](https://github.com/mreasonyang/ytmgo/actions/runs/41849890402)（在对应系统原生构建、实际安装 NSIS/DEB 包，并核对安装后的资源与空账号启动）。请注意：**CI 与原生安装包安装/空配置启动冒烟测试不等于已完成 Windows、Linux 或 Intel macOS 上的真实登录播放、完整界面交互、实体音频硬件输出或跨版本升级验收**；同理，所有随包 Mach-O 二进制已核验 `13.0` 部署目标，但**编译部署目标（macOS 13.0）不等于在 macOS 13 或 macOS 14 实体系统上完成了运行验收**。
 - **账号类型与广告流程边界：** macOS 已完成未登录匿名整曲播放及真实 **YouTube Music Premium** 账号的首页、曲库恢复、同步歌词、跳播与暂停恢复实测。**普通（非 Premium）账号**及**官方广告流程**尚未完成验收：当前实现没有官方广告素材序列与真实广告进度上报，不使用推算等待时间模拟广告，也不能将公开歌曲播放成功视为广告流程验收通过。
-- **内存占用：** v0.0.62 的进程树实测数据见下方[内存占用](#内存占用)。
+- **内存占用：** v0.0.64 的进程树实测数据见下方[内存占用](#内存占用)。
 - **全局快捷键与长时稳定性边界：** 应用内快捷键（如空格键播放/暂停、`⌘K` 搜索等）与 MyGo UI 测试器状态机已验证，但 macOS 实体全局快捷键（`⇧⌘Space`）跨应用触发尚未通过端到端实机确认。此外，本地实机验收中曾记录到偶发的 `audio_stream_failed` 与 `bootstrap_network_timeout`（点击 **Retry** 后均恢复正常播放），其上游或网络根因尚未最终定论；崩溃/强制终止持久化、睡眠唤醒以及多日长时耐久运行仍待后续验收。
 
 ### 内存占用
@@ -186,7 +186,7 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 
 | ytmGO 状态 | 进程数 | 内存 |
 | --- | --- | --- |
-| v0.0.62，恢复会话并暂停 | 2（主程序 + `SetStoreUpdateService.xpc`） | 中位数 **90.81 MiB** / 峰值 90.81 MiB |
+| v0.0.64，恢复会话并暂停 | 2（主程序 + `SetStoreUpdateService.xpc`） | 中位数 **90.81 MiB** / 峰值 90.81 MiB |
 | 连续播放 + 同步歌词与界面操作（432 个完整采样） | 4–6（ytmGO、有界 FFmpeg 与 Rust/QuickJS 宿主） | 中位数 **322.11 MiB**（最低 157.07 MiB – 最高 353.88 MiB） |
 
 想在自己的机器上与浏览器或其他音乐应用对比，可对其根进程运行同一采集脚本：
@@ -226,9 +226,11 @@ make build-app
 make dev
 ```
 
-执行 `make build` 会按当前宿主机系统与架构准备 `build/runtime`、`build/login` 和 `build/legal`，并根据 `mygo.json` 中的版本号（当前源码为 `0.0.62`）输出至 `build/<os>-<arch>/`：
+`make build` 和 `make build-app` 默认生成开发包：二进制不接入更新源，“关于”和设置显示 `DEV`、源码分支与提交（本地有修改时还显示 `dirty`）。`mygo.json` 是版本基线，`--build-info` 返回结构化构建身份。打包的开发版继续使用现有账号与偏好存储。正式构建必须显式设置 `RELEASE_VERSION`，执行 `scripts/release/publish.py configure`，再运行 `make build-app BUILD_TYPE=release`；CI 会自动完成这些步骤。正式更新源位于 `scripts/release/update-source.json`。
 
-- **macOS（`darwin/<arch>`）：** 生成 `build/darwin-<arch>/ytmGO.app` 与 `build/darwin-<arch>/ytmgo-<version>-<arch>.dmg`（采用 ad-hoc 应用签名 `-` 与未签名 DMG）。例如在 Apple Silicon（`darwin/arm64`）上基于当前源码版本 `0.0.62` 构建时，输出 `build/darwin-arm64/ytmGO.app` 与 `build/darwin-arm64/ytmgo-0.0.62-arm64.dmg`（在 macOS 上可通过 `open build/darwin-arm64/ytmGO.app` 启动）。注意：本地重新构建导致 ad-hoc 签名身份变化时，macOS 钥匙串可能会提示重新授权访问 `account-session-key`。
+执行 `make build` 会按当前宿主机系统与架构准备 `build/runtime`、`build/login` 和 `build/legal`，并根据 `mygo.json` 中的版本号输出至 `build/<os>-<arch>/`：
+
+- **macOS（`darwin/<arch>`）：** 生成 `build/darwin-<arch>/ytmGO.app` 与 `build/darwin-<arch>/ytmgo-<version>-<arch>.dmg`（采用 ad-hoc 应用签名 `-` 与未签名 DMG）。例如在 Apple Silicon（`darwin/arm64`）上基于当前源码版本 `0.0.64` 构建时，输出 `build/darwin-arm64/ytmGO.app` 与 `build/darwin-arm64/ytmgo-0.0.64-arm64.dmg`（在 macOS 上可通过 `open build/darwin-arm64/ytmGO.app` 启动）。注意：本地重新构建导致 ad-hoc 签名身份变化时，macOS 钥匙串可能会提示重新授权访问 `account-session-key`。
 - **Linux（`linux/amd64`）：** 生成 `build/linux-amd64/ytmgo` 与 `build/linux-amd64/ytmgo_<version>_amd64.deb`（在 Linux 上可直接执行 `./build/linux-amd64/ytmgo` 启动）。
 - **Windows（`windows/amd64`）：** 生成 `build/windows-amd64/ytmGO.exe` 与 `build/windows-amd64/ytmgo-setup-<version>-amd64.exe`（在 Windows 上可执行 `.\build\windows-amd64\ytmGO.exe` 启动）。
 
@@ -238,6 +240,7 @@ make dev
 
 ```sh
 /Applications/ytmGO.app/Contents/MacOS/ytmGO --version
+/Applications/ytmGO.app/Contents/MacOS/ytmGO --build-info
 /Applications/ytmGO.app/Contents/MacOS/ytmGO --check-for-updates
 /Applications/ytmGO.app/Contents/MacOS/ytmGO --install-update
 ```

@@ -254,5 +254,6 @@
   "nativeMusicRegionUnavailable": "地域制限により再生できません。ネットワークまたはプロキシの接続先を確認してから、再試行してください。",
   "nativeAccountLoginCancelled": "ログインをキャンセルしました。",
   "nativePlaybackAccessDenied": "音声ストリームへのアクセスが拒否されました。ネットワークまたはプロキシを確認してから、再試行してください。",
-  "nativePlaybackAccessDeniedHTTP": "音声ストリームへのアクセスが拒否されました（HTTP {status}）。ネットワークまたはプロキシを確認してから、再試行してください。"
+  "nativePlaybackAccessDeniedHTTP": "音声ストリームへのアクセスが拒否されました（HTTP {status}）。ネットワークまたはプロキシを確認してから、再試行してください。",
+  "menuDevelopmentUpdatesDisabled": "開発ビルドの更新は無効です"
 }

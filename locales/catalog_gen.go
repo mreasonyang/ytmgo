@@ -3290,3 +3290,15 @@ func NativePlaybackAccessDeniedHTTP(status string) string {
 func (msgs Messages) NativePlaybackAccessDeniedHTTP(status string) string {
 	return Catalog.Format(msgs.locale, "nativePlaybackAccessDeniedHTTP", map[string]any{"status": status})
 }
+
+// MenuDevelopmentUpdatesDisabled says "Updates disabled for development builds"
+// in the language the app shows.
+func MenuDevelopmentUpdatesDisabled() string {
+	return In(i18n.Locale()).MenuDevelopmentUpdatesDisabled()
+}
+
+// MenuDevelopmentUpdatesDisabled says "Updates disabled for development builds"
+// in the language of msgs.
+func (msgs Messages) MenuDevelopmentUpdatesDisabled() string {
+	return Catalog.Format(msgs.locale, "menuDevelopmentUpdatesDisabled", nil)
+}

@@ -40,8 +40,9 @@ python3 -m http.server 8000 --directory site/dist
   use a no-break space (`\u00a0`) to keep a name like YouTube Music together.
 - `assets/shots/<locale>/` are screenshots of the real interface, rendered by
   `TestSiteScreenshots` (`site_shots_test.go`) through MyGo's software renderer
-  with a fictional catalogue: invented artists, titles and lyrics with
-  generated covers. Re-render them after visible UI changes.
+  with a fictional catalogue: invented artists, titles and lyrics, with
+  covers drawn in code (`site_covers_test.go`), one per release in its own
+  style; songs share their album's cover. Re-render them after visible UI changes.
 - Download buttons point at the releases page and are upgraded in the browser
   to the newest release that carries each platform's file, since a release
   does not always include every platform.

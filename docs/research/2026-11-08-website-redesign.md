@@ -53,7 +53,7 @@ pitch and the measured figures from 41201a3 are kept word for word.
 Built in this pass: album structure with 9 tracks, a sung headline, the page
 player, an interactive lyrics panel, lines lit by scroll, tracks washed in the
 app's tints, Bricolage Grotesque and JetBrains Mono, and download details folded
-under one disclosure. Not yet done: new fictional cover art and a video loop.
+under one disclosure. Cover art: done in a follow-up (site_covers_test.go). Not yet done: a video loop.
 
 ## 3. Recommended direction: "The page is a record"
 

@@ -286,7 +286,7 @@ figure.shot:not([class*=wrap]) { margin-inline: 0; }
 .lyrics__lines li.is-past { color: rgb(255 255 255 / .55); }
 .lyrics__lines li.is-on { color: #fff; scale: 1.025; }
 .lyrics__now { display: grid; grid-template-columns: 40px 1fr; grid-template-rows: auto auto; gap: 0 12px; align-items: center; padding-top: 14px; border-top: 1px solid rgb(255 255 255 / .14); font-size: var(--t-meta); }
-.lyrics__art { grid-row: span 2; width: 40px; height: 40px; border-radius: var(--r-s); background: linear-gradient(135deg, #ff9a6b, #c2385a 60%, #5b2a7a); }
+.lyrics__art { grid-row: span 2; width: 40px; height: 40px; border-radius: var(--r-s); background: radial-gradient(circle 6px at 50% 100%, #ffd3a0 98%, transparent) top / 100% 60% no-repeat, linear-gradient(#18143a, #5a2a5e 34%, #f08a4b 59.5%, #3a1c3e 60%, #0c0a18); } /* the Slow Orbit cover */
 .lyrics__now > span:nth-child(2) { display: grid; line-height: 1.35; }
 .lyrics__now > span:nth-child(2) span { color: rgb(255 255 255 / .7); }
 .lyrics__bar { grid-column: 2; height: 4px; margin-top: 8px; border-radius: 2px; background: rgb(255 255 255 / .25); }

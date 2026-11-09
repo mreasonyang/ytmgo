@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/color"
 	"image/png"
-	"math"
 	"os"
 	"path/filepath"
 	"testing"
@@ -18,8 +17,8 @@ import (
 )
 
 // The website shows the real interface. Its catalogue is fictional: invented
-// artists, titles and lyrics with generated covers, so the screenshots show
-// nobody's music or artwork.
+// artists, titles and lyrics with covers drawn in code (site_covers_test.go),
+// so the screenshots show nobody's music or artwork.
 
 var siteSongs = []struct{ title, artist, album string }{
 	{"Slow Orbit", "Lumen Drift", "Low Light Hours"},
@@ -32,6 +31,15 @@ var siteSongs = []struct{ title, artist, album string }{
 	{"Northern Lines", "Mika Sorensen", "Northern Lines"},
 	{"Quiet Engines", "Tidal Bloom", "Quiet Engines"},
 	{"Copper Sky", "Nadia Kerr", "Paper Satellites"},
+}
+
+// The album page shows Low Light Hours' own tracklist.
+var siteLowLightHours = []struct {
+	title string
+	secs  int
+}{
+	{"Slow Orbit", 168}, {"Afterglow Avenue", 237}, {"Amber Hour", 197}, {"Sodium Lamps", 243},
+	{"Long Exposure", 226}, {"Window Seat", 189}, {"Harbour Clock", 251}, {"Last Train West", 302},
 }
 
 var siteAlbums = []struct{ title, artist string }{
@@ -68,66 +76,18 @@ var siteCopy = map[string]map[string]string{
 	"ja":      {"listen": "もう一度聴く", "albums": "おすすめのアルバム", "mixes": "あなたのミックス", "album": "アルバム", "playlist": "プレイリスト", "artist": "アーティスト", "liked": "高評価した曲", "mix": "ナイトドライブ ミックス", "focus": "ディープフォーカス"},
 }
 
-var sitePalettes = [][3]color.RGBA{
-	{{255, 94, 79, 255}, {66, 20, 80, 255}, {255, 196, 120, 255}},
-	{{40, 120, 220, 255}, {10, 20, 60, 255}, {120, 230, 255, 255}},
-	{{30, 160, 130, 255}, {8, 40, 46, 255}, {220, 255, 180, 255}},
-	{{150, 80, 220, 255}, {30, 12, 60, 255}, {255, 140, 220, 255}},
-	{{240, 170, 50, 255}, {90, 30, 20, 255}, {255, 236, 170, 255}},
-	{{220, 60, 120, 255}, {30, 14, 40, 255}, {90, 200, 255, 255}},
-	{{70, 90, 110, 255}, {14, 18, 26, 255}, {240, 120, 90, 255}},
-	{{100, 200, 90, 255}, {12, 40, 30, 255}, {250, 240, 120, 255}},
-	{{230, 110, 60, 255}, {40, 20, 60, 255}, {120, 200, 220, 255}},
-	{{60, 70, 200, 255}, {240, 110, 140, 255}, {255, 230, 200, 255}},
-}
-
 func siteMix(a, b color.RGBA, t float64) color.RGBA {
 	t = max(0, min(1, t))
 	l := func(x, y uint8) uint8 { return uint8(float64(x) + (float64(y)-float64(x))*t) }
 	return color.RGBA{l(a.R, b.R), l(a.G, b.G), l(a.B, b.B), 255}
 }
 
-// siteCover draws an abstract cover: a diagonal wash, a glowing orb and,
-// on alternate seeds, rings or horizon lines.
-func siteCover(seed int) *image.RGBA {
-	const n = 384
-	pal := sitePalettes[seed%len(sitePalettes)]
-	img := image.NewRGBA(image.Rect(0, 0, n, n))
-	cx := 0.3 + 0.4*math.Mod(float64(seed)*0.37, 1)
-	cy := 0.3 + 0.4*math.Mod(float64(seed)*0.61, 1)
-	r := 0.22 + 0.12*math.Mod(float64(seed)*0.29, 1)
-	for y := 0; y < n; y++ {
-		for x := 0; x < n; x++ {
-			u, v := float64(x)/n, float64(y)/n
-			c := siteMix(pal[1], pal[0], 0.15+0.85*(u*0.4+(1-v)*0.6))
-			d := math.Hypot(u-cx, v-cy)
-			if d < r {
-				c = siteMix(c, pal[2], 0.85*(1-d/r)+0.15)
-			} else {
-				c = siteMix(c, pal[2], 0.35*math.Exp(-(d-r)*9))
-			}
-			switch seed % 3 {
-			case 0:
-				if math.Abs(math.Mod(d*28, 2)-1) < 0.06 && d > r {
-					c = siteMix(c, pal[2], 0.3)
-				}
-			case 1:
-				if v > 0.62 && math.Mod(v*40, 2) < 0.5 {
-					c = siteMix(c, pal[1], 0.45)
-				}
-			}
-			img.SetRGBA(x, y, c)
-		}
-	}
-	return img
-}
-
 func siteFixture(locale string, dark bool) (*UIModel, ViewActions) {
 	m, a := nativeViewFixture()
 	copy := siteCopy[locale]
 	art := map[string]ui.ImageSource{}
-	for i := range sitePalettes {
-		art[fmt.Sprintf("site-%d", i)] = ui.NewBitmap(siteCover(i))
+	for key, paint := range siteCovers {
+		art[key] = ui.NewBitmap(siteRender(paint))
 	}
 	avatar := image.NewRGBA(image.Rect(0, 0, 96, 96))
 	for y := 0; y < 96; y++ {
@@ -140,19 +100,19 @@ func siteFixture(locale string, dark bool) (*UIModel, ViewActions) {
 
 	var songs []catalog.Item
 	for i, s := range siteSongs {
-		songs = append(songs, catalog.Item{ID: fmt.Sprintf("site-song-%d", i), Title: s.title, Artist: s.artist, Album: s.album, Kind: "song", Artwork: fmt.Sprintf("site-%d", i), Duration: time.Duration(168+i*23) * time.Second})
+		songs = append(songs, catalog.Item{ID: fmt.Sprintf("site-song-%d", i), Title: s.title, Artist: s.artist, Album: s.album, Kind: "song", Artwork: siteAlbumCovers[s.album], Duration: time.Duration(168+i*23) * time.Second})
 	}
 	var albums []catalog.Item
 	for i, al := range siteAlbums {
-		albums = append(albums, catalog.Item{Title: al.title, Artist: al.artist, Kind: "album", BrowseID: fmt.Sprintf("site-album-%d", i), Artwork: fmt.Sprintf("site-%d", (i*3+1)%len(sitePalettes))})
+		albums = append(albums, catalog.Item{Title: al.title, Artist: al.artist, Kind: "album", BrowseID: fmt.Sprintf("site-album-%d", i), Artwork: siteAlbumCovers[al.title]})
 	}
 	mixes := []catalog.Item{
-		{Title: copy["mix"], Kind: "playlist", BrowseID: "site-mix", Artwork: "site-5"},
-		{Title: copy["focus"], Kind: "playlist", BrowseID: "site-focus", Artwork: "site-2"},
-		{Title: "Lumen Drift", Kind: "artist", BrowseID: "site-artist", Artwork: "site-0"},
-		{Title: "Velvet Static", Kind: "artist", BrowseID: "site-artist-2", Artwork: "site-4"},
+		{Title: copy["mix"], Kind: "playlist", BrowseID: "site-mix", Artwork: "cover-night-drive"},
+		{Title: copy["focus"], Kind: "playlist", BrowseID: "site-focus", Artwork: "cover-deep-focus"},
+		{Title: "Lumen Drift", Kind: "artist", BrowseID: "site-artist", Artwork: "artist-lumen-drift"},
+		{Title: "Velvet Static", Kind: "artist", BrowseID: "site-artist-2", Artwork: "artist-velvet-static"},
 	}
-	library := []catalog.Item{{Title: copy["liked"], Kind: "playlist", BrowseID: "site-liked", Artwork: "site-9"}}
+	library := []catalog.Item{{Title: copy["liked"], Kind: "playlist", BrowseID: "site-liked", Artwork: "cover-liked"}}
 	library = append(library, mixes...)
 	library = append(library, albums[:4]...)
 
@@ -181,6 +141,18 @@ func siteFixture(locale string, dark bool) (*UIModel, ViewActions) {
 	return m, a
 }
 
+func siteAlbumTracks() []catalog.Item {
+	var out []catalog.Item
+	for i, s := range siteLowLightHours {
+		id := fmt.Sprintf("site-llh-%d", i)
+		if i == 0 {
+			id = "site-song-0" // the playing song, so the page marks it
+		}
+		out = append(out, catalog.Item{ID: id, Title: s.title, Artist: "Lumen Drift", Album: "Low Light Hours", Kind: "song", Artwork: "cover-low-light-hours", Duration: time.Duration(s.secs) * time.Second})
+	}
+	return out
+}
+
 func TestSiteScreenshots(t *testing.T) {
 	dir := os.Getenv("YTMGO_SITE_SHOTS_DIR")
 	if dir == "" {
@@ -196,7 +168,7 @@ func TestSiteScreenshots(t *testing.T) {
 		{"immersive", 1440, 900, true, func(m *UIModel) { m.Immersive = true }},
 		{"album", 1440, 900, true, func(m *UIModel) {
 			m.Route = "browse:site-album-0"
-			m.Page = catalog.Page{Title: "Low Light Hours", Creator: "Lumen Drift", Subtitle: siteCopy[m.Language]["album"] + " • Lumen Drift • 2026", Artwork: "site-1", Items: m.Queue}
+			m.Page = catalog.Page{Title: "Low Light Hours", Creator: "Lumen Drift", Subtitle: siteCopy[m.Language]["album"] + " • Lumen Drift • 2026", Artwork: "cover-low-light-hours", Items: siteAlbumTracks()}
 		}},
 		{"light", 1440, 900, false, func(m *UIModel) {}},
 		{"compact", 420, 860, true, func(m *UIModel) {}},

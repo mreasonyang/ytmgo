@@ -28,6 +28,13 @@ FONTS = (
      "modifications": "static instance (wght 720, wdth 88, opsz 96), Latin subset, OS/2 weight class 800"},
 )
 
+# Third-party artwork embedded in the app, with the notice each requires.
+ASSETS = (
+    {"name": "Lucide icons", "license": "ISC AND MIT", "notice": "resources/notices/lucide-LICENSE.txt",
+     "source": "https://github.com/lucide-icons/lucide",
+     "use": "interface icons in native_style.go, adapted to a 1.8 px stroke"},
+)
+
 
 class LicenseError(ValueError):
     """A fixed diagnostic safe to show without dependency tool output."""
@@ -44,7 +51,7 @@ def digest(path):
 def input_checksums():
     paths = set(INPUTS)
     paths.add("scripts/licensing/upstream-notices.json")
-    for directory in ("scripts/licensing/upstream", "scripts/runtime/licenses", "resources/fonts"):
+    for directory in ("scripts/licensing/upstream", "scripts/runtime/licenses", "resources/fonts", "resources/notices"):
         paths.update(p.relative_to(ROOT).as_posix() for p in (ROOT / directory).rglob("*") if p.is_file())
     return {name: digest(ROOT / name) for name in sorted(paths)}
 
@@ -200,6 +207,16 @@ def font_notices(output):
         records.append(dict(font, notice=f"fonts/{notice.name}", sha256=digest(ROOT / font["file"])))
     return records
 
+def asset_notices(output):
+    destination = output / "assets"
+    destination.mkdir()
+    for asset in ASSETS:
+        notice = ROOT / asset["notice"]
+        if not notice.is_file():
+            raise LicenseError("asset notice missing")
+        shutil.copyfile(notice, destination / notice.name)
+    return [dict(asset, notice=f"assets/{Path(asset['notice']).name}") for asset in ASSETS]
+
 
 def ffmpeg_source(output):
     runtime = ROOT / "build/runtime/licenses"
@@ -260,6 +277,9 @@ def verify(folder, check_inputs=False, check_staged_runtime=True):
     for font in manifest.get("fonts", []):
         if not (folder / font["notice"]).is_file():
             raise LicenseError("font notice missing")
+    for asset in manifest.get("assets", []):
+        if not (folder / asset["notice"]).is_file():
+            raise LicenseError("asset notice missing")
     if check_inputs:
         if input_checksums() != manifest["inputs"]:
             raise LicenseError("licensing inputs changed; regenerate notices")
@@ -284,6 +304,7 @@ def prepare():
                     "playback": rust_notices("playback-host", matches[0], output),
                     "ffmpeg": ffmpeg_source(output),
                     "fonts": font_notices(output),
+                    "assets": asset_notices(output),
                     "inputs": input_checksums()}
         manifest["sha256"] = {p.relative_to(output).as_posix(): digest(p)
                               for p in sorted(output.rglob("*")) if p.is_file()}

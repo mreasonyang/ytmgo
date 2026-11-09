@@ -20,6 +20,7 @@ third-party code; the root license does not relicense those portions.
 | Rust dependencies, including Wry, Tao, rquickjs and QuickJS | Each dependency's original terms, commonly MIT / Apache-2.0 | Exact versions in each helper's `Cargo.lock`; generated inventories include the declared license expressions and upstream notices |
 | option-ext, when selected by the target's Rust dependency graph | MPL-2.0 | [option-ext](https://crates.io/crates/option-ext); unchanged corresponding source accompanies the application |
 | Bricolage Grotesque | SIL Open Font License 1.1 | [Bricolage](https://github.com/ateliertriay/bricolage); display titles. `resources/fonts/ytmgo-display.ttf` is a modified version: a static instance (weight 720, width 88, display optical size), Latin subset, OS/2 weight class 800. License text in `resources/fonts/OFL-BricolageGrotesque.txt` |
+| Lucide icons, including icons derived from Feather | ISC; MIT for the Feather-derived icons | [Lucide](https://github.com/lucide-icons/lucide); the interface icons in `native_style.go` are adapted from Lucide (redrawn at a 1.8 px stroke). Notice in `resources/notices/lucide-LICENSE.txt` |
 | FFmpeg 9.0.2 | LGPL-2.1-or-later for the configured build | [FFmpeg](https://ffmpeg.org/); separate executable, built without GPL or nonfree options; unchanged source, configuration and rebuild instructions accompany the application |
 
 The JavaScript source versions and integrity checks are pinned in

@@ -83,7 +83,9 @@ func nativeTheme(dark bool) *ui.Theme {
 	return t
 }
 
-// Every glyph shares one 24 px grid and 1.8 px round stroke, parsed once for the native renderer.
+// Every glyph shares one 24 px grid and 1.8 px round stroke, parsed once for
+// the native renderer. The glyphs are adapted from Lucide (ISC; its
+// Feather-derived icons MIT), notice in resources/notices/lucide-LICENSE.txt.
 var nativeIconSources = map[string]string{
 	"refresh":      `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M6.1 7a7 7 0 0 1 11.55-1.7L20 8M4 16l2.35 2.7A7 7 0 0 0 17.9 17"/></svg>`,
 	"home":         `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .7-1.53l7-6a2 2 0 0 1 2.6 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>`,

@@ -25,7 +25,7 @@ FONTS = (
     {"name": "Bricolage Grotesque", "file": "resources/fonts/ytmgo-display.ttf",
      "license": "OFL-1.1", "notice": "resources/fonts/OFL-BricolageGrotesque.txt",
      "source": "https://github.com/ateliertriay/bricolage",
-     "modifications": "static instance (wght 720, wdth 88, opsz 96), Latin subset, OS/2 weight class 800"},
+     "modifications": "renamed ytmGO Display; weight 720 and width 88 fixed, optical size kept (12-96, default 32); Latin subset; OS/2 weight class 800"},
 )
 
 # Third-party artwork embedded in the app, with the notice each requires.

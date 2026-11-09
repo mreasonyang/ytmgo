@@ -8,10 +8,15 @@ import (
 )
 
 // nativeDisplayFont is the design guidebook's display face: Bricolage
-// Grotesque, cut as a static instance at weight 720, width 88 % and the
-// display optical size, Latin only (resources/fonts, SIL Open Font License
-// 1.1, listed in THIRD_PARTY_NOTICES.md). Other scripts fall back to the
-// system's own heavy weight, as the guidebook asks for CJK display text.
+// Grotesque, Latin only, with weight (720) and width (88 %) fixed and the
+// optical-size axis kept, so each heading's size picks its own spacing as the
+// website's font-optical-sizing: auto does; its default is 32, a heading
+// size, for any renderer that doesn't size optically. It is renamed
+// "ytmGO Display" so an installed Bricolage can't stand in for it
+// (resources/fonts, SIL Open Font License 1.1, in THIRD_PARTY_NOTICES.md).
+// Its weight class is 800, the weight headings ask for, so nothing
+// synthesises bold onto outlines that are already 720. Other scripts fall
+// back to the system's own heavy weight, as the guidebook asks for CJK.
 //
 //go:embed resources/fonts/ytmgo-display.ttf
 var nativeDisplayFont []byte

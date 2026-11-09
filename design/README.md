@@ -188,11 +188,20 @@ becomes readable by itself. Colour is never the only carrier of state.
 | Face | Use |
 | --- | --- |
 | **System UI** (SF Pro, Segoe UI, Noto Sans; PingFang, Microsoft YaHei/JhengHei, Hiragino) | All interface and running text |
-| **Bricolage Grotesque**, 720 weight, 88 % width, −3.5 % tracking | Display titles only: the hero, section and collection titles, big figures, lyric lines in the demo. Latin only; CJK display uses the system face at 800 |
+| **Bricolage Grotesque**, 720 weight, 88 % width, optical size following the font size, −3.5 % tracking | Display titles only: the hero, section and collection titles, big figures, lyric lines in the demo. Latin only; CJK display uses the system face at 800 |
 | **JetBrains Mono** | Numbers that line up: track numbers, durations, times, versions, code. Never sentences |
 
 Both shipped faces are SIL Open Font License 1.1; the licence text travels
 with the files.
+
+**Optical size is part of the face.** Bricolage changes its spacing and
+detail with size: a 24 px heading set with the 96 px design looks cramped
+(about 13 % narrower, word spaces a third smaller). Let the optical size
+follow the font size: the website uses `font-optical-sizing: auto`; the
+app ships the face with its optical-size axis, which the platform's text
+stack sets from the size. Never fix it to one value for every size. A
+modified copy of the face is renamed, so an installed copy can't stand in
+for it.
 
 ### 5.2 Scale
 

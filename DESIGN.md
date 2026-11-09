@@ -73,6 +73,10 @@ in `native_style.go`, the display face in `native_fonts.go`, layout in
   both appearances, so the stage uses the dark palette.
 - **Time readouts** occupy fixed-width slots, so progress labels don't shift
   adjacent controls.
+- **CJK headings** keep their phrases whole: mark phrase boundaries in a
+  heading's catalog message with `|` (`"你的|音乐库"`); `a.tr` turns the marks
+  into word joiners (`phrases`). Mark new or reworded CJK headings; leave
+  running text unmarked.
 - **Scripts.** English, Simplified Chinese, Traditional Chinese and Japanese
   use MyGo's native shaping and locale selection; labels, menus and
   accessible names come from the four-language catalog. Layout tests cover

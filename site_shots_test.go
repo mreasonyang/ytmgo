@@ -134,7 +134,7 @@ func siteFixture(locale string, dark bool) (*UIModel, ViewActions) {
 		Route: "home", Appearance: appearance, Language: locale, SignedIn: true, AccountAvatar: "site-avatar",
 		Current: songs[0], Queue: songs, Playing: true, Duration: songs[0].Duration.Seconds(), Position: 36.5, Volume: 0.72,
 		CanBack: true, LibraryItems: library, LibraryLoaded: true,
-		Page: catalog.Page{Title: locales.Catalog.Format(locale, "shellGreetingEvening", nil), Shelves: []catalog.Shelf{
+		Page: catalog.Page{Title: phrases(locales.Catalog.Format(locale, "shellGreetingEvening", nil)), Shelves: []catalog.Shelf{
 			{Title: copy["listen"], Items: songs[:8]},
 			{Title: copy["albums"], Items: albums},
 			{Title: copy["mixes"], Items: mixes},

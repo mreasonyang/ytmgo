@@ -174,7 +174,7 @@ largest type is a collection title.
   (`word-break: keep-all`) and break only at spaces, punctuation and phrase
   marks. In locale strings a `|` marks a phrase boundary
   (`你的音乐，|值得不止一个|浏览器标签页`). The website turns marks into
-  `<wbr>`; the app will do the same with its own shaping.
+  `<wbr>`; the app joins each phrase's characters with word joiners.
 - Running text breaks anywhere, with strict kinsoku, 1.8 leading, +2 %
   tracking and automatic CJK–Latin spacing.
 - Display sizes step down (`sizeCJK`): full-width glyphs are about twice as
@@ -359,9 +359,12 @@ marked artwork rules.
 | Display titles | System font 800 | Bricolage Grotesque for Latin; system heavy for CJK |
 | Feedback | Native defaults | Buttons press to 96 %; play controls grow 105 % |
 
-**Not yet adopted:** CJK phrase marks in the app. MyGo has no line-break
-control, and most large titles are catalogue names that can't be marked;
-the app keeps MyGo's default breaking until the toolkit offers one.
+**CJK phrase marks:** adopted. The app's catalog marks its headings with
+`|` like the website's locales; `phrases` (i18n_phrases.go) joins each
+phrase's characters with invisible word joiners (U+2060), which MyGo's line
+breaker honours, so headings break only at the marks. Catalogue names from
+YouTube Music can't be marked and break as the system breaks them, as on the
+website.
 
 ## 14. Changing the guidebook
 

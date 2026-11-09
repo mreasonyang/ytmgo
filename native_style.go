@@ -2,9 +2,13 @@ package main
 
 import "github.com/egoist/mygo/ui"
 
-// nativePalette holds the Spotify-style roles: a black window frame, near-black
-// panels, neutral elevated surfaces and white text, with ytmgo's own accent
-// reserved for playback state and primary play actions.
+//go:generate go run ./design/gen
+
+// nativePalette holds the colour roles of the design guidebook
+// (design/README.md): a black window frame, near-black panels, neutral
+// elevated surfaces and white text. Coral (accent) means play and nothing
+// else; attention marks errors and warnings. The values are generated from
+// design/tokens.json into native_tokens_gen.go.
 type nativePalette struct {
 	base, surface, raised, input, highlight ui.Color
 	text, secondary, muted                  ui.Color
@@ -13,29 +17,23 @@ type nativePalette struct {
 	// to keep 4.5:1 on its surfaces; fills and icons keep accent.
 	accentText   ui.Color
 	hover, press ui.Color
-	dark         bool
+	// attention marks errors and warnings, always beside an icon and words.
+	attention ui.Color
+	// track is the unfilled part of progress bars and sliders.
+	track ui.Color
+	dark  bool
 }
 
 func palette(dark bool) nativePalette {
 	if dark {
-		return nativePalette{
-			base: ui.Hex("#000000"), surface: ui.Hex("#121212"), raised: ui.Hex("#1f1f1f"), input: ui.Hex("#242424"), highlight: ui.Hex("#2a2a2a"),
-			text: ui.Hex("#ffffff"), secondary: ui.Hex("#b3b3b3"), muted: ui.Hex("#8f8f8f"),
-			accent: ui.Hex("#ff5a4f"), accentText: ui.Hex("#ff5a4f"), onAccent: ui.Hex("#000000"), line: ui.RGBA(255, 255, 255, 0.10),
-			hover: ui.RGBA(255, 255, 255, 0.07), press: ui.RGBA(255, 255, 255, 0.12), dark: true,
-		}
+		return tokenDark
 	}
-	return nativePalette{
-		base: ui.Hex("#e9e9eb"), surface: ui.Hex("#ffffff"), raised: ui.Hex("#f2f2f3"), input: ui.Hex("#ececee"), highlight: ui.Hex("#e1e1e4"),
-		text: ui.Hex("#121212"), secondary: ui.Hex("#5a5a5f"), muted: ui.Hex("#6b6b70"),
-		accent: ui.Hex("#e8382d"), accentText: ui.Hex("#b8261c"), onAccent: ui.Hex("#ffffff"), line: ui.RGBA(0, 0, 0, 0.10),
-		hover: ui.RGBA(0, 0, 0, 0.05), press: ui.RGBA(0, 0, 0, 0.09),
-	}
+	return tokenLight
 }
 
 // nativeHeaderTints colour the top of pages without artwork, as Spotify's
 // header gradients do. Each route keeps one stable tint.
-var nativeHeaderTints = []ui.Color{ui.Hex("#2d46b9"), ui.Hex("#8d67ab"), ui.Hex("#1e7a6b"), ui.Hex("#b0472b"), ui.Hex("#477d95"), ui.Hex("#7d4b32"), ui.Hex("#5179a1"), ui.Hex("#a13d63")}
+var nativeHeaderTints = tokenTints
 
 func nativeHeaderTint(key string) ui.Color {
 	h := uint32(2166136261)

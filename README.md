@@ -228,13 +228,13 @@ make dev
 
 `make build` and `make build-app` produce development packages: updates are disabled in the binary, and About/Settings show `DEV`, the source branch and commit (plus `dirty` for local edits). `mygo.json` tracks the next development target: after public release `0.0.64`, development builds identify as `0.0.65 DEV`. Advance this target after each successful release. `--build-info` exposes structured build identity. Packaged development builds retain the existing account and preferences storage. Release builds explicitly set `RELEASE_VERSION`, run `scripts/release/publish.py configure`, then use `make build-app BUILD_TYPE=release`; CI handles these steps. The release update source is in `scripts/release/update-source.json`.
 
-For a CI development package, open **Actions → Development macOS package → Run workflow**, select the source branch and architecture, or run:
+For a CI development package, open **Actions → Development macOS package → Run workflow**, keep the workflow branch on **main**, and enter the source branch and architecture, or run:
 
 ```sh
-gh workflow run dev-package.yml --repo mreasonyang/ytmgo --ref app-guidebook-redesign -f architecture=arm64
+gh workflow run dev-package.yml --repo mreasonyang/ytmgo --ref main -f source_branch=app-guidebook-redesign -f architecture=arm64
 ```
 
-Use `architecture=amd64` for Intel or `architecture=all` for both. Download the ZIP, source receipt and checksums from the run's **Artifacts** section. These are ad-hoc signed development builds without notarization; the workflow has read-only repository permissions, receives no signing secrets, verifies updates are disabled, and never publishes a GitHub Release or changes stable update feeds.
+Use `architecture=amd64` for Intel or `architecture=all` for both. Download the `ytmgo-dev-macos-<arch>-<run>` artifact containing the ZIP, source receipt and checksums. These builds use the same Developer ID signing identity as stable packages, without notarization. Native builders and verification jobs receive no signing secrets; only the existing main-only `macos-release` environment signs the bundles. Final verification rejects ad-hoc or wrong-team signatures and checks both update commands remain disabled. The workflow never publishes a GitHub Release or changes stable update feeds. Packaged dev and stable apps still share account storage and cannot run as independent applications.
 
 `make build` stages `build/runtime`, `build/login`, and `build/legal` for the current host OS/architecture and outputs to `build/<os>-<arch>/` using the version in `mygo.json`:
 

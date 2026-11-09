@@ -40,6 +40,22 @@ class DistributionLicenseTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "missing"):
             prepare.verify(self.folder)
 
+    def test_embedded_asset_requires_its_notice(self):
+        assets = self.folder / "assets"
+        assets.mkdir()
+        (assets / "icons-LICENSE.txt").write_text("synthetic icon license fixture")
+        self.manifest["assets"] = [{"name": "Icons", "notice": "assets/icons-LICENSE.txt"}]
+        self.write_manifest()
+        prepare.verify(self.folder)
+        (assets / "icons-LICENSE.txt").unlink()
+        self.write_manifest()
+        with self.assertRaisesRegex(ValueError, "asset notice"):
+            prepare.verify(self.folder)
+
+    def test_shipped_assets_have_notices(self):
+        for asset in prepare.ASSETS:
+            self.assertIn("ISC License", (prepare.ROOT / asset["notice"]).read_text())
+
     def test_corresponding_source_required_even_if_file_inventory_is_updated(self):
         self.archive.unlink()
         self.write_manifest()

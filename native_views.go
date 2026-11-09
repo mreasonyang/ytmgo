@@ -842,7 +842,9 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 		b.Padding(4).Justify(ui.Center)
 	}
 	if open {
-		b.Selected(true).Background(p.press)
+		// Selected keeps the row's text colour; MyGo's selected text is the
+		// inverted theme colour, for fills, not washes.
+		b.Selected(true).Background(p.press).TextColor(p.text)
 	} else if b.Hovered() {
 		b.Background(p.hover)
 	}
@@ -1453,7 +1455,7 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 	}
 	hovered := b.Hovered()
 	if playing {
-		b.Selected(true).Background(p.hover)
+		b.Selected(true).Background(p.hover).TextColor(p.text)
 	}
 	if hovered {
 		b.Background(p.press)
@@ -1791,7 +1793,7 @@ func nativeTabbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 	ui.Row(c).Height(nativeCompactTabbar).Shrink(0).Padding(4, 8).Background(p.base).Label(a.Tr("shellNavMain")).Children(func() {
 		for _, nav := range []struct{ route, key, icon string }{{"home", "shellNavHome", "home"}, {"search", "shellNavSearch", "search"}, {"explore", "shellNavExplore", "explore"}, {"library", "shellNavLibrary", "library"}} {
 			active := m.Route == nav.route
-			b := ui.ButtonBase(c.Key("tab-" + nav.route)).Column().Grow(1).Gap(4).Radius(8).Label(a.Tr(nav.key)).Selected(active).Background(ui.Transparent).TextColor(p.secondary)
+			b := ui.ButtonBase(c.Key("tab-" + nav.route)).Column().Grow(1).Gap(4).Radius(tokenRadiusControl).Label(a.Tr(nav.key)).Selected(active).Background(ui.Transparent).TextColor(p.secondary)
 			if active || b.Hovered() {
 				b.TextColor(p.text)
 			}

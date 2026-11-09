@@ -40,11 +40,23 @@ func updateMenuItem() *mygo.MenuItem {
 }
 
 func applicationMenuWithUpdates(newUpdateItem func() *mygo.MenuItem) *mygo.MenuItem {
+	about := &mygo.MenuItem{Role: mygo.RoleAbout}
+	if buildKind != "release" {
+		about = &mygo.MenuItem{Label: locales.MenuAbout(), Click: func(*mygo.MenuItem, *mygo.Window) {
+			mygo.App.ShowAboutPanel(developmentAboutOptions())
+		}}
+	}
 	return &mygo.MenuItem{Role: mygo.RoleAppMenu, Submenu: []*mygo.MenuItem{
-		{Role: mygo.RoleAbout}, newUpdateItem(), mygo.Separator(),
+		about, newUpdateItem(), mygo.Separator(),
 		{Role: mygo.RoleServices}, mygo.Separator(), {Role: mygo.RoleHide},
 		{Role: mygo.RoleHideOthers}, {Role: mygo.RoleUnhide}, mygo.Separator(), {Role: mygo.RoleQuit},
 	}}
+}
+
+func developmentAboutOptions() mygo.AboutPanelOptions {
+	b := currentBuildIdentity()
+	return mygo.AboutPanelOptions{ApplicationName: "ytmGO Dev", ApplicationVersion: b.displayVersion(),
+		Version: b.BuildNumber, Credits: b.Commit}
 }
 
 func helpMenuWithUpdates(items []*mygo.MenuItem, newUpdateItem func() *mygo.MenuItem) *mygo.MenuItem {

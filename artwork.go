@@ -44,6 +44,8 @@ const (
 // and renderer-owned GPU textures are separate from that cache budget.
 type artEntry struct {
 	bitmap   *ui.Bitmap
+	tint     ui.Color // the cover's colour for the interface, when tinted
+	tinted   bool
 	bytes    int
 	used     uint64
 	cancel   context.CancelFunc
@@ -305,8 +307,7 @@ func (c *artworkCache) startQueued() {
 			c.secondaryActive++
 		}
 		c.workers.Go(func() {
-			bitmap := c.load(ctx, d)
-			c.finish(d, e, bitmap)
+			c.finish(d, e, c.load(ctx, d))
 		})
 	}
 }
@@ -336,47 +337,54 @@ func (c *artworkCache) download(ctx context.Context, raw string) ([]byte, time.T
 	return data, expiry
 }
 
-func (c *artworkCache) load(ctx context.Context, d artDemand) *ui.Bitmap {
+// decoded is a cover ready to draw, with the colour it lends the interface.
+type decoded struct {
+	bitmap *ui.Bitmap
+	tint   ui.Color
+	tinted bool
+}
+
+func (c *artworkCache) load(ctx context.Context, d artDemand) decoded {
 	var key string
 	if c.disk != nil && d.priority != artAvatar {
 		key = artworkDiskKey(d.url)
 	}
 	if key != "" {
-		if bitmap := c.decode(ctx, c.disk.read(key), d.edge); bitmap != nil {
-			return bitmap
+		if art := c.decode(ctx, c.disk.read(key), d.edge); art.bitmap != nil {
+			return art
 		}
 	}
 	if ctx.Err() != nil {
-		return nil
+		return decoded{}
 	}
 	data, expiry := c.download(ctx, d.url)
-	bitmap := c.decode(ctx, data, d.edge)
-	if key != "" && bitmap != nil && ctx.Err() == nil && expiry.After(time.Now()) {
+	art := c.decode(ctx, data, d.edge)
+	if key != "" && art.bitmap != nil && ctx.Err() == nil && expiry.After(time.Now()) {
 		c.disk.write(key, data, expiry)
 	}
-	return bitmap
+	return art
 }
 
-func (c *artworkCache) decode(ctx context.Context, data []byte, edge int) *ui.Bitmap {
+func (c *artworkCache) decode(ctx context.Context, data []byte, edge int) decoded {
 	if len(data) == 0 {
-		return nil
+		return decoded{}
 	}
 	select {
 	case c.decoding <- struct{}{}:
 		defer func() { <-c.decoding }()
 	case <-ctx.Done():
-		return nil
+		return decoded{}
 	}
 	if ctx.Err() != nil {
-		return nil
+		return decoded{}
 	}
 	cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
 	if err != nil || cfg.Width < 1 || cfg.Height < 1 || cfg.Width > 4096 || cfg.Height > 4096 || cfg.Width*cfg.Height > artworkSourcePixels {
-		return nil
+		return decoded{}
 	}
 	im, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
-		return nil
+		return decoded{}
 	}
 	w, h := im.Bounds().Dx(), im.Bounds().Dy()
 	if w > edge || h > edge {
@@ -387,10 +395,27 @@ func (c *artworkCache) decode(ctx context.Context, data []byte, edge int) *ui.Bi
 		draw.CatmullRom.Scale(dst, dst.Bounds(), im, im.Bounds(), draw.Src, nil)
 		im = dst
 	}
-	return ui.NewBitmap(im)
+	// The colour is read from the decoded pixels once, here, so drawing a
+	// wash costs a gradient, not a blur, every frame.
+	tint, tinted := artworkTint(im)
+	return decoded{bitmap: ui.NewBitmap(im), tint: tint, tinted: tinted}
 }
 
-func (c *artworkCache) finish(d artDemand, e *artEntry, bitmap *ui.Bitmap) {
+// tint is the colour a cover lends the interface, from whichever size of it
+// has loaded.
+func (c *artworkCache) tint(raw string) (ui.Color, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for _, size := range artworkBuckets {
+		if e := c.entries[artRequest{artworkRequestAt(raw, size), size}]; e != nil && e.tinted {
+			return e.tint, true
+		}
+	}
+	return ui.Color{}, false
+}
+
+func (c *artworkCache) finish(d artDemand, e *artEntry, art decoded) {
+	bitmap := art.bitmap
 	c.mu.Lock()
 	c.active--
 	if d.edge > 128 {
@@ -406,6 +431,7 @@ func (c *artworkCache) finish(d artDemand, e *artEntry, bitmap *ui.Bitmap) {
 	e.cancel = nil
 	if current {
 		e.bitmap = bitmap
+		e.tint, e.tinted = art.tint, art.tinted
 		if bitmap == nil {
 			delay := min(artworkRetryBase<<e.failures, artworkRetryMax)
 			e.failures = min(e.failures+1, 6)

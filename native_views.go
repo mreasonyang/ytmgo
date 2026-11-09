@@ -102,13 +102,15 @@ type ViewActions struct {
 	LyricsClock                                         func() (seconds float64, playing bool)
 	Appearance, Language                                func(string)
 	Artwork                                             func(string, int, artworkPriority) ui.ImageSource
-	Video                                               func(bool)
-	SetVideoQuality                                     func(int)
-	SetLyricsExpanded                                   func(bool)
-	RetryPlayback                                       func()
-	LoadMore                                            func()
-	BeginShortcut, CancelShortcut                       func()
-	SetShortcut                                         func(string)
+	// ArtworkTint is the colour a loaded cover lends the interface.
+	ArtworkTint                   func(string) (ui.Color, bool)
+	Video                         func(bool)
+	SetVideoQuality               func(int)
+	SetLyricsExpanded             func(bool)
+	RetryPlayback                 func()
+	LoadMore                      func()
+	BeginShortcut, CancelShortcut func()
+	SetShortcut                   func(string)
 	// AppMenu fills the application menu button, where a hidden title bar
 	// leaves the window no menu bar (Linux, Windows); nil hides the button.
 	AppMenu          func(*ui.Menu)
@@ -1088,7 +1090,7 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 		ui.Column(c.Key(fmt.Sprintf("shelf-%d", i))).Gap(12).Children(func() {
 			if shelf.Title != "" {
 				size := float32(tokenSizeH3)
-				ui.Text(c, shelf.Title).FontSize(size).FontWeight(800).MaxLines(1).Ellipsis("…").Role(ui.RoleHeading)
+				nativeDisplay(ui.Text(c, shelf.Title).FontSize(size).MaxLines(1).Ellipsis("…").Role(ui.RoleHeading), shelf.Title, size)
 			}
 			switch {
 			case shelf.Title == "" || (m.Route == "search" && nativeSongShelf(shelf.Items)):
@@ -1529,7 +1531,14 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 // nativePlayerBar is the desktop player: track and like on the left, the
 // transport centred, and view and volume controls on the right.
 func nativePlayerBar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) ui.Element {
-	return ui.Row(c).Background(p.base).Padding(0, 16).Gap(16).AlignItems(ui.Center).Label(a.Tr("shellPlayerControls")).Children(func() {
+	return ui.Box(c).Background(p.base).Clip().Children(func() {
+		nativePlayerWash(c, m, a, p)
+		nativePlayerBarContent(c, m, a, p, width)
+	})
+}
+
+func nativePlayerBarContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) ui.Element {
+	return ui.Row(c).Absolute().Left(0).Top(0).WidthPercent(100).HeightPercent(100).Padding(0, 16).Gap(16).AlignItems(ui.Center).Label(a.Tr("shellPlayerControls")).Children(func() {
 		ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
 			info := ui.ButtonBase(c).MinWidth(0).Shrink(1).Height(64).Padding(4).Gap(12).Radius(tokenRadiusControl).Justify(ui.Start).Label(a.Tr("shellOpenNowPlaying"))
 			if info.Hovered() {
@@ -1642,7 +1651,12 @@ func nativeRepeat(m *UIModel) (icon, key string) {
 // nativeMiniPlayer is the compact player card above the tab bar.
 func nativeMiniPlayer(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 	ui.Column(c).Shrink(0).Background(p.base).Padding(8, 8, 0).Children(func() {
-		ui.Column(c).Height(tokenProductMiniPlayer).Radius(tokenRadiusControl).Background(p.raised).Clip().Children(func() {
+		// The card takes the playing cover's colour, as the player bar's wash does.
+		card := p.raised
+		if tint, ok := nativePlayingTint(m, a); ok {
+			card = p.raised.Mix(tint, nativeWashStrength(p))
+		}
+		ui.Column(c).Height(tokenProductMiniPlayer).Radius(tokenRadiusControl).Background(card).Clip().Children(func() {
 			ui.Row(c).Grow(1).Padding(0, 4, 0, 8).Gap(4).AlignItems(ui.Center).Children(func() {
 				info := ui.ButtonBase(c).Grow(1).MinWidth(0).Height(52).Gap(8).Justify(ui.Start).Radius(tokenRadiusArt).Label(a.Tr("shellOpenNowPlaying")).Children(func() {
 					nativePlayerArtwork(c, m.Current.Artwork, 40, 4, a, p)
@@ -1836,7 +1850,14 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 	if windowHeight < 760 {
 		gap = 12
 	}
-	return ui.Column(c).Background(p.surface).Radius(tokenRadiusPanel).Padding(16).Gap(gap).MinHeight(0).Children(func() {
+	return ui.Column(c).Background(p.surface).Radius(tokenRadiusPanel).MinHeight(0).Clip().Children(func() {
+		nativeNowPlayingWash(c, m, a, p)
+		nativePageLayer(c).Padding(16).Gap(gap).Children(func() { nativeNowPlayingBody(c, m, a, p, width, overlay, revealLyrics, windowHeight, gap) })
+	})
+}
+
+func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32, overlay, revealLyrics bool, windowHeight, gap float32) {
+	{
 		ui.Row(c).Height(32).Shrink(0).Gap(4).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, a.Tr("shellNowPlaying")).FontSize(tokenSizeBody).FontWeight(700).Grow(1).MinWidth(0).MaxLines(1).Ellipsis("…")
 			if nativeIconButton(c, "expand", a.Tr("shellImmersive")+" · "+a.Tr("shellNowPlaying"), p, false, 32).Clicked() {
@@ -1870,7 +1891,7 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 			nativeMediaSwitch(c, m, a, p)
 			ui.Row(c).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 				ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
-					ui.Text(c, m.Current.Title).FontSize(tokenSizeH3).FontWeight(800).LineHeight(1.2).MaxLines(2).Ellipsis("…")
+					nativeDisplay(ui.Text(c, m.Current.Title).FontSize(tokenSizeH3).LineHeight(1.2).MaxLines(2).Ellipsis("…"), m.Current.Title, tokenSizeH3)
 					ui.Text(c, m.Current.Artist).FontSize(tokenSizeSmall).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
 				})
 				if nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 36).Clicked() {
@@ -1909,7 +1930,7 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 		} else {
 			body()
 		}
-	})
+	}
 }
 
 // nativePanelCard holds the queue and lyrics behind a pair of chips.
@@ -2153,10 +2174,7 @@ func nativeBackdrop(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 	if src != "" && a.Artwork != nil {
 		artwork = a.Artwork(src, artworkEdge, priority)
 	}
-	strength := float32(0.5)
-	if !p.dark {
-		strength = 0.32
-	}
+	strength := nativeWashStrength(p)
 	if artwork == nil {
 		if m.Immersive {
 			return
@@ -2164,20 +2182,66 @@ func nativeBackdrop(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 		ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(100).Height(320).LinearGradient(ui.LinearGradient{From: nativeHeaderTint(m.Route).Alpha(strength), To: nativeHeaderTint(m.Route).Alpha(0), Angle: 180}).PassThrough()
 		return
 	}
-	// Blur a small layer, then draw it at the final size without a transform.
-	// A transformed child makes MyGo allocate a full-size RGBA mask for the
-	// rounded parent clip, which would erase the smaller canvas's savings.
-	layer := ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(25).Effect(backdropLayer{}).PassThrough()
+	layer := nativeCoverBlur(c, artwork)
 	if m.Immersive {
 		layer.HeightPercent(25).Opacity(strength * 0.7)
 	} else {
 		layer.Height(80).Opacity(strength)
 	}
-	layer.Children(func() { ui.Image(c, artwork).Fill().Fit(ui.Cover).Blur(17.5).PassThrough() })
 	if !m.Immersive {
 		// The blur spills below its 320-DIP band; fade it into the panel.
 		ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(100).Height(560).LinearGradient(ui.LinearGradient{From: p.surface.Alpha(0), To: p.surface, Angle: 180, Start: 0.2, End: 0.7}).PassThrough()
 	}
+}
+
+// nativeCoverBlur is a cover blurred across its parent, drawn from a
+// quarter-size layer: give it a height (a quarter of the band it covers)
+// and an opacity. Blur a small layer, then draw it at the final size without
+// a transform: a transformed child makes MyGo allocate a full-size RGBA mask
+// for the rounded parent clip, which would erase the smaller canvas's savings.
+func nativeCoverBlur(c *ui.Context, artwork ui.ImageSource) ui.Element {
+	layer := ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(25).Effect(backdropLayer{}).PassThrough()
+	layer.Children(func() { ui.Image(c, artwork).Fill().Fit(ui.Cover).Blur(17.5).PassThrough() })
+	return layer
+}
+
+// nativePlayingTint is the colour the playing track's cover lends the
+// interface, once the cover has loaded.
+func nativePlayingTint(m *UIModel, a ViewActions) (ui.Color, bool) {
+	if m.Current.ID == "" || m.Current.Artwork == "" || a.ArtworkTint == nil {
+		return ui.Color{}, false
+	}
+	return a.ArtworkTint(m.Current.Artwork)
+}
+
+// nativeWashStrength is how strongly a tint colours the chrome: the
+// guidebook's "the music leads", kept quiet enough that text stays legible.
+func nativeWashStrength(p nativePalette) float32 {
+	if p.dark {
+		return tokenWashDark
+	}
+	return tokenWashLight
+}
+
+// nativeNowPlayingWash colours the top of the Now Playing panel with the
+// playing cover's colour, fading into the panel, as a page without
+// artwork is washed by its tint.
+func nativeNowPlayingWash(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
+	tint, ok := nativePlayingTint(m, a)
+	if !ok {
+		return
+	}
+	ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(100).Height(360).LinearGradient(ui.LinearGradient{From: tint.Alpha(nativeWashStrength(p)), To: tint.Alpha(0), Angle: 180}).PassThrough()
+}
+
+// nativePlayerWash glows the playing cover's colour behind the player bar's
+// track, fading out toward the transport: what's playing carries colour.
+func nativePlayerWash(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
+	tint, ok := nativePlayingTint(m, a)
+	if !ok {
+		return
+	}
+	ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(100).HeightPercent(100).LinearGradient(ui.LinearGradient{From: tint.Alpha(nativeWashStrength(p) * tokenWashBar), To: tint.Alpha(0), Angle: 90, End: 0.4}).PassThrough()
 }
 
 // The inner blur extends three sigma beyond its quarter-size image. Drawing

@@ -113,7 +113,21 @@ A wash runs from the tint at the top (78 % tint over black) through 34 % at
 instead. The website gives each track one tint; the intro and the download
 share rust, so the record starts and ends in the same light.
 
-### 4.4 Contrast
+### 4.4 What's playing lends its colour
+
+The playing track's cover colours the player: the Now Playing panel washes
+down from it, the player bar glows with it behind the track and fades out
+before the transport, and the compact mini player is filled with it. The
+colour is read once from the cover when it loads: the hue carrying the most
+colour (vivid, bright pixels outweigh large dark ones; near-black, near-white
+and grey don't count), normalised to one brightness and a bounded saturation
+so text stays readable on any cover. A cover without colour lends none, and
+the chrome stays neutral. Washes are 50 % (dark) or 32 % (light) of the tint,
+the same strength as a page's header wash (`wash` in the tokens); the player
+bar's is 70 % of that. Coral is never replaced by a cover's colour:
+play stays coral.
+
+### 4.5 Contrast
 
 Text is at least 4.5:1 against what's behind it, large display text and
 interface glyphs 3:1. Dimmed states (upcoming lyric lines, disabled
@@ -277,7 +291,10 @@ tooltip. The website uses icons only on actions and platform names.
   then the 56 coral play button.
 - **Player bar:** 80 high, three zones: now playing (56 art), transport
   (white round play/pause, icon buttons, progress with mono times),
-  and output (lyrics, queue, volume, more, expand).
+  and output (lyrics, queue, volume, more, expand); washed with the playing
+  cover's colour behind the track (§4.4).
+- **Now Playing panel:** washed from the top in the playing cover's colour;
+  the track title is a display title.
 - **Chips** 32, capsule, `hover` fill, inverted when selected. **Pills** 36.
 - **Lyrics:** the current line is `text` and slightly larger, past lines
   60 %, future lines 34 %; it follows playback until you scroll, then offers

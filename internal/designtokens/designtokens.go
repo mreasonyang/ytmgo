@@ -29,8 +29,9 @@ func Generate(raw []byte) ([]byte, error) {
 			Fast, Base, Slow int
 			Press, Grow      float64
 		} `json:"motion"`
-		Product map[string]int             `json:"product"`
-		Shadow  map[string]json.RawMessage `json:"shadow"`
+		Product map[string]int                     `json:"product"`
+		Shadow  map[string]json.RawMessage         `json:"shadow"`
+		Wash    struct{ Dark, Light, Bar float64 } `json:"wash"`
 	}
 	if err := json.Unmarshal(raw, &t); err != nil {
 		return nil, err
@@ -88,6 +89,7 @@ func Generate(raw []byte) ([]byte, error) {
 		fmt.Fprintf(&b, "\ttokenProduct%s = %d\n", title(k), t.Product[k])
 	}
 	b.WriteString(")\n")
+	fmt.Fprintf(&b, "\n// Washes: how strongly a tint or cover colours the chrome.\nconst (\n\ttokenWashDark = %g\n\ttokenWashLight = %g\n\ttokenWashBar = %g\n)\n", t.Wash.Dark, t.Wash.Light, t.Wash.Bar)
 	b.WriteString("\n// Elevations: offset y, blur and the opacity of black.\nvar (\n")
 	for _, k := range sorted(t.Shadow) {
 		if strings.HasPrefix(k, "$") {

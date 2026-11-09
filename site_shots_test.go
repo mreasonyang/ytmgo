@@ -86,8 +86,13 @@ func siteFixture(locale string, dark bool) (*UIModel, ViewActions) {
 	m, a := nativeViewFixture()
 	copy := siteCopy[locale]
 	art := map[string]ui.ImageSource{}
+	tints := map[string]ui.Color{}
 	for key, paint := range siteCovers {
-		art[key] = ui.NewBitmap(siteRender(paint))
+		cover := siteRender(paint)
+		art[key] = ui.NewBitmap(cover)
+		if tint, ok := artworkTint(cover); ok {
+			tints[key] = tint
+		}
 	}
 	avatar := image.NewRGBA(image.Rect(0, 0, 96, 96))
 	for y := 0; y < 96; y++ {
@@ -97,6 +102,7 @@ func siteFixture(locale string, dark bool) (*UIModel, ViewActions) {
 	}
 	art["site-avatar"] = ui.NewBitmap(avatar)
 	a.Artwork = func(src string, _ int, _ artworkPriority) ui.ImageSource { return art[src] }
+	a.ArtworkTint = func(src string) (ui.Color, bool) { tint, ok := tints[src]; return tint, ok }
 
 	var songs []catalog.Item
 	for i, s := range siteSongs {

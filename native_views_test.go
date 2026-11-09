@@ -30,6 +30,7 @@ func nativeViewFixture() (*UIModel, ViewActions) {
 	m := &UIModel{playbackViewSeen: true, Route: "home", Appearance: "dark", Language: "en", Current: items[0], Queue: items, Playing: true, Duration: 240, Position: 48, Volume: 0.7, CanBack: true, Page: catalog.Page{Title: "Good evening", Shelves: []catalog.Shelf{{Title: "Listen again", Items: items}, {Title: "Albums for you", Items: albums}}, Items: items}, Lyrics: "It might not be the right time\nI might not be the right one"}
 	colors := []color.RGBA{{28, 65, 84, 255}, {90, 50, 94, 255}, {164, 113, 49, 255}, {64, 85, 52, 255}, {117, 47, 63, 255}, {42, 84, 106, 255}, {76, 64, 101, 255}, {85, 94, 82, 255}}
 	art := map[string]ui.ImageSource{}
+	tints := map[string]ui.Color{}
 	for i, col := range colors {
 		pic := image.NewRGBA(image.Rect(0, 0, 80, 80))
 		for y := 0; y < 80; y++ {
@@ -39,9 +40,13 @@ func nativeViewFixture() (*UIModel, ViewActions) {
 			}
 		}
 		art[fmt.Sprintf("art-%d", i)] = ui.NewBitmap(pic)
+		if tint, ok := artworkTint(pic); ok {
+			tints[fmt.Sprintf("art-%d", i)] = tint
+		}
 	}
 	noop := func() {}
 	a := ViewActions{Tr: func(key string) string { return locales.Catalog.Format(m.Language, key, nil) }, TrArgs: func(key string, args map[string]any) string { return locales.Catalog.Format(m.Language, key, args) }, Navigate: func(route string) { m.Route = route }, Search: func(query string) { m.Route = "search"; m.Query = query }, Open: func(item catalog.Item) { m.Page = catalog.Page{Title: item.Title} }, Play: func(item catalog.Item) { m.Current = item; m.Playing = true }, QueueAppend: func(item catalog.Item) { m.Queue = append(m.Queue, item) }, PlayQueue: func(i int) { m.Current = m.Queue[i] }, Toggle: func() { m.Playing = !m.Playing }, Next: noop, Previous: noop, Like: func() { m.Liked = !m.Liked }, Shuffle: func() { m.Shuffle = !m.Shuffle }, Repeat: func() { m.Repeat = (m.Repeat + 1) % 3 }, Mute: func() { m.Muted = !m.Muted }, Back: noop, Forward: noop, Reload: noop, Account: noop, SignOut: noop, Seek: func(value float64) { m.Position = value }, Volume: func(value float64) { m.Volume = value }, Appearance: func(value string) { m.Appearance = value }, Language: func(value string) { m.Language = value }, Artwork: func(src string, _ int, _ artworkPriority) ui.ImageSource { return art[src] }}
+	a.ArtworkTint = func(src string) (ui.Color, bool) { tint, ok := tints[src]; return tint, ok }
 	a.Video = func(video bool) { m.Video = video }
 	a.SetVideoQuality = func(quality int) { m.VideoQuality = quality }
 	a.SetLyricsExpanded = func(expanded bool) { m.LyricsExpanded = expanded }

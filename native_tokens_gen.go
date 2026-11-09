@@ -103,6 +103,13 @@ const (
 	tokenProductTile            = 64
 )
 
+// Washes: how strongly a tint or cover colours the chrome.
+const (
+	tokenWashDark  = 0.5
+	tokenWashLight = 0.32
+	tokenWashBar   = 0.7
+)
+
 // Elevations: offset y, blur and the opacity of black.
 var (
 	tokenShadowArt     = nativeShadow{8, 24, 0.3}

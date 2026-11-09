@@ -41,6 +41,12 @@ in `native_style.go`, the display face in `native_fonts.go`, layout in
   `text` with a dot. MyGo's theme accent is the inverted text colour, so
   built-in selected states invert.
 - **Errors** use `p.attention` beside the `alert` icon and words.
+- **What's playing lends its colour** (guidebook §4.4). `artworkTint`
+  (artwork_tint.go) reads a cover's colour once, when the artwork cache
+  decodes it; `ViewActions.ArtworkTint` hands it to the views. The Now
+  Playing panel, the player bar and the mini player paint it as plain
+  gradients or a mixed fill, so following the music costs nothing per frame.
+  Only page backdrops blur a cover.
 - **Header wash.** Collections blur their cover into the top of the page
   panel and fade it into the surface. Pages without artwork use a stable
   per-route tint from `nativeHeaderTints` (the tokens' order matters to the

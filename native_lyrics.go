@@ -119,6 +119,9 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 		scroll.HandleInput(func(ev ui.InputEvent) bool {
 			return state.dragInput(ev, m, a)
 		})
+		// Lines scrolled past an edge fade out instead of being sliced; an edge
+		// fades only while there is more beyond it.
+		scroll.Effect(nativeEdgeFade{top: state.scroll.Y > 0.5, bottom: state.scroll.Y < state.scroll.MaxY-0.5})
 		view := scroll.LayoutBounds()
 		visible := view
 		if a.viewportScroll != nil {
@@ -205,4 +208,49 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 			}
 		}
 	})
+}
+
+// nativeEdgeFade fades an element's top and bottom edges to transparent, as
+// CSS's mask-image does on the website's lyrics: it draws the rendered
+// element in strips, each with less alpha toward the edge, so it fades over
+// whatever lies behind (a card, or a cover's blur in immersive mode).
+type nativeEdgeFade struct{ top, bottom bool }
+
+// nativeEdgeFadeSize is how far into the element an edge fades.
+const nativeEdgeFadeSize = 24
+
+func (nativeEdgeFade) EffectMargin() ui.Point { return ui.Point{} }
+
+func (f nativeEdgeFade) PaintEffect(p *ui.Painter, box ui.Rect, content *ui.Bitmap, _ ui.Point) {
+	w, h := content.Size()
+	if box.H <= 0 || w == 0 || h == 0 {
+		return
+	}
+	px := float32(h) / box.H // bitmap pixels per DIP
+	fade := min(float32(nativeEdgeFadeSize), box.H/3)
+	top, bottom := float32(0), float32(0)
+	if f.top {
+		top = fade
+	}
+	if f.bottom {
+		bottom = fade
+	}
+	band := func(y0, y1, alpha float32) {
+		if y1 <= y0 {
+			return
+		}
+		var o ui.ImageOptions
+		if alpha < 1 {
+			o.Tint = ui.Color{R: 255, G: 255, B: 255, A: uint8(alpha*255 + 0.5)}
+		}
+		p.ImageRegion(content, ui.Rect{X: 0, Y: y0 * px, W: float32(w), H: (y1 - y0) * px}, ui.Rect{X: box.X, Y: box.Y + y0, W: box.W, H: y1 - y0}, o)
+	}
+	band(top, box.H-bottom, 1)
+	// One strip per DIP: smooth at any scale, and few enough to be cheap.
+	for i := float32(0); i < top; i++ {
+		band(i, min(i+1, top), (i+0.5)/top)
+	}
+	for i := float32(0); i < bottom; i++ {
+		band(box.H-bottom+i, min(box.H-bottom+i+1, box.H), 1-(i+0.5)/bottom)
+	}
 }

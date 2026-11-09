@@ -134,6 +134,15 @@ const (
 	// nativeImmersiveGutter separates immersive mode's media and panel and
 	// insets them from the window.
 	nativeImmersiveGutter = 48
+	// The Now Playing cover: at least nativeCoverMin, and a nativeCoverShare
+	// of the height it shares with the lyrics, which is the window less
+	// nativeNowPlayingChrome (the global bar, player bar, panel padding,
+	// header, media switch, title and the lyrics card's chips, measured).
+	// Lyrics first, it is a nativeCoverThumb beside the title.
+	nativeCoverMin         = 120
+	nativeCoverShare       = 0.45
+	nativeNowPlayingChrome = 450
+	nativeCoverThumb       = 56
 )
 
 func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
@@ -1884,26 +1893,40 @@ func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 		}
 		body := func() {
 			nativePlaybackNotice(c, m, a, p)
-			artSize := min(width-32, max(float32(120), windowHeight-560))
+			// Lyrics are a first-class view: the cover takes a share of the
+			// height it shares with them, never first claim on it, and grows
+			// to the panel's width only when the window has room for both.
+			artSize := min(width-32, max(nativeCoverMin, (windowHeight-nativeNowPlayingChrome)*nativeCoverShare))
 			if overlay {
-				artSize = min(artSize, max(float32(120), windowHeight-600))
+				artSize = min(artSize, max(nativeCoverMin, windowHeight-600))
 			}
+			// Lyrics first: the cover becomes a thumbnail beside the title and
+			// the lyrics take the rest. A video keeps its size.
+			lyricsFirst := m.LyricsExpanded && m.selectedPanelTab() == "lyrics" && !m.Video
 			lyricsExtra := float32(0)
-			if m.LyricsExpanded && m.selectedPanelTab() == "lyrics" && !m.Video {
-				lyricsExtra = max(0, artSize-80)
-				artSize = min(artSize, 80)
-			}
-			nativeMedia(c, m, a, p, artSize).AlignSelf(ui.Center)
-			nativeMediaSwitch(c, m, a, p)
-			ui.Row(c).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
-				ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
-					nativeDisplay(ui.Text(c, m.Current.Title).FontSize(tokenSizeH3).LineHeight(1.2).MaxLines(2).Ellipsis("…"), m.Current.Title, tokenSizeH3)
-					ui.Text(c, m.Current.Artist).FontSize(tokenSizeSmall).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+			identity := func(art bool) {
+				ui.Row(c).Shrink(0).Gap(12).AlignItems(ui.Center).Children(func() {
+					if art {
+						nativePlayerArtwork(c, m.Current.Artwork, nativeCoverThumb, tokenRadiusArt, a, p)
+					}
+					ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
+						nativeDisplay(ui.Text(c, m.Current.Title).FontSize(tokenSizeH3).LineHeight(1.2).MaxLines(2).Ellipsis("…"), m.Current.Title, tokenSizeH3)
+						ui.Text(c, m.Current.Artist).FontSize(tokenSizeSmall).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+					})
+					if nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 36).Clicked() {
+						a.Like()
+					}
 				})
-				if nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 36).Clicked() {
-					a.Like()
-				}
-			})
+			}
+			if lyricsFirst {
+				lyricsExtra = max(0, artSize-nativeCoverThumb)
+				identity(true)
+				nativeMediaSwitch(c, m, a, p)
+			} else {
+				nativeMedia(c, m, a, p, artSize).AlignSelf(ui.Center)
+				nativeMediaSwitch(c, m, a, p)
+				identity(false)
+			}
 			if overlay {
 				ui.Row(c).Shrink(0).Gap(16).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
 					if nativeIconButton(c, "previous", a.Tr("shellPrevious"), p, false, 44).Clicked() {
@@ -1917,7 +1940,9 @@ func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 				nativeSeek(c, m, a, p)
 				ui.Row(c).Shrink(0).AlignItems(ui.Center).Justify(ui.Center).Children(func() { nativeVolume(c, m, a, p, true) })
 			}
-			card := nativePanelCard(c, m, a, p)
+			// Keyed: the layouts above it differ, and its reading position must
+			// survive switching between them.
+			card := nativePanelCard(c.Key("now-playing-card"), m, a, p)
 			if overlay {
 				card.Height(300 + lyricsExtra).Shrink(0)
 				if revealLyrics {

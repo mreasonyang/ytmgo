@@ -356,11 +356,19 @@ tooltip. The website uses icons only on actions and platform names.
   and output (lyrics, queue, volume, more, expand); washed with the playing
   cover's colour behind the track (§4.4).
 - **Now Playing panel:** washed from the top in the playing cover's colour;
-  the track title is a display title.
+  the track title is a display title. Lyrics are a first-class view, so the
+  cover never takes first claim on the height: it gets 45 % of the space it
+  shares with the lyrics (at least 120, at most the panel's width). Lyrics
+  first, the cover becomes a 56 thumbnail in one row with the title, artist
+  and like, the Cover/Video switch beneath, and the lyrics take the rest; a
+  video keeps its size. The reader's choice and reading position survive
+  switching.
 - **Chips** 32, capsule, `hover` fill, inverted when selected. **Pills** 36.
 - **Lyrics:** the current line is `text` and slightly larger, past lines
   60 %, future lines 34 %; it follows playback until you scroll, then offers
-  "Follow playback".
+  "Follow playback". Lines scrolled past the view's top or bottom fade out
+  over 24 rather than being cut, and an edge fades only while more lies
+  beyond it.
 - **Dialogs and sheets:** radius `panel`, `raised`, one inverted primary
   action.
 

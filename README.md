@@ -228,6 +228,14 @@ make dev
 
 `make build` and `make build-app` produce development packages: updates are disabled in the binary, and About/Settings show `DEV`, the source branch and commit (plus `dirty` for local edits). `mygo.json` tracks the next development target: after public release `0.0.64`, development builds identify as `0.0.65 DEV`. Advance this target after each successful release. `--build-info` exposes structured build identity. Packaged development builds retain the existing account and preferences storage. Release builds explicitly set `RELEASE_VERSION`, run `scripts/release/publish.py configure`, then use `make build-app BUILD_TYPE=release`; CI handles these steps. The release update source is in `scripts/release/update-source.json`.
 
+For a CI development package, open **Actions → Development macOS package → Run workflow**, select the source branch and architecture, or run:
+
+```sh
+gh workflow run dev-package.yml --repo mreasonyang/ytmgo --ref app-guidebook-redesign -f architecture=arm64
+```
+
+Use `architecture=amd64` for Intel or `architecture=all` for both. Download the ZIP, source receipt and checksums from the run's **Artifacts** section. These are ad-hoc signed development builds without notarization; the workflow has read-only repository permissions, receives no signing secrets, verifies updates are disabled, and never publishes a GitHub Release or changes stable update feeds.
+
 `make build` stages `build/runtime`, `build/login`, and `build/legal` for the current host OS/architecture and outputs to `build/<os>-<arch>/` using the version in `mygo.json`:
 
 - **macOS (`darwin/<arch>`):** Produces `build/darwin-<arch>/ytmGO.app` and `build/darwin-<arch>/ytmgo-<version>-<arch>.dmg` with ad-hoc app signing (`-`) and an unsigned DMG. For example, on Apple Silicon (`darwin/arm64`) at development target `0.0.65`, it writes `build/darwin-arm64/ytmGO.app` and `build/darwin-arm64/ytmgo-0.0.65-arm64.dmg` (launch on macOS with `open build/darwin-arm64/ytmGO.app`). When a local rebuild changes the ad-hoc signing identity on macOS, Keychain may prompt to re-authorize access to `account-session-key`.

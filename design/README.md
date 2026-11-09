@@ -23,6 +23,53 @@ by a row from the app's own track table and washed in one of the app's
 header tints. A player bar follows the reader; the last track is "Press
 play". The website shows the product by performing it, not by describing it.
 
+### Lineage
+
+ytmGO brings Spotify's desktop design language to YouTube Music; the launch
+copy says so, and the design means it. What it borrows is the **language**:
+the arrangement and behaviour people already know, so they can listen
+without learning a new app. What makes ytmGO recognisably itself is its
+own, and nothing of Spotify's identity is ever taken.
+
+**Borrowed: structure and behaviour.**
+- The window: a black frame holding rounded panels, a global bar with a
+  centred search field, a library panel with filter chips, a three-zone
+  player bar, and Now Playing as a side panel.
+- The patterns: a numbered track table whose number becomes a play glyph on
+  hover; a collection header with a large cover and a round play button;
+  quick-access tiles on Home; a play button that rises on a hovered card;
+  page headers washed in colour; a mini player above a tab bar in narrow
+  windows.
+
+These are layout and interaction conventions. They're described by what
+they do, and drawn and built by ytmGO.
+
+**Never borrowed: identity.**
+- **Colour.** No Spotify Green (`#1DB954`, `#1ED760`) or any green standing
+  in for it. ytmGO's colour is coral, and it means play.
+- **Type.** Not Spotify's typefaces (Circular, Spotify Mix) or lookalikes
+  chosen to resemble them. ytmGO uses the system UI font and Bricolage
+  Grotesque.
+- **Marks.** Not Spotify's logo, wordmark, app icon or their shapes. ytmGO's
+  mark is its coral play ring.
+- **Assets.** Not Spotify's icons, illustrations, imagery, screenshots,
+  sounds or animation. ytmGO draws its own interface; its icons are adapted
+  from Lucide (§8).
+- **Words.** Not Spotify's feature and product names ("Wrapped", "Discover
+  Weekly", "Blend" and the like), slogans or marketing copy.
+
+**Naming Spotify.** Mention Spotify only to say plainly where the design
+language comes from, or that ytmGO isn't affiliated with it: in the launch
+copy, the FAQ and the disclaimer. Never in a way that suggests
+endorsement, partnership or that ytmGO is a Spotify product.
+
+**Where ytmGO is its own.** Coral as the one colour of play; the playing
+cover's colour leading the player (§4.4); Bricolage Grotesque display
+titles; lyrics and immersive mode as first-class views; Chinese and Japanese
+designed rather than fitted; and, on the website, the record. When adding
+something new, look here first: a feature should feel familiar in where it
+sits and how it behaves, and like ytmGO in how it looks.
+
 ## 2. Principles
 
 1. **The music leads.** Artwork, lyrics and the playing track carry colour
@@ -224,7 +271,10 @@ Everything else is flat and separated by `line` hairlines or surface steps.
 
 ## 8. Iconography
 
-One 24 px grid, 1.8 px round strokes. Filled variants mark the active
+One 24 px grid, 1.8 px round strokes, adapted from Lucide (ISC; its
+Feather-derived icons MIT, notice in `resources/notices`). New icons come
+from the same set, redrawn to the same stroke, or are drawn to match it;
+never from another app's interface. Filled variants mark the active
 destination and the primary transport glyphs. Icons label actions; they
 don't decorate. Icon-only buttons always have an accessible name and a
 tooltip. The website uses icons only on actions and platform names.

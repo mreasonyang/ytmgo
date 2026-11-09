@@ -1,0 +1,73 @@
+name: Development macOS package
+
+on:
+  workflow_dispatch:
+    inputs:
+      architecture:
+        description: Architecture to build (artifacts only, no release publication)
+        required: true
+        default: arm64
+        type: choice
+        options: [arm64, amd64, all]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dev-package-${{ github.ref }}-${{ inputs.architecture }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Development build (${{ matrix.arch }})
+    runs-on: ${{ matrix.arch == 'arm64' && 'xcode-27' || 'macos-15-intel' }}
+    timeout-minutes: 70
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJSON(inputs.architecture == 'arm64' && '["arm64"]' || inputs.architecture == 'amd64' && '["amd64"]' || '["arm64","amd64"]') }}
+    env:
+      CGO_ENABLED: "0"
+      CARGO_BUILD_JOBS: "2"
+      MACOSX_DEPLOYMENT_TARGET: "13.0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Retain the dispatched source identity
+        run: |
+          git switch -c "$GITHUB_REF_NAME"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+          cache: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.13"
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - name: Test development build and release isolation
+        run: |
+          python3 -m unittest discover -s scripts/release -p 'test_*.py'
+          make test test-licenses test-login
+          go vet ./...
+          go tool mygo i18n check
+      - name: Build the development app without update feeds
+        run: make build-app BUILD_TYPE=development
+      - name: Verify the native target and disabled updates, then package
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          python3 scripts/release/macos_compat.py --app "build/darwin-$ARCH/ytmGO.app" --arch "$ARCH" --receipt "dist/receipts/dev-$ARCH.json"
+          python3 scripts/release/verify_development.py --app "build/darwin-$ARCH/ytmGO.app" --arch "$ARCH" --out dist/development
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: ytmgo-dev-macos-${{ matrix.arch }}-${{ github.run_number }}
+          path: dist/development/*
+          if-no-files-found: error
+          retention-days: 14

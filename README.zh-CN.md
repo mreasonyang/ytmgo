@@ -228,6 +228,14 @@ make dev
 
 `make build` 和 `make build-app` 默认生成开发包：二进制不接入更新源，“关于”和设置显示 `DEV`、源码分支与提交（本地有修改时还显示 `dirty`）。`mygo.json` 记录下一开发目标版本：正式版为 `0.0.64` 时，开发版显示 `0.0.65 DEV`；每次成功发布后应推进该目标版本。`--build-info` 返回结构化构建身份。打包的开发版继续使用现有账号与偏好存储。正式构建必须显式设置 `RELEASE_VERSION`，执行 `scripts/release/publish.py configure`，再运行 `make build-app BUILD_TYPE=release`；CI 会自动完成这些步骤。正式更新源位于 `scripts/release/update-source.json`。
 
+CI 开发包可在 **Actions → Development macOS package → Run workflow** 中选择源码分支和架构，或运行：
+
+```sh
+gh workflow run dev-package.yml --repo mreasonyang/ytmgo --ref app-guidebook-redesign -f architecture=arm64
+```
+
+Intel 使用 `architecture=amd64`，两种架构使用 `architecture=all`。完成后从该运行的 **Artifacts** 下载 ZIP、源码回执和校验和。开发包采用 ad-hoc 签名，未公证；工作流只有仓库只读权限，不接收签名密钥，会验证更新已禁用，不创建 GitHub Release，也不修改正式更新源。
+
 执行 `make build` 会按当前宿主机系统与架构准备 `build/runtime`、`build/login` 和 `build/legal`，并根据 `mygo.json` 中的版本号输出至 `build/<os>-<arch>/`：
 
 - **macOS（`darwin/<arch>`）：** 生成 `build/darwin-<arch>/ytmGO.app` 与 `build/darwin-<arch>/ytmgo-<version>-<arch>.dmg`（采用 ad-hoc 应用签名 `-` 与未签名 DMG）。例如在 Apple Silicon（`darwin/arm64`）上基于开发目标版本 `0.0.65` 构建时，输出 `build/darwin-arm64/ytmGO.app` 与 `build/darwin-arm64/ytmgo-0.0.65-arm64.dmg`（在 macOS 上可通过 `open build/darwin-arm64/ytmGO.app` 启动）。注意：本地重新构建导致 ad-hoc 签名身份变化时，macOS 钥匙串可能会提示重新授权访问 `account-session-key`。

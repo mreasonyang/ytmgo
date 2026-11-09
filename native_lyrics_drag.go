@@ -116,7 +116,7 @@ func nativeLyricsDragPreview(c *ui.Context, scroll ui.Element, s *nativeLyricsFo
 	ui.Overlay(c, func() {
 		text := nativeTime(m.LyricLines[s.drag.selected].Start.Seconds()) + " · " + a.Tr("nativeLyricsReleaseToSeek")
 		ui.Text(c, text).AttachTo(scroll, ui.AnchorTopRight, ui.AnchorTopRight).Margin(4, 8, 0, 0).
-			Padding(4, 8).Radius(4).Background(p.raised).TextColor(p.text).FontSize(12).FontWeight(600).
+			Padding(4, 8).Radius(tokenRadiusPill).Background(p.raised).TextColor(p.text).FontSize(12).FontWeight(600).
 			Shadow(0, 2, 8, 0, ui.RGBA(0, 0, 0, 0.25)).PassThrough().Role(ui.RoleTooltip)
 	})
 }

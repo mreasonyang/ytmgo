@@ -31,7 +31,7 @@ func nativeVideoQualityControl(c *ui.Context, m *UIModel, a ViewActions, p nativ
 			}
 			item.Children(func() {
 				ui.Text(c, label).Grow(1)
-				check := ui.Icon(c, nativeIcons["check"]).Size(16, 16).TextColor(p.accent)
+				check := ui.Icon(c, nativeIcons["check"]).Size(16, 16).TextColor(p.text)
 				if label != current {
 					check.Opacity(0)
 				}

@@ -411,8 +411,14 @@ func TestNativeIconsAndPalette(t *testing.T) {
 		if theme.Dark != dark {
 			t.Fatal("native theme changed appearance")
 		}
-		if theme.Accent != palette(dark).accent {
-			t.Fatal("original accent palette changed")
+		// The guidebook: coral means play, so MyGo's own selected states
+		// (switches, select options, spinners) are inverted, never coral.
+		p := palette(dark)
+		if theme.Accent != p.text || theme.AccentText != p.base {
+			t.Fatal("theme accent is not the inverted text colour")
+		}
+		if p.accent == p.text {
+			t.Fatal("coral is no longer the play colour")
 		}
 	}
 	if nativeSongShelf([]catalog.Item{{Kind: "album", BrowseID: "album"}}) {

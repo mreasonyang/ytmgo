@@ -267,12 +267,12 @@ func nativeSignOutRow(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 	return func() {
 		label := a.Tr("shellSignOut")
 		// Inset by 4 so the focus ring is not clipped by the card.
-		b := ui.ButtonBase(c).Margin(4).Padding(8, 12).Gap(16).Radius(8).AlignItems(ui.Center).Justify(ui.Start).Label(label).TextColor(p.accentText)
+		b := ui.ButtonBase(c).Margin(4).Padding(8, 12).Gap(16).Radius(8).AlignItems(ui.Center).Justify(ui.Start).Label(label).TextColor(p.text)
 		if b.Hovered() {
 			b.Background(p.hover)
 		}
 		b.Children(func() {
-			nativeSettingTile(c, "logout", p.accent.Alpha(0.14), p.accent)
+			nativeSettingTile(c, "logout", p.highlight, p.text)
 			ui.Text(c, label).FontWeight(600)
 		})
 		if b.Clicked() {
@@ -353,7 +353,7 @@ func nativeLanguageControl(c *ui.Context, m *UIModel, a ViewActions, p nativePal
 			}
 			item.Children(func() {
 				ui.Text(c, title).Grow(1)
-				check := ui.Icon(c, nativeIcons["check"]).Size(16, 16).TextColor(p.accent)
+				check := ui.Icon(c, nativeIcons["check"]).Size(16, 16).TextColor(p.text)
 				if option.id != m.Language {
 					check.Opacity(0)
 				}

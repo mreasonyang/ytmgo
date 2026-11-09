@@ -244,21 +244,43 @@ func nativePageLayer(c *ui.Context) ui.Element {
 	return ui.Column(c).Absolute().Left(0).Top(0).WidthPercent(100).HeightPercent(100).MinHeight(0)
 }
 
+// nativeIconButton is a round icon button. An active one (an open panel,
+// a liked track, settings showing) is drawn in text with a dot beneath:
+// coral is for play, so only nativeModeButton uses it.
 func nativeIconButton(c *ui.Context, name, label string, p nativePalette, active bool, hit float32) ui.Element {
+	return nativeToggleIcon(c, name, label, p, active, hit, p.text)
+}
+
+// nativeModeButton is a playback mode toggle (shuffle, repeat): on, it is
+// coral with a dot, as what's playing is.
+func nativeModeButton(c *ui.Context, name, label string, p nativePalette, on bool, hit float32) ui.Element {
+	return nativeToggleIcon(c, name, label, p, on, hit, p.accent)
+}
+
+func nativeToggleIcon(c *ui.Context, name, label string, p nativePalette, active bool, hit float32, on ui.Color) ui.Element {
 	b := ui.ButtonBase(c).Size(hit, hit).Shrink(0).Radius(hit / 2).Label(label).Tooltip(label).TextColor(p.secondary)
 	if active {
-		b.Selected(true).Background(ui.Transparent).TextColor(p.accent)
+		b.Selected(true).Background(ui.Transparent).TextColor(on)
 	} else if b.Hovered() {
 		b.Background(p.hover).TextColor(p.text)
 	}
+	nativePress(b)
 	b.Children(func() {
 		icon := min(hit*0.6, 22)
 		ui.Icon(c, nativeIcons[name]).Size(icon, icon)
 		if active {
-			ui.Box(c).Absolute().Left((hit-4)/2).Bottom(1).Size(4, 4).Radius(2).Background(p.accent).PassThrough()
+			ui.Box(c).Absolute().Left((hit-4)/2).Bottom(1).Size(4, 4).Radius(2).Background(on).PassThrough()
 		}
 	})
 	return b
+}
+
+// nativePress gives a control the guidebook's press feedback: every control
+// presses to 96 %.
+func nativePress(e ui.Element) {
+	if e.Pressed() {
+		e.TransformOrigin(0.5, 0.5).Scale(tokenPressScale, tokenPressScale)
+	}
 }
 
 // nativeCircleButton is the filled round button of the global bar.
@@ -431,7 +453,7 @@ func nativeAvatar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, siz
 		bg, fg = p.muted, p.surface
 	}
 	if m.SignedIn && m.MusicPremium {
-		bg, fg = p.accent, p.onAccent
+		bg, fg = p.text, p.base
 	}
 	var avatar ui.ImageSource
 	if m.SignedIn && m.AccountAvatar != "" && a.Artwork != nil {
@@ -473,7 +495,7 @@ func nativeAccount(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, ba
 	}
 	b.Children(func() {
 		if m.MusicPremium && badge {
-			ui.Text(c, a.Tr("shellPremiumBadge")).PaddingStart(6).FontSize(12).FontWeight(700).TextColor(p.accentText)
+			ui.Text(c, a.Tr("shellPremiumBadge")).PaddingStart(6).FontSize(tokenSizeMicro).FontWeight(700).TextColor(p.text)
 		}
 		nativeAvatar(c, m, a, p, 32)
 	})
@@ -821,7 +843,7 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 		}
 		ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
 			title := ui.Text(c, item.Title).FontSize(15).FontWeight(500).MaxLines(1).Ellipsis("…")
-			if playing || open {
+			if playing {
 				title.TextColor(p.accentText)
 			}
 			ui.Text(c, nativeLibrarySubtitle(item, a)).FontSize(13).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
@@ -1513,7 +1535,7 @@ func nativePlayerBar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 		})
 		ui.Column(c).Width(min(722, width*0.38)).Shrink(0).Gap(2).AlignItems(ui.Stretch).Children(func() {
 			ui.Row(c).Height(40).Gap(16).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
-				if nativeIconButton(c, "shuffle", a.Tr("shellShuffle"), p, m.Shuffle, 32).Disabled(len(m.Queue) < 2).Clicked() {
+				if nativeModeButton(c, "shuffle", a.Tr("shellShuffle"), p, m.Shuffle, 32).Disabled(len(m.Queue) < 2).Clicked() {
 					a.Shuffle()
 				}
 				if nativeIconButton(c, "previous", a.Tr("shellPrevious"), p, false, 32).Disabled(m.Current.ID == "").Clicked() {
@@ -1524,7 +1546,7 @@ func nativePlayerBar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 					a.Next()
 				}
 				icon, key := nativeRepeat(m)
-				if nativeIconButton(c, icon, a.Tr(key), p, m.Repeat > 0, 32).Clicked() {
+				if nativeModeButton(c, icon, a.Tr(key), p, m.Repeat > 0, 32).Clicked() {
 					a.Repeat()
 				}
 			})
@@ -1584,7 +1606,7 @@ func nativeTrackCaption(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 		}
 		caption := ui.Text(c, artist).FontSize(12).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
 		if m.PlaybackError != "" {
-			caption.TextColor(p.accentText)
+			caption.TextColor(p.attention)
 			caption.Tooltip(m.PlaybackError)
 		}
 	})
@@ -2270,7 +2292,7 @@ func nativeExpandedTransport(c *ui.Context, m *UIModel, a ViewActions, p nativeP
 		// the transport keeps its seek bar instead of a truncated copy.
 		nativeSeek(c, m, a, p)
 		ui.Row(c).Height(56).Gap(16).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
-			if nativeIconButton(c, "shuffle", a.Tr("shellShuffle"), p, m.Shuffle, 44).Disabled(len(m.Queue) < 2).Clicked() {
+			if nativeModeButton(c, "shuffle", a.Tr("shellShuffle"), p, m.Shuffle, 44).Disabled(len(m.Queue) < 2).Clicked() {
 				a.Shuffle()
 			}
 			if nativeIconButton(c, "previous", a.Tr("shellPrevious"), p, false, 44).Disabled(m.Current.ID == "").Clicked() {
@@ -2281,7 +2303,7 @@ func nativeExpandedTransport(c *ui.Context, m *UIModel, a ViewActions, p nativeP
 				a.Next()
 			}
 			icon, key := nativeRepeat(m)
-			if nativeIconButton(c, icon, a.Tr(key), p, m.Repeat > 0, 44).Clicked() {
+			if nativeModeButton(c, icon, a.Tr(key), p, m.Repeat > 0, 44).Clicked() {
 				a.Repeat()
 			}
 		})
@@ -2312,7 +2334,8 @@ func nativePlaybackNotice(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 		return
 	}
 	ui.Row(c).Shrink(0).Gap(8).Padding(10).Radius(8).Background(p.raised).AlignItems(ui.Center).Children(func() {
-		ui.Text(c, m.PlaybackError).Grow(1).MinWidth(0).FontSize(12).TextColor(p.accentText)
+		ui.Icon(c, nativeIcons["alert"]).Size(16, 16).Shrink(0).TextColor(p.attention)
+		ui.Text(c, m.PlaybackError).Grow(1).MinWidth(0).FontSize(12).TextColor(p.text)
 		if nativePill(c, a.Tr("buttonRetry"), p, false).Width(72).PaddingX(6).Disabled(a.RetryPlayback == nil).Clicked() {
 			a.RetryPlayback()
 		}

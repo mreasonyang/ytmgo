@@ -596,7 +596,7 @@ func (a *desktop) resume() {
 }
 
 func (a *desktop) loadMore() {
-	if a.model.Loading || a.model.Page.Continuation == "" {
+	if a.model.Loading || a.model.Page.Continuation == "" || nativeContinuationExpired(&a.model) {
 		return
 	}
 	token := a.model.Page.Continuation
@@ -607,8 +607,13 @@ func (a *desktop) loadMore() {
 	go func() {
 		ctx, cancel := context.WithTimeout(a.ctx, 25*time.Second)
 		defer cancel()
+		started := time.Now()
 		page, err := a.catalog.Continue(ctx, token)
 		a.post(func() {
+			if generation != a.pageGeneration {
+				return
+			}
+			recordContinuationDiagnostic(a.diagnosticPath, err, time.Since(started))
 			a.finishContinuation(generation, page, err)
 		})
 	}()
@@ -620,7 +625,7 @@ func (a *desktop) finishContinuation(generation uint64, page catalog.Page, err e
 	}
 	a.model.Loading = false
 	if err != nil {
-		a.catalogFailure(err)
+		a.model.setContinuationFailure(err, a.trArgs)
 		return
 	}
 	a.model.Page.Items = append(a.model.Page.Items, page.Items...)

@@ -72,7 +72,15 @@ func recordAccountDiagnostic(directory, category string) {
 }
 
 func recordCatalogDiagnostic(directory string, err error, elapsed time.Duration) {
-	if directory == "" || errors.Is(err, context.Canceled) || errors.Is(err, catalog.ErrSessionChanged) {
+	recordCatalogOperationDiagnostic(directory, "", err, elapsed)
+}
+
+func recordContinuationDiagnostic(directory string, err error, elapsed time.Duration) {
+	recordCatalogOperationDiagnostic(directory, "continuation", err, elapsed)
+}
+
+func recordCatalogOperationDiagnostic(directory, operation string, err error, elapsed time.Duration) {
+	if directory == "" || errors.Is(err, context.Canceled) || (errors.Is(err, catalog.ErrSessionChanged) && operation != "continuation") {
 		return
 	}
 	category, stage, status := "ready", "", 0
@@ -81,6 +89,10 @@ func recordCatalogDiagnostic(directory string, err error, elapsed time.Duration)
 		var transport *catalog.TransportError
 		var httpError *catalog.HTTPError
 		switch {
+		case errors.Is(err, catalog.ErrExpiredContinuation):
+			category = "catalog_continuation_expired"
+		case errors.Is(err, catalog.ErrSessionChanged):
+			category = "catalog_continuation_invalidated"
 		case errors.Is(err, context.DeadlineExceeded):
 			category = "catalog_network_timeout"
 		case errors.As(err, &transport):
@@ -108,10 +120,15 @@ func recordCatalogDiagnostic(directory string, err error, elapsed time.Duration)
 	}
 	data, _ := json.Marshal(struct {
 		Time, Version, Component, Category, Stage string
+		Operation                                 string `json:"Operation,omitempty"`
 		HTTPStatus                                int
 		ElapsedMS                                 int64
-	}{time.Now().UTC().Format(time.RFC3339), applicationVersion(), "catalog", category, stage, status, max(0, elapsed.Milliseconds())})
+	}{time.Now().UTC().Format(time.RFC3339), applicationVersion(), "catalog", category, stage, operation, status, max(0, elapsed.Milliseconds())})
 	if os.MkdirAll(directory, 0700) == nil {
-		_ = os.WriteFile(filepath.Join(directory, "catalog-status.json"), data, 0600)
+		name := "catalog-status.json"
+		if operation == "continuation" {
+			name = "catalog-continuation-status.json"
+		}
+		_ = os.WriteFile(filepath.Join(directory, name), data, 0600)
 	}
 }

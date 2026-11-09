@@ -176,6 +176,8 @@
   "nativeRuntimeMissing": "音声ランタイムが見つかりません。ytmGO を再インストールしてください。",
   "nativePlaybackError": "この曲を再生できません。再試行するか、別の曲を選んでください。",
   "nativeCatalogError": "音楽を読み込めません。接続を確認して再試行してください。",
+  "nativeCatalogPageExpired": "リストの有効期限が切れました。再読み込みして続けてください。",
+  "nativeCatalogMoreError": "今は音楽をさらに読み込めません。もう一度お試しください。",
   "nativeNoLyrics": "この曲の歌詞はありません。",
   "nativeLyricsUnavailable": "この曲の歌詞はありません。",
   "nativeAccountError": "アカウントへのリクエストを完了できません。しばらくしてから再試行してください。",

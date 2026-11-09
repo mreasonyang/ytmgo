@@ -2495,6 +2495,26 @@ func (msgs Messages) NativeCatalogError() string {
 	return Catalog.Format(msgs.locale, "nativeCatalogError", nil)
 }
 
+// NativeCatalogPageExpired says "This list is out of date. Reload it to continue browsing."
+// in the language the app shows.
+func NativeCatalogPageExpired() string { return In(i18n.Locale()).NativeCatalogPageExpired() }
+
+// NativeCatalogPageExpired says "This list is out of date. Reload it to continue browsing."
+// in the language of msgs.
+func (msgs Messages) NativeCatalogPageExpired() string {
+	return Catalog.Format(msgs.locale, "nativeCatalogPageExpired", nil)
+}
+
+// NativeCatalogMoreError says "Unable to load more music right now. Please try again."
+// in the language the app shows.
+func NativeCatalogMoreError() string { return In(i18n.Locale()).NativeCatalogMoreError() }
+
+// NativeCatalogMoreError says "Unable to load more music right now. Please try again."
+// in the language of msgs.
+func (msgs Messages) NativeCatalogMoreError() string {
+	return Catalog.Format(msgs.locale, "nativeCatalogMoreError", nil)
+}
+
 // NativeNoLyrics says "Lyrics are not available for this track."
 // in the language the app shows.
 func NativeNoLyrics() string { return In(i18n.Locale()).NativeNoLyrics() }

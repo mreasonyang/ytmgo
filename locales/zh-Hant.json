@@ -176,6 +176,8 @@
   "nativeRuntimeMissing": "缺少音訊執行元件，請重新安裝完整的 ytmGO 應用。",
   "nativePlaybackError": "暫時無法播放這首歌曲，請重試或選擇其他歌曲。",
   "nativeCatalogError": "暫時無法載入音樂，請檢查網路後重試。",
+  "nativeCatalogPageExpired": "清單已過期，請重新載入後繼續瀏覽。",
+  "nativeCatalogMoreError": "暫時無法載入更多音樂，請再試一次。",
   "nativeNoLyrics": "這首歌曲暫無歌詞。",
   "nativeLyricsUnavailable": "這首歌曲暫無歌詞。",
   "nativeAccountError": "未能完成帳戶請求，請稍後再試。",

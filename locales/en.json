@@ -723,6 +723,8 @@
   "nativeRuntimeMissing": "The audio runtime is missing. Reinstall the complete ytmGO app.",
   "nativePlaybackError": "Unable to play this track. Try again or choose another song.",
   "nativeCatalogError": "Unable to load music. Check your connection and try again.",
+  "nativeCatalogPageExpired": "This list is out of date. Reload it to continue browsing.",
+  "nativeCatalogMoreError": "Unable to load more music right now. Please try again.",
   "nativeNoLyrics": "Lyrics are not available for this track.",
   "nativeLyricsUnavailable": "Lyrics are not available for this track.",
   "nativeAccountError": "Could not complete the account request. Please try again later.",

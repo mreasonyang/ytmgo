@@ -938,7 +938,7 @@ type nativeContinuation struct{ seen, requested string }
 // scrolls away from the end and back, or presses Retry.
 func nativeLoadNearEnd(c *ui.Context, scroller ui.Element, m *UIModel, a ViewActions) {
 	token := m.Page.Continuation
-	if token == "" || a.LoadMore == nil {
+	if token == "" || a.LoadMore == nil || nativeContinuationExpired(m) {
 		return
 	}
 	state := ui.Local(scroller, "continuation", func() nativeContinuation { return nativeContinuation{} })
@@ -963,6 +963,10 @@ func nativeLoadNearEnd(c *ui.Context, scroller ui.Element, m *UIModel, a ViewAct
 // the page, so a catalog error beside a continuation came from loading more.
 func nativeContinuationFailed(m *UIModel) bool {
 	return m.Error != "" && m.ErrorScope == errorCatalog && m.Page.Continuation != ""
+}
+
+func nativeContinuationExpired(m *UIModel) bool {
+	return nativeContinuationFailed(m) && m.errorMessage.key == "nativeCatalogPageExpired" && m.Error == m.errorMessage.rendered
 }
 
 func nativePageBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool, contentWidth float32) {
@@ -1018,8 +1022,10 @@ func nativePageBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, c
 // nativePageError is the page's error card. Retry loads the next page again
 // when that failed, keeping what is shown, and reloads the page otherwise.
 func nativePageError(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) ui.Element {
-	retry := a.Reload
-	if nativeContinuationFailed(m) {
+	retry, label := a.Reload, a.Tr("buttonRetry")
+	if nativeContinuationExpired(m) {
+		label = a.Tr("buttonReload")
+	} else if nativeContinuationFailed(m) {
 		retry = a.LoadMore
 	}
 	return ui.Column(c).Padding(16).Gap(12).Background(p.raised).Radius(tokenRadiusControl).Children(func() {
@@ -1027,7 +1033,7 @@ func nativePageError(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 			ui.Icon(c, nativeIcons["alert"]).Size(16, 16).Shrink(0).TextColor(p.attention)
 			ui.Text(c, m.Error).TextColor(p.text)
 		})
-		if m.ErrorScope != errorAccount && m.ErrorScope != errorAccountConnect && retry != nil && nativePill(c, a.Tr("buttonRetry"), p, true).AlignSelf(ui.Start).Clicked() {
+		if m.ErrorScope != errorAccount && m.ErrorScope != errorAccountConnect && retry != nil && nativePill(c, label, p, true).AlignSelf(ui.Start).Clicked() {
 			retry()
 		}
 		// A failed restore names its retry here, except where the library

@@ -77,6 +77,9 @@ func (m *UIModel) setPlaybackFailure(state player.State, tr func(string, map[str
 }
 
 func catalogErrorKey(err error) string {
+	if errors.Is(err, catalog.ErrExpiredContinuation) {
+		return "nativeCatalogPageExpired"
+	}
 	if key := catalogServiceErrorKey(err); key != "" {
 		return key
 	}
@@ -86,6 +89,19 @@ func catalogErrorKey(err error) string {
 func (a *desktop) catalogFailure(err error) {
 	a.model.ErrorScope = errorCatalog
 	a.setError(catalogErrorKey(err))
+}
+
+func (m *UIModel) setContinuationFailure(err error, tr func(string, map[string]any) string) {
+	// Refreshing the retained account can invalidate an in-flight cursor.
+	if errors.Is(err, catalog.ErrSessionChanged) {
+		err = catalog.ErrExpiredContinuation
+	}
+	m.ErrorScope = errorCatalog
+	key := catalogErrorKey(err)
+	if key == "nativeCatalogError" {
+		key = "nativeCatalogMoreError"
+	}
+	m.errorMessage.set(&m.Error, tr, key, nil)
 }
 
 func accountErrorScope(newIdentity bool) errorScope {

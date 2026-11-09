@@ -69,3 +69,23 @@ class DevelopmentArtifactTests(unittest.TestCase):
         with patch.object(dev, "run", side_effect=unsigned), \
                 self.assertRaisesRegex(dev.DevelopmentError, "signature"):
             self.verify()
+
+    def test_valid_ad_hoc_signature_is_rejected_for_distributable_dev_package(self):
+        def adhoc(args):
+            if args[0] == "codesign" and any(str(arg).startswith("-R=") for arg in args):
+                return 1, b""
+            return self.fake_run(args)
+        with patch.object(dev, "run", side_effect=adhoc):
+            self.assertEqual(self.verify(), self.info)
+            with self.assertRaisesRegex(dev.DevelopmentError, "signature"):
+                dev.identity(self.app, self.config, self.commit, self.branch, "AAAAAAAAAA")
+
+    def test_developer_id_gate_requires_the_app_identifier_team_and_apple_chain(self):
+        with patch.object(dev, "run", side_effect=self.fake_run) as run:
+            dev.identity(self.app, self.config, self.commit, self.branch, "AAAAAAAAAA")
+        command = next(c.args[0] for c in run.call_args_list if c.args[0][0] == "codesign")
+        requirement = next(arg[3:] for arg in command if str(arg).startswith("-R="))
+        self.assertIn('identifier "si.kyun.ytmgo"', requirement)
+        self.assertIn('anchor apple generic', requirement)
+        self.assertIn('subject.OU] = "AAAAAAAAAA"', requirement)
+        self.assertIn('1.2.840.113635.100.6.1.13', requirement)

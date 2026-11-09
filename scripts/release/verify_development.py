@@ -9,6 +9,8 @@ import re
 import subprocess
 import sys
 
+import macos
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -18,11 +20,25 @@ class DevelopmentError(Exception):
 
 def run(args):
     result = subprocess.run(list(map(str, args)), stdout=subprocess.PIPE,
-                            stderr=subprocess.DEVNULL, timeout=120)
+                            stderr=subprocess.DEVNULL, timeout=120,
+                            env={k: v for k, v in os.environ.items() if k not in macos.SECRET_NAMES})
     return result.returncode, result.stdout
 
 
-def identity(app, config, commit, branch):
+def verify_signature(app, team=None):
+    command = ["codesign", "--verify", "--deep", "--strict"]
+    if team is not None:
+        if not re.fullmatch(r"[A-Z0-9]{10}", team):
+            raise DevelopmentError("Invalid Developer ID team")
+        command += ['-R=identifier "si.kyun.ytmgo" and anchor apple generic and '
+                    'certificate leaf[subject.OU] = "' + team + '" and '
+                    'certificate leaf[field.1.2.840.113635.100.6.1.13] exists']
+    code, _ = run(command + [app])
+    if code:
+        raise DevelopmentError("Development app signature verification failed")
+
+
+def identity(app, config, commit, branch, team=None):
     plist = plistlib.loads((app / "Contents/Info.plist").read_bytes())
     executable = app / "Contents/MacOS/ytmGO"
     code, reply = run([executable, "--build-info"])
@@ -35,9 +51,7 @@ def identity(app, config, commit, branch):
             or plist.get("CFBundleShortVersionString") != version
             or plist.get("CFBundleVersion") != info.get("build_number")):
         raise DevelopmentError("Development build identity or update isolation mismatch")
-    code, _ = run(["codesign", "--verify", "--deep", "--strict", app])
-    if code:
-        raise DevelopmentError("Development app signature verification failed")
+    verify_signature(app, team)
     for flag in ("--check-for-updates", "--install-update"):
         code, reply = run([executable, flag])
         result = json.loads(reply)
@@ -59,8 +73,14 @@ def main():
     parser.add_argument("--app", type=Path, required=True)
     parser.add_argument("--arch", choices=("arm64", "amd64"), required=True)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--commit")
+    parser.add_argument("--branch")
+    parser.add_argument("--version")
+    parser.add_argument("--team-id", help="Require a Developer ID signature from this team")
     args = parser.parse_args()
     config = json.loads((ROOT / "mygo.json").read_text())
+    if args.version:
+        config["version"] = args.version
     code, commit = run(["git", "-C", ROOT, "rev-parse", "HEAD"])
     commit = commit.decode().strip()
     if code or not re.fullmatch(r"[0-9a-f]{40}", commit):
@@ -68,7 +88,9 @@ def main():
     code, branch = run(["git", "-C", ROOT, "rev-parse", "--abbrev-ref", "HEAD"])
     if code:
         raise DevelopmentError("Development source branch unavailable")
-    info = identity(args.app, config, commit, branch.decode().strip())
+    commit = args.commit or commit
+    branch = args.branch or branch.decode().strip()
+    info = identity(args.app, config, commit, branch, args.team_id)
     args.out.mkdir(parents=True, exist_ok=False)
     archive = args.out / ("ytmgo-" + info["version"] + "-dev-" + commit[:12] + "-darwin-" + args.arch + ".zip")
     code, _ = run(["ditto", "-c", "-k", "--keepParent", args.app, archive])
@@ -76,7 +98,9 @@ def main():
         raise DevelopmentError("Development archive creation failed")
     receipt = args.out / "build.json"
     receipt.write_text(json.dumps({"build": info, "architecture": args.arch,
-        "artifact_only": True, "code_signature_verified": True, "notarized": False,
+        "artifact_only": True, "code_signature_verified": True,
+        "developer_id_signed": args.team_id is not None, "team_identifier": args.team_id,
+        "notarized": False,
         "archive": archive.name, "archive_sha256": sha(archive),
         "run_id": os.environ.get("GITHUB_RUN_ID", "local")}, indent=2) + "\n")
     (args.out / "SHA256SUMS").write_text("".join(sha(path) + "  " + path.name + "\n" for path in (archive, receipt)))

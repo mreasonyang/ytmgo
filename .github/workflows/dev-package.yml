@@ -3,6 +3,11 @@ name: Development macOS package
 on:
   workflow_dispatch:
     inputs:
+      source_branch:
+        description: Source branch to build (run this workflow from main for signing)
+        required: true
+        default: main
+        type: string
       architecture:
         description: Architecture to build (artifacts only, no release publication)
         required: true
@@ -14,7 +19,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: dev-package-${{ github.ref }}-${{ inputs.architecture }}
+  group: dev-package-${{ inputs.source_branch }}-${{ inputs.architecture }}
   cancel-in-progress: true
 
 defaults:
@@ -22,7 +27,40 @@ defaults:
     shell: bash
 
 jobs:
+  source:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      commit: ${{ steps.source.outputs.commit }}
+      branch: ${{ steps.source.outputs.branch }}
+      version: ${{ steps.source.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.source_branch }}
+          persist-credentials: false
+      - name: Freeze the requested development source
+        id: source
+        env:
+          SOURCE_BRANCH: ${{ inputs.source_branch }}
+        run: |
+          git check-ref-format "refs/heads/$SOURCE_BRANCH"
+          python3 - <<'PY'
+          import json, os, re, subprocess
+          branch = os.environ['SOURCE_BRANCH']
+          commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          branch_commit = subprocess.check_output(['git', 'rev-parse', 'refs/remotes/origin/' + branch], text=True).strip()
+          assert commit == branch_commit
+          config = json.load(open('mygo.json'))
+          assert re.fullmatch(r'[0-9a-f]{40}', commit)
+          assert re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', config['version'])
+          assert config.get('updates') is None
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f"commit={commit}\nbranch={branch}\nversion={config['version']}\n")
+          PY
   build:
+    needs: source
     name: Development build (${{ matrix.arch }})
     runs-on: ${{ matrix.arch == 'arm64' && 'xcode-27' || 'macos-15-intel' }}
     timeout-minutes: 70
@@ -37,12 +75,15 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ needs.source.outputs.commit }}
           persist-credentials: false
       - name: Retain the dispatched source identity
+        env:
+          SOURCE_BRANCH: ${{ needs.source.outputs.branch }}
+          SOURCE_COMMIT: ${{ needs.source.outputs.commit }}
         run: |
-          git switch -c "$GITHUB_REF_NAME"
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git switch -c "$SOURCE_BRANCH"
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
           go-version-file: go.mod
@@ -65,6 +106,95 @@ jobs:
         run: |
           python3 scripts/release/macos_compat.py --app "build/darwin-$ARCH/ytmGO.app" --arch "$ARCH" --receipt "dist/receipts/dev-$ARCH.json"
           python3 scripts/release/verify_development.py --app "build/darwin-$ARCH/ytmGO.app" --arch "$ARCH" --out dist/development
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: dev-native-${{ matrix.arch }}
+          path: dist/development/*
+          if-no-files-found: error
+          retention-days: 14
+
+  sign:
+    needs: [source, build]
+    environment: macos-release
+    runs-on: xcode-27
+    timeout-minutes: 20
+    outputs:
+      team: ${{ steps.sign.outputs.team }}
+    steps:
+      # The signing implementation comes from the protected workflow's main SHA.
+      # Built branch code is never executed in this credential-bearing job.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          pattern: dev-native-*
+          path: dist/unsigned
+      - name: Sign development bundles with the existing Developer ID
+        id: sign
+        env:
+          SOURCE_COMMIT: ${{ needs.source.outputs.commit }}
+          SOURCE_BRANCH: ${{ needs.source.outputs.branch }}
+          SOURCE_VERSION: ${{ needs.source.outputs.version }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          MACOS_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          python3 scripts/release/sign_development.py --input dist/unsigned --out dist/signed --commit "$SOURCE_COMMIT" --branch "$SOURCE_BRANCH" --version "$SOURCE_VERSION"
+          echo "team=$APPLE_TEAM_ID" >> "$GITHUB_OUTPUT"
+      - name: Remove temporary signing materials
+        if: always()
+        run: python3 scripts/release/macos.py cleanup
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: dev-signed-bundles
+          path: dist/signed/signed-app-*.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  acceptance:
+    needs: [source, sign]
+    name: Signed development verification (${{ matrix.arch }})
+    runs-on: ${{ matrix.arch == 'arm64' && 'xcode-27' || 'macos-15-intel' }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJSON(inputs.architecture == 'arm64' && '["arm64"]' || inputs.architecture == 'amd64' && '["amd64"]' || '["arm64","amd64"]') }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: dev-signed-bundles
+          path: dist/signed
+      - name: Verify signed native apps, helpers and disabled updates
+        env:
+          ARCH: ${{ matrix.arch }}
+          SOURCE_COMMIT: ${{ needs.source.outputs.commit }}
+          SOURCE_BRANCH: ${{ needs.source.outputs.branch }}
+          SOURCE_VERSION: ${{ needs.source.outputs.version }}
+          APPLE_TEAM_ID: ${{ needs.sign.outputs.team }}
+        run: |
+          ditto -x -k "dist/signed/signed-app-$ARCH.zip" /Applications
+          python3 scripts/release/macos_compat.py --app /Applications/ytmGO.app --arch "$ARCH" --receipt "dist/receipts/dev-$ARCH.json"
+          python3 scripts/release/verify_development.py --app /Applications/ytmGO.app --arch "$ARCH" --out dist/development --commit "$SOURCE_COMMIT" --branch "$SOURCE_BRANCH" --version "$SOURCE_VERSION" --team-id "$APPLE_TEAM_ID"
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, 'scripts/release')
+          import macos
+          resources = Path('/Applications/ytmGO.app/Contents/Resources')
+          macos.run([resources / 'runtime/ytmgo-playback-host', 'check'], 'Signed script host check')
+          macos.run([resources / 'runtime/ffmpeg', '-version'], 'Signed decoder check')
+          login = json.loads((resources / 'login/manifest.json').read_text())
+          reply = macos.run([resources / 'login' / login['executable']], 'Signed login helper check', capture=True, input_bytes=b'')
+          assert json.loads(reply).get('status') == 'cancelled'
+          PY
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: ytmgo-dev-macos-${{ matrix.arch }}-${{ github.run_number }}

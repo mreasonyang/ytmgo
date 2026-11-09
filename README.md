@@ -172,12 +172,12 @@ The main music window uses a custom-rendered Go/MyGo interface (`ui.View`), with
 
 Detailed design specifications live in [DESIGN.md](DESIGN.md); historical and local verification records live in [VERIFICATION.md](VERIFICATION.md) and [docs/AUTO_UPDATE_VERIFICATION.md](docs/AUTO_UPDATE_VERIFICATION.md). Current boundaries to keep in mind:
 
-- **v0.0.62 UI Upgrade Acceptance (2026-11-06):** The actual installed macOS ARM app detected the public 0.0.62 release from 0.0.61, downloaded and installed it through its native update UI, relaunched automatically, and then reported it was up to date. The updated bundle matches the public ZIP; login, paused position, volume and preferences were preserved. See the [verification record](docs/audits/2026-11-06-release-0.0.62/README.md).
+- **v0.0.64 UI Upgrade Acceptance (2026-11-06):** The actual installed macOS ARM app detected the public 0.0.64 release from 0.0.61, downloaded and installed it through its native update UI, relaunched automatically, and then reported it was up to date. The updated bundle matches the public ZIP; login, paused position, volume and preferences were preserved. See the [verification record](docs/audits/2026-11-06-release-0.0.64/README.md).
 - **v0.0.61 Release Acceptance (2026-11-06):** Version numbering restarts at 0.0.61. All 22 public assets, four update signatures, native Windows/Linux installation/startup, macOS signing/notarization and ARM/Intel Homebrew installs passed verification. The local ARM installation matches the public ZIP. See the [release verification record](docs/audits/2026-11-06-release-0.0.61/README.md).
 - **Earlier 0.6.x Acceptance:** Summaries for releases published before the version reset are kept in [VERIFICATION.md](VERIFICATION.md#06x-release-acceptance-summaries).
 - **Platform Acceptance:** On 2026-11-04, both 3-platform GitHub Actions suites—[Native playback runtime](https://github.com/mreasonyang/ytmgo/actions/runs/41800458515) and [Native account login](https://github.com/mreasonyang/ytmgo/actions/runs/41800458464)—passed across macOS, Windows, and Linux. For **v0.6.4** ([audit record](docs/audits/2026-11-04-macos-compat-0.6.4/README.md)), native packaging, Developer ID signing/notarization/stapling, Gatekeeper checks, helper execution, empty-profile startup, and [actual Homebrew cask installs](https://github.com/mreasonyang/homebrew-taps/actions/runs/41850617166) passed on both **macOS 27 Apple Silicon (`arm64`)** and **macOS 15 Intel (`amd64`)**, alongside an [Intel synthetic WebView login lifecycle run](https://github.com/mreasonyang/ytmgo/actions/runs/41848250319), a [public 0.6.3 → 0.6.4 ARM upgrade](https://github.com/mreasonyang/ytmgo/actions/runs/41850200341), and the [Windows/Linux native package workflow](https://github.com/mreasonyang/ytmgo/actions/runs/41849890402) (which builds on the target OS, installs the NSIS/DEB package, and verifies installed resources and empty-profile startup). However, **CI and native package install/startup smoke tests are not live signed-in playback, complete UI interaction, hardware audio output, or version-to-version upgrade acceptance on Windows, Linux, or Intel macOS**; likewise, verifying a **macOS 13.0 deployment target** across all shipped Mach-O binaries is **not** physical runtime acceptance on macOS 13 or macOS 14.
 - **Account Tiers & Advertising:** Anonymous full-track playback and real **YouTube Music Premium** browsing, library restoration, and playback have been verified on macOS. **Standard (free/non-Premium) accounts** and **official advertising flows** are **not** accepted: ytmGO does not implement official ad asset sequencing or ad progress reporting, does not simulate ads with artificial wait timers, and does not treat public track playback as ad-flow validation.
-- **Memory Footprint:** See [Memory Footprint](#memory-footprint) below for the measured v0.0.62 process-tree figures.
+- **Memory Footprint:** See [Memory Footprint](#memory-footprint) below for the measured v0.0.64 process-tree figures.
 - **Global Shortcuts & Long-Run Stability:** In-app shortcuts (`Space`, `⌘K`, etc.) and UI Tester state machines pass, but physical global shortcut key injection (`⇧⌘Space`) has not yet been confirmed end-to-end on macOS. Local E2E runs also recorded isolated transient playback errors (`audio_stream_failed`, `bootstrap_network_timeout`) that recovered via **Retry** whose upstream/network root causes remain open. Crash/force-kill persistence, sleep/wake endurance, and multi-day stability are not yet certified.
 
 ### Memory Footprint
@@ -186,7 +186,7 @@ Measured on Apple Silicon (Mac16,8) with [`scripts/diagnostics/measure.py`](scri
 
 | ytmGO state | Processes | Memory |
 | --- | --- | --- |
-| v0.0.62, restored paused session | 2 (main app + `SetStoreUpdateService.xpc`) | **90.81 MiB** median / 90.81 MiB peak |
+| v0.0.64, restored paused session | 2 (main app + `SetStoreUpdateService.xpc`) | **90.81 MiB** median / 90.81 MiB peak |
 | Active playback + synced lyrics & UI navigation (432 complete samples) | 4–6 (ytmGO, bounded FFmpeg & Rust/QuickJS host) | **322.11 MiB** median (157.07 MiB min – 353.88 MiB max) |
 
 To compare against a browser or another music app on your own machine, run the same collector against its root process:
@@ -226,9 +226,11 @@ make build-app
 make dev
 ```
 
-`make build` stages `build/runtime`, `build/login`, and `build/legal` for the current host OS/architecture and outputs to `build/<os>-<arch>/` using the version in `mygo.json` (currently `0.0.62`):
+`make build` and `make build-app` produce development packages: updates are disabled in the binary, and About/Settings show `DEV`, the source branch and commit (plus `dirty` for local edits). `mygo.json` is the version baseline; `--build-info` exposes structured build identity. Packaged development builds retain the existing account and preferences storage. Release builds explicitly set `RELEASE_VERSION`, run `scripts/release/publish.py configure`, then use `make build-app BUILD_TYPE=release`; CI handles these steps. The release update source is in `scripts/release/update-source.json`.
 
-- **macOS (`darwin/<arch>`):** Produces `build/darwin-<arch>/ytmGO.app` and `build/darwin-<arch>/ytmgo-<version>-<arch>.dmg` with ad-hoc app signing (`-`) and an unsigned DMG. For example, on Apple Silicon (`darwin/arm64`) at source version `0.0.62`, it writes `build/darwin-arm64/ytmGO.app` and `build/darwin-arm64/ytmgo-0.0.62-arm64.dmg` (launch on macOS with `open build/darwin-arm64/ytmGO.app`). When a local rebuild changes the ad-hoc signing identity on macOS, Keychain may prompt to re-authorize access to `account-session-key`.
+`make build` stages `build/runtime`, `build/login`, and `build/legal` for the current host OS/architecture and outputs to `build/<os>-<arch>/` using the version in `mygo.json`:
+
+- **macOS (`darwin/<arch>`):** Produces `build/darwin-<arch>/ytmGO.app` and `build/darwin-<arch>/ytmgo-<version>-<arch>.dmg` with ad-hoc app signing (`-`) and an unsigned DMG. For example, on Apple Silicon (`darwin/arm64`) at source version `0.0.64`, it writes `build/darwin-arm64/ytmGO.app` and `build/darwin-arm64/ytmgo-0.0.64-arm64.dmg` (launch on macOS with `open build/darwin-arm64/ytmGO.app`). When a local rebuild changes the ad-hoc signing identity on macOS, Keychain may prompt to re-authorize access to `account-session-key`.
 - **Linux (`linux/amd64`):** Outputs `build/linux-amd64/ytmgo` and `build/linux-amd64/ytmgo_<version>_amd64.deb` (launch directly on Linux with `./build/linux-amd64/ytmgo`).
 - **Windows (`windows/amd64`):** Outputs `build/windows-amd64/ytmGO.exe` and `build/windows-amd64/ytmgo-setup-<version>-amd64.exe` (launch on Windows with `.\build\windows-amd64\ytmGO.exe`).
 
@@ -238,6 +240,7 @@ Packaged executables on all platforms also support non-interactive maintenance f
 
 ```sh
 /Applications/ytmGO.app/Contents/MacOS/ytmGO --version
+/Applications/ytmGO.app/Contents/MacOS/ytmGO --build-info
 /Applications/ytmGO.app/Contents/MacOS/ytmGO --check-for-updates
 /Applications/ytmGO.app/Contents/MacOS/ytmGO --install-update
 ```

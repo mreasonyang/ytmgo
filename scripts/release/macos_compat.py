@@ -22,7 +22,7 @@ def version_tuple(value):
 def inspect(app, arch, minimum):
     config = json.loads((macos.ROOT / "mygo.json").read_text())
     plist = plistlib.loads((app / "Contents/Info.plist").read_bytes())
-    if (plist.get("CFBundleShortVersionString") != config["version"]
+    if (plist.get("CFBundleShortVersionString") != config["version"].split("-", 1)[0]
             or version_tuple(plist.get("LSMinimumSystemVersion", "")) != version_tuple(minimum)):
         raise macos.PackageError("App version or minimum macOS mismatch")
     cpu = {"arm64": "arm64", "amd64": "x86_64"}[arch]

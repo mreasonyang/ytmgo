@@ -801,5 +801,6 @@
   "nativeMusicRegionUnavailable": "Unavailable in this region. Check your network or proxy location, then retry.",
   "nativeAccountLoginCancelled": "Sign-in cancelled.",
   "nativePlaybackAccessDenied": "Audio access denied. Check your network or proxy, then retry to refresh the stream.",
-  "nativePlaybackAccessDeniedHTTP": "Audio access denied (HTTP {status}). Check your network or proxy, then retry to refresh the stream."
+  "nativePlaybackAccessDeniedHTTP": "Audio access denied (HTTP {status}). Check your network or proxy, then retry to refresh the stream.",
+  "menuDevelopmentUpdatesDisabled": "Updates disabled for development builds"
 }

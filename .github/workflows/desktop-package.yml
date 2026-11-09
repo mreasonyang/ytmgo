@@ -96,11 +96,13 @@ jobs:
           RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
         run: |
           python - <<'PY'
-          import json, os
+          import json, os, sys
           from pathlib import Path
+          sys.path.insert(0, "scripts/release")
+          from build_config import release_config
           path = Path('source/mygo.json')
           config = json.loads(path.read_text())
-          config['version'] = os.environ['RELEASE_TAG'][1:]
+          config = release_config(config, os.environ['RELEASE_TAG'][1:], os.environ.get('GITHUB_RUN_NUMBER'))
           path.write_text(json.dumps(config, indent=2) + '\n')
           print('Configured release version: ' + config['version'])
           PY
@@ -195,11 +197,13 @@ jobs:
           RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
         run: |
           python3 - <<'PY'
-          import json, os
+          import json, os, sys
           from pathlib import Path
+          sys.path.insert(0, "scripts/release")
+          from build_config import release_config
           path = Path('source/mygo.json')
           config = json.loads(path.read_text())
-          config['version'] = os.environ['RELEASE_TAG'][1:]
+          config = release_config(config, os.environ['RELEASE_TAG'][1:], os.environ.get('GITHUB_RUN_NUMBER'))
           path.write_text(json.dumps(config, indent=2) + '\n')
           print('Configured release version: ' + config['version'])
           PY

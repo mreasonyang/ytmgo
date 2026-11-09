@@ -262,7 +262,8 @@ def smoke(source, out):
 
 def build(source):
     target()
-    run(["go", "tool", "mygo", "build", "-skip-dmg"], source)
+    run([sys.executable, ROOT / "scripts/release/build.py", "--source", source.resolve(),
+         "--kind", "release", "--version", config(source)["version"], "--skip-dmg"], source)
     print("Built native desktop app and installer", flush=True)
 
 

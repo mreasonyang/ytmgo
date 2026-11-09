@@ -1,5 +1,7 @@
 .PHONY: dev runtime login licenses check-licenses test-licenses build build-app test test-runtime test-login check
 
+BUILD_TYPE ?= development
+
 LOGIN_OS := $(shell go env GOOS)
 ifeq ($(LOGIN_OS),darwin)
 LOGIN_HELPER = $(CURDIR)/build/login/ytmgo Account Login.app/Contents/MacOS/ytmgo-account-login
@@ -27,12 +29,12 @@ test-licenses:
 
 build: licenses
 	python3 scripts/login/prepare.py --verify
-	CGO_ENABLED=0 go tool mygo build
+	python3 scripts/release/build.py --kind $(BUILD_TYPE)
 	python3 scripts/licensing/prepare.py --verify-build
 
 build-app: licenses
 	python3 scripts/login/prepare.py --verify
-	CGO_ENABLED=0 go tool mygo build -skip-dmg
+	python3 scripts/release/build.py --kind $(BUILD_TYPE) --skip-dmg
 	python3 scripts/licensing/prepare.py --verify-build
 	CGO_ENABLED=0 go build -o build/release/update-package ./cmd/update-package
 

@@ -254,5 +254,6 @@
   "nativeMusicRegionUnavailable": "当前地区无法使用 YouTube Music。请检查网络或代理的出口地区，然后重试。",
   "nativeAccountLoginCancelled": "已取消登录。",
   "nativePlaybackAccessDenied": "音频流访问被拒绝。请检查网络或代理，然后重试以重新获取音频流。",
-  "nativePlaybackAccessDeniedHTTP": "音频流访问被拒绝（HTTP {status}）。请检查网络或代理，然后重试以重新获取音频流。"
+  "nativePlaybackAccessDeniedHTTP": "音频流访问被拒绝（HTTP {status}）。请检查网络或代理，然后重试以重新获取音频流。",
+  "menuDevelopmentUpdatesDisabled": "开发构建不接收更新"
 }

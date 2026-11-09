@@ -226,11 +226,11 @@ make build-app
 make dev
 ```
 
-`make build` 和 `make build-app` 默认生成开发包：二进制不接入更新源，“关于”和设置显示 `DEV`、源码分支与提交（本地有修改时还显示 `dirty`）。`mygo.json` 是版本基线，`--build-info` 返回结构化构建身份。打包的开发版继续使用现有账号与偏好存储。正式构建必须显式设置 `RELEASE_VERSION`，执行 `scripts/release/publish.py configure`，再运行 `make build-app BUILD_TYPE=release`；CI 会自动完成这些步骤。正式更新源位于 `scripts/release/update-source.json`。
+`make build` 和 `make build-app` 默认生成开发包：二进制不接入更新源，“关于”和设置显示 `DEV`、源码分支与提交（本地有修改时还显示 `dirty`）。`mygo.json` 记录下一开发目标版本：正式版为 `0.0.64` 时，开发版显示 `0.0.65 DEV`；每次成功发布后应推进该目标版本。`--build-info` 返回结构化构建身份。打包的开发版继续使用现有账号与偏好存储。正式构建必须显式设置 `RELEASE_VERSION`，执行 `scripts/release/publish.py configure`，再运行 `make build-app BUILD_TYPE=release`；CI 会自动完成这些步骤。正式更新源位于 `scripts/release/update-source.json`。
 
 执行 `make build` 会按当前宿主机系统与架构准备 `build/runtime`、`build/login` 和 `build/legal`，并根据 `mygo.json` 中的版本号输出至 `build/<os>-<arch>/`：
 
-- **macOS（`darwin/<arch>`）：** 生成 `build/darwin-<arch>/ytmGO.app` 与 `build/darwin-<arch>/ytmgo-<version>-<arch>.dmg`（采用 ad-hoc 应用签名 `-` 与未签名 DMG）。例如在 Apple Silicon（`darwin/arm64`）上基于当前源码版本 `0.0.64` 构建时，输出 `build/darwin-arm64/ytmGO.app` 与 `build/darwin-arm64/ytmgo-0.0.64-arm64.dmg`（在 macOS 上可通过 `open build/darwin-arm64/ytmGO.app` 启动）。注意：本地重新构建导致 ad-hoc 签名身份变化时，macOS 钥匙串可能会提示重新授权访问 `account-session-key`。
+- **macOS（`darwin/<arch>`）：** 生成 `build/darwin-<arch>/ytmGO.app` 与 `build/darwin-<arch>/ytmgo-<version>-<arch>.dmg`（采用 ad-hoc 应用签名 `-` 与未签名 DMG）。例如在 Apple Silicon（`darwin/arm64`）上基于开发目标版本 `0.0.65` 构建时，输出 `build/darwin-arm64/ytmGO.app` 与 `build/darwin-arm64/ytmgo-0.0.65-arm64.dmg`（在 macOS 上可通过 `open build/darwin-arm64/ytmGO.app` 启动）。注意：本地重新构建导致 ad-hoc 签名身份变化时，macOS 钥匙串可能会提示重新授权访问 `account-session-key`。
 - **Linux（`linux/amd64`）：** 生成 `build/linux-amd64/ytmgo` 与 `build/linux-amd64/ytmgo_<version>_amd64.deb`（在 Linux 上可直接执行 `./build/linux-amd64/ytmgo` 启动）。
 - **Windows（`windows/amd64`）：** 生成 `build/windows-amd64/ytmGO.exe` 与 `build/windows-amd64/ytmgo-setup-<version>-amd64.exe`（在 Windows 上可执行 `.\build\windows-amd64\ytmGO.exe` 启动）。
 

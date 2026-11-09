@@ -22,10 +22,10 @@ func nativeVideoQualityControl(c *ui.Context, m *UIModel, a ViewActions, p nativ
 		ui.Icon(c, nativeIcons["chevron-down"]).Size(16, 16).TextColor(p.secondary)
 	})
 	sel.Popup(func(panel ui.Element) {
-		panel.Margin(6, 0, 0, 0).Padding(4).Radius(tokenRadiusControl).Background(p.raised).Border(1, p.line).Shadow(0, 12, 32, 0, ui.RGBA(0, 0, 0, 0.35))
+		panel.Margin(8, 0, 0, 0).Padding(4).Radius(tokenRadiusControl).Background(p.raised).Border(1, p.line).Shadow(tokenShadowPopover.args())
 		for _, quality := range videoquality.Options() {
 			label := videoquality.Label(quality)
-			item := sel.Item(label).Height(36).PaddingX(10).Gap(10).Radius(tokenRadiusArt).AlignItems(ui.Center).TextColor(p.text)
+			item := sel.Item(label).Height(36).PaddingX(12).Gap(8).Radius(tokenRadiusArt).AlignItems(ui.Center).TextColor(p.text)
 			if item.Highlighted() {
 				item.Background(p.hover)
 			}

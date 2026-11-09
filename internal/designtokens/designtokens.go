@@ -29,7 +29,8 @@ func Generate(raw []byte) ([]byte, error) {
 			Fast, Base, Slow int
 			Press, Grow      float64
 		} `json:"motion"`
-		Product map[string]int `json:"product"`
+		Product map[string]int             `json:"product"`
+		Shadow  map[string]json.RawMessage `json:"shadow"`
 	}
 	if err := json.Unmarshal(raw, &t); err != nil {
 		return nil, err
@@ -85,6 +86,18 @@ func Generate(raw []byte) ([]byte, error) {
 	fmt.Fprintf(&b, "\ttokenPressScale = %g\n\ttokenGrowScale = %g\n", t.Motion.Press, t.Motion.Grow)
 	for _, k := range sorted(t.Product) {
 		fmt.Fprintf(&b, "\ttokenProduct%s = %d\n", title(k), t.Product[k])
+	}
+	b.WriteString(")\n")
+	b.WriteString("\n// Elevations: offset y, blur and the opacity of black.\nvar (\n")
+	for _, k := range sorted(t.Shadow) {
+		if strings.HasPrefix(k, "$") {
+			continue
+		}
+		var v [3]float64
+		if err := json.Unmarshal(t.Shadow[k], &v); err != nil {
+			return nil, fmt.Errorf("tokens: shadow %s: %w", k, err)
+		}
+		fmt.Fprintf(&b, "\ttokenShadow%s = nativeShadow{%g, %g, %g}\n", title(k), v[0], v[1], v[2])
 	}
 	b.WriteString(")\n")
 	return format.Source(b.Bytes())

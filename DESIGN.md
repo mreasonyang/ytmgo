@@ -57,6 +57,14 @@ in `native_style.go`, the display face in `native_fonts.go`, layout in
   apart, Now Playing 360 docked or 380 floating, player 80, compact mini
   player 60 and tab bar 64, targets 32 and 44 compact) come from the
   tokens' `product` measures.
+- **No literal styling.** `TestNativeViewsUseDesignTokens` parses the view
+  code and fails on a literal colour, corner, type size or shadow, or on
+  spacing off the scale (0, 4, 8, 12, 16, 24, 32, 48, 72). Values that are
+  geometry rather than design (a slider inset equal to its thumb's radius)
+  are named constants derived from what they depend on.
+- **Shadows** are the tokens' elevations: `Shadow(tokenShadowArt.args())`.
+  Dialogs dim the window with `p.scrim`. Video plays on a black stage in
+  both appearances, so the stage uses the dark palette.
 - **Time readouts** occupy fixed-width slots, so progress labels don't shift
   adjacent controls.
 - **Scripts.** English, Simplified Chinese, Traditional Chinese and Japanese

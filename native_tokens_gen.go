@@ -22,6 +22,7 @@ var tokenDark = nativePalette{
 	onAccent:   ui.Hex("#000000"),
 	press:      ui.Hex("#ffffff1f"),
 	raised:     ui.Hex("#1f1f1f"),
+	scrim:      ui.Hex("#00000099"),
 	secondary:  ui.Hex("#b3b3b3"),
 	surface:    ui.Hex("#121212"),
 	text:       ui.Hex("#ffffff"),
@@ -43,6 +44,7 @@ var tokenLight = nativePalette{
 	onAccent:   ui.Hex("#ffffff"),
 	press:      ui.Hex("#00000017"),
 	raised:     ui.Hex("#f2f2f3"),
+	scrim:      ui.Hex("#00000066"),
 	secondary:  ui.Hex("#5a5a5f"),
 	surface:    ui.Hex("#ffffff"),
 	text:       ui.Hex("#121212"),
@@ -99,4 +101,14 @@ const (
 	tokenProductTarget          = 32
 	tokenProductTargetTouch     = 44
 	tokenProductTile            = 64
+)
+
+// Elevations: offset y, blur and the opacity of black.
+var (
+	tokenShadowArt     = nativeShadow{8, 24, 0.3}
+	tokenShadowControl = nativeShadow{8, 16, 0.3}
+	tokenShadowDialog  = nativeShadow{24, 64, 0.5}
+	tokenShadowHero    = nativeShadow{16, 48, 0.45}
+	tokenShadowPopover = nativeShadow{12, 32, 0.35}
+	tokenShadowTooltip = nativeShadow{2, 8, 0.25}
 )

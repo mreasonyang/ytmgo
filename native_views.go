@@ -122,13 +122,16 @@ type ViewActions struct {
 // at 760 and below the window becomes a single column with a mini player and
 // a bottom tab bar.
 const (
-	nativeTopbarHeight  = 64
-	nativePlayerHeight  = 80
-	nativeLibraryWidth  = 300
-	nativeRailWidth     = 72
-	nativePanelWidth    = 360
-	nativeCompactTabbar = 64
+	nativeTopbarHeight  = tokenProductGlobalBar
+	nativePlayerHeight  = tokenProductPlayer
+	nativeLibraryWidth  = tokenProductLibrary
+	nativeRailWidth     = tokenProductRail
+	nativePanelWidth    = tokenProductNowPlaying
+	nativeCompactTabbar = tokenProductTabBar
 	nativeExpandedBar   = 140
+	// nativeImmersiveGutter separates immersive mode's media and panel and
+	// insets them from the window.
+	nativeImmersiveGutter = 48
 )
 
 func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
@@ -164,8 +167,8 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 	if m.Panel && !m.Immersive && width <= 1180 {
 		panelWidth := min(width-16, 380)
 		ui.DialogBase(c, &m.Panel, func(backdrop, panel ui.Element) {
-			backdrop.Background(ui.RGBA(0, 0, 0, 0.5))
-			panel.Width(panelWidth).Height(min(height-100, 760)).Radius(tokenRadiusPanel).Background(p.surface).Shadow(0, 16, 48, 0, ui.RGBA(0, 0, 0, 0.5)).Clip().Children(func() {
+			backdrop.Background(p.scrim)
+			panel.Width(panelWidth).Height(min(height-100, 760)).Radius(tokenRadiusPanel).Background(p.surface).Shadow(tokenShadowHero.args()).Clip().Children(func() {
 				nativeNowPlaying(c, m, a, p, panelWidth, true, firstPlayback).Fill()
 			})
 		}).Label(a.Tr("shellNowPlaying"))
@@ -269,7 +272,7 @@ func nativeToggleIcon(c *ui.Context, name, label string, p nativePalette, active
 		icon := min(hit*0.6, 22)
 		ui.Icon(c, nativeIcons[name]).Size(icon, icon)
 		if active {
-			ui.Box(c).Absolute().Left((hit-4)/2).Bottom(1).Size(4, 4).Radius(2).Background(on).PassThrough()
+			ui.Box(c).Absolute().Left((hit-4)/2).Bottom(1).Size(4, 4).Radius(tokenRadiusPill).Background(on).PassThrough()
 		}
 	})
 	return b
@@ -311,7 +314,7 @@ func nativeCircleButton(c *ui.Context, name, label string, p nativePalette, size
 // nativePill is a rounded text button; the primary form is Spotify's white
 // (in light appearance, black) call to action.
 func nativePill(c *ui.Context, label string, p nativePalette, primary bool) ui.Element {
-	b := ui.Button(c, label).MinHeight(36).Padding(7, 18).Radius(tokenRadiusPill).BorderWidth(0).FontWeight(700).Background(p.input).TextColor(p.text)
+	b := ui.Button(c, label).MinHeight(tokenProductPill).Padding(8, 16).Radius(tokenRadiusPill).BorderWidth(0).FontWeight(700).Background(p.input).TextColor(p.text)
 	if primary {
 		b.Selected(true).Background(p.text).TextColor(p.base)
 		if b.Hovered() {
@@ -326,7 +329,7 @@ func nativePill(c *ui.Context, label string, p nativePalette, primary bool) ui.E
 
 // nativeChip is a filter chip: translucent at rest, inverted when selected.
 func nativeChip(c *ui.Context, label string, p nativePalette, selected bool) ui.Element {
-	b := ui.Button(c, label).Height(32).MinHeight(32).Padding(0, 12).Radius(16).BorderWidth(0).FontSize(tokenSizeMeta).FontWeight(500).Background(p.hover).TextColor(p.text)
+	b := ui.Button(c, label).Height(tokenProductChip).MinHeight(tokenProductChip).Padding(0, 12).Radius(tokenRadiusPill).BorderWidth(0).FontSize(tokenSizeMeta).FontWeight(500).Background(p.hover).TextColor(p.text)
 	if selected {
 		b.Selected(true).Background(p.text).TextColor(p.base)
 	} else if b.Hovered() {
@@ -412,7 +415,7 @@ func nativeCompactTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalet
 // nativeSearchField is the persistent search pill. On desktop it ends with the
 // Explore button, where Spotify places Browse.
 func nativeSearchField(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, h float32, explore bool) ui.Element {
-	field := ui.Row(c).MinWidth(0).Height(h).PaddingStart(12).PaddingEnd(6).Gap(10).Radius(h/2).Background(p.raised).Border(2, ui.Transparent).AlignItems(ui.Center)
+	field := ui.Row(c).MinWidth(0).Height(h).PaddingStart(12).PaddingEnd(8).Gap(8).Radius(h/2).Background(p.raised).Border(2, ui.Transparent).AlignItems(ui.Center)
 	if field.FocusWithin() {
 		field.BorderColor(p.text)
 	} else if field.Hovered() {
@@ -488,7 +491,7 @@ func nativeAccount(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, ba
 	if nativeRestoring(m) {
 		// Sign-in cannot start until restoration settles, so it is not offered.
 		status := nativeAccountStatus(m, a)
-		ui.Row(c).Height(36).MinWidth(0).Shrink(1).PaddingX(12).Gap(8).Radius(18).Background(p.raised).AlignItems(ui.Center).Label(status).Tooltip(status).Children(func() {
+		ui.Row(c).Height(36).MinWidth(0).Shrink(1).PaddingX(12).Gap(8).Radius(tokenRadiusPill).Background(p.raised).AlignItems(ui.Center).Label(status).Tooltip(status).Children(func() {
 			ui.Spinner(c).Size(16, 16)
 			if badge {
 				ui.Text(c, status).MinWidth(0).FontSize(tokenSizeMeta).FontWeight(600).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
@@ -503,13 +506,13 @@ func nativeAccount(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, ba
 		return
 	}
 	status := nativeAccountStatus(m, a)
-	b := ui.ButtonBase(c.Key("account")).Height(48).MinWidth(48).Shrink(0).Padding(8).Gap(8).Radius(24).Background(p.raised).Label(a.Tr("menuAccount") + " · " + status).Tooltip(status)
+	b := ui.ButtonBase(c.Key("account")).Height(48).MinWidth(48).Shrink(0).Padding(8).Gap(8).Radius(tokenRadiusPill).Background(p.raised).Label(a.Tr("menuAccount") + " · " + status).Tooltip(status)
 	if b.Hovered() {
 		b.Background(p.highlight)
 	}
 	b.Children(func() {
 		if m.MusicPremium && badge {
-			ui.Text(c, a.Tr("shellPremiumBadge")).PaddingStart(6).FontSize(tokenSizeMicro).FontWeight(700).TextColor(p.text)
+			ui.Text(c, a.Tr("shellPremiumBadge")).PaddingStart(4).FontSize(tokenSizeMicro).FontWeight(700).TextColor(p.text)
 		}
 		nativeAvatar(c, m, a, p, 32)
 	})
@@ -744,7 +747,7 @@ func nativeLibraryCacheStatus(c *ui.Context, m *UIModel, a ViewActions, p native
 	if m.LibraryErrorKey != "" {
 		key = "nativeLibrarySavedError"
 	}
-	ui.Row(c).Shrink(0).Padding(6, 16).Gap(8).AlignItems(ui.Center).Children(func() {
+	ui.Row(c).Shrink(0).Padding(8, 16).Gap(8).AlignItems(ui.Center).Children(func() {
 		if m.LibraryRefreshing {
 			ui.Spinner(c).Size(14, 14).Label(a.Tr(key))
 		}
@@ -771,14 +774,14 @@ func nativeLibrarySkeleton(c *ui.Context, a ViewActions, p nativePalette, full b
 				row.Padding(4).Justify(ui.Center)
 			}
 			row.Children(func() {
-				ui.Box(c).Size(48, 48).Shrink(0).Radius(4).Background(p.highlight)
+				ui.Box(c).Size(48, 48).Shrink(0).Radius(tokenRadiusArt).Background(p.highlight)
 				if !full {
 					return
 				}
 				// Bars of varied length read as titles rather than a table.
-				ui.Column(c).Grow(1).MinWidth(0).Gap(10).Children(func() {
-					ui.Box(c).Width(float32(120 + 40*(i%3))).Height(12).Radius(6).Background(p.highlight)
-					ui.Box(c).Width(float32(72 + 24*((i+1)%3))).Height(10).Radius(5).Background(p.highlight)
+				ui.Column(c).Grow(1).MinWidth(0).Gap(8).Children(func() {
+					ui.Box(c).Width(float32(120 + 40*(i%3))).Height(12).Radius(tokenRadiusPill).Background(p.highlight)
+					ui.Box(c).Width(float32(72 + 24*((i+1)%3))).Height(10).Radius(tokenRadiusPill).Background(p.highlight)
 				})
 			})
 		}
@@ -787,7 +790,7 @@ func nativeLibrarySkeleton(c *ui.Context, a ViewActions, p nativePalette, full b
 
 func nativeLibraryPrompt(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 	ui.Column(c).Padding(8, 8).Children(func() {
-		ui.Column(c).Padding(20).Gap(12).Radius(8).Background(p.raised).Children(func() {
+		ui.Column(c).Padding(16).Gap(12).Radius(tokenRadiusControl).Background(p.raised).Children(func() {
 			title, hint := nativeLibraryPromptText(m)
 			ui.Text(c, a.Tr(title)).FontSize(tokenSizeBody).FontWeight(700)
 			ui.Text(c, a.Tr(hint)).FontSize(tokenSizeSmall).LineHeight(1.5).TextColor(p.secondary)
@@ -834,7 +837,7 @@ func nativeLibraryPromptText(m *UIModel) (title, body string) {
 func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p nativePalette, full bool) {
 	open := item.BrowseID != "" && m.Route == "browse:"+item.BrowseID
 	playing := item.ID != "" && item.ID == m.Current.ID
-	b := ui.ButtonBase(c).Height(64).Padding(8).Gap(12).Radius(tokenRadiusControl).Justify(ui.Start).Label(nativeItemLabel(item)).Tooltip(item.Title)
+	b := ui.ButtonBase(c).Height(tokenProductLibraryRow).Padding(8).Gap(12).Radius(tokenRadiusControl).Justify(ui.Start).Label(nativeItemLabel(item)).Tooltip(item.Title)
 	if m.LibraryCached && !m.SignedIn {
 		b.Disabled(true)
 	}
@@ -917,7 +920,7 @@ func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, co
 				}
 			})
 		}
-		ui.Column(c).Padding(20, inset, 32).Gap(32).Children(func() {
+		ui.Column(c).Padding(24, inset, 32).Gap(32).Children(func() {
 			nativePageBody(c, m, a, p, compact, contentWidth)
 		})
 	})
@@ -1017,8 +1020,11 @@ func nativePageError(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 	if nativeContinuationFailed(m) {
 		retry = a.LoadMore
 	}
-	return ui.Column(c).Padding(20).Gap(12).Background(p.raised).Radius(8).Children(func() {
-		ui.Text(c, m.Error).TextColor(p.secondary)
+	return ui.Column(c).Padding(16).Gap(12).Background(p.raised).Radius(tokenRadiusControl).Children(func() {
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+			ui.Icon(c, nativeIcons["alert"]).Size(16, 16).Shrink(0).TextColor(p.attention)
+			ui.Text(c, m.Error).TextColor(p.text)
+		})
 		if m.ErrorScope != errorAccount && m.ErrorScope != errorAccountConnect && retry != nil && nativePill(c, a.Tr("buttonRetry"), p, true).AlignSelf(ui.Start).Clicked() {
 			retry()
 		}
@@ -1034,7 +1040,7 @@ func nativePageError(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 // shortcuts, shelves and items.
 func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool, contentWidth float32) {
 	if m.Route == "library" && !m.SignedIn && (!m.LibraryCached || m.AccountRestore != accountRestoring) {
-		ui.Column(c).Padding(24).Gap(14).Radius(8).Background(p.raised).Children(func() {
+		ui.Column(c).Padding(24).Gap(12).Radius(tokenRadiusControl).Background(p.raised).Children(func() {
 			title, body := nativeLibraryPromptText(m)
 			if m.LibraryCached {
 				body = "nativeLibraryReconnectBody"
@@ -1160,17 +1166,17 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 			if m.Page.Artwork != "" {
 				nativeArtwork(c, m.Page.Artwork, min(96, contentWidth*0.25), tokenRadiusControl, a, p).Shrink(0)
 			}
-			ui.Column(c).Grow(1).MinWidth(0).Gap(6).Children(func() { title(24) })
+			ui.Column(c).Grow(1).MinWidth(0).Gap(8).Children(func() { title(24) })
 		})
 	} else if compact {
 		ui.Column(c).Padding(8, inset, 0).Gap(12).Children(func() {
 			if m.Page.Artwork != "" {
-				nativeArtwork(c, m.Page.Artwork, min(contentWidth-2*inset-64, 224), tokenRadiusControl, a, p).AlignSelf(ui.Center).Shadow(0, 8, 32, 0, ui.RGBA(0, 0, 0, 0.45))
+				nativeArtwork(c, m.Page.Artwork, min(contentWidth-2*inset-64, 224), tokenRadiusControl, a, p).AlignSelf(ui.Center).Shadow(tokenShadowHero.args())
 			}
 			title(26)
 		})
 	} else {
-		art := float32(232)
+		art := float32(tokenProductCollectionCover)
 		if contentWidth < 900 {
 			art = 192
 		}
@@ -1180,7 +1186,7 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 		}
 		ui.Row(c).Padding(top, inset, 0).Gap(24).AlignItems(ui.End).Children(func() {
 			if m.Page.Artwork != "" {
-				nativeArtwork(c, m.Page.Artwork, art, tokenRadiusControl, a, p).Shadow(0, 8, 32, 0, ui.RGBA(0, 0, 0, 0.45))
+				nativeArtwork(c, m.Page.Artwork, art, tokenRadiusControl, a, p).Shadow(tokenShadowHero.args())
 			}
 			ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
 				title(font)
@@ -1195,16 +1201,16 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 	for _, item := range items {
 		inPage = inPage || item.ID == m.Current.ID
 	}
-	buttonSize, buttonTop := float32(56), float32(24)
+	buttonSize, buttonTop := float32(tokenProductPlayButton), float32(24)
 	if short {
-		buttonSize, buttonTop = 44, 12
+		buttonSize, buttonTop = tokenProductTargetTouch, 12
 	}
 	ui.Row(c).Padding(buttonTop, inset, 0).Gap(24).AlignItems(ui.Center).Children(func() {
 		icon, key := "play", "shellPlay"
 		if inPage && m.Playing {
 			icon, key = "pause", "shellPause"
 		}
-		b := ui.ButtonBase(c).Size(buttonSize, buttonSize).Shrink(0).Radius(buttonSize/2).Background(p.accent).TextColor(p.onAccent).Shadow(0, 8, 16, 0, ui.RGBA(0, 0, 0, 0.3)).Label(a.Tr(key) + " · " + m.Page.Title).Tooltip(a.Tr(key)).Disabled(inPage && m.PlaybackLoading)
+		b := ui.ButtonBase(c).Size(buttonSize, buttonSize).Shrink(0).Radius(buttonSize / 2).Background(p.accent).TextColor(p.onAccent).Shadow(tokenShadowControl.args()).Label(a.Tr(key) + " · " + m.Page.Title).Tooltip(a.Tr(key)).Disabled(inPage && m.PlaybackLoading)
 		nativePlayFeedback(b)
 		b.Children(func() { ui.Icon(c, nativeIcons[icon]).Size(26, 26) })
 		if b.Clicked() {
@@ -1237,19 +1243,19 @@ func nativeMetadataHasCreator(subtitle, creator string) bool {
 // nativeShortcutTile is one of Home's quick-access tiles for library items.
 func nativeShortcutTile(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p nativePalette) {
 	playing := item.ID != "" && item.ID == m.Current.ID
-	b := ui.ButtonBase(c).Height(64).MinWidth(0).PaddingEnd(12).Gap(12).Radius(tokenRadiusControl).Justify(ui.Start).Background(p.hover).Clip().Label(item.Title).Tooltip(item.Title)
+	b := ui.ButtonBase(c).Height(tokenProductTile).MinWidth(0).PaddingEnd(12).Gap(12).Radius(tokenRadiusControl).Justify(ui.Start).Background(p.hover).Clip().Label(item.Title).Tooltip(item.Title)
 	hovered := b.Hovered()
 	if hovered {
 		b.Background(p.press)
 	}
 	b.Children(func() {
-		nativeArtwork(c, item.Artwork, 64, 0, a, p)
+		nativeArtwork(c, item.Artwork, tokenProductTile, 0, a, p)
 		t := ui.Text(c, item.Title).Grow(1).MinWidth(0).FontSize(tokenSizeSmall).FontWeight(700).MaxLines(2).Ellipsis("…")
 		if playing {
 			t.TextColor(p.accentText)
 			ui.Icon(c, nativeIcons["volume"]).Size(16, 16).TextColor(p.accent)
 		} else if hovered && item.ID != "" {
-			ui.Box(c).Size(32, 32).Shrink(0).Radius(16).Background(p.accent).TextColor(p.onAccent).Center().PassThrough().Children(func() { ui.Icon(c, nativeIcons["play"]).Size(16, 16) })
+			ui.Box(c).Size(32, 32).Shrink(0).Radius(tokenRadiusPill).Background(p.accent).TextColor(p.onAccent).Center().PassThrough().Children(func() { ui.Icon(c, nativeIcons["play"]).Size(16, 16) })
 		}
 	})
 	b.ContextMenu(nativeTrackMenu(item, a))
@@ -1365,13 +1371,13 @@ func nativeCardArt(compact bool) float32 {
 	if compact {
 		return 140
 	}
-	return 164
+	return tokenProductCardCover
 }
 
 // nativeCard is Spotify's shelf card: cover, title and a two-line subtitle,
 // with a play button rising over playable covers on hover.
 func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p nativePalette, size float32) {
-	b := ui.ButtonBase(c).Column().Width(size + 24).Shrink(0).Padding(12).Gap(8).Radius(8).AlignItems(ui.Stretch).Justify(ui.Start).Label(nativeResultLabel(item, m, a))
+	b := ui.ButtonBase(c).Column().Width(size + 24).Shrink(0).Padding(12).Gap(8).Radius(tokenRadiusControl).AlignItems(ui.Stretch).Justify(ui.Start).Label(nativeResultLabel(item, m, a))
 	if m.Route == "library" && m.LibraryCached && !m.SignedIn {
 		b.Disabled(true)
 	}
@@ -1385,9 +1391,9 @@ func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p n
 			radius = size / 2
 		}
 		ui.Box(c).Size(size, size).Shrink(0).Children(func() {
-			nativeArtwork(c, item.Artwork, size, radius, a, p).Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, 0.3))
+			nativeArtwork(c, item.Artwork, size, radius, a, p).Shadow(tokenShadowArt.args())
 			if hovered && item.ID != "" {
-				ui.Box(c).Absolute().Right(8).Bottom(8).Size(48, 48).Radius(24).Background(p.accent).TextColor(p.onAccent).Shadow(0, 8, 8, 0, ui.RGBA(0, 0, 0, 0.3)).Center().PassThrough().Children(func() {
+				ui.Box(c).Absolute().Right(8).Bottom(8).Size(48, 48).Radius(tokenRadiusPill).Background(p.accent).TextColor(p.onAccent).Shadow(tokenShadowControl.args()).Center().PassThrough().Children(func() {
 					ui.Icon(c, nativeIcons["play"]).Size(22, 22)
 				})
 			}
@@ -1449,7 +1455,7 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 	if compact {
 		pad = 8
 	}
-	b := ui.ButtonBase(c).Height(56).PaddingX(pad).Gap(16).Radius(tokenRadiusControl).Justify(ui.Start).Label(nativeResultLabel(item, m, a))
+	b := ui.ButtonBase(c).Height(tokenProductRow).PaddingX(pad).Gap(16).Radius(tokenRadiusControl).Justify(ui.Start).Label(nativeResultLabel(item, m, a))
 	if m.Route == "library" && m.LibraryCached && !m.SignedIn && mode != nativeTrackQueue {
 		b.Disabled(true)
 	}
@@ -1537,14 +1543,14 @@ func nativePlayerBar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 				m.Panel = true
 			}
 			if m.PlaybackError != "" && !m.Panel && !m.Immersive {
-				if nativePill(c, a.Tr("buttonRetry"), p, false).Width(72).PaddingX(6).Shrink(0).Disabled(a.RetryPlayback == nil).Clicked() {
+				if nativePill(c, a.Tr("buttonRetry"), p, false).Width(72).PaddingX(8).Shrink(0).Disabled(a.RetryPlayback == nil).Clicked() {
 					a.RetryPlayback()
 				}
 			} else if m.PlaybackError == "" && nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 32).Disabled(m.Current.ID == "").Clicked() {
 				a.Like()
 			}
 		})
-		ui.Column(c).Width(min(722, width*0.38)).Shrink(0).Gap(2).AlignItems(ui.Stretch).Children(func() {
+		ui.Column(c).Width(min(722, width*0.38)).Shrink(0).Gap(4).AlignItems(ui.Stretch).Children(func() {
 			ui.Row(c).Height(40).Gap(16).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
 				if nativeModeButton(c, "shuffle", a.Tr("shellShuffle"), p, m.Shuffle, 32).Disabled(len(m.Queue) < 2).Clicked() {
 					a.Shuffle()
@@ -1635,10 +1641,10 @@ func nativeRepeat(m *UIModel) (icon, key string) {
 
 // nativeMiniPlayer is the compact player card above the tab bar.
 func nativeMiniPlayer(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
-	ui.Column(c).Shrink(0).Background(p.base).Padding(6, 8, 0).Children(func() {
-		ui.Column(c).Height(60).Radius(8).Background(p.raised).Clip().Children(func() {
+	ui.Column(c).Shrink(0).Background(p.base).Padding(8, 8, 0).Children(func() {
+		ui.Column(c).Height(tokenProductMiniPlayer).Radius(tokenRadiusControl).Background(p.raised).Clip().Children(func() {
 			ui.Row(c).Grow(1).Padding(0, 4, 0, 8).Gap(4).AlignItems(ui.Center).Children(func() {
-				info := ui.ButtonBase(c).Grow(1).MinWidth(0).Height(52).Gap(10).Justify(ui.Start).Radius(tokenRadiusArt).Label(a.Tr("shellOpenNowPlaying")).Children(func() {
+				info := ui.ButtonBase(c).Grow(1).MinWidth(0).Height(52).Gap(8).Justify(ui.Start).Radius(tokenRadiusArt).Label(a.Tr("shellOpenNowPlaying")).Children(func() {
 					nativePlayerArtwork(c, m.Current.Artwork, 40, 4, a, p)
 					nativeTrackCaption(c, m, a, p)
 				})
@@ -1646,7 +1652,7 @@ func nativeMiniPlayer(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 					m.Panel = true
 				}
 				if m.PlaybackError != "" && !m.Panel {
-					if nativePill(c, a.Tr("buttonRetry"), p, false).Width(64).PaddingX(6).Shrink(0).Disabled(a.RetryPlayback == nil).Clicked() {
+					if nativePill(c, a.Tr("buttonRetry"), p, false).Width(64).PaddingX(8).Shrink(0).Disabled(a.RetryPlayback == nil).Clicked() {
 						a.RetryPlayback()
 					}
 				} else if m.PlaybackError == "" && nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 40).Disabled(m.Current.ID == "").Clicked() {
@@ -1725,12 +1731,16 @@ func nativeSeek(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 	})
 }
 
+// nativeSliderThumb is the slider thumb's diameter; the track is inset by
+// its radius so the thumb stays inside the control at either end.
+const nativeSliderThumb = 12
+
 func nativeSlider(c *ui.Context, value *float64, maximum float64, p nativePalette) ui.Element {
-	s := ui.SliderBase(c, value, 0, maximum).Height(24).PaddingX(5)
+	s := ui.SliderBase(c, value, 0, maximum).Height(24).PaddingX(nativeSliderThumb / 2)
 	hovered := s.Hovered() || s.Focused() || s.Pressed()
 	fraction := float32(max(0, min(1, *value/maximum)))
 	s.Draw(func(painter *ui.Painter, r ui.Rect) {
-		track := ui.Rect{X: r.X + 5, Y: r.Y + r.H/2 - 2, W: max(0, r.W-10), H: 4}
+		track := ui.Rect{X: r.X + nativeSliderThumb/2, Y: r.Y + r.H/2 - 2, W: max(0, r.W-nativeSliderThumb), H: 4}
 		painter.Fill(track, p.text.Alpha(0.3), 2)
 		fill := track
 		fill.W *= fraction
@@ -1740,7 +1750,7 @@ func nativeSlider(c *ui.Context, value *float64, maximum float64, p nativePalett
 		}
 		painter.Fill(fill, col, 2)
 		if hovered {
-			painter.Fill(ui.Rect{X: track.X + fill.W - 6, Y: r.Y + r.H/2 - 6, W: 12, H: 12}, p.text, 6)
+			painter.Fill(ui.Rect{X: track.X + fill.W - nativeSliderThumb/2, Y: r.Y + r.H/2 - nativeSliderThumb/2, W: nativeSliderThumb, H: nativeSliderThumb}, p.text, nativeSliderThumb/2)
 		}
 	})
 	return s
@@ -1751,9 +1761,9 @@ func nativeSlider(c *ui.Context, value *float64, maximum float64, p nativePalett
 func nativeSliderReadout(c *ui.Context, slider ui.Element, p nativePalette, text string, fraction float64) {
 	x := 5 + max(0, slider.LayoutBounds().W-10)*float32(max(0, min(1, fraction)))
 	ui.Overlay(c, func() {
-		ui.Text(c, text).AttachTo(slider, ui.AnchorTopLeft, ui.AnchorBottom).Margin(0, 0, 6, x).
+		ui.Text(c, text).AttachTo(slider, ui.AnchorTopLeft, ui.AnchorBottom).Margin(0, 0, 8, x).
 			Padding(4, 8).Radius(tokenRadiusPill).Background(p.raised).TextColor(p.text).FontSize(tokenSizeMicro).FontWeight(600).
-			Shadow(0, 2, 8, 0, ui.RGBA(0, 0, 0, 0.25)).PassThrough().Role(ui.RoleTooltip)
+			Shadow(tokenShadowTooltip.args()).PassThrough().Role(ui.RoleTooltip)
 	})
 }
 
@@ -1762,8 +1772,8 @@ func nativeProgressLine(c *ui.Context, m *UIModel, p nativePalette) {
 	if m.Duration > 0 {
 		value = float32(max(0, min(1, m.Position/m.Duration)))
 	}
-	ui.Box(c).Height(2).Shrink(0).Margin(0, 8, 0).Radius(1).Background(p.text.Alpha(0.2)).Children(func() {
-		ui.Box(c).Height(2).Radius(1).WidthPercent(value * 100).Background(p.text)
+	ui.Box(c).Height(2).Shrink(0).Margin(0, 8, 0).Radius(tokenRadiusPill).Background(p.text.Alpha(0.2)).Children(func() {
+		ui.Box(c).Height(2).Radius(tokenRadiusPill).WidthPercent(value * 100).Background(p.text)
 	})
 }
 
@@ -1868,7 +1878,7 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 				}
 			})
 			if overlay {
-				ui.Row(c).Shrink(0).Gap(18).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
+				ui.Row(c).Shrink(0).Gap(16).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
 					if nativeIconButton(c, "previous", a.Tr("shellPrevious"), p, false, 44).Clicked() {
 						a.Previous()
 					}
@@ -1904,7 +1914,7 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 
 // nativePanelCard holds the queue and lyrics behind a pair of chips.
 func nativePanelCard(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) ui.Element {
-	return ui.Column(c).MinHeight(0).Padding(12).Gap(12).Radius(8).Background(p.raised).Children(func() {
+	return ui.Column(c).MinHeight(0).Padding(12).Gap(12).Radius(tokenRadiusControl).Background(p.raised).Children(func() {
 		nativePanelTabs(c, m, a, p)
 		nativePanelBody(c, m, a, p)
 	})
@@ -1981,7 +1991,7 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 		headerHeight = nativeImmersiveHeader(c, m, a, p, width)
 	}
 	if compact {
-		scroll := ui.Scroll(c).Grow(1).Padding(20).Gap(24)
+		scroll := ui.Scroll(c).Grow(1).Padding(16).Gap(24)
 		a = nativeArtworkViewport(c, a, scroll)
 		scroll.Children(func() {
 			nativePlaybackNotice(c, m, a, p)
@@ -2001,8 +2011,10 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 	}
 	panelWidth := min(float32(380), width*0.32)
 	contentHeight := max(float32(0), height-headerHeight-48)
-	mediaWidth := max(float32(1), width-16-80-40-panelWidth)
-	ui.Row(c).Grow(1).MinHeight(0).Padding(24, 40).Gap(40).AlignItems(ui.Center).Children(func() {
+	// The frame gap on both sides, a gutter at each edge and one between the
+	// media and the panel.
+	mediaWidth := max(float32(1), width-2*tokenProductFrameGap-3*nativeImmersiveGutter-panelWidth)
+	ui.Row(c).Grow(1).MinHeight(0).Padding(24, nativeImmersiveGutter).Gap(nativeImmersiveGutter).AlignItems(ui.Center).Children(func() {
 		scroll := ui.Scroll(c).Grow(1).MinWidth(0).MinHeight(0).HeightPercent(100).Label(a.Tr("shellContent"))
 		// The queue card is a sibling of the media column, so it keeps the
 		// outer viewport instead of the left column's clip.
@@ -2027,7 +2039,7 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 					// square cover while filling more of the available column.
 					artSize = min(mediaWidth, mediaHeight*16/9)
 				}
-				nativeMedia(c, m, a, p, artSize).Shadow(0, 24, 64, 0, ui.RGBA(0, 0, 0, 0.5))
+				nativeMedia(c, m, a, p, artSize).Shadow(tokenShadowDialog.args())
 				nativeMediaSwitch(c, m, a, p)
 				nativeImmersiveTitle(c, m, a, p, false)
 				nativePlaybackNotice(c, m, a, p)
@@ -2275,13 +2287,19 @@ func nativeMediaSwitch(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 
 func nativeMedia(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, size float32) ui.Element {
 	if !m.Video {
-		return nativePlayerArtwork(c, m.Current.Artwork, size, 8, a, p)
+		return nativePlayerArtwork(c, m.Current.Artwork, size, tokenRadiusControl, a, p)
 	}
-	return ui.Box(c).Size(size, size*9/16).Shrink(0).Radius(8).Background(ui.Hex("#000000")).Clip().Center().Label(a.Tr("nativeVideo")).Children(func() {
+	// Video plays on a black stage in either appearance, so the stage takes
+	// the dark palette.
+	stage := palette(true)
+	return ui.Box(c).Size(size, size*9/16).Shrink(0).Radius(tokenRadiusControl).Background(stage.base).Clip().Center().Label(a.Tr("nativeVideo")).Children(func() {
 		if m.VideoError != "" {
 			ui.Column(c).WidthPercent(100).Padding(8).Gap(8).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, m.VideoError).TextAlign(ui.Center).TextColor(ui.Hex("#b3b3b3")).FontSize(tokenSizeMeta).MaxLines(2).Ellipsis("…")
-				if nativePill(c, a.Tr("buttonRetry"), p, false).Disabled(a.Video == nil || m.Current.ID == "").Clicked() {
+				ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+					ui.Icon(c, nativeIcons["alert"]).Size(16, 16).Shrink(0).TextColor(stage.attention)
+					ui.Text(c, m.VideoError).TextAlign(ui.Center).TextColor(stage.text).FontSize(tokenSizeMeta).MaxLines(2).Ellipsis("…")
+				})
+				if nativePill(c, a.Tr("buttonRetry"), stage, false).Disabled(a.Video == nil || m.Current.ID == "").Clicked() {
 					a.Video(true)
 				}
 			})
@@ -2290,13 +2308,13 @@ func nativeMedia(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, size
 		} else if m.VideoFrame != nil {
 			ui.Image(c, m.VideoFrame).Size(size, size*9/16).Fit(ui.Contain)
 		} else {
-			ui.Text(c, a.Tr("nativeVideoUnavailable")).Padding(16).TextAlign(ui.Center).TextColor(ui.Hex("#b3b3b3")).FontSize(tokenSizeMeta)
+			ui.Text(c, a.Tr("nativeVideoUnavailable")).Padding(16).TextAlign(ui.Center).TextColor(stage.secondary).FontSize(tokenSizeMeta)
 		}
 	})
 }
 
 func nativeExpandedTransport(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) ui.Element {
-	return ui.Column(c).Padding(6, 16).Gap(4).Background(p.base).Children(func() {
+	return ui.Column(c).Padding(8, 16).Gap(4).Background(p.base).Children(func() {
 		// Compact immersive content leads with the full playback notice, so
 		// the transport keeps its seek bar instead of a truncated copy.
 		nativeSeek(c, m, a, p)
@@ -2330,7 +2348,7 @@ func nativeExpandedTransport(c *ui.Context, m *UIModel, a ViewActions, p nativeP
 // account, beside the action that resolves it.
 func nativePlaybackNotice(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 	if nativeAwaitingAccount(m) {
-		ui.Column(c).Shrink(0).Gap(8).Padding(10).Radius(8).Background(p.raised).Children(func() {
+		ui.Column(c).Shrink(0).Gap(8).Padding(12).Radius(tokenRadiusControl).Background(p.raised).Children(func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 				ui.Spinner(c).Size(16, 16)
 				ui.Text(c, a.Tr("nativePlaybackAwaitingAccount")).Grow(1).MinWidth(0).FontSize(tokenSizeMicro).TextColor(p.secondary)
@@ -2342,10 +2360,10 @@ func nativePlaybackNotice(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 	if m.PlaybackError == "" {
 		return
 	}
-	ui.Row(c).Shrink(0).Gap(8).Padding(10).Radius(8).Background(p.raised).AlignItems(ui.Center).Children(func() {
+	ui.Row(c).Shrink(0).Gap(8).Padding(12).Radius(tokenRadiusControl).Background(p.raised).AlignItems(ui.Center).Children(func() {
 		ui.Icon(c, nativeIcons["alert"]).Size(16, 16).Shrink(0).TextColor(p.attention)
 		ui.Text(c, m.PlaybackError).Grow(1).MinWidth(0).FontSize(tokenSizeMicro).TextColor(p.text)
-		if nativePill(c, a.Tr("buttonRetry"), p, false).Width(72).PaddingX(6).Disabled(a.RetryPlayback == nil).Clicked() {
+		if nativePill(c, a.Tr("buttonRetry"), p, false).Width(72).PaddingX(8).Disabled(a.RetryPlayback == nil).Clicked() {
 			a.RetryPlayback()
 		}
 	})

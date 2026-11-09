@@ -161,7 +161,7 @@ func TestNativeSeekCommitsPointerOnceAndKeepsKeyboardTarget(t *testing.T) {
 	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
 	r := nativeAssertVisible(t, tt, a.Tr("shellProgress"), 1440, 900)
 	y := r.Y + r.H/2
-	x := func(fraction float32) float32 { return r.X + 5 + (r.W-10)*fraction }
+	x := func(fraction float32) float32 { return r.X + nativeSliderThumb/2 + (r.W-nativeSliderThumb)*fraction }
 	tt.Press(x(0.25), y)
 	for i := 3; i <= 7; i++ {
 		tt.Move(x(float32(i)/10), y)

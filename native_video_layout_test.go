@@ -64,7 +64,7 @@ func TestNativeShortImmersiveVideoUsesHeightBudget(t *testing.T) {
 						// 609/640 windows leave 409/440 DIPs of immersive content: the
 						// cover takes what the switch, gaps and the title block, as the
 						// fonts lay it out, leave; a video keeps that height budget.
-						mediaWidth := float32(width) - 16 - 80 - 40 - min(380, float32(width)*0.32)
+						mediaWidth := float32(width) - 2*tokenProductFrameGap - 3*nativeImmersiveGutter - min(380, float32(width)*0.32)
 						want := float32(height-200) - 32 - 48 - nativeImmersiveTitleHeight(m, a, mediaWidth)
 						tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, height)
 						video := nativeAssertVisible(t, tt, a.Tr("nativeVideo"), width, height)

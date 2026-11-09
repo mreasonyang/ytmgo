@@ -21,7 +21,19 @@ type nativePalette struct {
 	attention ui.Color
 	// track is the unfilled part of progress bars and sliders.
 	track ui.Color
+	// scrim dims the window behind a dialog.
+	scrim ui.Color
 	dark  bool
+}
+
+// nativeShadow is an elevation from the tokens: a black shadow straight
+// down. Only artwork, floating panels, popovers, dialogs and floating play
+// controls cast one.
+type nativeShadow struct{ y, blur, alpha float32 }
+
+// args are Shadow's arguments: e.Shadow(tokenShadowArt.args()).
+func (s nativeShadow) args() (x, y, blur, spread float32, c ui.Color) {
+	return 0, s.y, s.blur, 0, ui.RGBA(0, 0, 0, s.alpha)
 }
 
 func palette(dark bool) nativePalette {

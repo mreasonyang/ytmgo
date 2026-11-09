@@ -45,15 +45,15 @@ func nativeSheet(c *ui.Context, open *bool, scroll *ui.ScrollState, title string
 		sheet = width
 	}
 	ui.DialogBase(c, open, func(backdrop, panel ui.Element) {
-		backdrop.Background(ui.RGBA(0, 0, 0, 0.6))
+		backdrop.Background(p.scrim)
 		panel.Width(sheet).Background(p.surface).Clip()
 		if compact {
 			panel.Height(height)
 		} else {
-			panel.MaxHeight(min(height-48, 780)).Radius(tokenRadiusPanel).Border(1, p.line).Shadow(0, 24, 64, 0, ui.RGBA(0, 0, 0, 0.5))
+			panel.MaxHeight(min(height-48, 780)).Radius(tokenRadiusPanel).Border(1, p.line).Shadow(tokenShadowDialog.args())
 		}
 		panel.Children(func() {
-			ui.Row(c).Shrink(0).Padding(20, 16, 12, 24).AlignItems(ui.Center).Children(func() {
+			ui.Row(c).Shrink(0).Padding(24, 16, 12, 24).AlignItems(ui.Center).Children(func() {
 				ui.Text(c, title).FontSize(titleSize).FontWeight(800).Grow(1).MinWidth(0).MaxLines(1).Ellipsis("…")
 				if nativeIconButton(c, "close", a.Tr("shellClose"), p, false, 36).Clicked() {
 					*open = false
@@ -64,7 +64,7 @@ func nativeSheet(c *ui.Context, open *bool, scroll *ui.ScrollState, title string
 				edge = p.line
 			}
 			ui.Box(c).Height(1).Shrink(0).Background(edge)
-			ui.Scroll(c).Grow(1).MinHeight(0).Padding(12, 24, 28, 24).Gap(28).TrackScroll(scroll).Children(func() {
+			ui.Scroll(c).Grow(1).MinHeight(0).Padding(12, 24, 32, 24).Gap(24).TrackScroll(scroll).Children(func() {
 				body(sheet-48 < nativeSettingsStack)
 			})
 			if scroll.Y < scroll.MaxY-1 {
@@ -77,7 +77,7 @@ func nativeSheet(c *ui.Context, open *bool, scroll *ui.ScrollState, title string
 // nativeSettingsGroup is a titled card of rows divided by hairlines that start
 // inset DIPs in, under the text of rows with icons; nil rows are skipped.
 func nativeSettingsGroup(c *ui.Context, p nativePalette, title string, inset float32, rows ...func()) ui.Element {
-	return ui.Column(c).Gap(10).Children(func() {
+	return ui.Column(c).Gap(8).Children(func() {
 		if title != "" {
 			ui.Text(c, title).FontSize(tokenSizeSmall).FontWeight(700).PaddingX(4)
 		}
@@ -109,7 +109,7 @@ func nativeSettingRow(c *ui.Context, p nativePalette, narrow bool, icon, title, 
 	text := func() ui.Element {
 		return ui.Row(c).MinWidth(0).Gap(16).AlignItems(ui.Center).Children(func() {
 			nativeSettingTile(c, icon, p.highlight, p.text)
-			ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
+			ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
 				ui.Text(c, title).FontWeight(600)
 				if detail != "" {
 					ui.Text(c, detail).FontSize(tokenSizeMeta).LineHeight(1.4).TextColor(p.secondary)
@@ -118,13 +118,13 @@ func nativeSettingRow(c *ui.Context, p nativePalette, narrow bool, icon, title, 
 		})
 	}
 	if narrow {
-		ui.Column(c).Padding(14, 16).Gap(12).Children(func() {
+		ui.Column(c).Padding(12, 16).Gap(12).Children(func() {
 			text()
 			ui.Row(c).Gap(8).Wrap().AlignItems(ui.Center).Children(control)
 		})
 		return
 	}
-	ui.Row(c).Padding(14, 16).Gap(16).AlignItems(ui.Center).Children(func() {
+	ui.Row(c).Padding(12, 16).Gap(16).AlignItems(ui.Center).Children(func() {
 		text().Grow(1).Basis(0)
 		ui.Row(c).Shrink(0).Gap(8).AlignItems(ui.Center).Children(control)
 	})
@@ -135,10 +135,10 @@ func nativeKeycaps(c *ui.Context, p nativePalette, chord string) ui.Element {
 	return ui.Row(c).Shrink(0).Gap(4).AlignItems(ui.Center).Label(chord).Children(func() {
 		for _, key := range strings.Fields(chord) {
 			if key == "/" {
-				ui.Text(c, key).FontSize(tokenSizeMicro).PaddingX(2).TextColor(p.muted)
+				ui.Text(c, key).FontSize(tokenSizeMicro).PaddingX(4).TextColor(p.muted)
 				continue
 			}
-			ui.Box(c).MinWidth(26).Height(26).PaddingX(7).Radius(tokenRadiusArt).Background(p.surface).Border(1, p.line).Center().Children(func() {
+			ui.Box(c).MinWidth(26).Height(26).PaddingX(8).Radius(tokenRadiusArt).Background(p.surface).Border(1, p.line).Center().Children(func() {
 				ui.Text(c, key).FontSize(tokenSizeMicro).FontWeight(600).TextColor(p.text)
 			})
 		}
@@ -148,7 +148,7 @@ func nativeKeycaps(c *ui.Context, p nativePalette, chord string) ui.Element {
 // nativeLinkButton is a quiet text action for rows: secondary at rest,
 // highlighted under the pointer.
 func nativeLinkButton(c *ui.Context, label string, p nativePalette, icon string) ui.Element {
-	b := ui.ButtonBase(c).Height(32).PaddingX(12).Gap(4).Radius(16).AlignItems(ui.Center).Label(label).TextColor(p.text).Background(p.input)
+	b := ui.ButtonBase(c).Height(32).PaddingX(12).Gap(4).Radius(tokenRadiusPill).AlignItems(ui.Center).Label(label).TextColor(p.text).Background(p.input)
 	if b.Hovered() {
 		b.Background(p.highlight)
 	}
@@ -194,11 +194,11 @@ func nativeSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, w
 			keyboard.ScrollIntoView()
 			m.revealShortcut = false
 		}
-		ui.Column(c).Gap(10).Children(func() {
+		ui.Column(c).Gap(8).Children(func() {
 			nativeSettingsGroup(c, p, a.Tr("nativeSettingsAbout"), 64, func() {
-				ui.Row(c).Padding(14, 16).Gap(16).AlignItems(ui.Center).Children(func() {
+				ui.Row(c).Padding(12, 16).Gap(16).AlignItems(ui.Center).Children(func() {
 					nativeSettingTile(c, "play", p.accent, p.onAccent)
-					ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
+					ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
 						ui.Text(c, a.Tr("appName")).FontWeight(700)
 						if m.Version != "" {
 							ui.Text(c, a.TrArgs("nativeSettingsVersion", map[string]any{"version": m.Version})).FontSize(tokenSizeMeta).TextColor(p.secondary)
@@ -239,9 +239,9 @@ func nativeAccountSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePal
 		}
 		nativeRestoreActions(c, m, a, p, nativeRestoring(m))
 	}
-	ui.Column(c).Padding(16).Gap(14).Children(func() {
-		ui.Row(c).Gap(14).AlignItems(ui.Center).Children(func() {
-			nativeAvatar(c, m, a, p, 48)
+	ui.Column(c).Padding(16).Gap(12).Children(func() {
+		ui.Row(c).Gap(nativeAccountGap).AlignItems(ui.Center).Children(func() {
+			nativeAvatar(c, m, a, p, nativeAccountAvatar)
 			ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(4).Children(func() {
 				ui.Text(c, nativeAccountStatus(m, a)).FontSize(tokenSizeBody).FontWeight(700).MaxLines(2).Ellipsis("…")
 				if detail != "" {
@@ -253,13 +253,20 @@ func nativeAccountSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePal
 			}
 		})
 		if stack {
-			ui.Row(c).Padding(0, 0, 0, 62).Gap(8).Wrap().AlignItems(ui.Center).Children(actions)
+			ui.Row(c).Padding(0, 0, 0, nativeAccountAvatar+nativeAccountGap).Gap(8).Wrap().AlignItems(ui.Center).Children(actions)
 		}
 	})
 }
 
 // nativeSignOutRow is the destructive account action, set apart in its own
 // row. It is nil when there is no session to clear.
+// The account card: its actions, when stacked, line up with the text
+// beside the avatar.
+const (
+	nativeAccountAvatar = 48
+	nativeAccountGap    = 16
+)
+
 func nativeSignOutRow(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) func() {
 	if !m.SignedIn && !nativeRestoreDeferred(m) {
 		return nil
@@ -296,14 +303,14 @@ func nativeAppearanceControl(c *ui.Context, m *UIModel, a ViewActions, p nativeP
 	}
 	index := max(chosen, 0)
 	seg := ui.SegmentedBase(c, &index, len(options))
-	seg.Track.Padding(3).Gap(2).Radius(tokenRadiusControl).Background(p.input).Label(a.Tr("shellAppearance"))
+	seg.Track.Padding(4).Gap(4).Radius(tokenRadiusControl).Background(p.input).Label(a.Tr("shellAppearance"))
 	if narrow {
 		seg.Track.Grow(1)
 	}
 	seg.Track.Children(func() {
 		for i, option := range options {
 			label := a.Tr(option.key)
-			b := seg.Segment(i).Height(32).PaddingX(10).Gap(6).Radius(tokenRadiusArt).Label(label).TextColor(p.secondary).Background(ui.Transparent)
+			b := seg.Segment(i).Height(32).PaddingX(12).Gap(8).Radius(tokenRadiusArt).Label(label).TextColor(p.secondary).Background(ui.Transparent)
 			if narrow {
 				// Share spare space after each label's natural width, so longer
 				// system labels also fit with Linux's CJK fallback fonts.
@@ -332,7 +339,7 @@ func nativeLanguageControl(c *ui.Context, m *UIModel, a ViewActions, p nativePal
 	current := nativeLanguageTitle(a, m.Language)
 	chosen := current
 	sel := ui.SelectBase(c, &chosen)
-	sel.Trigger.Height(36).MinWidth(200).PaddingX(14).Gap(10).Radius(tokenRadiusControl).AlignItems(ui.Center).Background(p.input).TextColor(p.text).Label(a.Tr("shellLanguage"))
+	sel.Trigger.Height(36).MinWidth(200).PaddingX(12).Gap(8).Radius(tokenRadiusControl).AlignItems(ui.Center).Background(p.input).TextColor(p.text).Label(a.Tr("shellLanguage"))
 	if narrow {
 		sel.Trigger.Grow(1)
 	}
@@ -344,10 +351,10 @@ func nativeLanguageControl(c *ui.Context, m *UIModel, a ViewActions, p nativePal
 		ui.Icon(c, nativeIcons["chevron-down"]).Size(16, 16).TextColor(p.secondary)
 	})
 	sel.Popup(func(panel ui.Element) {
-		panel.Margin(6, 0, 0, 0).Padding(4).Radius(tokenRadiusControl).Background(p.raised).Border(1, p.line).Shadow(0, 12, 32, 0, ui.RGBA(0, 0, 0, 0.35))
+		panel.Margin(8, 0, 0, 0).Padding(4).Radius(tokenRadiusControl).Background(p.raised).Border(1, p.line).Shadow(tokenShadowPopover.args())
 		for _, option := range nativeLanguages {
 			title := nativeLanguageTitle(a, option.id)
-			item := sel.Item(title).Height(36).PaddingX(10).Gap(10).Radius(tokenRadiusArt).AlignItems(ui.Center).TextColor(p.text)
+			item := sel.Item(title).Height(36).PaddingX(12).Gap(8).Radius(tokenRadiusArt).AlignItems(ui.Center).TextColor(p.text)
 			if item.Highlighted() {
 				item.Background(p.hover)
 			}

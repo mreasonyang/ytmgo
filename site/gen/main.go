@@ -64,16 +64,33 @@ func main() {
 	src := flag.String("src", "site", "site source directory")
 	out := flag.String("out", "site/dist", "output directory")
 	base := flag.String("base", "https://ytmgo.kyun.si/", "absolute URL the site is served from")
+	design := flag.String("design", "design/tokens.json", "design tokens (see design/README.md)")
 	flag.Parse()
 	if !strings.HasSuffix(*base, "/") {
 		*base += "/"
 	}
-	if err := build(*src, *out, *base); err != nil {
+	if err := build(*src, *out, *base, *design); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func build(src, out, base string) error {
+func build(src, out, base, design string) error {
+	tok, err := loadTokens(design)
+	if err != nil {
+		return err
+	}
+	tokenCSS, err := tok.css()
+	if err != nil {
+		return err
+	}
+	sheet, err := os.ReadFile(filepath.Join(src, "assets", "site.css"))
+	if err != nil {
+		return err
+	}
+	if err := lintCSS(string(sheet), tokenCSS); err != nil {
+		return err
+	}
+	style := []byte(tokenCSS + "\n" + string(sheet))
 	strs := map[string]map[string]string{}
 	for _, l := range locales {
 		raw, err := os.ReadFile(filepath.Join(src, "locales", l.Code+".json"))
@@ -94,13 +111,14 @@ func build(src, out, base string) error {
 		return err
 	}
 	hashes := map[string]string{}
-	for _, name := range []string{"site.js", "boot.js", "site.css"} {
+	for _, name := range []string{"site.js", "boot.js"} {
 		data, err := os.ReadFile(filepath.Join(src, "assets", name))
 		if err != nil {
 			return err
 		}
 		hashes[name] = fmt.Sprintf("%x", sha256.Sum256(data))[:12]
 	}
+	hashes["site.css"] = fmt.Sprintf("%x", sha256.Sum256(style))[:12]
 	if err := os.RemoveAll(out); err != nil {
 		return err
 	}
@@ -161,7 +179,10 @@ func build(src, out, base string) error {
 	if err := copyDir(filepath.Join(src, "assets"), filepath.Join(out, "assets")); err != nil {
 		return err
 	}
-	return extras(out, base)
+	if err := write(filepath.Join(out, "assets", "site.css"), style); err != nil {
+		return err
+	}
+	return extras(out, base, notFoundStyle(tok))
 }
 
 // plain drops the phrase marks from a string.
@@ -186,10 +207,28 @@ func checkKeys(strs map[string]map[string]string) error {
 }
 
 // notFoundStyle is the 404 page's only style; _headers allows it by hash.
-const notFoundStyle = `body{margin:0;min-height:100vh;display:grid;place-content:center;justify-items:center;gap:20px;padding:24px;text-align:center;background:linear-gradient(#5f2a1c,#000 60%) #000;color:#fff;font:16px/1.5 system-ui,sans-serif}img{border-radius:22%}h1{margin:0;font-size:56px;line-height:1}p{margin:0;color:#b3b3b3}nav{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}a{padding:8px 16px;border-radius:999px;background:rgb(255 255 255/.1);color:#fff;text-decoration:none;font-weight:600}a:hover{background:rgb(255 255 255/.18)}`
+// It uses the same tokens as the site: the rust wash, the text roles and
+// the pill buttons.
+func notFoundStyle(t *tokens) string {
+	c := t.Color.Dark
+	return fmt.Sprintf(`body{margin:0;min-height:100vh;display:grid;place-content:center;justify-items:center;gap:20px;padding:24px;text-align:center;`+
+		`background:linear-gradient(color-mix(in srgb,%[1]s 54%%,%[2]s),%[2]s 60%%) %[2]s;color:%[3]s;font:16px/1.5 system-ui,sans-serif}`+
+		`img{border-radius:%[4]s}h1{margin:0;font-size:56px;line-height:1}p{margin:0;color:%[5]s}`+
+		`nav{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}`+
+		`a{padding:8px 16px;border-radius:999px;background:color-mix(in srgb,%[3]s 10%%,transparent);color:%[3]s;text-decoration:none;font-weight:600}a:hover{background:color-mix(in srgb,%[3]s 18%%,transparent)}`,
+		t.Tint["rust"], c["base"], c["text"], radiusString(t, "icon"), c["secondary"])
+}
+
+func radiusString(t *tokens, name string) string {
+	var s string
+	if json.Unmarshal(t.Radius[name], &s) == nil {
+		return s
+	}
+	return string(t.Radius[name]) + "px"
+}
 
 // extras writes what Cloudflare Pages expects beside the pages.
-func extras(out, base string) error {
+func extras(out, base, notFound string) error {
 	var sm strings.Builder
 	sm.WriteString(`<?xml version="1.0" encoding="UTF-8"?>` + "\n")
 	sm.WriteString(`<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">` + "\n")
@@ -204,7 +243,7 @@ func extras(out, base string) error {
 	files := map[string]string{
 		"sitemap.xml": sm.String(),
 		"robots.txt":  "User-agent: *\nAllow: /\nSitemap: " + base + "sitemap.xml\n",
-		"_headers":    headers(),
+		"_headers":    headers(notFound),
 	}
 	var links []string
 	for _, l := range locales {
@@ -212,7 +251,7 @@ func extras(out, base string) error {
 		links = append(links, fmt.Sprintf(`<a href="/%s" lang="%s">%s</a>`, l.Slug, l.Lang, l.Name))
 	}
 	files["404.html"] = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ytmGO — page not found</title><link rel="icon" href="/assets/icon-32.png" sizes="32x32">` +
-		`<style>` + notFoundStyle + `</style>` +
+		`<style>` + notFound + `</style>` +
 		`<img src="/assets/icon-180.png" alt="" width="88" height="88"><h1>404</h1>` +
 		`<p>This page isn't here.<br><span lang="zh-Hans">找不到此页面。</span> <span lang="zh-Hant">找不到此頁面。</span> <span lang="ja">このページは見つかりません。</span></p>` +
 		`<nav>` + strings.Join(links, "") + `</nav></html>` + "\n"
@@ -227,8 +266,8 @@ func extras(out, base string) error {
 // headers is Cloudflare's _headers file. The pages load only their own
 // files; the one outside request is the GitHub API for release links. The
 // inline JSON blocks are data, which script-src does not govern.
-func headers() string {
-	sum := sha256.Sum256([]byte(notFoundStyle))
+func headers(notFound string) string {
+	sum := sha256.Sum256([]byte(notFound))
 	csp := strings.Join([]string{
 		"default-src 'self'",
 		"img-src 'self' data:",

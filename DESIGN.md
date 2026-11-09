@@ -17,6 +17,13 @@ Every decision below exists to protect that model.
 
 ## 1. Design system foundations
 
+> **Superseded for future work.** The design guidebook in
+> [`design/README.md`](design/README.md), with its values in
+> [`design/tokens.json`](design/tokens.json), is the target this app will be
+> redesigned against. This section describes the app as it is today; the
+> guidebook's *Adoption* table lists where the two differ. Sections 2 and 3
+> (screens, interactions and runtime ownership) remain current.
+
 The interface follows Spotify's desktop language: a black window frame, three
 rounded near-black panels, a global bar with a centred search pill, and a
 three-zone player bar. ytmGO keeps its own accent for playback state and the

@@ -17,11 +17,11 @@ python3 -m http.server 8000 --directory site/dist
   colours in `native_style.go`). A fixed player bar, the app's player bar,
   follows the scroll, skips between tracks, and its play button pauses every
   animation. Without JavaScript the bar is hidden and everything is static.
-- Design rules live at the top of `assets/site.css`, with the reasoning in
-  `docs/audits/2026-11-08-website-design`: use the tokens (type sizes, radii,
-  spacing), one component per kind of content, coral only for the brand
-  mark, the primary action and playback, and hover effects only on things
-  that act.
+- The design comes from the guidebook in `design/README.md`. Every colour,
+  type size, radius, spacing, motion timing and app measure is generated from
+  `design/tokens.json` and prepended to `site.css` at build time; the build
+  fails if `site.css` hard-codes one (lines marked `artwork` may draw covers).
+  `go test ./site/gen/` checks this.
 - Motion shows the product or the state: the sung headline, the lyrics demo
   and the playing equalizer. Everything else only fades in once as a block
   (`.rv`, added by `site.js` only when motion is on). Reduced motion, the

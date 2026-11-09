@@ -10,6 +10,7 @@ Re-render only the card from the shipped home screen with:
 
     python3 site/tools/encode_shots.py --social
 """
+import json
 import sys
 from pathlib import Path
 
@@ -17,6 +18,15 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
+TOKENS = json.loads((ROOT.parent / "design" / "tokens.json").read_text())
+
+
+def token(hex_value: str) -> tuple[int, int, int]:
+    """An opaque colour from design/tokens.json as an RGB tuple."""
+    return tuple(int(hex_value[i:i + 2], 16) for i in (1, 3, 5))
+
+
+DARK = TOKENS["color"]["dark"]
 SHOTS = ["home", "album", "immersive", "light", "compact"]
 
 
@@ -38,7 +48,7 @@ def social(home: Path, icon: Image.Image) -> None:
     """The link-preview card, in the site's own look: the intro track's rust
     wash, the wordmark and headline, and the real home screen."""
     w, h = 1200, 630
-    tint = (176, 71, 43)
+    tint = token(TOKENS["tint"]["rust"])
     card = Image.new("RGB", (w, h), (0, 0, 0))
     wash = ImageDraw.Draw(card)
     for y in range(h):
@@ -50,12 +60,12 @@ def social(home: Path, icon: Image.Image) -> None:
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, *shot.size), 16, fill=255)
     card.paste(shot, (560, 150), mask)
     draw = ImageDraw.Draw(card)
-    draw.rounded_rectangle((559, 149, 560 + shot.width, 150 + shot.height), 16, outline=(70, 40, 34), width=1)
+    draw.rounded_rectangle((559, 149, 560 + shot.width, 150 + shot.height), 16, outline=tuple(round(c * .4) for c in tint), width=1)
     badge = icon.resize((76, 76), Image.LANCZOS)
     card.paste(badge, (64, 64), badge)
     brand = font("bricolage-grotesque.woff2", 44, [96, 720, 88])
-    draw.text((156, 102), "ytm", font=brand, fill=(255, 255, 255), anchor="lm")
-    draw.text((156 + draw.textlength("ytm", font=brand), 102), "GO", font=brand, fill=(255, 90, 79), anchor="lm")
+    draw.text((156, 102), "ytm", font=brand, fill=token(DARK["text"]), anchor="lm")
+    draw.text((156 + draw.textlength("ytm", font=brand), 102), "GO", font=brand, fill=token(DARK["accent"]), anchor="lm")
     lines = ("Your music", "deserves more than", "a browser tab")
     size = 76
     while max(draw.textlength(t, font=font("bricolage-grotesque.woff2", size, [96, 720, 88])) for t in lines) > 466:
@@ -63,10 +73,10 @@ def social(home: Path, icon: Image.Image) -> None:
     title = font("bricolage-grotesque.woff2", size, [96, 720, 88])
     y = 236
     for line in lines:
-        draw.text((62, y), line, font=title, fill=(255, 255, 255))
+        draw.text((62, y), line, font=title, fill=token(DARK["text"]))
         y += round(size * 0.98)
     mono = font("jetbrains-mono.woff2", 19, [500])
-    draw.text((64, 548), "Free · macOS · Windows · Linux", font=mono, fill=(179, 179, 179))
+    draw.text((64, 548), "Free · macOS · Windows · Linux", font=mono, fill=token(DARK["secondary"]))
     card.save(ASSETS / "social.png", optimize=True)
 
 

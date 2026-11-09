@@ -40,6 +40,23 @@ class DistributionLicenseTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "missing"):
             prepare.verify(self.folder)
 
+    def test_embedded_font_requires_its_notice(self):
+        fonts = self.folder / "fonts"
+        fonts.mkdir()
+        (fonts / "OFL.txt").write_text("synthetic font license fixture")
+        self.manifest["fonts"] = [{"name": "Display", "notice": "fonts/OFL.txt"}]
+        self.write_manifest()
+        prepare.verify(self.folder)
+        (fonts / "OFL.txt").unlink()
+        self.write_manifest()
+        with self.assertRaisesRegex(ValueError, "font notice"):
+            prepare.verify(self.folder)
+
+    def test_shipped_fonts_have_notices(self):
+        for font in prepare.FONTS:
+            self.assertTrue((prepare.ROOT / font["file"]).is_file(), font["file"])
+            self.assertIn("SIL Open Font License", (prepare.ROOT / font["notice"]).read_text())
+
     def test_corresponding_source_required_even_if_file_inventory_is_updated(self):
         self.archive.unlink()
         self.write_manifest()

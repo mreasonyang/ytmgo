@@ -53,7 +53,7 @@
 }
 :is(:lang(zh-Hans), :lang(zh-Hant), :lang(ja)) :is(h1, h2, h3, summary, .table b, .album__meta) { word-break: keep-all; overflow-wrap: break-word; }
 :is(:lang(zh-Hans), :lang(zh-Hant), :lang(ja)) :is(p, .points li, .table span, .meters dt) { line-height: 1.8; letter-spacing: .02em; }
-:is(:lang(zh-Hans), :lang(zh-Hant), :lang(ja)) :is(.hero__title, h2) { font-weight: 800; letter-spacing: 0; line-height: 1.18; }
+:is(:lang(zh-Hans), :lang(zh-Hant), :lang(ja)) :is(.hero__title, h2) { font-weight: 800; letter-spacing: 0; line-height: var(--display-leading-cjk); }
 :is(:lang(zh-Hans), :lang(zh-Hant), :lang(ja)) .mono { letter-spacing: 0; }
 .nowrap { white-space: nowrap; }
 

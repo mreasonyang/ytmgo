@@ -18,9 +18,9 @@ func Generate(raw []byte) ([]byte, error) {
 		Tint  orderedStrings               `json:"tint"`
 		Font  struct {
 			Display struct {
-				Weight            int
-				Width             int
-				Tracking, Leading float64
+				Weight                        int
+				Width                         int
+				Tracking, Leading, LeadingCJK float64
 			}
 		} `json:"font"`
 		Size   map[string]json.RawMessage `json:"size"`
@@ -80,7 +80,7 @@ func Generate(raw []byte) ([]byte, error) {
 		return nil, err
 	}
 	d := t.Font.Display
-	fmt.Fprintf(&b, "\ttokenDisplayWeight = %d\n\ttokenDisplayWidth = %d\n\ttokenDisplayTracking = %g\n\ttokenDisplayLeading = %g\n", d.Weight, d.Width, d.Tracking, d.Leading)
+	fmt.Fprintf(&b, "\ttokenDisplayWeight = %d\n\ttokenDisplayWidth = %d\n\ttokenDisplayTracking = %g\n\ttokenDisplayLeading = %g\n\ttokenDisplayLeadingCJK = %g\n", d.Weight, d.Width, d.Tracking, d.Leading, d.LeadingCJK)
 	fmt.Fprintf(&b, "\ttokenMotionFast = %d * time.Millisecond\n\ttokenMotionBase = %d * time.Millisecond\n\ttokenMotionSlow = %d * time.Millisecond\n", t.Motion.Fast, t.Motion.Base, t.Motion.Slow)
 	fmt.Fprintf(&b, "\ttokenPressScale = %g\n\ttokenGrowScale = %g\n", t.Motion.Press, t.Motion.Grow)
 	for _, k := range sorted(t.Product) {

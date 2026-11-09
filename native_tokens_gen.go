@@ -75,6 +75,7 @@ const (
 	tokenDisplayWidth           = 88
 	tokenDisplayTracking        = -0.035
 	tokenDisplayLeading         = 0.96
+	tokenDisplayLeadingCJK      = 1.18
 	tokenMotionFast             = 150 * time.Millisecond
 	tokenMotionBase             = 250 * time.Millisecond
 	tokenMotionSlow             = 700 * time.Millisecond

@@ -18,10 +18,11 @@ type tokens struct {
 	Tint map[string]string `json:"tint"`
 	Font struct {
 		Display struct {
-			Weight   int     `json:"weight"`
-			Width    int     `json:"width"`
-			Tracking float64 `json:"tracking"`
-			Leading  float64 `json:"leading"`
+			Weight     int     `json:"weight"`
+			Width      int     `json:"width"`
+			Tracking   float64 `json:"tracking"`
+			Leading    float64 `json:"leading"`
+			LeadingCJK float64 `json:"leadingCJK"`
 		} `json:"display"`
 	} `json:"font"`
 	Size    map[string]json.RawMessage `json:"size"`
@@ -123,6 +124,7 @@ func (t *tokens) css() (string, error) {
 	prop("display-width", fmt.Sprintf("%d%%", d.Width))
 	prop("display-tracking", fmt.Sprintf("%gem", d.Tracking))
 	prop("display-leading", fmt.Sprint(d.Leading))
+	prop("display-leading-cjk", fmt.Sprint(d.LeadingCJK))
 	for _, k := range sortedKeys(t.Size) {
 		var px float64
 		if json.Unmarshal(t.Size[k], &px) == nil {

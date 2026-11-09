@@ -895,7 +895,7 @@ func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, co
 				if compact {
 					size = tokenSizeH3
 				}
-				ui.Text(c, m.Page.Title).FontSize(size).FontWeight(800).LineHeight(1.15).MaxLines(2).Ellipsis("…").Role(ui.RoleHeading)
+				nativeDisplay(ui.Text(c, m.Page.Title).FontSize(size).LineHeight(nativeDisplayLeading(m.Page.Title)).MaxLines(2).Ellipsis("…").Role(ui.RoleHeading), m.Page.Title, size)
 				if m.Page.Subtitle != "" {
 					ui.Text(c, m.Page.Subtitle).TextColor(p.secondary).FontSize(tokenSizeMeta)
 				}
@@ -1131,7 +1131,7 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 	_, height := c.Size()
 	short := height < 760
 	title := func(size float32) {
-		ui.Text(c, m.Page.Title).FontSize(size).FontWeight(800).LineHeight(1.08).MaxLines(2).Ellipsis("…").Role(ui.RoleHeading)
+		nativeDisplay(ui.Text(c, m.Page.Title).FontSize(size).LineHeight(nativeDisplayLeading(m.Page.Title)).MaxLines(2).Ellipsis("…").Role(ui.RoleHeading), m.Page.Title, size)
 		if creator := strings.TrimSpace(m.Page.Creator); creator != "" && !nativeMetadataHasCreator(m.Page.Subtitle, creator) {
 			ui.Text(c, creator).FontSize(tokenSizeSmall).FontWeight(600).MaxLines(1).Ellipsis("…")
 		}
@@ -2032,7 +2032,7 @@ func nativeImmersiveTitle(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 		if compact {
 			size = tokenSizeH3
 		}
-		ui.Text(c, title).FontSize(size).FontWeight(800).LineHeight(1.1).TextAlign(ui.Center).MaxLines(2).Ellipsis("…")
+		nativeDisplay(ui.Text(c, title).FontSize(size).LineHeight(nativeDisplayLeading(title)).TextAlign(ui.Center).MaxLines(2).Ellipsis("…"), title, size)
 		ui.Text(c, artist).FontSize(tokenSizeBody).FontWeight(500).TextColor(p.secondary).TextAlign(ui.Center)
 	})
 }
@@ -2051,7 +2051,7 @@ func nativeImmersiveTitleText(m *UIModel, a ViewActions) (title, artist string) 
 // artist out of a short window.
 func nativeImmersiveTitleHeight(m *UIModel, a ViewActions, width float32) float32 {
 	title, artist := nativeImmersiveTitleText(m, a)
-	titleFont := ui.Font{Size: tokenSizeH2, Weight: 800, LineHeight: 1.1}
+	titleFont := nativeDisplayMetrics(tokenSizeH2, nativeDisplayLeading(title))
 	_, titleHeight := ui.ShapeText(title, titleFont, width).Size()
 	// A single unwrapped line has the tallest font any wrapped line uses.
 	_, titleLine := ui.ShapeText(title, titleFont, 0).Size()

@@ -255,7 +255,14 @@ largest type is a collection title.
 
 ## 6. Space and layout
 
-Space comes from one scale: **4, 8, 12, 16, 24, 32, 48, 72, 104, 144**.
+**The base unit is 4 px.** Every spatial value is a positive multiple of
+4: padding, margins, gaps, component widths and heights, icon sizes and
+their containers, and positioning offsets. Exempt: 1 px borders, hairlines
+and dividers, and shadows' blur and spread. A size computed at run time
+(an icon from its button, a cover from the window) is rounded to the grid.
+Prefer the scale **4, 8, 12, 16, 24, 32, 48, 72, 104, 144**; other
+multiples (20, 28, 40) are allowed where the scale can't fit. The app's
+design guard and the website's lint fail on an off-grid value.
 
 **Product** (from `tokens.json` → `product`):
 
@@ -317,9 +324,13 @@ destination and the primary transport glyphs. **Optical, not geometric, centring
 glyph is centred by where the eye puts its weight, between its bounding
 box and its ink's centroid. Asymmetric glyphs carry their correction in
 their path (play right of centre, the heart 1 unit low, shuffle 1.5 units
-left); a button with a leading icon takes 2 px less padding on that side;
-a chevron centres on the cap height of the text beside it, and digits and
-mixed-case wordmarks are nudged to centre their glyphs, not their line box.
+left). **Optical corrections never break the 4 px grid:** they live in a
+glyph's own geometry (its path, viewBox or clip), never in an off-grid
+padding or offset. A leading download icon's viewBox is shifted 2 units
+so its ink sits as far from the pill's edge as the label's does; digits and
+wordmarks are centred by their cap height (`text-box: trim-both cap
+alphabetic`), not their line box; a chevron is a glyph centred on the line,
+where the system font's cap height also centres.
 Check by measuring rendered ink, not by eye. Icons label actions; they
 don't decorate. Icon-only buttons always have an accessible name and a
 tooltip. The website uses icons only on actions and platform names.

@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -212,8 +214,12 @@ var (
 	rgbColor   = regexp.MustCompile(`\brgba?\(`)
 	radiusDecl = regexp.MustCompile(`border-radius:\s*([^;}]+)`)
 	// A drop shadow: an offset and a blur, not a 0 0 0 1px ring or an inset.
-	dropShadow   = regexp.MustCompile(`(inset\s+)?\b-?\d+(?:px)?\s+-?\d+px\s+\d+px`)
-	boxShadow    = regexp.MustCompile(`box-shadow:\s*([^;}]+)`)
+	dropShadow = regexp.MustCompile(`(inset\s+)?\b-?\d+(?:px)?\s+-?\d+px\s+\d+px`)
+	boxShadow  = regexp.MustCompile(`box-shadow:\s*([^;}]+)`)
+	// Spatial properties, whose px values sit on the 4 px grid. Not
+	// border-*, outline widths, shadows or type, which the grid exempts.
+	spatialDecl  = regexp.MustCompile(`(?:^|[\s;{])((?:padding|margin|inset|scroll-margin|scroll-padding)(?:-[a-z-]+)?|gap|row-gap|column-gap|width|height|min-width|min-height|max-width|max-height|top|left|right|bottom|translate|flex-basis|outline-offset)\s*:\s*([^;}]+)`)
+	pxValue      = regexp.MustCompile(`(-?\d*\.?\d+)px`)
 	fontSizeDecl = regexp.MustCompile(`font-size:\s*([^;}]+)`)
 	fontDecl     = regexp.MustCompile(`(?:^|[\s;{])font:\s*([^;}]+)`)
 	customProp   = regexp.MustCompile(`(?:^|[\s;{])(--[a-z0-9-]+)\s*:`)
@@ -232,6 +238,15 @@ func lintCSS(css string, generated string) error {
 		n := i + 1
 		if !strings.Contains(line, "artwork") && (hexColor.MatchString(line) || rgbColor.MatchString(line)) {
 			problems = append(problems, fmt.Sprintf("line %d: literal colour; use a colour role", n))
+		}
+		if !strings.Contains(line, "artwork") && !strings.HasPrefix(strings.TrimSpace(line), "@media") {
+			for _, m := range spatialDecl.FindAllStringSubmatch(line, -1) {
+				for _, v := range pxValue.FindAllStringSubmatch(m[2], -1) {
+					if f, _ := strconv.ParseFloat(v[1], 64); f != 0 && f != 1 && f != -1 && math.Mod(f, 4) != 0 {
+						problems = append(problems, fmt.Sprintf("line %d: %s %spx is off the 4 px grid", n, m[1], v[1]))
+					}
+				}
+			}
 		}
 		for _, m := range boxShadow.FindAllStringSubmatch(line, -1) {
 			for _, d := range dropShadow.FindAllStringSubmatch(m[1], -1) {

@@ -36,7 +36,8 @@ type tokens struct {
 		Press float64 `json:"press"`
 		Grow  float64 `json:"grow"`
 	} `json:"motion"`
-	Product map[string]int `json:"product"`
+	Product map[string]int             `json:"product"`
+	Shadow  map[string]json.RawMessage `json:"shadow"`
 	Brand   struct {
 		Wrap     int            `json:"wrap"`
 		WrapWide int            `json:"wrapWide"`
@@ -168,6 +169,14 @@ func (t *tokens) css() (string, error) {
 	prop("s-block", fmt.Sprintf("%dpx", br.Block))
 	prop("s-gap", fmt.Sprintf("%dpx", br.Gap))
 	prop("button", fmt.Sprintf("%dpx", br.Button))
+	// Elevations, for the dark appearance the website uses.
+	for _, k := range sortedKeys(t.Shadow) {
+		var v [3]float64
+		if json.Unmarshal(t.Shadow[k], &v) != nil {
+			continue // $comment, lightScale
+		}
+		prop("shadow-"+kebab(k), fmt.Sprintf("0 %gpx %gpx rgb(0 0 0 / %g)", v[0], v[1], v[2]))
+	}
 	b.WriteString("}\n")
 
 	block()
@@ -201,9 +210,12 @@ func (t *tokens) css() (string, error) {
 }
 
 var (
-	hexColor     = regexp.MustCompile(`#[0-9a-fA-F]{3,8}\b`)
-	rgbColor     = regexp.MustCompile(`\brgba?\(`)
-	radiusDecl   = regexp.MustCompile(`border-radius:\s*([^;}]+)`)
+	hexColor   = regexp.MustCompile(`#[0-9a-fA-F]{3,8}\b`)
+	rgbColor   = regexp.MustCompile(`\brgba?\(`)
+	radiusDecl = regexp.MustCompile(`border-radius:\s*([^;}]+)`)
+	// A drop shadow: an offset and a blur, not a 0 0 0 1px ring or an inset.
+	dropShadow   = regexp.MustCompile(`(inset\s+)?\b-?\d+(?:px)?\s+-?\d+px\s+\d+px`)
+	boxShadow    = regexp.MustCompile(`box-shadow:\s*([^;}]+)`)
 	fontSizeDecl = regexp.MustCompile(`font-size:\s*([^;}]+)`)
 	fontDecl     = regexp.MustCompile(`(?:^|[\s;{])font:\s*([^;}]+)`)
 	customProp   = regexp.MustCompile(`(?:^|[\s;{])(--[a-z0-9-]+)\s*:`)
@@ -222,6 +234,13 @@ func lintCSS(css string, generated string) error {
 		n := i + 1
 		if !strings.Contains(line, "artwork") && (hexColor.MatchString(line) || rgbColor.MatchString(line)) {
 			problems = append(problems, fmt.Sprintf("line %d: literal colour; use a colour role", n))
+		}
+		for _, m := range boxShadow.FindAllStringSubmatch(line, -1) {
+			for _, d := range dropShadow.FindAllStringSubmatch(m[1], -1) {
+				if d[1] == "" {
+					problems = append(problems, fmt.Sprintf("line %d: drop shadow %q; use a --shadow token", n, d[0]))
+				}
+			}
 		}
 		for _, m := range radiusDecl.FindAllStringSubmatch(line, -1) {
 			if v := strings.TrimSpace(m[1]); !strings.HasPrefix(v, "var(--r-") && v != "50%" && v != "0" && v != "inherit" {

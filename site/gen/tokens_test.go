@@ -39,6 +39,7 @@ func TestLintCatchesDrift(t *testing.T) {
 		"literal font size": ".a { font-size: 14px; }",
 		"literal font":      ".a { font: 700 14px/1 var(--sans); }",
 		"redefined token":   ".a { --accent: red; }",
+		"hand-made shadow":  ".a { box-shadow: 0 16px 40px var(--base); }",
 	} {
 		if lintCSS(line, generated) == nil {
 			t.Errorf("%s: %q passed the lint", name, line)
@@ -54,6 +55,8 @@ func TestLintAllowsTokensAndMarkedArtwork(t *testing.T) {
 		".a { font: 600 var(--t-meta) var(--sans); }",
 		".a { background: linear-gradient(#18143a, #f08a4b); } /* artwork: a cover */",
 		".a { --p: 0%; }",
+		".a { box-shadow: var(--shadow-popover), 0 0 0 1px var(--line); }",
+		".a { box-shadow: inset 0 0 0 1px var(--line); }",
 	} {
 		if err := lintCSS(line, generated); err != nil {
 			t.Errorf("%q: %v", line, err)

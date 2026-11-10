@@ -131,7 +131,7 @@ html:not(.js) .nav, .nav.is-scrolled { background: color-mix(in srgb, var(--base
 .lang summary::-webkit-details-marker { display: none; }
 .lang summary:hover, .lang[open] summary { color: var(--text); background: color-mix(in srgb, var(--text) 10%, transparent); }
 .lang summary svg { width: 18px; height: 18px; }
-.lang ul { position: absolute; right: 0; top: calc(100% + 8px); min-width: 180px; margin: 0; padding: 4px; list-style: none; background: var(--highlight); border-radius: var(--r-control); box-shadow: 0 16px 40px color-mix(in srgb, var(--base) 60%, transparent); }
+.lang ul { position: absolute; right: 0; top: calc(100% + 8px); min-width: 180px; margin: 0; padding: 4px; list-style: none; background: var(--raised); border-radius: var(--r-control); box-shadow: var(--shadow-popover), 0 0 0 1px var(--line); }
 .lang li a { display: flex; justify-content: space-between; padding: 10px 12px; border-radius: var(--r-art); text-decoration: none; font-size: var(--t-small); }
 .lang li a:hover { background: color-mix(in srgb, var(--text) 10%, transparent); }
 .lang li a[aria-current] { font-weight: 700; }
@@ -178,7 +178,7 @@ html:not(.js) .nav, .nav.is-scrolled { background: color-mix(in srgb, var(--base
 /* Media panels: screenshots and the lyrics panel. */
 .shot { margin-block: 0; }
 figure.shot:not([class*=wrap]) { margin-inline: 0; }
-.shot img, .lyrics { border-radius: var(--r-panel); box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 10%, transparent), 0 40px 100px -30px color-mix(in srgb, var(--base) 90%, transparent); }
+.shot img, .lyrics { border-radius: var(--r-panel); box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 10%, transparent); } /* on the black page a hairline separates; a drop shadow can't be seen */
 .shot--sticky { position: sticky; top: 96px; }
 
 /* Points: the supporting details of a section, separated by hairlines. */
@@ -207,7 +207,7 @@ figure.shot:not([class*=wrap]) { margin-inline: 0; }
 /* Tracklist: the app's album page. */
 .album { padding: 120px 0 var(--s-section); background: linear-gradient(var(--surface), var(--base) 70%); }
 .album__head { display: flex; align-items: flex-end; gap: 32px; }
-.album__cover { width: clamp(120px, 14vw, 176px); border-radius: var(--r-icon); box-shadow: 0 24px 60px color-mix(in srgb, var(--base) 60%, transparent); }
+.album__cover { width: clamp(120px, 14vw, 176px); border-radius: var(--r-icon); }
 .album__kind { font-size: var(--t-small); font-weight: 600; }
 .album__title { margin: 4px 0 10px; }
 .album__meta { color: var(--secondary); font-size: var(--t-small); }
@@ -230,11 +230,12 @@ figure.shot:not([class*=wrap]) { margin-inline: 0; }
 .tracklist .d { color: var(--secondary); }
 
 /* 02 Synced lyrics: the app's lyrics panel, playing. Click a line to seek. */
-.lyrics { position: relative; display: flex; flex-direction: column; height: 560px; padding: 20px 24px 18px; background: linear-gradient(170deg, color-mix(in srgb, var(--tint) 82%, var(--base)), color-mix(in srgb, var(--tint) 36%, var(--base))); }
+.lyrics { position: relative; display: flex; flex-direction: column; height: 560px; padding: 20px 24px 18px; background: linear-gradient(color-mix(in srgb, var(--cover-tint) 50%, transparent), transparent 360px) var(--surface); }
+.lyrics { --cover-tint: #9e6641; } /* artwork: the colour ytmGO derives from the Slow Orbit cover (artworkTint), as the app washes Now Playing */
 .lyrics__head { display: flex; gap: 8px; }
-.chip { display: inline-flex; align-items: center; height: var(--chip); padding: 0 14px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--base) 28%, transparent); font-size: var(--t-small); font-weight: 600; }
+.chip { display: inline-flex; align-items: center; height: var(--chip); padding: 0 14px; border-radius: var(--r-pill); background: var(--hover); font-size: var(--t-small); font-weight: 600; }
 .chip--on { background: var(--text); color: var(--base); }
-.lyrics__view { position: relative; flex: 1; margin: 12px 0; overflow: hidden; -webkit-mask-image: linear-gradient(transparent, var(--base) 16%, var(--base) 84%, transparent); mask-image: linear-gradient(transparent, var(--base) 16%, var(--base) 84%, transparent); }
+.lyrics__view { position: relative; flex: 1; margin: 12px 0; overflow: hidden; -webkit-mask-image: linear-gradient(transparent, var(--base) 24px, var(--base) calc(100% - 24px), transparent); mask-image: linear-gradient(transparent, var(--base) 24px, var(--base) calc(100% - 24px), transparent); }
 .lyrics__lines { position: absolute; left: 0; right: 0; top: 50%; margin: 0; padding: 0; list-style: none; transition: transform var(--d-slow) var(--ease); }
 .lyrics__lines li { padding: 9px 0; font-size: var(--t-line); line-height: 1.22; letter-spacing: -0.015em; color: color-mix(in srgb, var(--text) 34%, transparent); transform-origin: left center; transition: color var(--d-base), scale var(--d-slow) var(--ease); }
 .js .lyrics__lines li { cursor: pointer; }
@@ -322,7 +323,7 @@ figure.shot:not([class*=wrap]) { margin-inline: 0; }
 }
 .player[hidden] { display: none; }
 .player__now { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.player__art { flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: var(--r-art); background: linear-gradient(140deg, color-mix(in srgb, var(--text) 14%, transparent), color-mix(in srgb, var(--base) 38%, transparent)) var(--tint); transition: background-color var(--d-slow) var(--ease); }
+.player__art { flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: var(--r-art); background: var(--tint); transition: background-color var(--d-slow) var(--ease); }
 .player__meta { display: grid; min-width: 0; line-height: 1.35; }
 .player__meta b { overflow: hidden; font-size: var(--t-meta); font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
 .player__meta span { color: var(--secondary); font-size: var(--t-micro); }

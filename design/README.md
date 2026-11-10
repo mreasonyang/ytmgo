@@ -403,7 +403,12 @@ tooltip. The website uses icons only on actions and platform names.
 - **Title + body:** a display title, then a `lead` paragraph in
   `secondary`, no wider than 46 characters.
 - **Media panel:** a real screenshot or a live replica, radius `panel`,
-  with a hairline ring and a soft shadow. No fake window chrome.
+  with a hairline ring. No drop shadow: on the black page one can't be
+  seen, and the ring does the separating. No fake window chrome. A replica
+  follows the app's surfaces: the lyrics demo is the Now Playing panel,
+  washed from the top in its playing cover's colour (§4.4), not in its
+  section's tint. Website shadows use the elevation tokens
+  (`--shadow-*`), and only on what floats, as the language menu.
 - **Points:** supporting details, separated by hairlines, stacked beside the
   copy or in a grid beneath it. Optional `body`-size bold titles.
 - **Figures:** a display-size number over a `small` label; with a note on

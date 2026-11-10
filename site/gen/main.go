@@ -286,10 +286,7 @@ func headers(notFound string) string {
 		"  X-Frame-Options: DENY\n" +
 		"\n" +
 		"/assets/shots/*\n" +
-		"  Cache-Control: public, max-age=604800\n" +
-		"\n" +
-		"/assets/fonts/*\n" +
-		"  Cache-Control: public, max-age=2592000\n"
+		"  Cache-Control: public, max-age=604800\n"
 }
 
 func write(path string, data []byte) error {

@@ -73,10 +73,8 @@ const (
 	tokenRadiusControl          = 8
 	tokenRadiusPanel            = 12
 	tokenRadiusPill             = 999
-	tokenDisplayWeight          = 720
-	tokenDisplayWidth           = 88
-	tokenDisplayTracking        = -0.035
-	tokenDisplayLeading         = 0.96
+	tokenDisplayWeight          = 800
+	tokenDisplayLeading         = 1.05
 	tokenDisplayLeadingCJK      = 1.18
 	tokenMotionFast             = 150 * time.Millisecond
 	tokenMotionBase             = 250 * time.Millisecond

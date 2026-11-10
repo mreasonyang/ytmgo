@@ -1,53 +1,23 @@
 package main
 
-import (
-	_ "embed"
-	"log"
+import "github.com/egoist/mygo/ui"
 
-	"github.com/egoist/mygo/ui"
-)
+// Display titles use the system font, as all of ytmGO's text does
+// (design/README.md §5.1): the platform's own UI face at the display weight,
+// with its own spacing and optical sizes. ytmGO ships no typefaces.
 
-// nativeDisplayFont is the design guidebook's display face: Bricolage
-// Grotesque, Latin only, with weight (720) and width (88 %) fixed and the
-// optical-size axis kept, so each heading's size picks its own spacing as the
-// website's font-optical-sizing: auto does; its default is 32, a heading
-// size, for any renderer that doesn't size optically. It is renamed
-// "ytmGO Display" so an installed Bricolage can't stand in for it
-// (resources/fonts, SIL Open Font License 1.1, in THIRD_PARTY_NOTICES.md).
-// Its weight class is 800, the weight headings ask for, so nothing
-// synthesises bold onto outlines that are already 720. Other scripts fall
-// back to the system's own heavy weight, as the guidebook asks for CJK.
-//
-//go:embed resources/fonts/ytmgo-display.ttf
-var nativeDisplayFont []byte
-
-const nativeDisplayFamily = "ytmGO Display"
-
-func init() {
-	if err := ui.RegisterFont(nativeDisplayFont, nativeDisplayFamily); err != nil {
-		// Display titles fall back to the system font; nothing else depends on it.
-		log.Printf("display font unavailable: %v", err)
-	}
-}
-
-// nativeDisplay styles a display title. Latin takes the display face with
-// its tight tracking; CJK, which the face doesn't cover, takes the system's
-// heavy weight without tracking, as the guidebook asks.
+// nativeDisplay styles a display title.
 func nativeDisplay(t ui.Element, text string, size float32) ui.Element {
-	t.Font(nativeDisplayFamily + ", system-ui").FontWeight(800)
-	if !nativeHasCJK(text) {
-		t.LetterSpacing(size * tokenDisplayTracking)
-	}
-	return t
+	return t.FontWeight(tokenDisplayWeight)
 }
 
 // nativeDisplayMetrics is the same, for measuring a display title.
 func nativeDisplayMetrics(size, lineHeight float32) ui.Font {
-	return ui.Font{Family: nativeDisplayFamily + ", system-ui", Size: size, Weight: 800, LineHeight: lineHeight}
+	return ui.Font{Size: size, Weight: tokenDisplayWeight, LineHeight: lineHeight}
 }
 
-// nativeDisplayLeading is the guidebook's display leading for Latin, and
-// the roomier leading CJK headings need.
+// nativeDisplayLeading is the display leading for Latin, and the roomier
+// leading CJK headings need.
 func nativeDisplayLeading(text string) float32 {
 	if nativeHasCJK(text) {
 		return tokenDisplayLeadingCJK

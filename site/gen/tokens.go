@@ -19,7 +19,6 @@ type tokens struct {
 	Font struct {
 		Display struct {
 			Weight     int     `json:"weight"`
-			Width      int     `json:"width"`
 			Tracking   float64 `json:"tracking"`
 			Leading    float64 `json:"leading"`
 			LeadingCJK float64 `json:"leadingCJK"`
@@ -122,7 +121,6 @@ func (t *tokens) css() (string, error) {
 	prop("tint", rust)
 	d := t.Font.Display
 	prop("display-weight", fmt.Sprint(d.Weight))
-	prop("display-width", fmt.Sprintf("%d%%", d.Width))
 	prop("display-tracking", fmt.Sprintf("%gem", d.Tracking))
 	prop("display-leading", fmt.Sprint(d.Leading))
 	prop("display-leading-cjk", fmt.Sprint(d.LeadingCJK))

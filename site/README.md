@@ -26,9 +26,8 @@ python3 -m http.server 8000 --directory site/dist
   and the playing equalizer. Everything else only fades in once as a block
   (`.rv`, added by `site.js` only when motion is on). Reduced motion, the
   player's pause and no JavaScript all show everything in place.
-- `assets/fonts/` holds Latin subsets of Bricolage Grotesque (headings) and
-  JetBrains Mono (numbers and times), both under the SIL Open Font License
-  (texts beside them). Other scripts fall back to the system fonts.
+- Text is set in the visitor's system fonts (the platform's UI font, and its
+  monospace for numbers and times); the site ships no typefaces.
 - `locales/<locale>.json` holds the copy. `go run ./site/gen` fails if a locale
   misses or adds a key, or if the template stops using one, so the four
   languages stay in step. Keys starting with `js.` are passed to `site.js`.

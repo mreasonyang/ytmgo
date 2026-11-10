@@ -20,14 +20,6 @@ INPUTS = DOCS + ("go.mod", "go.sum", "native/account-login/Cargo.toml",
     "scripts/licensing/prepare.py", "scripts/licensing/rebuild_ffmpeg.py")
 
 
-# Fonts embedded in the app, with how each shipped file was derived.
-FONTS = (
-    {"name": "Bricolage Grotesque", "file": "resources/fonts/ytmgo-display.ttf",
-     "license": "OFL-1.1", "notice": "resources/fonts/OFL-BricolageGrotesque.txt",
-     "source": "https://github.com/ateliertriay/bricolage",
-     "modifications": "renamed ytmGO Display; weight 720 and width 88 fixed, optical size kept (12-96, default 32); Latin subset; OS/2 weight class 800"},
-)
-
 # Third-party artwork embedded in the app, with the notice each requires.
 ASSETS = (
     {"name": "Lucide icons", "license": "ISC AND MIT", "notice": "resources/notices/lucide-LICENSE.txt",
@@ -51,7 +43,7 @@ def digest(path):
 def input_checksums():
     paths = set(INPUTS)
     paths.add("scripts/licensing/upstream-notices.json")
-    for directory in ("scripts/licensing/upstream", "scripts/runtime/licenses", "resources/fonts", "resources/notices"):
+    for directory in ("scripts/licensing/upstream", "scripts/runtime/licenses", "resources/notices"):
         paths.update(p.relative_to(ROOT).as_posix() for p in (ROOT / directory).rglob("*") if p.is_file())
     return {name: digest(ROOT / name) for name in sorted(paths)}
 
@@ -195,18 +187,6 @@ def script_notices(output):
             for p in lock["packages"]]
 
 
-def font_notices(output):
-    destination = output / "fonts"
-    destination.mkdir()
-    records = []
-    for font in FONTS:
-        notice = ROOT / font["notice"]
-        if not notice.is_file() or not (ROOT / font["file"]).is_file():
-            raise LicenseError("font or font notice missing")
-        shutil.copyfile(notice, destination / notice.name)
-        records.append(dict(font, notice=f"fonts/{notice.name}", sha256=digest(ROOT / font["file"])))
-    return records
-
 def asset_notices(output):
     destination = output / "assets"
     destination.mkdir()
@@ -274,9 +254,6 @@ def verify(folder, check_inputs=False, check_staged_runtime=True):
             path = folder / record["source_archive"]
             if not path.is_file() or digest(path) != record["sha256"]:
                 raise LicenseError("corresponding source missing or changed")
-    for font in manifest.get("fonts", []):
-        if not (folder / font["notice"]).is_file():
-            raise LicenseError("font notice missing")
     for asset in manifest.get("assets", []):
         if not (folder / asset["notice"]).is_file():
             raise LicenseError("asset notice missing")
@@ -303,7 +280,6 @@ def prepare():
                     "login": rust_notices("account-login", matches[0], output),
                     "playback": rust_notices("playback-host", matches[0], output),
                     "ffmpeg": ffmpeg_source(output),
-                    "fonts": font_notices(output),
                     "assets": asset_notices(output),
                     "inputs": input_checksums()}
         manifest["sha256"] = {p.relative_to(output).as_posix(): digest(p)

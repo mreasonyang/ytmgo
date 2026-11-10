@@ -30,7 +30,7 @@ native implementation.
 The structure follows Spotify's desktop language: a black window frame,
 three rounded near-black panels, a global bar with a centred search pill, a
 library panel and a three-zone player bar. The palette, icons and theme live
-in `native_style.go`, the display face in `native_fonts.go`, layout in
+in `native_style.go`, display-title styling in `native_fonts.go` (system font only), layout in
 `native_views.go`, exercised by the MyGo software-renderer tests.
 
 ### 1.1 Native notes

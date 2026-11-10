@@ -11,29 +11,14 @@
    - Motion shows the product (lyrics) or the state (playing); everything
      else only fades in once. */
 
-@font-face {
-  font-family: "Bricolage Grotesque";
-  src: url("fonts/bricolage-grotesque.woff2") format("woff2");
-  font-weight: 200 800;
-  font-stretch: 75% 100%;
-  font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2190-2193, U+20AC, U+2122, U+2212, U+2215;
-}
-@font-face {
-  font-family: "JetBrains Mono";
-  src: url("fonts/jetbrains-mono.woff2") format("woff2");
-  font-weight: 100 800;
-  font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2190-2193, U+20AC, U+2122, U+2212, U+2215;
-}
 
 :root {
   /* Tokens (colours, type scale, radii, spacing, motion, the app's measures)
      are generated from design/tokens.json and prepended at build time. Only
      the font stacks live here, since they differ per script. */
   --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
-  --display: "Bricolage Grotesque", var(--sans);
-  --mono: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --display: var(--sans);
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, "Liberation Mono", monospace;
   interpolate-size: allow-keywords;
   color-scheme: dark;
 }
@@ -87,7 +72,7 @@ p a { text-underline-offset: 3px; }
 .skip:focus { top: 12px; }
 
 /* Display type: one cut. */
-.hero__title, h2, .lyrics__lines li { font-family: var(--display); font-weight: var(--display-weight); font-stretch: var(--display-width); font-optical-sizing: auto; }
+.hero__title, h2, .lyrics__lines li { font-family: var(--display); font-weight: var(--display-weight); }
 .hero__title, h2 { letter-spacing: var(--display-tracking); line-height: var(--display-leading); }
 h2 { font-size: var(--t-title); }
 
@@ -122,7 +107,7 @@ h2 { font-size: var(--t-title); }
 .nav { position: sticky; top: 0; z-index: 50; margin-bottom: -64px; transition: background-color var(--d-fast); }
 html:not(.js) .nav, .nav.is-scrolled { background: color-mix(in srgb, var(--base) 78%, transparent); backdrop-filter: saturate(150%) blur(18px); -webkit-backdrop-filter: saturate(150%) blur(18px); }
 .nav__inner { display: flex; align-items: center; gap: 32px; height: var(--nav); width: min(var(--wrap-wide), 100% - 32px); margin-inline: auto; }
-.brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font: var(--display-weight) var(--t-lead)/1 var(--display); font-stretch: var(--display-width); }
+.brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font: var(--display-weight) var(--t-lead)/1 var(--display); }
 .brand span { translate: 0 -2px; } /* optical: the wordmark's letters centre on the icon, not its line box */
 .brand img { border-radius: var(--r-icon); }
 .brand b, .album__title b { color: var(--accent); font-weight: inherit; }
@@ -261,7 +246,7 @@ figure.shot:not([class*=wrap]) { margin-inline: 0; }
 /* 06 Fast and light: figures at title size, labels beneath. */
 .meters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-gap); margin: 0; }
 .meters div { display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: 12px; padding-top: 20px; border-top: 1px solid var(--line); }
-.meters dd { margin: 0; font: var(--display-weight) var(--t-title)/1 var(--display); font-stretch: var(--display-width); letter-spacing: var(--display-tracking); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.meters dd { margin: 0; font: var(--display-weight) var(--t-title)/1 var(--display); letter-spacing: var(--display-tracking); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .meters dt { color: var(--secondary); font-size: var(--t-small); }
 
 /* 08 The details: the app's collection table. */
@@ -291,7 +276,7 @@ figure.shot:not([class*=wrap]) { margin-inline: 0; }
 .platform { display: flex; flex-direction: column; padding: 28px; border-radius: var(--r-panel); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); scroll-margin-top: 96px; }
 .platform header { display: flex; align-items: center; gap: 12px; }
 .platform__logo { width: 28px; height: 28px; }
-.platform h3 { font: var(--display-weight) var(--t-h3)/1 var(--display); font-stretch: var(--display-width); letter-spacing: -0.015em; }
+.platform h3 { font: var(--display-weight) var(--t-h3)/1 var(--display); letter-spacing: -0.015em; }
 .platform__badge { display: none; margin-left: auto; padding: 4px 10px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--text) 10%, transparent); color: var(--secondary); font-size: var(--t-micro); font-weight: 700; }
 .platform.is-mine .platform__badge { display: block; }
 .platform__req { margin-top: 14px; min-height: 3.2em; color: var(--secondary); font-size: var(--t-small); }

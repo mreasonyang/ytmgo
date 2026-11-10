@@ -48,8 +48,7 @@ they do, and drawn and built by ytmGO.
 - **Colour.** No Spotify Green (`#1DB954`, `#1ED760`) or any green standing
   in for it. ytmGO's colour is coral, and it means play.
 - **Type.** Not Spotify's typefaces (Circular, Spotify Mix) or lookalikes
-  chosen to resemble them. ytmGO uses the system UI font and Bricolage
-  Grotesque.
+  chosen to resemble them. ytmGO uses the system font.
 - **Marks.** Not Spotify's logo, wordmark, app icon or their shapes. ytmGO's
   mark is its coral play ring.
 - **Assets.** Not Spotify's icons, illustrations, imagery, screenshots,
@@ -64,8 +63,8 @@ copy, the FAQ and the disclaimer. Never in a way that suggests
 endorsement, partnership or that ytmGO is a Spotify product.
 
 **Where ytmGO is its own.** Coral as the one colour of play; the playing
-cover's colour leading the player (§4.4); Bricolage Grotesque display
-titles; lyrics and immersive mode as first-class views; Chinese and Japanese
+cover's colour leading the player (§4.4); a heavy system-font display
+hierarchy; lyrics and immersive mode as first-class views; Chinese and Japanese
 designed rather than fitted; and, on the website, the record. When adding
 something new, look here first: a feature should feel familiar in where it
 sits and how it behaves, and like ytmGO in how it looks.
@@ -92,7 +91,7 @@ sits and how it behaves, and like ytmGO in how it looks.
 | | Product (app) | Brand (website, social, film) |
 | --- | --- | --- |
 | Purpose | Listening, all day | First impression, one visit |
-| Type | System UI font; display face for display titles | Display face for titles, system UI font for text |
+| Type | System font; display titles at 800 | System font; display titles at 800, larger |
 | Density | Compact, 15 px text | Generous, 17 px text |
 | Motion | State changes only | State changes, one fade-in per block, the two product demonstrations |
 | Colour | Neutral chrome, art-driven washes | The same palette; whole sections washed in tints |
@@ -200,23 +199,17 @@ becomes readable by itself. Colour is never the only carrier of state.
 
 ### 5.1 Faces
 
+**ytmGO uses the system font, always.** It ships no typefaces: the app
+registers none and the website loads none.
+
 | Face | Use |
 | --- | --- |
-| **System UI** (SF Pro, Segoe UI, Noto Sans; PingFang, Microsoft YaHei/JhengHei, Hiragino) | All interface and running text |
-| **Bricolage Grotesque**, 720 weight, 88 % width, optical size following the font size, −3.5 % tracking | Display titles only: the hero, section and collection titles, big figures, lyric lines in the demo. Latin only; CJK display uses the system face at 800 |
-| **JetBrains Mono** | Numbers that line up: track numbers, durations, times, versions, code. Never sentences |
+| **System UI** (SF Pro, Segoe UI, Noto Sans; PingFang, Microsoft YaHei/JhengHei, Hiragino) | All text, display titles included. Titles are the same face at the display weight (800) and leading (1.05; 1.18 in CJK), with the platform's own spacing and optical sizes: no added tracking |
+| **System monospace** (SF Mono, Cascadia Mono, Menlo, Consolas) | Numbers that line up: track numbers, durations, times, versions, code. Never sentences |
 
-Both shipped faces are SIL Open Font License 1.1; the licence text travels
-with the files.
-
-**Optical size is part of the face.** Bricolage changes its spacing and
-detail with size: a 24 px heading set with the 96 px design looks cramped
-(about 13 % narrower, word spaces a third smaller). Let the optical size
-follow the font size: the website uses `font-optical-sizing: auto`; the
-app ships the face with its optical-size axis, which the platform's text
-stack sets from the size. Never fix it to one value for every size. A
-modified copy of the face is renamed, so an installed copy can't stand in
-for it.
+The system face reads natively on every platform, covers every script
+without fallbacks, and can't be shadowed, mis-cut or mis-licensed; what
+makes ytmGO's type its own is the scale, weight and hierarchy, not a face.
 
 ### 5.2 Scale
 
@@ -233,13 +226,13 @@ for it.
 | `title` | 32–72 | Collection title | Section titles |
 | `hero` | 54–136 | — | The one hero headline |
 
-Weights: 400 text, 600 labels, 700 headings, 800 system display. Leading:
-0.96 display, 1.2 headings, 1.35 interface, 1.6 running text (1.8 in CJK).
+Weights: 400 text, 600 labels, 700 headings, 800 display. Leading:
+1.05 display, 1.2 headings, 1.35 interface, 1.6 running text (1.8 in CJK).
 
-**Every heading at `h3` and above is a display title**, set through the
-display face: page, shelf, sheet and empty-state titles alike. Quiet labels
-(a panel's name, a title bar's) are `meta`/`body` at 600–700, never
-letter-spaced; tracking belongs to the display face alone.
+**Every heading at `h3` and above is a display title**, set at the display
+weight and leading: page, shelf, sheet and empty-state titles alike. Quiet
+labels (a panel's name, a title bar's) are `meta`/`body` at 600–700. Nothing
+is letter-spaced: the system face's own spacing is right at every size.
 
 **One giant moment per surface.** The website has one hero size; the app's
 largest type is a collection title.
@@ -255,7 +248,7 @@ largest type is a collection title.
   tracking and automatic CJK–Latin spacing.
 - Display sizes step down (`sizeCJK`): full-width glyphs are about twice as
   wide as the condensed Latin face.
-- No negative tracking, no Latin display face on CJK, no faux italics.
+- No negative tracking, no faux italics.
 - Text carries its `lang`, so each script gets its own fonts; Japanese kana
   never falls back to Chinese fonts.
 - Names stay whole: a no-break space joins "YouTube Music".
@@ -473,7 +466,7 @@ marked artwork rules.
 | Coral | Also errors, selection, Premium, open library item, every active toggle | Play only; errors `attention` with an icon, selection inverted, Premium neutral, non-playback toggles `text` with a dot |
 | Radii | 6, 8, 10, 12, 14 | `art` 4, `control` 8, `panel` 12, nested inner corners |
 | Type | Base 14; 11, 14, 16, 20, 22 in use | The scale: 12, 13, 15, 17, 22, 24, 32, title |
-| Display titles | System font 800 | Bricolage Grotesque for Latin; system heavy for CJK |
+| Display titles | System font 800, ad hoc | System font at the display weight and leading, through one helper (`nativeDisplay`) |
 | Feedback | Native defaults | Buttons press to 96 %; play controls grow 105 % |
 
 **CJK phrase marks:** adopted. The app's catalog marks its headings with

@@ -360,7 +360,7 @@ func nativePill(c *ui.Context, label string, p nativePalette, primary bool) ui.E
 	if primary {
 		b.Selected(true).Background(p.text).TextColor(p.base)
 		if b.Hovered() {
-			b.Background(p.text.Alpha(0.86))
+			b.Background(p.inverseHover)
 		}
 	} else if b.Hovered() {
 		b.Background(p.highlight)
@@ -1163,7 +1163,10 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 						columnWidth = min(float32(math.Floor(float64((inner-16*float32(groups-1))/float32(groups)))), 560)
 					}
 				}
-				shelfScroll := ui.ScrollHorizontal(c).Gap(16).PaddingY(4).Height(4*56 + 8)
+				// Shelves hang their columns and cards from the top: a row centres
+				// by default, which floats a short last column or a card with a
+				// one-line subtitle away from its neighbours.
+				shelfScroll := ui.ScrollHorizontal(c).Gap(16).PaddingY(4).Height(4*56 + 8).AlignItems(ui.Start)
 				clipped := nativeShelfViewport(c, a, shelfScroll)
 				shelfScroll.Children(func() {
 					for start := 0; start < len(shelf.Items); start += 4 {
@@ -1176,7 +1179,7 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 				})
 			default:
 				size := nativeCardArt(compact)
-				shelfScroll := ui.ScrollHorizontal(c).PaddingY(4).Height(size + 112).MarginX(-12)
+				shelfScroll := ui.ScrollHorizontal(c).PaddingY(4).Height(size + 112).MarginX(-12).AlignItems(ui.Start)
 				clipped := nativeShelfViewport(c, a, shelfScroll)
 				shelfScroll.Children(func() {
 					for j, item := range shelf.Items {
@@ -1806,7 +1809,7 @@ func nativeSeek(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 	}
 	row.Children(func() {
 		ui.Text(c, nativeTime(state.value)).Width(40).TextAlign(ui.End).FontSize(tokenSizeMicro).TextColor(p.secondary)
-		s := nativeSlider(c.Key("seek"), &state.value, max(1, m.Duration), p).Grow(1).Label(a.Tr("shellProgress")).Disabled(!enabled)
+		s := nativeSlider(c.Key("seek"), &state.value, max(1, m.Duration), p, true).Grow(1).Label(a.Tr("shellProgress")).Disabled(!enabled)
 		changed, pressed := s.Changed(), s.Pressed()
 		if changed {
 			state.dirty = true
@@ -1841,17 +1844,19 @@ func nativeSeek(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 // its radius so the thumb stays inside the control at either end.
 const nativeSliderThumb = 12
 
-func nativeSlider(c *ui.Context, value *float64, maximum float64, p nativePalette) ui.Element {
+// A playback slider (seek) turns coral under the pointer; others (volume)
+// stay text, since coral means play.
+func nativeSlider(c *ui.Context, value *float64, maximum float64, p nativePalette, playback bool) ui.Element {
 	s := ui.SliderBase(c, value, 0, maximum).Height(24).PaddingX(nativeSliderThumb / 2)
 	hovered := s.Hovered() || s.Focused() || s.Pressed()
 	fraction := float32(max(0, min(1, *value/maximum)))
 	s.Draw(func(painter *ui.Painter, r ui.Rect) {
 		track := ui.Rect{X: r.X + nativeSliderThumb/2, Y: r.Y + r.H/2 - 2, W: max(0, r.W-nativeSliderThumb), H: 4}
-		painter.Fill(track, p.text.Alpha(0.3), 2)
+		painter.Fill(track, p.track, 2)
 		fill := track
 		fill.W *= fraction
 		col := p.text
-		if hovered {
+		if hovered && playback {
 			col = p.accent
 		}
 		painter.Fill(fill, col, 2)
@@ -1878,7 +1883,7 @@ func nativeProgressLine(c *ui.Context, m *UIModel, p nativePalette) {
 	if m.Duration > 0 {
 		value = float32(max(0, min(1, m.Position/m.Duration)))
 	}
-	ui.Box(c).Height(4).Shrink(0).Margin(0, 8, 0).Radius(tokenRadiusPill).Background(p.text.Alpha(0.2)).Children(func() {
+	ui.Box(c).Height(4).Shrink(0).Margin(0, 8, 0).Radius(tokenRadiusPill).Background(p.track).Children(func() {
 		ui.Box(c).Height(4).Radius(tokenRadiusPill).WidthPercent(value * 100).Background(p.text)
 	})
 }
@@ -1895,7 +1900,7 @@ func nativeVolume(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, sho
 	}
 	if showSlider {
 		volume := m.Volume
-		s := nativeSlider(c.Key("volume"), &volume, 1, p).Width(96).Label(a.Tr("shellVolume"))
+		s := nativeSlider(c.Key("volume"), &volume, 1, p, false).Width(96).Label(a.Tr("shellVolume"))
 		if s.Changed() {
 			a.Volume(volume)
 		}
@@ -2201,7 +2206,7 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 				nativePlaybackNotice(c, m, a, p)
 			})
 		})
-		nativePanelCard(c, m, a, p).Width(panelWidth).HeightPercent(90).Background(p.base.Alpha(0.35))
+		nativePanelCard(c, m, a, p).Width(panelWidth).HeightPercent(90).Background(p.veil)
 	})
 }
 

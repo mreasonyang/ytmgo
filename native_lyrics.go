@@ -158,9 +158,13 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 				state.cueCenters = state.cueCenters[:0]
 				var first, last, current ui.Rect
 				for i, line := range m.LyricLines {
-					color := p.secondary
-					if i == active {
+					// Sung lines muted, the current one text, the rest dim.
+					color := p.dim
+					switch {
+					case i == active:
 						color = p.text
+					case i < active:
+						color = p.muted
 					}
 					if state.drag.moved && i == state.drag.selected {
 						color = p.accent

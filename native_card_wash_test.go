@@ -18,7 +18,13 @@ func wcagLuminance(c ui.Color) float64 {
 	return 0.2126*ch(c.R) + 0.7152*ch(c.G) + 0.0722*ch(c.B)
 }
 
+// wcagContrast is a's contrast on b; a translucent a is seen over b.
 func wcagContrast(a, b ui.Color) float64 {
+	if a.A < 255 {
+		opaque := a
+		opaque.A = 255
+		a = b.Mix(opaque, float32(a.A)/255)
+	}
 	la, lb := wcagLuminance(a), wcagLuminance(b)
 	return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
 }

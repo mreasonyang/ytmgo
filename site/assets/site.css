@@ -88,10 +88,10 @@ h2 { font-size: var(--t-title); }
 .btn svg { width: 20px; height: 20px; stroke-width: 2.2; }
 .btn[hidden] { display: none; }
 .btn--accent { background: var(--accent); color: var(--on-accent); }
-.btn--accent:hover { background: color-mix(in srgb, var(--accent) 88%, var(--text)); }
+.btn--accent:hover:not(:active) { transform: scale(var(--grow-scale)); } /* as the app's play controls: coral grows, never changes colour */
 .btn--light { background: var(--text); color: var(--base); }
-.btn--light:hover { background: color-mix(in srgb, var(--text) 86%, var(--base)); }
-.btn--outline { color: var(--text); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 35%, transparent); }
+.btn--light:hover { background: var(--inverse-hover); }
+.btn--outline { color: var(--text); box-shadow: inset 0 0 0 1px var(--track); }
 .btn--outline:hover { box-shadow: inset 0 0 0 1px var(--text); }
 .btn--sm { min-height: var(--pill); padding: 0 16px; }
 /* Optical alignment (design/README.md §8): a leading icon's grid has empty
@@ -103,42 +103,42 @@ h2 { font-size: var(--t-title); }
 
 /* Navigation floats over the first wash and turns solid once you scroll. */
 .nav { position: sticky; top: 0; z-index: 50; margin-bottom: -64px; transition: background-color var(--d-fast); }
-html:not(.js) .nav, .nav.is-scrolled { background: color-mix(in srgb, var(--base) 78%, transparent); backdrop-filter: saturate(150%) blur(18px); -webkit-backdrop-filter: saturate(150%) blur(18px); }
+html:not(.js) .nav, .nav.is-scrolled { background: var(--veil); backdrop-filter: saturate(150%) blur(18px); -webkit-backdrop-filter: saturate(150%) blur(18px); }
 .nav__inner { display: flex; align-items: center; gap: 32px; height: var(--nav); width: min(var(--wrap-wide), 100% - 32px); margin-inline: auto; }
 .brand { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font: var(--display-weight) var(--t-lead)/1 var(--display); }
 .brand span { text-box: trim-both cap alphabetic; } /* optical: centre the wordmark's letters, not its line box, on the icon */
 .brand img { border-radius: var(--r-icon); }
 .brand b, .album__title b { color: var(--accent); font-weight: inherit; }
 .nav__links { display: flex; gap: 24px; }
-.nav__links a, .footer nav a { color: color-mix(in srgb, var(--text) 72%, transparent); text-decoration: none; font-size: var(--t-small); font-weight: 600; transition: color var(--d-fast); }
+.nav__links a, .footer nav a { color: var(--secondary); text-decoration: none; font-size: var(--t-small); font-weight: 600; transition: color var(--d-fast); }
 .nav__links a:hover, .footer nav a:hover, .footer nav a[aria-current] { color: var(--text); }
 .nav__end { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 .js .nav__download { display: none; }
 
 .lang { position: relative; }
-.lang summary { list-style: none; display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border-radius: var(--r-pill); cursor: pointer; color: color-mix(in srgb, var(--text) 80%, transparent); font-size: var(--t-small); font-weight: 600; transition: background-color var(--d-fast), color var(--d-fast); }
+.lang summary { list-style: none; display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border-radius: var(--r-pill); cursor: pointer; color: var(--secondary); font-size: var(--t-small); font-weight: 600; transition: background-color var(--d-fast), color var(--d-fast); }
 .lang summary::-webkit-details-marker { display: none; }
-.lang summary:hover, .lang[open] summary { color: var(--text); background: color-mix(in srgb, var(--text) 10%, transparent); }
+.lang summary:hover, .lang[open] summary { color: var(--text); background: var(--hover); }
 .lang summary svg { width: 16px; height: 16px; }
 .lang ul { position: absolute; right: 0; top: calc(100% + 8px); min-width: 180px; margin: 0; padding: 4px; list-style: none; background: var(--raised); border-radius: var(--r-control); box-shadow: var(--shadow-popover), 0 0 0 1px var(--line); }
 .lang li a { display: flex; justify-content: space-between; padding: 8px 12px; border-radius: var(--r-art); text-decoration: none; font-size: var(--t-small); }
-.lang li a:hover { background: color-mix(in srgb, var(--text) 10%, transparent); }
+.lang li a:hover { background: var(--hover); }
 .lang li a[aria-current] { font-weight: 700; }
 .lang li a[aria-current]::after { content: "✓"; }
 
-/* Tracks. The wash is the app's header wash: the tint at the top, fading
-   into the black base. */
+/* Tracks. The brand's section wash (wash.brandTop, brandMid): the tint at
+   the top, fading into the black base. */
 .track { position: relative; isolation: isolate; padding: 0 0 var(--s-section); }
 .track::before {
   content: ""; position: absolute; inset: 0 0 auto; height: 720px; z-index: -1; pointer-events: none;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 78%, var(--base)) 0, color-mix(in srgb, var(--tint) 34%, var(--base)) 260px, var(--base) 100%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tint) var(--wash-brand-top), var(--base)) 0, color-mix(in srgb, var(--tint) var(--wash-brand-mid), var(--base)) 260px, var(--base) 100%);
 }
 .track__head {
   display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 0 16px; align-items: center;
-  height: 56px; margin-bottom: var(--s-block); border-bottom: 1px solid color-mix(in srgb, var(--text) 16%, transparent);
+  height: 56px; margin-bottom: var(--s-block); border-bottom: 1px solid var(--line);
   font-size: var(--t-small); font-weight: 600;
 }
-.track__n, .track__d { color: color-mix(in srgb, var(--text) 70%, transparent); }
+.track__n, .track__d { color: var(--secondary); }
 .track__n { display: flex; align-items: center; height: 16px; }
 .track__t, .tracklist .t b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; transition: color var(--d-base); }
 .track.is-playing .track__t, .tracklist a.is-playing .t b { color: var(--accent); }
@@ -167,7 +167,7 @@ html:not(.js) .nav, .nav.is-scrolled { background: color-mix(in srgb, var(--base
 /* Media panels: screenshots and the lyrics panel. */
 .shot { margin-block: 0; }
 figure.shot:not([class*=wrap]) { margin-inline: 0; }
-.shot img, .lyrics { border-radius: var(--r-panel); box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 10%, transparent); } /* on the black page a hairline separates; a drop shadow can't be seen */
+.shot img, .lyrics { border-radius: var(--r-panel); box-shadow: 0 0 0 1px var(--line); } /* on the black page a hairline separates; a drop shadow can't be seen */
 /* A screenshot's corner nests around the app's panels in it (16, 8 from the
    window's edge), drawn at the shot's scale s: it must exceed 16s by no more
    than 8s, so it steps down as the shot shrinks. A 1440 px window: */
@@ -194,13 +194,13 @@ figure.shot:not([class*=wrap]) { margin-inline: 0; }
 .track--hero .track__head { margin-bottom: 48px; }
 .hero__title { font-size: var(--t-hero); max-width: 12.5em; }
 .hero__below { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: var(--s-gap) 72px; align-items: end; margin-top: 48px; }
-.hero__lead { max-width: 54ch; color: color-mix(in srgb, var(--text) 82%, transparent); font-size: var(--t-lead); line-height: 1.55; }
+.hero__lead { max-width: 54ch; color: var(--secondary); font-size: var(--t-lead); line-height: 1.55; }
 .hero__actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px 28px; }
-.hero__note { grid-column: 1 / -1; color: color-mix(in srgb, var(--text) 60%, transparent); }
+.hero__note { grid-column: 1 / -1; color: var(--muted); }
 .shot--hero { margin-top: 80px; }
 
 /* Sung words: each word fills from dim to white, like a lyric line. */
-.w { background: linear-gradient(90deg, var(--text) 50%, color-mix(in srgb, var(--text) 28%, transparent) 50%) 100% 0 / 200% 100% no-repeat; -webkit-background-clip: text; background-clip: text; color: transparent; }
+.w { background: linear-gradient(90deg, var(--text) 50%, var(--dim) 50%) 100% 0 / 200% 100% no-repeat; -webkit-background-clip: text; background-clip: text; color: transparent; }
 .is-sung .w { animation: sing .42s linear var(--at, 0s) forwards; }
 @keyframes sing { to { background-position: 0 0; } }
 
@@ -220,7 +220,7 @@ figure.shot:not([class*=wrap]) { margin-inline: 0; }
 .tracklist__head span:last-child, .tracklist .d { justify-self: end; }
 .tracklist__head svg { width: 16px; height: 16px; }
 .tracklist a { min-height: var(--row); border-radius: var(--r-control); text-decoration: none; transition: background-color var(--d-fast); }
-.tracklist a:hover { background: color-mix(in srgb, var(--text) 8%, transparent); }
+.tracklist a:hover { background: var(--hover); }
 .tracklist a:not(.is-playing):hover .n { font-size: 0; }
 .tracklist a:not(.is-playing):hover .n::before { content: ""; width: 12px; height: 12px; background: var(--text); clip-path: polygon(8% 0, 100% 50%, 8% 100%); }
 .tracklist .n { display: flex; align-items: center; font-size: var(--t-small); color: var(--secondary); }
@@ -230,23 +230,23 @@ figure.shot:not([class*=wrap]) { margin-inline: 0; }
 .tracklist .d { color: var(--secondary); }
 
 /* 02 Synced lyrics: the app's lyrics panel, playing. Click a line to seek. */
-.lyrics { position: relative; display: flex; flex-direction: column; height: 560px; padding: 20px 24px 16px; background: linear-gradient(color-mix(in srgb, var(--cover-tint) 50%, transparent), transparent 360px) var(--surface); }
+.lyrics { position: relative; display: flex; flex-direction: column; height: 560px; padding: 20px 24px 16px; background: linear-gradient(color-mix(in srgb, var(--cover-tint) var(--wash-cover), transparent), transparent 360px) var(--surface); }
 .lyrics { --cover-tint: #9e6641; } /* artwork: the colour ytmGO derives from the Slow Orbit cover (artworkTint), as the app washes Now Playing */
 .lyrics__head { display: flex; gap: 8px; }
 .chip { display: inline-flex; align-items: center; height: var(--chip); padding: 0 12px; border-radius: var(--r-pill); background: var(--hover); font-size: var(--t-small); font-weight: 600; }
 .chip--on { background: var(--text); color: var(--base); }
 .lyrics__view { position: relative; flex: 1; margin: 12px 0; overflow: hidden; -webkit-mask-image: linear-gradient(transparent, var(--base) 24px, var(--base) calc(100% - 24px), transparent); mask-image: linear-gradient(transparent, var(--base) 24px, var(--base) calc(100% - 24px), transparent); }
 .lyrics__lines { position: absolute; left: 0; right: 0; top: 50%; margin: 0; padding: 0; list-style: none; transition: transform var(--d-slow) var(--ease); }
-.lyrics__lines li { padding: 8px 0; font-size: var(--t-line); line-height: 1.22; letter-spacing: -0.015em; color: color-mix(in srgb, var(--text) 34%, transparent); transform-origin: left center; transition: color var(--d-base), scale var(--d-slow) var(--ease); }
+.lyrics__lines li { padding: 8px 0; font-size: var(--t-line); line-height: 1.22; letter-spacing: -0.015em; color: var(--dim); transform-origin: left center; transition: color var(--d-base), scale var(--d-slow) var(--ease); }
 .js .lyrics__lines li { cursor: pointer; }
-.js .lyrics__lines li:hover { color: color-mix(in srgb, var(--text) 75%, transparent); }
-.lyrics__lines li.is-past { color: color-mix(in srgb, var(--text) 60%, transparent); }
+.js .lyrics__lines li:hover { color: var(--secondary); }
+.lyrics__lines li.is-past { color: var(--muted); }
 .lyrics__lines li.is-on { color: var(--text); scale: 1.025; }
-.lyrics__now { display: grid; grid-template-columns: 40px 1fr; grid-template-rows: auto auto; gap: 0 12px; align-items: center; padding-top: 12px; border-top: 1px solid color-mix(in srgb, var(--text) 14%, transparent); font-size: var(--t-meta); }
+.lyrics__now { display: grid; grid-template-columns: 40px 1fr; grid-template-rows: auto auto; gap: 0 12px; align-items: center; padding-top: 12px; border-top: 1px solid var(--line); font-size: var(--t-meta); }
 .lyrics__art { grid-row: span 2; width: 40px; height: 40px; border-radius: var(--r-art); background: radial-gradient(circle 6px at 50% 100%, #ffd3a0 98%, transparent) top / 100% 60% no-repeat, linear-gradient(#18143a, #5a2a5e 34%, #f08a4b 59.5%, #3a1c3e 60%, #0c0a18); } /* artwork: the Slow Orbit cover */
 .lyrics__now > span:nth-child(2) { display: grid; line-height: 1.35; }
-.lyrics__now > span:nth-child(2) span { color: color-mix(in srgb, var(--text) 70%, transparent); }
-.lyrics__bar { grid-column: 2; height: 4px; margin-top: 8px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--text) 25%, transparent); }
+.lyrics__now > span:nth-child(2) span { color: var(--secondary); }
+.lyrics__bar { grid-column: 2; height: 4px; margin-top: 8px; border-radius: var(--r-pill); background: var(--track); }
 .lyrics__bar span { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--text); transition: width var(--d-slow); }
 
 /* 05 Any window */
@@ -277,7 +277,7 @@ figure.shot:not([class*=wrap]) { margin-inline: 0; }
 .others { margin-top: 88px; border-top: 1px solid var(--line); }
 .others > summary, .faq summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px 0; cursor: pointer; font-size: var(--t-body); font-weight: 700; transition: color var(--d-fast); }
 .others > summary::-webkit-details-marker, .faq summary::-webkit-details-marker { display: none; }
-.others > summary:hover, .faq summary:hover { color: color-mix(in srgb, var(--text) 80%, transparent); }
+.others > summary:hover, .faq summary:hover { color: var(--secondary); }
 .others > summary::after, .faq summary::after { content: ""; flex: none; width: 16px; height: 16px; background: var(--secondary); mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat; transition: rotate var(--d-fast); }
 .others[open] > summary::after, .faq details[open] summary::after { rotate: 180deg; }
 .platforms { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding-bottom: 8px; }
@@ -285,7 +285,7 @@ figure.shot:not([class*=wrap]) { margin-inline: 0; }
 .platform header { display: flex; align-items: center; gap: 12px; }
 .platform__logo { width: 28px; height: 28px; }
 .platform h3 { font: var(--display-weight) var(--t-h3)/1 var(--display); letter-spacing: -0.015em; }
-.platform__badge { display: none; margin-left: auto; padding: 4px 12px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--text) 10%, transparent); color: var(--secondary); font-size: var(--t-micro); font-weight: 700; }
+.platform__badge { display: none; margin-left: auto; padding: 4px 12px; border-radius: var(--r-pill); background: var(--hover); color: var(--secondary); font-size: var(--t-micro); font-weight: 700; }
 .platform.is-mine .platform__badge { display: block; }
 .platform__req { margin-top: 12px; min-height: 3.2em; color: var(--secondary); font-size: var(--t-small); }
 .platform__buttons { display: grid; gap: 8px; margin-top: 20px; }
@@ -295,8 +295,8 @@ figure.shot:not([class*=wrap]) { margin-inline: 0; }
 .platform__note a { color: var(--secondary); }
 .cmd { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding: 4px 4px 4px 12px; border-radius: var(--r-control); background: var(--base); box-shadow: inset 0 0 0 1px var(--line); }
 .cmd code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; font: var(--t-meta)/1.8 var(--mono); color: var(--text); scrollbar-width: none; }
-.cmd__copy { flex: none; padding: 4px 12px; border: 0; border-radius: var(--r-art); background: color-mix(in srgb, var(--text) 10%, transparent); color: var(--text); font: 600 var(--t-meta) var(--sans); cursor: pointer; transition: background-color var(--d-fast); }
-.cmd__copy:hover, .cmd__copy.is-done { background: color-mix(in srgb, var(--text) 20%, transparent); }
+.cmd__copy { flex: none; padding: 4px 12px; border: 0; border-radius: var(--r-art); background: var(--hover); color: var(--text); font: 600 var(--t-meta) var(--sans); cursor: pointer; transition: background-color var(--d-fast); }
+.cmd__copy:hover, .cmd__copy.is-done { background: var(--press); }
 
 /* FAQ */
 .faq { padding: var(--s-section) 0; border-top: 1px solid var(--line); }
@@ -318,7 +318,7 @@ figure.shot:not([class*=wrap]) { margin-inline: 0; }
 .player {
   position: fixed; inset: auto 0 0; z-index: 60; height: var(--player);
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 600px) minmax(0, 1fr); align-items: center; gap: 16px;
-  padding: 0 16px; background: var(--base); border-top: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+  padding: 0 16px; background: var(--base); border-top: 1px solid var(--line);
 }
 .player[hidden] { display: none; }
 .player__now { display: flex; align-items: center; gap: 12px; min-width: 0; }

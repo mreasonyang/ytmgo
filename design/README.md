@@ -117,14 +117,27 @@ dark only.
 | `input` | `#242424` | `#ececee` | Secondary pills, segmented tracks |
 | `highlight` | `#2a2a2a` | `#e1e1e4` | Hovered round buttons, menus, placeholders |
 | `text` | `#ffffff` | `#121212` | Titles, primary labels, inverted buttons |
-| `secondary` | `#b3b3b3` | `#5a5a5f` | Artists, body copy, meta |
-| `muted` | `#8f8f8f` | `#6b6b70` | Notes, placeholders, table headings |
+| `secondary` | 70 % white (`#b3b3b3` on black) | `#5a5a5f` | Artists, body copy, lead paragraphs, links, meta |
+| `muted` | 56 % white (`#8f8f8f` on black) | `#6b6b70` | Notes, placeholders, table headings, sung lyric lines |
+| `dim` | 34 % white | 34 % `text` | Upcoming lyric lines and unsung words only (decorative, §4.5) |
 | `accent` | `#ff5a4f` | `#e8382d` | Play: fills and glyphs |
 | `accentText` | `#ff5a4f` | `#b8261c` | Play: text (≥ 4.5:1 on every surface) |
 | `onAccent` | `#000000` | `#ffffff` | Content on an accent fill |
 | `attention` | `#ffb35c` | `#8a5300` | Errors and warnings, always with an icon and words |
-| `line` / `hover` / `press` | 10 % / 7 % / 12 % white | 10 % / 5 % / 9 % black | Hairlines and interaction washes |
-| `track` | `#4d4d4d` | `#c9c9cd` | Unfilled progress and sliders |
+| `line` | 10 % white | 10 % black | Hairlines, dividers, rings around images |
+| `hover` / `press` | 7 % / 12 % white | 5 % / 9 % black | Quiet fills at rest / hovered; hovered rows |
+| `track` | 30 % white | 21 % black | Unfilled progress and sliders, outline buttons |
+| `selection` | 20 % white | 20 % `text` | Selected text |
+| `inverseHover` | `#dbdbdb` | `#303030` | A hovered inverted button |
+| `scrim` | 60 % black | 40 % black | Dims the window behind a dialog |
+| `veil` | 60 % `base` | 60 % `base` | A surface over moving content: the sticky nav (with blur), the immersive card over the cover |
+
+Dark text roles are white made translucent, so on a tint or a cover's wash
+they take its colour; on black they are exactly the greys in brackets.
+These are the only colours: no other share of a role, mixed by hand, is
+allowed (the site's lint and the app's design test reject one). The
+exceptions are the washes, whose strengths are tokens (`wash`), and
+artwork.
 
 ### 4.2 What coral means
 
@@ -154,8 +167,11 @@ hash so a page always keeps its tint: blue `#2d46b9`, violet `#8d67ab`, teal
 `#1e7a6b`, rust `#b0472b`, steel `#477d95`, brown `#7d4b32`, slate `#5179a1`
 and raspberry `#a13d63`.
 
-A wash runs from the tint at the top (78 % tint over black) through 34 % at
-260 px into the background. Pages with artwork wash the same way in their
+In the app a page's wash runs from the tint at `wash.dark` (50 %; light
+32 %) at the top to nothing. The website's sections are the brand's, and
+richer: the tint at `wash.brandTop` (70 %) over black, through
+`wash.brandMid` (34 %) at 260 px into the background. 70 % is the most
+that keeps `secondary` text at 4.5:1 at the top on every tint. Pages with artwork wash the same way in their
 cover's colour (§4.4), never in a blurred copy of the cover, which turns
 blotchy; a cover without colour leaves the page neutral. Only immersive
 mode, where the cover is the subject, fills the view with its blur. A wash
@@ -184,7 +200,7 @@ colour (vivid, bright pixels outweigh large dark ones; near-black, near-white
 and grey don't count), normalised to one brightness and a bounded saturation
 so text stays readable on any cover. A cover without colour lends none, and
 the chrome stays neutral. Washes are 50 % (dark) or 32 % (light) of the tint,
-the same strength as a page's header wash (`wash` in the tokens); the player
+the same strength as an app page's header wash (`wash` in the tokens); the player
 bar's is 70 % of that. Coral is never replaced by a cover's colour:
 play stays coral.
 
@@ -381,8 +397,9 @@ tooltip. The website uses icons only on actions and platform names.
 
 - **Hover only on what acts.** Rows and cards that open something get the
   `hover` wash; text and tables that don't, get nothing.
-- **Hover response by kind:** capsule buttons change colour; round play
-  controls grow to 105 %; icon buttons go from `secondary` to `text`;
+- **Hover response by kind:** capsule buttons change colour (to
+  `inverseHover`, `highlight` or `press`); play controls, round or the
+  coral capsule, grow to 105 %, as coral never shifts; icon buttons go from `secondary` to `text`;
   rows wash. Every **button** (capsules, chips, icon and play buttons)
   presses to 96 %; rows and cards answer with the `press` wash, since a
   whole row shrinking would jump.
@@ -434,8 +451,8 @@ tooltip. The website uses icons only on actions and platform names.
   video keeps its size. The reader's choice and reading position survive
   switching.
 - **Chips** 32, capsule, `hover` fill, inverted when selected. **Pills** 36.
-- **Lyrics:** the current line is `text` and slightly larger, past lines
-  60 %, future lines 34 %; it follows playback until you scroll, then offers
+- **Lyrics:** the current line is `text` and slightly larger, sung lines
+  `muted`, upcoming lines `dim`; it follows playback until you scroll, then offers
   "Follow playback". Lines scrolled past the view's top or bottom fade out
   over 24 rather than being cut, and an edge fades only while more lies
   beyond it.
@@ -502,7 +519,8 @@ marked artwork rules.
 | Area | Before | Now |
 | --- | --- | --- |
 | Tokens | Hand-written in `native_style.go` | Generated from `tokens.json` (`native_tokens_gen.go`), checked by a test |
-| Coral | Also errors, selection, Premium, open library item, every active toggle | Play only; errors `attention` with an icon, selection inverted, Premium neutral, non-playback toggles `text` with a dot |
+| Coral | Also errors, selection, Premium, open library item, every active toggle, the hovered volume slider | Play only; errors `attention` with an icon, selection inverted, Premium neutral, non-playback toggles `text` with a dot |
+| Colour shares | Text at 20, 30, 86 %, base at 35 %, coral at 25 %, made in the views | Roles only: `track`, `selection`, `inverseHover`, `veil`, `dim`; lyric lines `muted` / `dim` |
 | Radii | 4, 5, 6, 8, 10, 12, 14 | The scale 8, 12, 16, 24: `art` 8, `control` 12, `panel` 16, `sheet` 24, every nest smaller inside |
 | Type | Base 14; 11, 14, 16, 20, 22 in use | The scale: 12, 13, 15, 17, 22, 24, 32, title |
 | Display titles | System font 800, ad hoc | System font at the display weight and leading, through one helper (`nativeDisplay`) |

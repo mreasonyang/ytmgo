@@ -95,6 +95,12 @@ func TestNativeViewsUseDesignTokens(t *testing.T) {
 			switch {
 			case pkg != nil && pkg.Name == "ui" && (sel.Sel.Name == "Hex" || sel.Sel.Name == "RGBA"):
 				report("literal colour ui.%s; use a palette role", sel.Sel.Name)
+			case (sel.Sel.Name == "Alpha" || sel.Sel.Name == "Mix") && len(call.Args) >= 1:
+				// Translucent colours are roles (line, hover, track, veil…);
+				// only fading to nothing and the tokens' washes are computed.
+				if v, ok := literal(call.Args[len(call.Args)-1]); ok && v != 0 {
+					report("%s(%g); use a colour role", sel.Sel.Name, v)
+				}
 			case sel.Sel.Name == "Radius" && len(call.Args) == 1:
 				if v, ok := literal(call.Args[0]); ok && v != 0 {
 					report("Radius(%g); use a radius token", v)

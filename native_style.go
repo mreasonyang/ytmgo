@@ -21,9 +21,14 @@ type nativePalette struct {
 	attention ui.Color
 	// track is the unfilled part of progress bars and sliders.
 	track ui.Color
-	// scrim dims the window behind a dialog.
-	scrim ui.Color
-	dark  bool
+	// scrim dims the window behind a dialog; veil is base, translucent, for a
+	// surface over artwork.
+	scrim, veil ui.Color
+	// dim is upcoming lyric lines: decorative, readable once they're sung.
+	dim ui.Color
+	// selection is selected text; inverseHover a hovered inverted button.
+	selection, inverseHover ui.Color
+	dark                    bool
 }
 
 // nativeShadow is an elevation from the tokens: a black shadow straight
@@ -81,7 +86,7 @@ func nativeTheme(dark bool) *ui.Theme {
 	t.AccentHover = p.text
 	t.AccentPressed = p.text
 	t.AccentText = p.base
-	t.Selection = p.text.Alpha(0.2)
+	t.Selection = p.selection
 	t.Focus = p.text
 	t.FontSize = tokenSizeSmall
 	t.Radius = tokenRadiusControl

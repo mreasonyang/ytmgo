@@ -111,7 +111,7 @@ func nativeLyricsDragPreview(c *ui.Context, scroll ui.Element, s *nativeLyricsFo
 		return
 	}
 	scroll.Draw(func(painter *ui.Painter, r ui.Rect) {
-		painter.Fill(ui.Rect{X: r.X, Y: r.Y + s.viewportCenter, W: r.W, H: 1}, p.accent.Alpha(0.25), 0)
+		painter.Fill(ui.Rect{X: r.X, Y: r.Y + s.viewportCenter, W: r.W, H: 1}, p.accent, 0)
 	})
 	ui.Overlay(c, func() {
 		text := nativeTime(m.LyricLines[s.drag.selected].Start.Seconds()) + " · " + a.Tr("nativeLyricsReleaseToSeek")

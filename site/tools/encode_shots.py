@@ -28,6 +28,8 @@ def token(hex_value: str) -> tuple[int, int, int]:
 
 
 DARK = TOKENS["color"]["dark"]
+# The brand wash (design/README.md §4.3): the tint at the top, then mid.
+TOP, MID = TOKENS["wash"]["brandTop"], TOKENS["wash"]["brandMid"]
 SHOTS = ["home", "album", "immersive", "light", "compact"]
 
 
@@ -62,7 +64,7 @@ def social(home: Path, icon: Image.Image) -> None:
     card = Image.new("RGB", (w, h), (0, 0, 0))
     wash = ImageDraw.Draw(card)
     for y in range(h):
-        k = max(0.0, 0.78 - 0.78 * y / (h * 0.9))
+        k = max(0.0, TOP - TOP * y / (h * 0.9))
         wash.line([(0, y), (w, y)], fill=tuple(round(c * k) for c in tint))
     shot = Image.open(home).convert("RGB")
     shot = shot.resize((760, 760 * shot.height // shot.width), Image.LANCZOS)
@@ -73,7 +75,7 @@ def social(home: Path, icon: Image.Image) -> None:
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, *shot.size), corner, fill=255)
     card.paste(shot, (560, 150), mask)
     draw = ImageDraw.Draw(card)
-    draw.rounded_rectangle((559, 149, 560 + shot.width, 150 + shot.height), corner + 1, outline=tuple(round(c * .4) for c in tint), width=1)
+    draw.rounded_rectangle((559, 149, 560 + shot.width, 150 + shot.height), corner + 1, outline=tuple(round(c * MID) for c in tint), width=1)
     badge = icon.resize((76, 76), Image.LANCZOS)
     card.paste(badge, (64, 64), badge)
     brand = font("sans-serif", 44, 800)

@@ -27,6 +27,7 @@ import (
 	"html/template"
 	"io/fs"
 	"log"
+	"math"
 	"os"
 	"path/filepath"
 	"slices"
@@ -58,6 +59,7 @@ type page struct {
 	ScriptHash string // changes the script URL whenever its contents change
 	BootHash   string // the same for boot.js
 	StyleHash  string // and for the stylesheet
+	ThemeColor string // the base colour role, for the browser's chrome
 }
 
 func main() {
@@ -159,7 +161,7 @@ func build(src, out, base, design string) error {
 		}
 		root := strings.Repeat("../", strings.Count(l.Slug, "/"))
 		var buf bytes.Buffer
-		if err := t.Execute(&buf, page{Locale: l, Locales: locales, Root: root, Base: base, Year: time.Now().Year(), JS: js, ScriptHash: hashes["site.js"], BootHash: hashes["boot.js"], StyleHash: hashes["site.css"]}); err != nil {
+		if err := t.Execute(&buf, page{Locale: l, Locales: locales, Root: root, Base: base, Year: time.Now().Year(), JS: js, ScriptHash: hashes["site.js"], BootHash: hashes["boot.js"], StyleHash: hashes["site.css"], ThemeColor: tok.Color.Dark["base"]}); err != nil {
 			return fmt.Errorf("%s: %w", l.Code, err)
 		}
 		if err := write(filepath.Join(out, l.Slug, "index.html"), buf.Bytes()); err != nil {
@@ -212,11 +214,11 @@ func checkKeys(strs map[string]map[string]string) error {
 func notFoundStyle(t *tokens) string {
 	c := t.Color.Dark
 	return fmt.Sprintf(`body{margin:0;min-height:100vh;display:grid;place-content:center;justify-items:center;gap:20px;padding:24px;text-align:center;`+
-		`background:linear-gradient(color-mix(in srgb,%[1]s 54%%,%[2]s),%[2]s 60%%) %[2]s;color:%[3]s;font:16px/1.5 system-ui,sans-serif}`+
+		`background:linear-gradient(color-mix(in srgb,%[1]s %[6]g%%,%[2]s),%[2]s 60%%) %[2]s;color:%[3]s;font:16px/1.5 system-ui,sans-serif}`+
 		`img{border-radius:%[4]s}h1{margin:0;font-size:56px;line-height:1}p{margin:0;color:%[5]s}`+
 		`nav{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}`+
-		`a{padding:8px 16px;border-radius:999px;background:color-mix(in srgb,%[3]s 10%%,transparent);color:%[3]s;text-decoration:none;font-weight:600}a:hover{background:color-mix(in srgb,%[3]s 18%%,transparent)}`,
-		t.Tint["rust"], c["base"], c["text"], radiusString(t, "icon"), c["secondary"])
+		`a{padding:8px 16px;border-radius:999px;background:%[7]s;color:%[3]s;text-decoration:none;font-weight:600}a:hover{background:%[8]s}`,
+		t.Tint["rust"], c["base"], c["text"], radiusString(t, "icon"), c["secondary"], math.Round(t.Wash.BrandTop*100), c["hover"], c["press"])
 }
 
 func radiusString(t *tokens, name string) string {

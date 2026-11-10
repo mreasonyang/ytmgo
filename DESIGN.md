@@ -64,7 +64,8 @@ in `native_style.go`, display-title styling in `native_fonts.go` (system font on
   player 60 and tab bar 64, targets 32 and 44 compact) come from the
   tokens' `product` measures.
 - **No literal styling.** `TestNativeViewsUseDesignTokens` parses the view
-  code and fails on a literal colour, corner, type size or shadow, or on
+  code and fails on a literal colour or a hand-made share of one (`Alpha`,
+  `Mix`; translucent colours are roles), corner, type size or shadow, or on
   any literal spatial value off the 4 px grid, in every file of the package.
   Corners are radius tokens (8, 12, 16, 24; `TestRadiusScale`) or half a
   size, including those passed to the artwork helpers, and nest smaller

@@ -26,6 +26,11 @@ type tokens struct {
 			LeadingCJK float64 `json:"leadingCJK"`
 		} `json:"display"`
 	} `json:"font"`
+	Wash struct {
+		Dark     float64 `json:"dark"`
+		BrandTop float64 `json:"brandTop"`
+		BrandMid float64 `json:"brandMid"`
+	} `json:"wash"`
 	Size    map[string]json.RawMessage `json:"size"`
 	SizeCJK map[string]fluid           `json:"sizeCJK"`
 	Radius  map[string]json.RawMessage `json:"radius"`
@@ -121,6 +126,10 @@ func (t *tokens) css() (string, error) {
 		return "", fmt.Errorf("tokens: the default tint rust is missing")
 	}
 	prop("tint", rust)
+	// Washes: a cover's colour (as the app's) and the brand's section tints.
+	prop("wash-cover", fmt.Sprintf("%g%%", math.Round(t.Wash.Dark*100)))
+	prop("wash-brand-top", fmt.Sprintf("%g%%", math.Round(t.Wash.BrandTop*100)))
+	prop("wash-brand-mid", fmt.Sprintf("%g%%", math.Round(t.Wash.BrandMid*100)))
 	d := t.Font.Display
 	prop("display-weight", fmt.Sprint(d.Weight))
 	prop("display-tracking", fmt.Sprintf("%gem", d.Tracking))
@@ -223,6 +232,8 @@ var (
 	fontSizeDecl = regexp.MustCompile(`font-size:\s*([^;}]+)`)
 	fontDecl     = regexp.MustCompile(`(?:^|[\s;{])font:\s*([^;}]+)`)
 	customProp   = regexp.MustCompile(`(?:^|[\s;{])(--[a-z0-9-]+)\s*:`)
+	// A colour mixed by hand: color-mix with a literal share.
+	adHocMix = regexp.MustCompile(`color-mix\((?:[^()]|\([^()]*\))*?\d+(?:\.\d+)?%`)
 )
 
 // lintCSS keeps site.css on the tokens: colours, radii and font sizes come
@@ -238,6 +249,9 @@ func lintCSS(css string, generated string) error {
 		n := i + 1
 		if !strings.Contains(line, "artwork") && (hexColor.MatchString(line) || rgbColor.MatchString(line)) {
 			problems = append(problems, fmt.Sprintf("line %d: literal colour; use a colour role", n))
+		}
+		if !strings.Contains(line, "artwork") && adHocMix.MatchString(line) {
+			problems = append(problems, fmt.Sprintf("line %d: colour mixed by hand; use a colour role or a wash token", n))
 		}
 		if !strings.Contains(line, "artwork") && !strings.HasPrefix(strings.TrimSpace(line), "@media") {
 			for _, m := range spatialDecl.FindAllStringSubmatch(line, -1) {

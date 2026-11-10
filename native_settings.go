@@ -54,7 +54,7 @@ func nativeSheet(c *ui.Context, open *bool, scroll *ui.ScrollState, title string
 		}
 		panel.Children(func() {
 			ui.Row(c).Shrink(0).Padding(24, 16, 12, 24).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, title).FontSize(titleSize).FontWeight(800).Grow(1).MinWidth(0).MaxLines(1).Ellipsis("…")
+				nativeDisplay(ui.Text(c, title).FontSize(titleSize).Grow(1).MinWidth(0).MaxLines(1).Ellipsis("…"), title, titleSize)
 				if nativeIconButton(c, "close", a.Tr("shellClose"), p, false, 36).Clicked() {
 					*open = false
 				}

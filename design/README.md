@@ -221,6 +221,11 @@ for it.
 Weights: 400 text, 600 labels, 700 headings, 800 system display. Leading:
 0.96 display, 1.2 headings, 1.35 interface, 1.6 running text (1.8 in CJK).
 
+**Every heading at `h3` and above is a display title**, set through the
+display face: page, shelf, sheet and empty-state titles alike. Quiet labels
+(a panel's name, a title bar's) are `meta`/`body` at 600–700, never
+letter-spaced; tracking belongs to the display face alone.
+
 **One giant moment per surface.** The website has one hero size; the app's
 largest type is a collection title.
 
@@ -341,7 +346,9 @@ tooltip. The website uses icons only on actions and platform names.
 
 **Product:**
 - **Track row:** 56 high, radius `control`, 40 art (`art` radius). Number,
-  title over artist, album, duration in mono. The number becomes a play glyph
+  title over artist, album, duration in mono. The playing indicator has its
+  own slot, so columns line up whether a row plays or not, and a list whose
+  rows all come from one album (an album's own page) drops the Album column. The number becomes a play glyph
   on hover and an equalizer while playing; the title turns coral.
 - **Library row:** 64 high, 48 art (round for artists), title over
   "kind · owner". The open collection is washed and its title is `text`

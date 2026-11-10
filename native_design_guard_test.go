@@ -34,6 +34,25 @@ func TestNativeViewsUseDesignTokens(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		// Display-size text must be styled by nativeDisplay: note the
+		// spans of its first arguments.
+		var display [][2]token.Pos
+		ast.Inspect(file, func(n ast.Node) bool {
+			if call, ok := n.(*ast.CallExpr); ok {
+				if id, ok := call.Fun.(*ast.Ident); ok && id.Name == "nativeDisplay" && len(call.Args) > 0 {
+					display = append(display, [2]token.Pos{call.Args[0].Pos(), call.Args[0].End()})
+				}
+			}
+			return true
+		})
+		inDisplay := func(pos token.Pos) bool {
+			for _, d := range display {
+				if pos >= d[0] && pos < d[1] {
+					return true
+				}
+			}
+			return false
+		}
 		ast.Inspect(file, func(n ast.Node) bool {
 			call, ok := n.(*ast.CallExpr)
 			if !ok {
@@ -66,6 +85,13 @@ func TestNativeViewsUseDesignTokens(t *testing.T) {
 			case sel.Sel.Name == "FontSize" && len(call.Args) == 1:
 				if v, ok := literal(call.Args[0]); ok {
 					report("FontSize(%g); use a type token", v)
+				}
+				if id, ok := call.Args[0].(*ast.Ident); ok && (id.Name == "tokenSizeH2" || id.Name == "tokenSizeH3") && !inDisplay(call.Pos()) {
+					report("%s heading outside nativeDisplay; headings use the display face", id.Name)
+				}
+			case sel.Sel.Name == "LetterSpacing":
+				if _, ok := literal(call.Args[0]); ok {
+					report("literal LetterSpacing; tracking belongs to the display face")
 				}
 			case sel.Sel.Name == "Shadow" && len(call.Args) != 1:
 				report("Shadow with literal values; use a tokenShadow elevation")

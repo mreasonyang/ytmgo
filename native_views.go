@@ -1017,12 +1017,12 @@ func nativePageBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, c
 		ui.Column(c).Padding(48, 16).Gap(12).AlignItems(ui.Center).Children(func() {
 			if m.Route == "library" && m.SignedIn {
 				ui.Icon(c, nativeIcons["library"]).Size(48, 48).TextColor(p.muted)
-				ui.Text(c, a.Tr("nativeLibraryEmptyTitle")).FontSize(tokenSizeH3).FontWeight(700)
+				nativeDisplay(ui.Text(c, a.Tr("nativeLibraryEmptyTitle")).FontSize(tokenSizeH3), a.Tr("nativeLibraryEmptyTitle"), tokenSizeH3)
 				ui.Text(c, a.Tr("nativeLibraryEmptyBody")).TextColor(p.secondary)
 				return
 			}
 			ui.Icon(c, nativeIcons["search"]).Size(48, 48).TextColor(p.muted)
-			ui.Text(c, a.Tr("nativeEmptyResults")).FontSize(tokenSizeH3).FontWeight(700)
+			nativeDisplay(ui.Text(c, a.Tr("nativeEmptyResults")).FontSize(tokenSizeH3), a.Tr("nativeEmptyResults"), tokenSizeH3)
 			ui.Text(c, a.Tr("shellSearchPlaceholder")).TextColor(p.secondary)
 		})
 	}
@@ -1062,7 +1062,7 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 			if m.LibraryCached {
 				body = "nativeLibraryReconnectBody"
 			}
-			ui.Text(c, a.Tr(title)).FontSize(tokenSizeH3).FontWeight(800)
+			nativeDisplay(ui.Text(c, a.Tr(title)).FontSize(tokenSizeH3), a.Tr(title), tokenSizeH3)
 			ui.Text(c, a.Tr(body)).TextColor(p.secondary)
 			if m.AccountRestore == accountRestoreSlow {
 				ui.Text(c, a.Tr("nativeAccountRestoreSlow")).TextColor(p.secondary)
@@ -1128,7 +1128,7 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 					for start := 0; start < len(shelf.Items); start += 4 {
 						ui.Column(c.Key(fmt.Sprintf("songs-%d", start))).Width(columnWidth).Shrink(0).Children(func() {
 							for j := start; j < min(start+4, len(shelf.Items)); j++ {
-								nativeTrack(c.Key(fmt.Sprintf("song-%d", j)), shelf.Items[j], j, m, clipped, p, nativeTrackRow, true)
+								nativeTrack(c.Key(fmt.Sprintf("song-%d", j)), shelf.Items[j], j, m, clipped, p, nativeTrackRow, true, false)
 							}
 						})
 					}
@@ -1448,12 +1448,15 @@ func nativeTrackList(c *ui.Context, items []catalog.Item, m *UIModel, a ViewActi
 	if numbered {
 		mode = nativeTrackNumbered
 	}
+	album := !compact && !nativeOneAlbum(items)
 	ui.Column(c).Children(func() {
 		if numbered && !compact {
 			ui.Row(c).Height(36).PaddingX(16).Gap(16).AlignItems(ui.Center).TextColor(p.secondary).Children(func() {
 				ui.Text(c, "#").Width(24).Shrink(0).FontSize(tokenSizeMeta).TextAlign(ui.Center)
 				ui.Text(c, a.Tr("shellColumnTitle")).Grow(1).Basis(0).MinWidth(0).FontSize(tokenSizeMeta).MaxLines(1).Ellipsis("…")
-				ui.Text(c, a.Tr("shellColumnAlbum")).Grow(0.75).Basis(0).MinWidth(0).FontSize(tokenSizeMeta).MaxLines(1).Ellipsis("…")
+				if album {
+					ui.Text(c, a.Tr("shellColumnAlbum")).Grow(0.75).Basis(0).MinWidth(0).FontSize(tokenSizeMeta).MaxLines(1).Ellipsis("…")
+				}
 				ui.Row(c).Width(48).Shrink(0).Justify(ui.End).Label(a.Tr("shellColumnDuration")).Children(func() {
 					ui.Icon(c, nativeIcons["clock"]).Size(16, 16)
 				})
@@ -1461,12 +1464,26 @@ func nativeTrackList(c *ui.Context, items []catalog.Item, m *UIModel, a ViewActi
 			ui.Box(c).Height(1).Margin(0, 0, 8).Background(p.line)
 		}
 		for j, item := range items {
-			nativeTrack(c.Key(fmt.Sprintf("list-%d", j)), item, offset+j, m, a, p, mode, compact)
+			nativeTrack(c.Key(fmt.Sprintf("list-%d", j)), item, offset+j, m, a, p, mode, compact, album)
 		}
 	})
 }
 
-func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a ViewActions, p nativePalette, mode nativeTrackMode, compact bool) {
+// nativeOneAlbum reports whether every row comes from the same album, as on
+// an album's own page, where an Album column would repeat its title.
+func nativeOneAlbum(items []catalog.Item) bool {
+	if len(items) == 0 || items[0].Album == "" {
+		return false
+	}
+	for _, item := range items[1:] {
+		if item.Album != items[0].Album {
+			return false
+		}
+	}
+	return true
+}
+
+func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a ViewActions, p nativePalette, mode nativeTrackMode, compact, album bool) {
 	playing := item.ID != "" && item.ID == m.Current.ID
 	pad := float32(16)
 	if compact {
@@ -1517,11 +1534,17 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 				}
 			})
 		})
-		if !compact && mode != nativeTrackQueue {
+		if album {
 			ui.Text(c, item.Album).Grow(0.75).Basis(0).MinWidth(0).FontSize(tokenSizeMeta).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
 		}
-		if playing && mode != nativeTrackNumbered {
-			ui.Icon(c, nativeIcons["volume"]).Size(16, 16).TextColor(p.accent)
+		if mode != nativeTrackNumbered {
+			// A fixed slot, filled while playing, so the playing row's columns
+			// line up with the rest.
+			ui.Box(c).Size(16, 16).Shrink(0).Children(func() {
+				if playing {
+					ui.Icon(c, nativeIcons["volume"]).Size(16, 16).TextColor(p.accent)
+				}
+			})
 		}
 		if item.Duration > 0 || mode == nativeTrackNumbered {
 			duration := ""
@@ -1886,7 +1909,7 @@ func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 		if m.Current.ID == "" {
 			ui.Column(c).Grow(1).Gap(16).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
 				nativeArtwork(c, "", 112, 8, a, p)
-				ui.Text(c, a.Tr("shellEmptyTitle")).FontSize(tokenSizeH3).FontWeight(800)
+				nativeDisplay(ui.Text(c, a.Tr("shellEmptyTitle")).FontSize(tokenSizeH3), a.Tr("shellEmptyTitle"), tokenSizeH3)
 				ui.Text(c, a.TrArgs("shellEmptyBody", map[string]any{"shortcut": "⌘ K"})).TextColor(p.secondary).TextAlign(ui.Center)
 			})
 			return
@@ -2008,7 +2031,7 @@ func nativePanelBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 	a = nativeArtworkViewport(c, a, scroll)
 	return scroll.Children(func() {
 		for i, item := range m.Queue {
-			nativeTrack(c.Key(fmt.Sprintf("queue-%d", i)), item, i, m, a, p, nativeTrackQueue, true)
+			nativeTrack(c.Key(fmt.Sprintf("queue-%d", i)), item, i, m, a, p, nativeTrackQueue, true, false)
 		}
 	})
 }
@@ -2031,7 +2054,7 @@ func nativeImmersiveHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePal
 		ui.Spacer(c)
 		// Window controls can leave the title too little room: it goes first.
 		if width-left-right-buttons*44 >= 120 {
-			ui.Text(c, a.Tr("shellNowPlaying")).FontSize(tokenSizeMicro).FontWeight(700).LetterSpacing(1).TextColor(p.secondary)
+			ui.Text(c, a.Tr("shellNowPlaying")).FontSize(tokenSizeMeta).FontWeight(600).TextColor(p.secondary)
 			ui.Spacer(c)
 		}
 		if nativeIconButton(c, "settings", a.Tr("shellSettings"), p, false, 40).Clicked() {

@@ -309,7 +309,14 @@ never from another app's interface. **One glyph, one meaning:** the
 diagonal expand arrows always mean immersive mode; a panel that grows or
 shrinks in place uses vertical chevrons, and a control whose glyph changes
 with its state needs no active dot. Filled variants mark the active
-destination and the primary transport glyphs. Icons label actions; they
+destination and the primary transport glyphs. **Optical, not geometric, centring:** a
+glyph is centred by where the eye puts its weight, between its bounding
+box and its ink's centroid. Asymmetric glyphs carry their correction in
+their path (play right of centre, the heart 1 unit low, shuffle 1.5 units
+left); a button with a leading icon takes 2 px less padding on that side;
+a chevron centres on the cap height of the text beside it, and digits and
+mixed-case wordmarks are nudged to centre their glyphs, not their line box.
+Check by measuring rendered ink, not by eye. Icons label actions; they
 don't decorate. Icon-only buttons always have an accessible name and a
 tooltip. The website uses icons only on actions and platform names.
 

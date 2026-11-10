@@ -109,6 +109,11 @@ h2 { font-size: var(--t-title); }
 .btn--outline { color: var(--text); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 35%, transparent); }
 .btn--outline:hover { box-shadow: inset 0 0 0 1px var(--text); }
 .btn--sm { min-height: var(--pill); padding: 0 16px; }
+/* Optical alignment (design/README.md §8): a leading icon's grid has empty
+   space beside the stroke, so the icon side gets less padding and the ink
+   sits evenly in the pill. */
+.btn:has(> svg:first-child) { padding-inline-start: 22px; }
+.btn--sm:has(> svg:first-child) { padding-inline-start: 15px; }
 .btn--sm svg { width: 17px; height: 17px; }
 .round { display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; cursor: pointer; transition: transform var(--d-fast) var(--ease); }
 .round:hover { transform: scale(var(--grow-scale)); }
@@ -118,6 +123,7 @@ h2 { font-size: var(--t-title); }
 html:not(.js) .nav, .nav.is-scrolled { background: color-mix(in srgb, var(--base) 78%, transparent); backdrop-filter: saturate(150%) blur(18px); -webkit-backdrop-filter: saturate(150%) blur(18px); }
 .nav__inner { display: flex; align-items: center; gap: 32px; height: var(--nav); width: min(var(--wrap-wide), 100% - 32px); margin-inline: auto; }
 .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font: var(--display-weight) var(--t-lead)/1 var(--display); font-stretch: var(--display-width); }
+.brand span { translate: 0 -2px; } /* optical: the wordmark's letters centre on the icon, not its line box */
 .brand img { border-radius: var(--r-icon); }
 .brand b, .album__title b { color: var(--accent); font-weight: inherit; }
 .nav__links { display: flex; gap: 26px; }
@@ -279,8 +285,8 @@ figure.shot:not([class*=wrap]) { margin-inline: 0; }
 .others > summary, .faq summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 22px 0; cursor: pointer; font-size: var(--t-body); font-weight: 700; transition: color var(--d-fast); }
 .others > summary::-webkit-details-marker, .faq summary::-webkit-details-marker { display: none; }
 .others > summary:hover, .faq summary:hover { color: color-mix(in srgb, var(--text) 80%, transparent); }
-.others > summary::after, .faq summary::after { content: ""; flex: none; width: 12px; height: 12px; border-right: 2px solid var(--secondary); border-bottom: 2px solid var(--secondary); rotate: 45deg; translate: 0 -3px; transition: rotate var(--d-fast), translate var(--d-fast); }
-.others[open] > summary::after, .faq details[open] summary::after { rotate: 225deg; translate: 0 3px; }
+.others > summary::after, .faq summary::after { content: ""; flex: none; width: 12px; height: 12px; border-right: 2px solid var(--secondary); border-bottom: 2px solid var(--secondary); rotate: 45deg; translate: 0 -5.5px; transition: rotate var(--d-fast), translate var(--d-fast); }
+.others[open] > summary::after, .faq details[open] summary::after { rotate: 225deg; translate: 0 1.75px; } /* optical: the chevron's ink centres on the question's cap height */
 .platforms { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding-bottom: 8px; }
 .platform { display: flex; flex-direction: column; padding: 28px; border-radius: var(--r-panel); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); scroll-margin-top: 96px; }
 .platform header { display: flex; align-items: center; gap: 12px; }
@@ -323,7 +329,7 @@ figure.shot:not([class*=wrap]) { margin-inline: 0; }
 }
 .player[hidden] { display: none; }
 .player__now { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.player__art { flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: var(--r-art); background: var(--tint); transition: background-color var(--d-slow) var(--ease); }
+.player__art { flex: none; display: grid; place-items: center; padding-top: 3px; /* optical: digits sit high in their line box */ width: 52px; height: 52px; border-radius: var(--r-art); background: var(--tint); transition: background-color var(--d-slow) var(--ease); }
 .player__meta { display: grid; min-width: 0; line-height: 1.35; }
 .player__meta b { overflow: hidden; font-size: var(--t-meta); font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
 .player__meta span { color: var(--secondary); font-size: var(--t-micro); }

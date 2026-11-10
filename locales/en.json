@@ -406,6 +406,10 @@
   "@shellOpenNowPlaying": {
     "description": "Accessible name of the artwork / title buttons."
   },
+  "shellCloseNowPlaying": "Close Now Playing",
+  "@shellCloseNowPlaying": {
+    "description": "Accessible name of the player bar's artwork / title button while Now Playing shows: a second click closes it."
+  },
   "shellIdleTitle": "Not playing",
   "@shellIdleTitle": {
     "description": "Player bar title when nothing is loaded."

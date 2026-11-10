@@ -1641,7 +1641,14 @@ func nativePlayerBar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 func nativePlayerBarContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) ui.Element {
 	return ui.Row(c).Absolute().Left(0).Top(0).WidthPercent(100).HeightPercent(100).Padding(0, 16).Gap(16).AlignItems(ui.Center).Label(a.Tr("shellPlayerControls")).Children(func() {
 		ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
-			info := ui.ButtonBase(c).MinWidth(0).Shrink(1).Height(64).Padding(4).Gap(12).Radius(tokenRadiusControl).Justify(ui.Start).Label(a.Tr("shellOpenNowPlaying"))
+			// The track toggles Now Playing, as the queue and lyrics buttons
+			// do: a second click closes what the first opened.
+			showing := m.Panel && !m.Immersive
+			label := a.Tr("shellOpenNowPlaying")
+			if showing {
+				label = a.Tr("shellCloseNowPlaying")
+			}
+			info := ui.ButtonBase(c).MinWidth(0).Shrink(1).Height(64).Padding(4).Gap(12).Radius(tokenRadiusControl).Justify(ui.Start).Label(label)
 			if info.Hovered() {
 				info.Background(p.hover)
 			}
@@ -1650,7 +1657,7 @@ func nativePlayerBarContent(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 				nativeTrackCaption(c, m, a, p)
 			})
 			if info.Clicked() {
-				m.Panel = true
+				m.Panel = !showing
 			}
 			if m.PlaybackError != "" && !m.Panel && !m.Immersive {
 				if nativePill(c, a.Tr("buttonRetry"), p, false).Width(72).PaddingX(8).Shrink(0).Disabled(a.RetryPlayback == nil).Clicked() {

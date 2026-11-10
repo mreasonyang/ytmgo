@@ -100,6 +100,7 @@
   "shellContent": "內容",
   "shellPlayerControls": "播放控制項",
   "shellOpenNowPlaying": "開啟正在播放",
+  "shellCloseNowPlaying": "關閉正在播放",
   "shellIdleTitle": "未在播放",
   "shellIdleSubtitle": "挑一首歌，開始聆聽",
   "shellLoading": "載入中…",

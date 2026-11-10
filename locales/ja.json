@@ -100,6 +100,7 @@
   "shellContent": "コンテンツ",
   "shellPlayerControls": "プレーヤーの操作",
   "shellOpenNowPlaying": "再生中の曲を開く",
+  "shellCloseNowPlaying": "再生中の曲を閉じる",
   "shellIdleTitle": "再生していません",
   "shellIdleSubtitle": "曲を選んで聴き始めましょう",
   "shellLoading": "読み込み中…",

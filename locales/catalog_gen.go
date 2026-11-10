@@ -1439,6 +1439,22 @@ func (msgs Messages) ShellOpenNowPlaying() string {
 	return Catalog.Format(msgs.locale, "shellOpenNowPlaying", nil)
 }
 
+// ShellCloseNowPlaying says "Close Now Playing"
+// in the language the app shows.
+//
+// Accessible name of the player bar's artwork / title button while Now
+// Playing shows: a second click closes it.
+func ShellCloseNowPlaying() string { return In(i18n.Locale()).ShellCloseNowPlaying() }
+
+// ShellCloseNowPlaying says "Close Now Playing"
+// in the language of msgs.
+//
+// Accessible name of the player bar's artwork / title button while Now
+// Playing shows: a second click closes it.
+func (msgs Messages) ShellCloseNowPlaying() string {
+	return Catalog.Format(msgs.locale, "shellCloseNowPlaying", nil)
+}
+
 // ShellIdleTitle says "Not playing"
 // in the language the app shows.
 //

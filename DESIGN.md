@@ -142,7 +142,8 @@ in `native_style.go`, display-title styling in `native_fonts.go` (system font on
   shelves as cards, with service ordering. Album and playlist pages open in
   place with a numbered table. Continuations append to the current page;
   failures offer an explicit retry.
-- Transport: the player bar's artwork/title opens Now Playing. Play/pause,
+- Transport: the player bar's artwork/title toggles Now Playing: a second
+  click closes it, and its accessible name says which it will do. Play/pause,
   previous/next, shuffle, repeat, seek and volume operate the same player in
   every presentation. Queue and lyrics buttons open Now Playing on that tab and
   close it when it is already showing. Muting remembers the previous volume.

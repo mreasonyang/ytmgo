@@ -941,3 +941,26 @@ func TestNativeSearchResultsNameTheirType(t *testing.T) {
 		})
 	}
 }
+
+// The player bar's track toggles Now Playing: the first click opens it,
+// the second closes it, and its name says which it will do.
+func TestPlayerBarTrackTogglesNowPlaying(t *testing.T) {
+	m, a := nativeViewFixture()
+	m.Panel = false
+	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
+	if err := tt.Click(a.Tr("shellOpenNowPlaying")); err != nil {
+		t.Fatal(err)
+	}
+	if !m.Panel {
+		t.Fatal("the first click did not open Now Playing")
+	}
+	if err := tt.Click(a.Tr("shellCloseNowPlaying")); err != nil {
+		t.Fatalf("the open panel's track does not offer to close it: %v", err)
+	}
+	if m.Panel {
+		t.Fatal("the second click did not close Now Playing")
+	}
+	if _, ok := tt.Find(a.Tr("shellOpenNowPlaying")); !ok {
+		t.Fatal("the closed panel's track does not offer to open it")
+	}
+}

@@ -211,11 +211,12 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 			}
 			ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Radius(tokenRadiusPanel).Background(p.surface).Clip().Children(func() {
 				nativeBackdrop(c, m, a, p)
-				nativePageLayer(c).Children(func() {
+				var scrolled *ui.ScrollState
+				nativePageWash(nativePageLayer(c), m, a, p, &scrolled).Children(func() {
 					if m.Immersive {
 						nativeImmersive(c, m, a, p, width, height-nativePlayerHeight-top-header, header == 0)
 					} else {
-						nativeContent(c, m, a, p, false)
+						scrolled = nativeContent(c, m, a, p, false)
 					}
 				})
 			})
@@ -233,12 +234,13 @@ func nativeCompactFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 	ui.Column(c).Fill().Background(p.base).TextColor(p.text).Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Background(p.surface).Clip().Children(func() {
 			nativeBackdrop(c, m, a, p)
-			nativePageLayer(c).Children(func() {
+			var scrolled *ui.ScrollState
+			nativePageWash(nativePageLayer(c), m, a, p, &scrolled).Children(func() {
 				if m.Immersive {
 					nativeImmersive(c, m, a, p, width, height-nativeExpandedBar-nativeCompactTabbar, true)
 				} else {
 					nativeCompactTopbar(c, m, a, p, width)
-					nativeContent(c, m, a, p, true)
+					scrolled = nativeContent(c, m, a, p, true)
 				}
 			})
 		})
@@ -906,11 +908,14 @@ func nativeColumns(width, minWidth, gap float32) (int, float32) {
 	return n, float32(math.Floor(float64((width - gap*float32(n-1)) / float32(n))))
 }
 
-func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool) {
+// nativeContent draws the page and returns its scroll position, which the
+// page's colour wash follows.
+func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool) *ui.ScrollState {
 	inset := nativeContentInset(compact)
 	scroll := ui.Scroll(c.Key("content-" + m.Route + "-" + m.Page.Title)).Grow(1).MinHeight(0).Label(a.Tr("shellContent"))
 	contentWidth := scroll.Bounds().W
 	a = nativeArtworkViewport(c, a, scroll)
+	scrolled := a.viewportScroll
 	nativeLoadNearEnd(c, scroll, m, a)
 	scroll.Children(func() {
 		if strings.HasPrefix(m.Route, "browse:") && m.Page.Title != "" {
@@ -935,6 +940,7 @@ func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, co
 			nativePageBody(c, m, a, p, compact, contentWidth)
 		})
 	})
+	return scrolled
 }
 
 type nativeContinuation struct{ seen, requested string }
@@ -2230,33 +2236,51 @@ func nativePresentation(m *UIModel) nativePresentationKey {
 // collection, the current track's cover in immersive mode, or a stable tint
 // for pages without artwork.
 func nativeBackdrop(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
-	strength := nativeWashStrength(p)
-	header := func(tint ui.Color) {
-		ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(100).Height(320).LinearGradient(ui.LinearGradient{From: tint.Alpha(strength), To: tint.Alpha(0), Angle: 180}).PassThrough()
-	}
-	if m.Immersive {
-		// Immersive mode is the one place the cover itself fills the view.
-		if m.Current.Artwork == "" || a.Artwork == nil {
-			return
-		}
-		if artwork := a.Artwork(m.Current.Artwork, artworkEdge, artPlayer); artwork != nil {
-			nativeCoverBlur(c, artwork).HeightPercent(25).Opacity(strength * 0.7)
-		}
+	// Immersive mode is the one place the cover itself fills the view, a
+	// fixed ambience behind everything. Pages wash in nativePageWash.
+	if !m.Immersive || m.Current.Artwork == "" || a.Artwork == nil {
 		return
 	}
-	if m.Page.Artwork == "" {
-		header(nativeHeaderTint(m.Route))
-		return
-	}
-	// A collection washes in its cover's colour, as Now Playing does: a
-	// clean gradient rather than a blurred, blotchy cover. A cover without
-	// colour leaves the page neutral.
-	if a.ArtworkTint != nil {
-		if tint, ok := a.ArtworkTint(m.Page.Artwork); ok {
-			header(tint)
-		}
+	if artwork := a.Artwork(m.Current.Artwork, artworkEdge, artPlayer); artwork != nil {
+		nativeCoverBlur(c, artwork).HeightPercent(25).Opacity(nativeWashStrength(p) * 0.7)
 	}
 }
+
+// nativePageWash colours the top of a page: a collection in its cover's
+// colour, other pages in their stable tint, a cover without colour not at
+// all. The wash belongs to the page's header, so it scrolls away with it
+// rather than staying under the list: it is painted beneath the page layer's
+// children (the compact top bar included) and moved by the content's scroll
+// position, read when it paints, so it never lags a frame behind.
+func nativePageWash(layer ui.Element, m *UIModel, a ViewActions, p nativePalette, scrolled **ui.ScrollState) ui.Element {
+	if m.Immersive {
+		return layer
+	}
+	tint, ok := nativeHeaderTint(m.Route), true
+	if m.Page.Artwork != "" {
+		tint, ok = ui.Color{}, false
+		if a.ArtworkTint != nil {
+			tint, ok = a.ArtworkTint(m.Page.Artwork)
+		}
+	}
+	if !ok {
+		return layer
+	}
+	strength := nativeWashStrength(p)
+	return layer.Draw(func(painter *ui.Painter, r ui.Rect) {
+		y := float32(0)
+		if *scrolled != nil {
+			y = (*scrolled).Y
+		}
+		if y >= nativeWashHeight {
+			return
+		}
+		painter.FillGradient(ui.Rect{X: r.X, Y: r.Y - y, W: r.W, H: nativeWashHeight}, ui.LinearGradient{From: tint.Alpha(strength), To: tint.Alpha(0), Angle: 180}, 0)
+	})
+}
+
+// nativeWashHeight is how far a page's colour wash runs down from its top.
+const nativeWashHeight = 320
 
 // nativeCoverBlur is a cover blurred across its parent, drawn from a
 // quarter-size layer: give it a height (a quarter of the band it covers)

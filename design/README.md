@@ -159,7 +159,12 @@ A wash runs from the tint at the top (78 % tint over black) through 34 % at
 260 px into the background. Pages with artwork wash the same way in their
 cover's colour (§4.4), never in a blurred copy of the cover, which turns
 blotchy; a cover without colour leaves the page neutral. Only immersive
-mode, where the cover is the subject, fills the view with its blur. The website gives each track one tint; the intro and the download
+mode, where the cover is the subject, fills the view with its blur. A wash
+belongs to its page's header, so it **scrolls away with the header**; it
+never stays pinned while a list scrolls through it. What is fixed to a
+viewport is only what describes that viewport: edge fades (shown while
+there is more beyond the edge), the immersive ambience, and the washes of
+panels that don't scroll (the player bar, the Now Playing header). The website gives each track one tint; the intro and the download
 share rust, so the record starts and ends in the same light.
 
 ### 4.4 What's playing lends its colour

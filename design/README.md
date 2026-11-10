@@ -156,15 +156,19 @@ hash so a page always keeps its tint: blue `#2d46b9`, violet `#8d67ab`, teal
 and raspberry `#a13d63`.
 
 A wash runs from the tint at the top (78 % tint over black) through 34 % at
-260 px into the background. Pages with artwork wash in their blurred cover
-instead. The website gives each track one tint; the intro and the download
+260 px into the background. Pages with artwork wash the same way in their
+cover's colour (§4.4), never in a blurred copy of the cover, which turns
+blotchy; a cover without colour leaves the page neutral. Only immersive
+mode, where the cover is the subject, fills the view with its blur. The website gives each track one tint; the intro and the download
 share rust, so the record starts and ends in the same light.
 
 ### 4.4 What's playing lends its colour
 
 The playing track's cover colours the player: the Now Playing panel washes
 down from it, the player bar glows with it behind the track and fades out
-before the transport, and the compact mini player is filled with it. The
+before the transport, and the compact mini player is filled with it, more
+weakly (28 % dark, 16 % light) since it holds text: its secondary text keeps
+4.5:1 on every colour the picker can return, which a test checks. The
 colour is read once from the cover when it loads: the hue carrying the most
 colour (vivid, bright pixels outweigh large dark ones; near-black, near-white
 and grey don't count), normalised to one brightness and a bounded saturation
@@ -280,8 +284,21 @@ pointer and 44 for touch.
 **Nesting:** an inner corner is the outer radius minus the padding between
 them, never less than `art`.
 
-**Depth:** shadows only on artwork, floating panels, popovers and dialogs.
-Everything else is flat and separated by `line` hairlines or surface steps.
+**Depth:** a shadow must separate something that floats or lifts; it is
+never decoration. Shadows are black at an opacity tuned on dark surfaces;
+light appearance draws them at `lightScale` (38 %) of it, since black on
+white reads far heavier.
+- **Shadowed:** a collection's cover and the immersive cover (`art`),
+  floating panels (`hero`), popovers, tooltips, the play button that rises
+  over a hovered card's art, and a card's art while hovered.
+- **Not shadowed:** cards at rest (spacing separates them), the collection's
+  coral play button (its fill is its affordance), and dialogs in dark
+  appearance, where the scrim and hairline already set them apart and a
+  shadow on the scrim can't be seen.
+- **Edges before shadows:** on a light page, a cover gets a 1 px `line`
+  border, since a pale cover on white needs an edge a light shadow can't
+  give. Everything else is flat, separated by `line` hairlines or surface
+  steps.
 
 ## 8. Iconography
 

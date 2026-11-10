@@ -105,17 +105,20 @@ const (
 
 // Washes: how strongly a tint or cover colours the chrome.
 const (
-	tokenWashDark  = 0.5
-	tokenWashLight = 0.32
-	tokenWashBar   = 0.7
+	tokenWashDark      = 0.5
+	tokenWashLight     = 0.32
+	tokenWashBar       = 0.7
+	tokenWashCardDark  = 0.28
+	tokenWashCardLight = 0.16
 )
 
 // Elevations: offset y, blur and the opacity of black.
 var (
-	tokenShadowArt     = nativeShadow{8, 24, 0.3}
-	tokenShadowControl = nativeShadow{8, 16, 0.3}
-	tokenShadowDialog  = nativeShadow{24, 64, 0.5}
-	tokenShadowHero    = nativeShadow{16, 48, 0.45}
-	tokenShadowPopover = nativeShadow{12, 32, 0.35}
-	tokenShadowTooltip = nativeShadow{2, 8, 0.25}
+	tokenShadowArt        = nativeShadow{8, 24, 0.3}
+	tokenShadowControl    = nativeShadow{8, 16, 0.3}
+	tokenShadowDialog     = nativeShadow{24, 64, 0.5}
+	tokenShadowHero       = nativeShadow{16, 48, 0.45}
+	tokenShadowLightScale = float32(0.38)
+	tokenShadowPopover    = nativeShadow{12, 32, 0.35}
+	tokenShadowTooltip    = nativeShadow{2, 8, 0.25}
 )

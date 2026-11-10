@@ -31,9 +31,15 @@ type nativePalette struct {
 // controls cast one.
 type nativeShadow struct{ y, blur, alpha float32 }
 
-// args are Shadow's arguments: e.Shadow(tokenShadowArt.args()).
-func (s nativeShadow) args() (x, y, blur, spread float32, c ui.Color) {
-	return 0, s.y, s.blur, 0, ui.RGBA(0, 0, 0, s.alpha)
+// args are Shadow's arguments for the appearance: e.Shadow(tokenShadowArt.args(p)).
+// The opacity is tuned on dark surfaces; black on a light one reads far
+// heavier, so light takes tokenShadowLightScale of it.
+func (s nativeShadow) args(p nativePalette) (x, y, blur, spread float32, c ui.Color) {
+	alpha := s.alpha
+	if !p.dark {
+		alpha *= tokenShadowLightScale
+	}
+	return 0, s.y, s.blur, 0, ui.RGBA(0, 0, 0, alpha)
 }
 
 func palette(dark bool) nativePalette {

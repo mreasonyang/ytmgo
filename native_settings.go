@@ -50,7 +50,12 @@ func nativeSheet(c *ui.Context, open *bool, scroll *ui.ScrollState, title string
 		if compact {
 			panel.Height(height)
 		} else {
-			panel.MaxHeight(min(height-48, 780)).Radius(tokenRadiusPanel).Border(1, p.line).Shadow(tokenShadowDialog.args())
+			panel.MaxHeight(min(height-48, 780)).Radius(tokenRadiusPanel).Border(1, p.line)
+			// The scrim and the hairline set the dialog apart; on the dark
+			// scrim a shadow can't be seen, so only light draws one.
+			if !p.dark {
+				panel.Shadow(tokenShadowDialog.args(p))
+			}
 		}
 		panel.Children(func() {
 			ui.Row(c).Shrink(0).Padding(24, 16, 12, 24).AlignItems(ui.Center).Children(func() {
@@ -351,7 +356,7 @@ func nativeLanguageControl(c *ui.Context, m *UIModel, a ViewActions, p nativePal
 		ui.Icon(c, nativeIcons["chevron-down"]).Size(16, 16).TextColor(p.secondary)
 	})
 	sel.Popup(func(panel ui.Element) {
-		panel.Margin(8, 0, 0, 0).Padding(4).Radius(tokenRadiusControl).Background(p.raised).Border(1, p.line).Shadow(tokenShadowPopover.args())
+		panel.Margin(8, 0, 0, 0).Padding(4).Radius(tokenRadiusControl).Background(p.raised).Border(1, p.line).Shadow(tokenShadowPopover.args(p))
 		for _, option := range nativeLanguages {
 			title := nativeLanguageTitle(a, option.id)
 			item := sel.Item(title).Height(36).PaddingX(12).Gap(8).Radius(tokenRadiusArt).AlignItems(ui.Center).TextColor(p.text)

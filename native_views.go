@@ -179,7 +179,7 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 		panelWidth := min(width-16, 380)
 		ui.DialogBase(c, &m.Panel, func(backdrop, panel ui.Element) {
 			backdrop.Background(p.scrim)
-			panel.Width(panelWidth).Height(min(height-100, 760)).Radius(tokenRadiusPanel).Background(p.surface).Shadow(tokenShadowHero.args()).Clip().Children(func() {
+			panel.Width(panelWidth).Height(min(height-100, 760)).Radius(tokenRadiusPanel).Background(p.surface).Shadow(tokenShadowHero.args(p)).Clip().Children(func() {
 				nativeNowPlaying(c, m, a, p, panelWidth, true, firstPlayback).Fill()
 			})
 		}).Label(a.Tr("shellNowPlaying"))
@@ -1188,7 +1188,7 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 	} else if compact {
 		ui.Column(c).Padding(8, inset, 0).Gap(12).Children(func() {
 			if m.Page.Artwork != "" {
-				nativeArtwork(c, m.Page.Artwork, min(contentWidth-2*inset-64, 224), tokenRadiusControl, a, p).AlignSelf(ui.Center).Shadow(tokenShadowHero.args())
+				nativeCollectionCover(nativeArtwork(c, m.Page.Artwork, min(contentWidth-2*inset-64, 224), tokenRadiusControl, a, p).AlignSelf(ui.Center), p)
 			}
 			title(26)
 		})
@@ -1203,7 +1203,7 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 		}
 		ui.Row(c).Padding(top, inset, 0).Gap(24).AlignItems(ui.End).Children(func() {
 			if m.Page.Artwork != "" {
-				nativeArtwork(c, m.Page.Artwork, art, tokenRadiusControl, a, p).Shadow(tokenShadowHero.args())
+				nativeCollectionCover(nativeArtwork(c, m.Page.Artwork, art, tokenRadiusControl, a, p), p)
 			}
 			ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
 				title(font)
@@ -1227,7 +1227,7 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 		if inPage && m.Playing {
 			icon, key = "pause", "shellPause"
 		}
-		b := ui.ButtonBase(c).Size(buttonSize, buttonSize).Shrink(0).Radius(buttonSize / 2).Background(p.accent).TextColor(p.onAccent).Shadow(tokenShadowControl.args()).Label(a.Tr(key) + " · " + m.Page.Title).Tooltip(a.Tr(key)).Disabled(inPage && m.PlaybackLoading)
+		b := ui.ButtonBase(c).Size(buttonSize, buttonSize).Shrink(0).Radius(buttonSize / 2).Background(p.accent).TextColor(p.onAccent).Label(a.Tr(key) + " · " + m.Page.Title).Tooltip(a.Tr(key)).Disabled(inPage && m.PlaybackLoading)
 		nativePlayFeedback(b)
 		b.Children(func() { ui.Icon(c, nativeIcons[icon]).Size(26, 26) })
 		if b.Clicked() {
@@ -1408,9 +1408,12 @@ func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p n
 			radius = size / 2
 		}
 		ui.Box(c).Size(size, size).Shrink(0).Children(func() {
-			nativeArtwork(c, item.Artwork, size, radius, a, p).Shadow(tokenShadowArt.args())
+			art := nativeArtwork(c, item.Artwork, size, radius, a, p)
+			if hovered {
+				art.Shadow(tokenShadowArt.args(p))
+			}
 			if hovered && item.ID != "" {
-				ui.Box(c).Absolute().Right(8).Bottom(8).Size(48, 48).Radius(tokenRadiusPill).Background(p.accent).TextColor(p.onAccent).Shadow(tokenShadowControl.args()).Center().PassThrough().Children(func() {
+				ui.Box(c).Absolute().Right(8).Bottom(8).Size(48, 48).Radius(tokenRadiusPill).Background(p.accent).TextColor(p.onAccent).Shadow(tokenShadowControl.args(p)).Center().PassThrough().Children(func() {
 					ui.Icon(c, nativeIcons["play"]).Size(22, 22)
 				})
 			}
@@ -1692,7 +1695,7 @@ func nativeMiniPlayer(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 		// The card takes the playing cover's colour, as the player bar's wash does.
 		card := p.raised
 		if tint, ok := nativePlayingTint(m, a); ok {
-			card = p.raised.Mix(tint, nativeWashStrength(p))
+			card = p.raised.Mix(tint, nativeCardWash(p))
 		}
 		ui.Column(c).Height(tokenProductMiniPlayer).Radius(tokenRadiusControl).Background(card).Clip().Children(func() {
 			ui.Row(c).Grow(1).Padding(0, 4, 0, 8).Gap(4).AlignItems(ui.Center).Children(func() {
@@ -1815,7 +1818,7 @@ func nativeSliderReadout(c *ui.Context, slider ui.Element, p nativePalette, text
 	ui.Overlay(c, func() {
 		ui.Text(c, text).AttachTo(slider, ui.AnchorTopLeft, ui.AnchorBottom).Margin(0, 0, 8, x).
 			Padding(4, 8).Radius(tokenRadiusPill).Background(p.raised).TextColor(p.text).FontSize(tokenSizeMicro).FontWeight(600).
-			Shadow(tokenShadowTooltip.args()).PassThrough().Role(ui.RoleTooltip)
+			Shadow(tokenShadowTooltip.args(p)).PassThrough().Role(ui.RoleTooltip)
 	})
 }
 
@@ -2121,7 +2124,7 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 					// square cover while filling more of the available column.
 					artSize = min(mediaWidth, mediaHeight*16/9)
 				}
-				nativeMedia(c, m, a, p, artSize).Shadow(tokenShadowDialog.args())
+				nativeMedia(c, m, a, p, artSize).Shadow(tokenShadowArt.args(p))
 				nativeMediaSwitch(c, m, a, p)
 				nativeImmersiveTitle(c, m, a, p, false)
 				nativePlaybackNotice(c, m, a, p)
@@ -2227,31 +2230,31 @@ func nativePresentation(m *UIModel) nativePresentationKey {
 // collection, the current track's cover in immersive mode, or a stable tint
 // for pages without artwork.
 func nativeBackdrop(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
-	src, priority := m.Page.Artwork, artSecondary
-	if m.Immersive {
-		src, priority = m.Current.Artwork, artPlayer
-	}
-	var artwork ui.ImageSource
-	if src != "" && a.Artwork != nil {
-		artwork = a.Artwork(src, artworkEdge, priority)
-	}
 	strength := nativeWashStrength(p)
-	if artwork == nil {
-		if m.Immersive {
+	header := func(tint ui.Color) {
+		ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(100).Height(320).LinearGradient(ui.LinearGradient{From: tint.Alpha(strength), To: tint.Alpha(0), Angle: 180}).PassThrough()
+	}
+	if m.Immersive {
+		// Immersive mode is the one place the cover itself fills the view.
+		if m.Current.Artwork == "" || a.Artwork == nil {
 			return
 		}
-		ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(100).Height(320).LinearGradient(ui.LinearGradient{From: nativeHeaderTint(m.Route).Alpha(strength), To: nativeHeaderTint(m.Route).Alpha(0), Angle: 180}).PassThrough()
+		if artwork := a.Artwork(m.Current.Artwork, artworkEdge, artPlayer); artwork != nil {
+			nativeCoverBlur(c, artwork).HeightPercent(25).Opacity(strength * 0.7)
+		}
 		return
 	}
-	layer := nativeCoverBlur(c, artwork)
-	if m.Immersive {
-		layer.HeightPercent(25).Opacity(strength * 0.7)
-	} else {
-		layer.Height(80).Opacity(strength)
+	if m.Page.Artwork == "" {
+		header(nativeHeaderTint(m.Route))
+		return
 	}
-	if !m.Immersive {
-		// The blur spills below its 320-DIP band; fade it into the panel.
-		ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(100).Height(560).LinearGradient(ui.LinearGradient{From: p.surface.Alpha(0), To: p.surface, Angle: 180, Start: 0.2, End: 0.7}).PassThrough()
+	// A collection washes in its cover's colour, as Now Playing does: a
+	// clean gradient rather than a blurred, blotchy cover. A cover without
+	// colour leaves the page neutral.
+	if a.ArtworkTint != nil {
+		if tint, ok := a.ArtworkTint(m.Page.Artwork); ok {
+			header(tint)
+		}
 	}
 }
 
@@ -2273,6 +2276,27 @@ func nativePlayingTint(m *UIModel, a ViewActions) (ui.Color, bool) {
 		return ui.Color{}, false
 	}
 	return a.ArtworkTint(m.Current.Artwork)
+}
+
+// nativeCardWash is how strongly a tint fills a card holding text (the mini
+// player): weaker than a wash, so its secondary text keeps 4.5:1 whatever
+// the cover's hue (TestNativeCardWashKeepsTextReadable).
+func nativeCardWash(p nativePalette) float32 {
+	if p.dark {
+		return tokenWashCardDark
+	}
+	return tokenWashCardLight
+}
+
+// nativeCollectionCover lifts a collection's cover off its page: a soft
+// shadow, and in light appearance a hairline, since a pale cover on a white
+// page needs an edge a light shadow can't give.
+func nativeCollectionCover(e ui.Element, p nativePalette) ui.Element {
+	e.Shadow(tokenShadowArt.args(p))
+	if !p.dark {
+		e.Border(1, p.line)
+	}
+	return e
 }
 
 // nativeWashStrength is how strongly a tint colours the chrome: the

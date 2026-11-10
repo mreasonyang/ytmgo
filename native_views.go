@@ -738,6 +738,7 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 		}
 		scroll := ui.Scroll(c).Grow(1).MinHeight(0).Padding(0, pad, 8).Label(a.Tr("shellLibraryRegion"))
 		clipped := nativeArtworkViewport(c, a, scroll)
+		nativeScrollEdges(scroll, clipped.viewportScroll, p, p.surface)
 		scroll.Children(func() {
 			for i, item := range items {
 				if *filter != "" && nativeLibraryKind(item) != *filter {
@@ -1898,12 +1899,18 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 		gap = 12
 	}
 	return ui.Column(c).Background(p.surface).Radius(tokenRadiusPanel).MinHeight(0).Clip().Children(func() {
-		nativeNowPlayingWash(c, m, a, p)
-		nativePageLayer(c).Padding(16).Gap(gap).Children(func() { nativeNowPlayingBody(c, m, a, p, width, overlay, revealLyrics, windowHeight, gap) })
+		var scrolled *ui.ScrollState
+		layer := nativePageLayer(c).Padding(16).Gap(gap)
+		if tint, ok := nativePlayingTint(m, a); ok {
+			nativeScrollingWash(layer, tint, nativeWashStrength(p), nativeNowPlayingWashHeight, &scrolled)
+		}
+		layer.Children(func() { scrolled = nativeNowPlayingBody(c, m, a, p, width, overlay, revealLyrics, windowHeight, gap) })
 	})
 }
 
-func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32, overlay, revealLyrics bool, windowHeight, gap float32) {
+// nativeNowPlayingBody draws the panel and returns its scroll position when
+// it scrolls (as a floating sheet), which the panel's wash follows.
+func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32, overlay, revealLyrics bool, windowHeight, gap float32) *ui.ScrollState {
 	{
 		ui.Row(c).Height(32).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, a.Tr("shellNowPlaying")).FontSize(tokenSizeBody).FontWeight(700).Grow(1).MinWidth(0).MaxLines(1).Ellipsis("…")
@@ -1921,7 +1928,7 @@ func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 				nativeDisplay(ui.Text(c, a.Tr("shellEmptyTitle")).FontSize(tokenSizeH3), a.Tr("shellEmptyTitle"), tokenSizeH3)
 				ui.Text(c, a.TrArgs("shellEmptyBody", map[string]any{"shortcut": "⌘ K"})).TextColor(p.secondary).TextAlign(ui.Center)
 			})
-			return
+			return nil
 		}
 		body := func() {
 			nativePlaybackNotice(c, m, a, p)
@@ -1990,9 +1997,10 @@ func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 			scroll := ui.Scroll(c).Grow(1).MinHeight(0).Gap(gap)
 			a = nativeArtworkViewport(c, a, scroll)
 			scroll.Children(body)
-		} else {
-			body()
+			return a.viewportScroll
 		}
+		body()
+		return nil
 	}
 }
 
@@ -2038,6 +2046,9 @@ func nativePanelBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 	}
 	scroll := ui.Scroll(c.Key("panel-queue")).Grow(1).MinHeight(68)
 	a = nativeArtworkViewport(c, a, scroll)
+	// As the lyrics beside it: rows past an edge fade, while more lies beyond.
+	st := a.viewportScroll
+	scroll.Effect(nativeEdgeFade{top: st.Y > 0.5, bottom: st.Y < st.MaxY-0.5})
 	return scroll.Children(func() {
 		for i, item := range m.Queue {
 			nativeTrack(c.Key(fmt.Sprintf("queue-%d", i)), item, i, m, a, p, nativeTrackQueue, true, false)
@@ -2266,16 +2277,39 @@ func nativePageWash(layer ui.Element, m *UIModel, a ViewActions, p nativePalette
 	if !ok {
 		return layer
 	}
-	strength := nativeWashStrength(p)
+	return nativeScrollingWash(layer, tint, nativeWashStrength(p), nativeWashHeight, scrolled)
+}
+
+// nativeScrollEdges marks a scrolling list under a fixed header, as the
+// settings sheet does: a hairline along its top once content has scrolled
+// beneath the header, and a fade at its bottom while more lies below. Drawn
+// over the rows at paint time, from the scroll position then.
+func nativeScrollEdges(scroll ui.Element, st *ui.ScrollState, p nativePalette, bg ui.Color) {
+	scroll.DrawOver(func(painter *ui.Painter, r ui.Rect) {
+		if st.Y > 0 {
+			painter.Fill(ui.Rect{X: r.X, Y: r.Y, W: r.W, H: 1}, p.line, 0)
+		}
+		if st.Y < st.MaxY-1 {
+			const fade = 40
+			painter.FillGradient(ui.Rect{X: r.X, Y: r.Y + r.H - fade, W: r.W, H: fade}, ui.LinearGradient{From: bg.Alpha(0), To: bg, Angle: 180}, 0)
+		}
+	})
+}
+
+// nativeScrollingWash paints a colour wash from the top of layer, beneath its
+// children, moved up by the scroll position *scrolled holds once it is set
+// (read when it paints, so it never lags a frame): a wash belongs to what
+// it heads and scrolls away with it.
+func nativeScrollingWash(layer ui.Element, tint ui.Color, strength, height float32, scrolled **ui.ScrollState) ui.Element {
 	return layer.Draw(func(painter *ui.Painter, r ui.Rect) {
 		y := float32(0)
 		if *scrolled != nil {
 			y = (*scrolled).Y
 		}
-		if y >= nativeWashHeight {
+		if y >= height {
 			return
 		}
-		painter.FillGradient(ui.Rect{X: r.X, Y: r.Y - y, W: r.W, H: nativeWashHeight}, ui.LinearGradient{From: tint.Alpha(strength), To: tint.Alpha(0), Angle: 180}, 0)
+		painter.FillGradient(ui.Rect{X: r.X, Y: r.Y - y, W: r.W, H: height}, ui.LinearGradient{From: tint.Alpha(strength), To: tint.Alpha(0), Angle: 180}, 0)
 	})
 }
 
@@ -2332,16 +2366,9 @@ func nativeWashStrength(p nativePalette) float32 {
 	return tokenWashLight
 }
 
-// nativeNowPlayingWash colours the top of the Now Playing panel with the
-// playing cover's colour, fading into the panel, as a page without
-// artwork is washed by its tint.
-func nativeNowPlayingWash(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
-	tint, ok := nativePlayingTint(m, a)
-	if !ok {
-		return
-	}
-	ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(100).Height(360).LinearGradient(ui.LinearGradient{From: tint.Alpha(nativeWashStrength(p)), To: tint.Alpha(0), Angle: 180}).PassThrough()
-}
+// nativeNowPlayingWashHeight is how far the Now Playing panel's wash, in
+// the playing cover's colour, runs down from its top.
+const nativeNowPlayingWashHeight = 360
 
 // nativePlayerWash glows the playing cover's colour behind the player bar's
 // track, fading out toward the transport: what's playing carries colour.

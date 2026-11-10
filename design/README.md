@@ -164,7 +164,13 @@ belongs to its page's header, so it **scrolls away with the header**; it
 never stays pinned while a list scrolls through it. What is fixed to a
 viewport is only what describes that viewport: edge fades (shown while
 there is more beyond the edge), the immersive ambience, and the washes of
-panels that don't scroll (the player bar, the Now Playing header). The website gives each track one tint; the intro and the download
+panels that don't scroll (the player bar, a docked Now Playing panel); a
+floating Now Playing sheet scrolls, so its wash scrolls away like a page's.
+Scrolling edges follow two conventions: a list under a fixed header (the
+library, a sheet) gets a hairline under the header once content has scrolled
+beneath it and a fade at its bottom while more lies below; a list inside a
+card (lyrics, queue) fades at whichever edge has more beyond it. Rows are
+never cut off at an edge without one of these. The website gives each track one tint; the intro and the download
 share rust, so the record starts and ends in the same light.
 
 ### 4.4 What's playing lends its colour

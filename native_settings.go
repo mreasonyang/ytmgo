@@ -64,17 +64,11 @@ func nativeSheet(c *ui.Context, open *bool, scroll *ui.ScrollState, title string
 					*open = false
 				}
 			})
-			edge := ui.Transparent
-			if scroll.Y > 0 {
-				edge = p.line
-			}
-			ui.Box(c).Height(1).Shrink(0).Background(edge)
-			ui.Scroll(c).Grow(1).MinHeight(0).Padding(12, 24, 32, 24).Gap(24).TrackScroll(scroll).Children(func() {
+			list := ui.Scroll(c).Grow(1).MinHeight(0).Padding(12, 24, 32, 24).Gap(24).TrackScroll(scroll)
+			nativeScrollEdges(list, scroll, p, p.surface)
+			list.Children(func() {
 				body(sheet-48 < nativeSettingsStack)
 			})
-			if scroll.Y < scroll.MaxY-1 {
-				ui.Box(c).Absolute().Left(0).Bottom(0).WidthPercent(100).Height(40).LinearGradient(ui.LinearGradient{From: p.surface.Alpha(0), To: p.surface, Angle: 180}).PassThrough()
-			}
 		})
 	}).Label(title)
 }

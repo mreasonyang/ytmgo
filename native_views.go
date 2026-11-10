@@ -218,11 +218,11 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 					if m.Immersive {
 						nativeImmersive(c, m, a, p, width, height-nativePlayerHeight-top-header-tokenProductFrameGap, header == 0)
 					} else {
-						scrolled = nativeContent(c, m, a, p, false)
+						scrolled = nativeContent(c, m, a, p, false, nativePageWidth(m, width))
 					}
 				})
 			})
-			if m.Panel && !m.Immersive && width > 1180 {
+			if nativeDockedNowPlaying(m, width) {
 				nativeNowPlaying(c, m, a, p, nativePanelWidth, false, false).Width(nativePanelWidth).Shrink(0)
 			}
 		})
@@ -242,7 +242,7 @@ func nativeCompactFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 					nativeImmersive(c, m, a, p, width, height-nativeExpandedBar-nativeCompactTabbar, true)
 				} else {
 					nativeCompactTopbar(c, m, a, p, width)
-					scrolled = nativeContent(c, m, a, p, true)
+					scrolled = nativeContent(c, m, a, p, true, width)
 				}
 			})
 		})
@@ -667,13 +667,41 @@ func nativeResultLabel(item catalog.Item, m *UIModel, a ViewActions) string {
 	return nativeItemLabel(item)
 }
 
+// nativeLibraryPanelWidth is the library's width in a window width wide:
+// the full panel, or the rail on narrower windows and when collapsed.
+func nativeLibraryPanelWidth(m *UIModel, width float32) float32 {
+	if width > 1180 && !m.SidebarCollapsed {
+		return nativeLibraryWidth
+	}
+	return nativeRailWidth
+}
+
+// nativeDockedNowPlaying reports whether Now Playing docks beside the page
+// (wider windows) rather than floating over it.
+func nativeDockedNowPlaying(m *UIModel, width float32) bool {
+	return m.Panel && !m.Immersive && width > 1180
+}
+
+// nativePageWidth is the page panel's width in a desktop window width wide:
+// what the frame gaps, the library and a docked Now Playing leave. The page
+// lays out from it in the frame that changes it, as a panel opens or the
+// window resizes, instead of from the last frame's bounds, which drew one
+// frame of the old layout.
+func nativePageWidth(m *UIModel, width float32) float32 {
+	w := width - 2*tokenProductFrameGap
+	if !m.Immersive {
+		w -= nativeLibraryPanelWidth(m, width) + tokenProductFrameGap
+	}
+	if nativeDockedNowPlaying(m, width) {
+		w -= nativePanelWidth + tokenProductFrameGap
+	}
+	return max(0, w)
+}
+
 func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) {
 	a.secondaryArtwork = true
 	full := width > 1180 && !m.SidebarCollapsed
-	panelWidth := float32(nativeRailWidth)
-	if full {
-		panelWidth = nativeLibraryWidth
-	}
+	panelWidth := nativeLibraryPanelWidth(m, width)
 	panel := ui.Column(c).Width(panelWidth).Shrink(0).MinHeight(0).Background(p.surface).Radius(tokenRadiusPanel).Clip()
 	filter := ui.Local(panel, "library-filter", func() string { return "" })
 	panel.Children(func() {
@@ -947,10 +975,11 @@ func nativeColumns(width, minWidth, gap float32) (int, float32) {
 
 // nativeContent draws the page and returns its scroll position, which the
 // page's colour wash follows.
-func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool) *ui.ScrollState {
+// nativeContent is the page, contentWidth wide: the frame computes it, so
+// the page never lays out for the width it had a frame ago.
+func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool, contentWidth float32) *ui.ScrollState {
 	inset := nativeContentInset(compact)
 	scroll := ui.Scroll(c.Key("content-" + m.Route + "-" + m.Page.Title)).Grow(1).MinHeight(0).Label(a.Tr("shellContent"))
-	contentWidth := scroll.Bounds().W
 	a = nativeArtworkViewport(c, a, scroll)
 	scrolled := a.viewportScroll
 	nativeScrollbar(c, scroll, scrolled, p, nil)

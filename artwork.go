@@ -179,16 +179,18 @@ func (f *artworkFrame) get(raw string, requestedEdge int, priority artworkPriori
 	}
 
 	failed := entry != nil && time.Now().Before(entry.retryAt)
-	if priority == artPlayer {
-		// A queue thumbnail can paint immediately while the large cover loads.
-		// Conversely, the player bar can use a prefetched large cover as-is.
-		if bitmap, size := c.cachedCover(raw, edge); bitmap != nil {
+	// A cover cached at another size paints at once: a smaller one while
+	// this size loads, a larger one as it is. When a panel opens or the
+	// window resizes, covers change size bucket; without this every one
+	// blanked to a placeholder and loaded again.
+	if bitmap, size := c.cachedCover(raw, edge); bitmap != nil {
+		if priority == artPlayer {
 			c.lastPlayerCover = raw
-			if size < edge && !failed {
-				f.want(key, priority)
-			}
-			return bitmap
 		}
+		if size < edge && !failed {
+			f.want(key, priority)
+		}
+		return bitmap
 	}
 	if !failed {
 		f.want(key, priority)

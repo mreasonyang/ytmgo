@@ -453,3 +453,34 @@ func TestSystemArtworkReachesDownloaderWithoutCDNSizeRewrite(t *testing.T) {
 		}
 	}
 }
+
+// A cover that changes size bucket, as a panel opens or the window resizes,
+// paints from the size already cached instead of blanking to a placeholder:
+// a larger one as it is, a smaller one while its own size loads.
+func TestArtworkPaintsCachedSizeWhileItsBucketChanges(t *testing.T) {
+	c := artworkTestCache(t, artworkTestPNG(t, 16, 16))
+	const raw = "https://i.ytimg.com/vi/example/hqdefault.jpg"
+	medium := artRequest{url: artworkRequestAt(raw, 384), edge: 384}
+	requestTestArtwork(c, raw, 300)
+	c.workers.Wait()
+	cached := c.entries[medium]
+	if cached == nil || cached.bitmap == nil {
+		t.Fatal("the 384 cover did not load")
+	}
+	// Smaller: the larger cover paints, and nothing loads.
+	f := artworkFrame{cache: c}
+	if got := f.get(raw, 100, artPrimary); got != cached.bitmap {
+		t.Fatal("a smaller card blanked instead of painting the cached cover")
+	}
+	if len(f.wanted) != 0 {
+		t.Fatalf("a cover smaller than one cached loaded again: %v", f.wanted)
+	}
+	// Larger: the cached cover paints while the larger one loads.
+	f = artworkFrame{cache: c}
+	if got := f.get(raw, 500, artPrimary); got != cached.bitmap {
+		t.Fatal("a larger card blanked while its cover loads")
+	}
+	if len(f.wanted) != 1 {
+		t.Fatalf("the larger cover was not asked for: %v", f.wanted)
+	}
+}

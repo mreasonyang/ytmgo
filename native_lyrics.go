@@ -119,6 +119,7 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 		scroll.HandleInput(func(ev ui.InputEvent) bool {
 			return state.dragInput(ev, m, a)
 		})
+		nativeScrollbar(c, scroll, &state.scroll, p, nil)
 		// Lines scrolled past an edge fade out instead of being sliced; an edge
 		// fades only while there is more beyond it.
 		scroll.Effect(nativeEdgeFade{top: state.scroll.Y > 0.5, bottom: state.scroll.Y < state.scroll.MaxY-0.5})

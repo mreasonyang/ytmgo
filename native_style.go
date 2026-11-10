@@ -9,6 +9,9 @@ import "github.com/egoist/mygo/ui"
 // elevated surfaces and white text. Coral (accent) means play and nothing
 // else; attention marks errors and warnings. The values are generated from
 // design/tokens.json into native_tokens_gen.go.
+// nativeScrollbarWidth is a scroll bar's thickness, MyGo's and ours.
+const nativeScrollbarWidth = 8
+
 type nativePalette struct {
 	base, surface, raised, input, highlight ui.Color
 	text, secondary, muted                  ui.Color
@@ -90,7 +93,10 @@ func nativeTheme(dark bool) *ui.Theme {
 	t.Focus = p.text
 	t.FontSize = tokenSizeSmall
 	t.Radius = tokenRadiusControl
-	t.ScrollbarWidth = 8
+	// MyGo's bars stay while the pointer is anywhere over a scroller; they
+	// stay to be grabbed, unseen, and nativeScrollbar draws what shows.
+	t.ScrollbarWidth = nativeScrollbarWidth
+	t.Scrollbar = ui.Transparent
 	return t
 }
 

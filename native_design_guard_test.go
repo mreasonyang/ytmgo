@@ -72,7 +72,10 @@ func TestNativeViewsUseDesignTokens(t *testing.T) {
 			}
 			at := fset.Position(call.Pos())
 			if id, ok := call.Fun.(*ast.Ident); ok && artworkHelpers[id.Name] && len(call.Args) > 3 {
-				if lit, ok := call.Args[3].(*ast.BasicLit); ok && lit.Value != "0" {
+				// Not even 0: art flush with a rounded container takes the
+				// container's corners itself, as the GPU renderer rounds only
+				// the innermost clip.
+				if lit, ok := call.Args[3].(*ast.BasicLit); ok {
 					problems = append(problems, fmt.Sprintf("%s:%d: %s with corner %s; use a radius token", at.Filename, at.Line, id.Name, lit.Value))
 				}
 			}
@@ -101,9 +104,11 @@ func TestNativeViewsUseDesignTokens(t *testing.T) {
 				if v, ok := literal(call.Args[len(call.Args)-1]); ok && v != 0 {
 					report("%s(%g); use a colour role", sel.Sel.Name, v)
 				}
-			case sel.Sel.Name == "Radius" && len(call.Args) == 1:
-				if v, ok := literal(call.Args[0]); ok && v != 0 {
-					report("Radius(%g); use a radius token", v)
+			case sel.Sel.Name == "Radius":
+				for _, arg := range call.Args {
+					if v, ok := literal(arg); ok && v != 0 {
+						report("Radius(%g); use a radius token", v)
+					}
 				}
 			case sel.Sel.Name == "Tooltip" && len(call.Args) == 1:
 				report("Tooltip; use nativeTip, which draws the guidebook's tip")
@@ -132,5 +137,72 @@ func TestNativeViewsUseDesignTokens(t *testing.T) {
 	}
 	if len(problems) > 0 {
 		t.Fatalf("%d values stray from the design tokens:\n  %s", len(problems), strings.Join(problems, "\n  "))
+	}
+}
+
+// Every scroller draws its bars through nativeScrollbar (or
+// nativeScrollEdges, which calls it): the theme hides MyGo's own, so one
+// that didn't would show no bar at all.
+func TestScrollersDrawTheirBars(t *testing.T) {
+	files, err := filepath.Glob("*.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fset := token.NewFileSet()
+	for _, name := range files {
+		if strings.HasSuffix(name, "_test.go") {
+			continue
+		}
+		file, err := parser.ParseFile(fset, name, nil, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, decl := range file.Decls {
+			fn, ok := decl.(*ast.FuncDecl)
+			if !ok || fn.Body == nil {
+				continue
+			}
+			scrollers := map[string]token.Pos{}
+			barred := map[string]bool{}
+			ast.Inspect(fn.Body, func(n ast.Node) bool {
+				switch n := n.(type) {
+				case *ast.AssignStmt:
+					if id, ok := n.Lhs[0].(*ast.Ident); ok && len(n.Rhs) == 1 && createsScroller(n.Rhs[0]) {
+						scrollers[id.Name] = n.Pos()
+					}
+				case *ast.CallExpr:
+					if id, ok := n.Fun.(*ast.Ident); ok && (id.Name == "nativeScrollbar" || id.Name == "nativeScrollEdges") && len(n.Args) > 1 {
+						if arg, ok := n.Args[1].(*ast.Ident); ok {
+							barred[arg.Name] = true
+						}
+					}
+				}
+				return true
+			})
+			for v, pos := range scrollers {
+				if !barred[v] {
+					t.Errorf("%s: scroller %s draws no bar; call nativeScrollbar", fset.Position(pos), v)
+				}
+			}
+		}
+	}
+}
+
+// createsScroller reports whether e builds a scroller: a chain starting at
+// ui.Scroll, ui.ScrollHorizontal or ui.ScrollBoth.
+func createsScroller(e ast.Expr) bool {
+	for {
+		call, ok := e.(*ast.CallExpr)
+		if !ok {
+			return false
+		}
+		sel, ok := call.Fun.(*ast.SelectorExpr)
+		if !ok {
+			return false
+		}
+		if pkg, ok := sel.X.(*ast.Ident); ok && pkg.Name == "ui" {
+			return strings.HasPrefix(sel.Sel.Name, "Scroll")
+		}
+		e = sel.X
 	}
 }

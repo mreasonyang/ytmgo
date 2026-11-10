@@ -65,7 +65,7 @@ func nativeSheet(c *ui.Context, open *bool, scroll *ui.ScrollState, title string
 				}
 			})
 			list := ui.Scroll(c).Grow(1).MinHeight(0).Padding(12, 24, 32, 24).Gap(24).TrackScroll(scroll)
-			nativeScrollEdges(list, scroll, p, p.surface)
+			nativeScrollEdges(c, list, scroll, p, p.surface)
 			list.Children(func() {
 				body(sheet-48 < nativeSettingsStack)
 			})

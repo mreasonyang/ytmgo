@@ -76,6 +76,14 @@ in `native_style.go`, display-title styling in `native_fonts.go` (system font on
 - **Shadows** are the tokens' elevations: `Shadow(tokenShadowArt.args())`.
   Dialogs dim the window with `p.scrim`. Video plays on a black stage in
   both appearances, so the stage uses the dark palette.
+- **Scroll bars** are `nativeScrollbar`'s (guidebook §10): the theme hides
+  MyGo's, which show whenever the pointer is over a scroller, and leaves
+  them to be grabbed. `TestScrollersDrawTheirBars` fails on a scroller
+  without one.
+- **Clips:** MyGo's GPU renderer rounds only the innermost clip (the
+  software renderer the tests use rounds all of them), so content flush with
+  a rounded container takes its corners itself rather than relying on the
+  container's `Clip`.
 - **Time readouts** occupy fixed-width slots, so progress labels don't shift
   adjacent controls.
 - **CJK headings** keep their phrases whole: mark phrase boundaries in a

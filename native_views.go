@@ -771,7 +771,7 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 		}
 		scroll := ui.Scroll(c).Grow(1).MinHeight(0).Padding(0, pad, 8).Label(a.Tr("shellLibraryRegion"))
 		clipped := nativeArtworkViewport(c, a, scroll)
-		nativeScrollEdges(scroll, clipped.viewportScroll, p, p.surface)
+		nativeScrollEdges(c, scroll, clipped.viewportScroll, p, p.surface)
 		scroll.Children(func() {
 			for i, item := range items {
 				if *filter != "" && nativeLibraryKind(item) != *filter {
@@ -951,6 +951,7 @@ func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, co
 	contentWidth := scroll.Bounds().W
 	a = nativeArtworkViewport(c, a, scroll)
 	scrolled := a.viewportScroll
+	nativeScrollbar(c, scroll, scrolled, p, nil)
 	nativeLoadNearEnd(c, scroll, m, a)
 	scroll.Children(func() {
 		if strings.HasPrefix(m.Route, "browse:") && m.Page.Title != "" {
@@ -1168,6 +1169,7 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 				// one-line subtitle away from its neighbours.
 				shelfScroll := ui.ScrollHorizontal(c).Gap(16).PaddingY(4).Height(4*56 + 8).AlignItems(ui.Start)
 				clipped := nativeShelfViewport(c, a, shelfScroll)
+				nativeScrollbar(c, shelfScroll, clipped.viewportScroll, p, nil)
 				shelfScroll.Children(func() {
 					for start := 0; start < len(shelf.Items); start += 4 {
 						ui.Column(c.Key(fmt.Sprintf("songs-%d", start))).Width(columnWidth).Shrink(0).Children(func() {
@@ -1181,6 +1183,7 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 				size := nativeCardArt(compact)
 				shelfScroll := ui.ScrollHorizontal(c).PaddingY(4).Height(size + 112).MarginX(-12).AlignItems(ui.Start)
 				clipped := nativeShelfViewport(c, a, shelfScroll)
+				nativeScrollbar(c, shelfScroll, clipped.viewportScroll, p, nil)
 				shelfScroll.Children(func() {
 					for j, item := range shelf.Items {
 						nativeCard(c.Key(fmt.Sprintf("card-%d", j)), item, m, clipped, p, size)
@@ -1312,7 +1315,10 @@ func nativeShortcutTile(c *ui.Context, item catalog.Item, m *UIModel, a ViewActi
 		b.Background(p.press)
 	}
 	b.Children(func() {
-		nativeArtwork(c, item.Artwork, tokenProductTile, 0, a, p)
+		// The art is flush with the tile's left side, so it takes the tile's
+		// corners there itself: MyGo's GPU renderer rounds only the innermost
+		// clip, and the art's own clip would square the tile's off.
+		nativeArtwork(c, item.Artwork, tokenProductTile, tokenRadiusControl, a, p).Radius(tokenRadiusControl, 0, 0, tokenRadiusControl)
 		t := ui.Text(c, item.Title).Grow(1).MinWidth(0).FontSize(tokenSizeSmall).FontWeight(700).MaxLines(2).Ellipsis("…")
 		if playing {
 			t.TextColor(p.accentText)
@@ -2046,6 +2052,7 @@ func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 		if overlay {
 			scroll := ui.Scroll(c).Grow(1).MinHeight(0).Gap(gap)
 			a = nativeArtworkViewport(c, a, scroll)
+			nativeScrollbar(c, scroll, a.viewportScroll, p, nil)
 			scroll.Children(body)
 			return a.viewportScroll
 		}
@@ -2105,6 +2112,7 @@ func nativePanelBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 	}
 	scroll := ui.Scroll(c.Key("panel-queue")).Grow(1).MinHeight(68)
 	a = nativeArtworkViewport(c, a, scroll)
+	nativeScrollbar(c, scroll, a.viewportScroll, p, nil)
 	// As the lyrics beside it: rows past an edge fade, while more lies beyond.
 	st := a.viewportScroll
 	scroll.Effect(nativeEdgeFade{top: st.Y > 0.5, bottom: st.Y < st.MaxY-0.5})
@@ -2154,6 +2162,7 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 	if compact {
 		scroll := ui.Scroll(c).Grow(1).Padding(16).Gap(24)
 		a = nativeArtworkViewport(c, a, scroll)
+		nativeScrollbar(c, scroll, a.viewportScroll, p, nil)
 		scroll.Children(func() {
 			nativePlaybackNotice(c, m, a, p)
 			mediaHeight := max(float32(180), height-390)
@@ -2180,6 +2189,7 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 		// The queue card is a sibling of the media column, so it keeps the
 		// outer viewport instead of the left column's clip.
 		media := nativeArtworkViewport(c, a, scroll)
+		nativeScrollbar(c, scroll, media.viewportScroll, p, nil)
 		scroll.Children(func() {
 			a := media
 			ui.Column(c).MinHeight(contentHeight).Shrink(0).Gap(24).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
@@ -2343,8 +2353,8 @@ func nativePageWash(layer ui.Element, m *UIModel, a ViewActions, p nativePalette
 // settings sheet does: a hairline along its top once content has scrolled
 // beneath the header, and a fade at its bottom while more lies below. Drawn
 // over the rows at paint time, from the scroll position then.
-func nativeScrollEdges(scroll ui.Element, st *ui.ScrollState, p nativePalette, bg ui.Color) {
-	scroll.DrawOver(func(painter *ui.Painter, r ui.Rect) {
+func nativeScrollEdges(c *ui.Context, scroll ui.Element, st *ui.ScrollState, p nativePalette, bg ui.Color) {
+	nativeScrollbar(c, scroll, st, p, func(painter *ui.Painter, r ui.Rect) {
 		if st.Y > 0 {
 			painter.Fill(ui.Rect{X: r.X, Y: r.Y, W: r.W, H: 1}, p.line, 0)
 		}
@@ -2353,6 +2363,117 @@ func nativeScrollEdges(scroll ui.Element, st *ui.ScrollState, p nativePalette, b
 			painter.FillGradient(ui.Rect{X: r.X, Y: r.Y + r.H - fade, W: r.W, H: fade}, ui.LinearGradient{From: bg.Alpha(0), To: bg, Angle: 180}, 0)
 		}
 	})
+}
+
+// nativeScrollbarIdle is how long a scroller's bar stays after the last
+// scroll, or after the pointer comes over it, before fading.
+const nativeScrollbarIdle = time.Second
+
+type nativeScrollbarState struct {
+	x, y           float32
+	over           bool
+	active, hidden time.Time
+}
+
+// nativeScrollbar draws a scroller's bars in place of MyGo's, which the
+// theme makes transparent: MyGo shows them for as long as the pointer is
+// anywhere over the scroller. These show as it scrolls and as the pointer
+// comes over it, then fade once it rests, as macOS's overlay bars do; on
+// the bar's own strip, where MyGo lets the pointer grab it, they stay and
+// brighten. under paints beneath them in the same DrawOver (an element has
+// one), as the scroll edges do.
+func nativeScrollbar(c *ui.Context, scroll ui.Element, st *ui.ScrollState, p nativePalette, under func(*ui.Painter, ui.Rect)) {
+	s := ui.Local(scroll, "scrollbar", func() nativeScrollbarState { return nativeScrollbarState{} })
+	now := c.Now()
+	if st.X != s.x || st.Y != s.y {
+		s.x, s.y, s.active = st.X, st.Y, now
+	}
+	px, py, over := scroll.PointerPosition()
+	if over && !s.over {
+		s.active = now
+	}
+	s.over = over
+	box := scroll.Bounds()
+	strip := float32(nativeScrollbarWidth + 6) // MyGo's grab strip
+	onBar := over && (st.MaxY > 0 && (c.Direction() == ui.RightToLeft && px <= strip || c.Direction() != ui.RightToLeft && px >= box.W-strip) ||
+		st.MaxX > 0 && py >= box.H-strip)
+	show := onBar
+	if idle := now.Sub(s.active); !onBar && idle < nativeScrollbarIdle {
+		show = true
+		c.After(nativeScrollbarIdle - idle)
+	}
+	// It appears at once and fades as it goes, as macOS's do. The fade is
+	// timed here, not with Animate, so a frozen clock (as in tests) never
+	// holds frames: only a fade under way asks for them.
+	alpha := float32(1)
+	if show {
+		s.hidden = time.Time{}
+	} else {
+		if s.hidden.IsZero() {
+			s.hidden = now
+		}
+		alpha = 1 - float32(now.Sub(s.hidden))/float32(tokenMotionBase)
+		if s.active.IsZero() || alpha <= 0 {
+			alpha = 0
+		} else {
+			c.AnimationFrame()
+		}
+	}
+	thumb := p.track
+	if onBar {
+		thumb = p.muted
+	}
+	rtl := c.Direction() == ui.RightToLeft
+	scroll.DrawOver(func(painter *ui.Painter, r ui.Rect) {
+		if under != nil {
+			under(painter, r)
+		}
+		if alpha <= 0 {
+			return
+		}
+		col := thumb.Alpha(float32(thumb.A) / 255 * alpha)
+		for _, bar := range nativeScrollbarThumbs(r, st, rtl) {
+			painter.Fill(bar, col, nativeScrollbarWidth/2)
+		}
+	})
+}
+
+// nativeScrollbarThumbs are the thumbs MyGo would draw (its scrollBars and
+// scrollThumb), so what shows is where the pointer grabs.
+func nativeScrollbarThumbs(r ui.Rect, st *ui.ScrollState, rtl bool) []ui.Rect {
+	const w = nativeScrollbarWidth
+	vertical, horizontal := st.MaxY > 0.5, st.MaxX > 0.5
+	corner := float32(0)
+	if vertical && horizontal {
+		corner = w + 3
+	}
+	thumb := func(pos, track, view, content, offset float32) (float32, float32) {
+		inner := track - 4
+		length := min(max(inner*view/content, 24), inner)
+		at := max(0, min((inner-length)*offset/(content-view), inner-length))
+		return pos + 2 + at, length
+	}
+	var bars []ui.Rect
+	if vertical {
+		y, h := thumb(r.Y, max(r.H-corner, 0), r.H, r.H+st.MaxY, st.Y)
+		x := r.X + r.W - w - 3
+		if rtl {
+			x = r.X + 3
+		}
+		bars = append(bars, ui.Rect{X: x, Y: y, W: w, H: h})
+	}
+	if horizontal {
+		track := max(r.W-corner, 0)
+		x, l := thumb(r.X, track, r.W, r.W+st.MaxX, st.X)
+		if rtl {
+			x = r.X + track - (x - r.X) - l
+			if vertical {
+				x += corner
+			}
+		}
+		bars = append(bars, ui.Rect{X: x, Y: r.Y + r.H - w - 3, W: l, H: w})
+	}
+	return bars
 }
 
 // nativeScrollingWash paints a colour wash from the top of layer, beneath its

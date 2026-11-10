@@ -323,8 +323,10 @@ So the roles step up as they hold one another: art 8 in a row 12 in a panel
 more than the space allows, the inner shapes give up their own corners: a
 list inside a card (the Now Playing queue) is made of flat bands that the
 card clips, as the Settings groups are. A shape flush with its container
-(the art of a quick-access tile) takes no corner of its own either; the
-container's clip draws it. A focus ring nests around its element the same
+(the art of a quick-access tile) takes the container's corners on the
+sides it shares (12, 0, 0, 12), never 0 with the container's clip left to
+round it: MyGo's GPU renderer rounds only the innermost clip, so an inner
+clip squares the outer corners off. A focus ring nests around its element the same
 way: element radius plus the ring's offset.
 
 A screenshot nests around the panels in it at the scale it is shown:
@@ -395,6 +397,9 @@ tooltip. The website uses icons only on actions and platform names.
 
 ## 10. Interaction
 
+- **Scroll bars** show as a list scrolls and as the pointer comes over it,
+  and fade after a second at rest, wherever the pointer rests; on the
+  bar's own strip they stay, brighter (`muted` for `track`), to be grabbed.
 - **Hover only on what acts.** Rows and cards that open something get the
   `hover` wash; text and tables that don't, get nothing.
 - **Hover response by kind:** capsule buttons change colour (to

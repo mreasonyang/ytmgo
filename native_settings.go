@@ -98,7 +98,7 @@ func nativeSettingsGroup(c *ui.Context, p nativePalette, title string, inset flo
 
 func nativeSettingTile(c *ui.Context, icon string, bg, fg ui.Color) {
 	ui.Box(c).Size(32, 32).Shrink(0).Radius(tokenRadiusControl).Background(bg).TextColor(fg).Center().Children(func() {
-		ui.Icon(c, nativeIcons[icon]).Size(18, 18)
+		ui.Icon(c, nativeIcons[icon]).Size(20, 20)
 	})
 }
 
@@ -137,7 +137,7 @@ func nativeKeycaps(c *ui.Context, p nativePalette, chord string) ui.Element {
 				ui.Text(c, key).FontSize(tokenSizeMicro).PaddingX(4).TextColor(p.muted)
 				continue
 			}
-			ui.Box(c).MinWidth(26).Height(26).PaddingX(8).Radius(tokenRadiusArt).Background(p.surface).Border(1, p.line).Center().Children(func() {
+			ui.Box(c).MinWidth(24).Height(24).PaddingX(8).Radius(tokenRadiusArt).Background(p.surface).Border(1, p.line).Center().Children(func() {
 				ui.Text(c, key).FontSize(tokenSizeMicro).FontWeight(600).TextColor(p.text)
 			})
 		}
@@ -154,7 +154,7 @@ func nativeLinkButton(c *ui.Context, label string, p nativePalette, icon string)
 	b.Children(func() {
 		ui.Text(c, label).FontSize(tokenSizeMeta).FontWeight(600)
 		if icon != "" {
-			ui.Icon(c, nativeIcons[icon]).Size(14, 14).TextColor(p.secondary)
+			ui.Icon(c, nativeIcons[icon]).Size(16, 16).TextColor(p.secondary)
 		}
 	})
 	return b

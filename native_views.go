@@ -141,7 +141,7 @@ const (
 	// Lyrics first, it is a nativeCoverThumb beside the title.
 	nativeCoverMin         = 120
 	nativeCoverShare       = 0.45
-	nativeNowPlayingChrome = 450
+	nativeNowPlayingChrome = 448
 	nativeCoverThumb       = 56
 )
 
@@ -282,13 +282,25 @@ func nativeToggleIcon(c *ui.Context, name, label string, p nativePalette, active
 	}
 	nativePress(b)
 	b.Children(func() {
-		icon := min(hit*0.6, 22)
+		icon := min(nativeGrid(hit*0.6), 24)
 		ui.Icon(c, nativeIcons[name]).Size(icon, icon)
 		if active {
-			ui.Box(c).Absolute().Left((hit-4)/2).Bottom(1).Size(4, 4).Radius(tokenRadiusPill).Background(on).PassThrough()
+			ui.Box(c).Absolute().Left((hit-4)/2).Bottom(0).Size(4, 4).Radius(tokenRadiusPill).Background(on).PassThrough()
 		}
 	})
 	return b
+}
+
+// nativeGrid rounds a computed dimension to the 4 px grid (design/README.md
+// §6): every spatial value is a multiple of 4.
+func nativeGrid(v float32) float32 {
+	return max(4, float32(math.Round(float64(v)/4))*4)
+}
+
+// nativeGridFloor rounds a computed size down to the 4 px grid, for sizes
+// that must not outgrow the space they were measured to fit.
+func nativeGridFloor(v float32) float32 {
+	return max(4, float32(math.Floor(float64(v)/4))*4)
 }
 
 // nativePress gives a button the guidebook's press feedback: every button
@@ -435,7 +447,7 @@ func nativeSearchField(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 		field.Background(p.highlight).BorderColor(p.line)
 	}
 	return field.Children(func() {
-		ui.Icon(c, nativeIcons["search"]).Size(22, 22).TextColor(p.secondary)
+		ui.Icon(c, nativeIcons["search"]).Size(20, 20).TextColor(p.secondary)
 		input := ui.TextInput(c.Key("search-input"), &m.Query).Grow(1).MinWidth(0).Height(h - 6).Padding(0).BorderWidth(0).Background(ui.Transparent).Placeholder(a.Tr("shellSearchPlaceholder")).Label(a.Tr("shellNavSearch")).FontSize(tokenSizeSmall)
 		if m.FocusSearch {
 			input.Focus()
@@ -493,7 +505,7 @@ func nativeAvatar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, siz
 		if avatar != nil {
 			ui.Image(c, avatar).Fill().Fit(ui.Cover).PassThrough()
 		} else {
-			ui.Icon(c, nativeIcons["user"]).Size(size*0.56, size*0.56)
+			ui.Icon(c, nativeIcons["user"]).Size(nativeGrid(size*0.56), nativeGrid(size*0.56))
 		}
 	})
 }
@@ -763,7 +775,7 @@ func nativeLibraryCacheStatus(c *ui.Context, m *UIModel, a ViewActions, p native
 	}
 	ui.Row(c).Shrink(0).Padding(8, 16).Gap(8).AlignItems(ui.Center).Children(func() {
 		if m.LibraryRefreshing {
-			ui.Spinner(c).Size(14, 14).Label(a.Tr(key))
+			ui.Spinner(c).Size(16, 16).Label(a.Tr(key))
 		}
 		ui.Text(c, a.Tr(key)).Grow(1).MinWidth(0).FontSize(tokenSizeMicro).TextColor(p.secondary).MaxLines(2)
 		if m.LibraryErrorKey != "" && m.SignedIn && a.RetryLibrary != nil {
@@ -795,7 +807,7 @@ func nativeLibrarySkeleton(c *ui.Context, a ViewActions, p nativePalette, full b
 				// Bars of varied length read as titles rather than a table.
 				ui.Column(c).Grow(1).MinWidth(0).Gap(8).Children(func() {
 					ui.Box(c).Width(float32(120 + 40*(i%3))).Height(12).Radius(tokenRadiusPill).Background(p.highlight)
-					ui.Box(c).Width(float32(72 + 24*((i+1)%3))).Height(10).Radius(tokenRadiusPill).Background(p.highlight)
+					ui.Box(c).Width(float32(72 + 24*((i+1)%3))).Height(8).Radius(tokenRadiusPill).Background(p.highlight)
 				})
 			})
 		}
@@ -1236,7 +1248,7 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 		}
 		b := ui.ButtonBase(c).Size(buttonSize, buttonSize).Shrink(0).Radius(buttonSize / 2).Background(p.accent).TextColor(p.onAccent).Label(a.Tr(key) + " · " + m.Page.Title).Tooltip(a.Tr(key)).Disabled(inPage && m.PlaybackLoading)
 		nativePlayFeedback(b)
-		b.Children(func() { ui.Icon(c, nativeIcons[icon]).Size(26, 26) })
+		b.Children(func() { ui.Icon(c, nativeIcons[icon]).Size(24, 24) })
 		if b.Clicked() {
 			if inPage {
 				a.Toggle()
@@ -1421,7 +1433,7 @@ func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p n
 			}
 			if hovered && item.ID != "" {
 				ui.Box(c).Absolute().Right(8).Bottom(8).Size(48, 48).Radius(tokenRadiusPill).Background(p.accent).TextColor(p.onAccent).Shadow(tokenShadowControl.args(p)).Center().PassThrough().Children(func() {
-					ui.Icon(c, nativeIcons["play"]).Size(22, 22)
+					ui.Icon(c, nativeIcons["play"]).Size(24, 24)
 				})
 			}
 		})
@@ -1517,7 +1529,7 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 				case playing:
 					ui.Icon(c, nativeIcons["volume"]).Size(16, 16).TextColor(p.accent)
 				case hovered:
-					ui.Icon(c, nativeIcons["play"]).Size(14, 14).TextColor(p.text)
+					ui.Icon(c, nativeIcons["play"]).Size(16, 16).TextColor(p.text)
 				default:
 					ui.Text(c, fmt.Sprint(index+1)).FontSize(tokenSizeSmall).TextColor(p.secondary)
 				}
@@ -1738,7 +1750,7 @@ func nativePlayButton(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 	}
 	b := ui.ButtonBase(c).Size(size, size).Shrink(0).Radius(size / 2).Label(a.Tr(key)).Tooltip(a.Tr(key)).Background(p.text).TextColor(p.base).Disabled(m.Current.ID == "")
 	nativePlayFeedback(b)
-	b.Children(func() { ui.Icon(c, nativeIcons[icon]).Size(size*0.5, size*0.5) })
+	b.Children(func() { ui.Icon(c, nativeIcons[icon]).Size(nativeGrid(size*0.5), nativeGrid(size*0.5)) })
 	if b.Clicked() {
 		a.Toggle()
 	}
@@ -1834,8 +1846,8 @@ func nativeProgressLine(c *ui.Context, m *UIModel, p nativePalette) {
 	if m.Duration > 0 {
 		value = float32(max(0, min(1, m.Position/m.Duration)))
 	}
-	ui.Box(c).Height(2).Shrink(0).Margin(0, 8, 0).Radius(tokenRadiusPill).Background(p.text.Alpha(0.2)).Children(func() {
-		ui.Box(c).Height(2).Radius(tokenRadiusPill).WidthPercent(value * 100).Background(p.text)
+	ui.Box(c).Height(4).Shrink(0).Margin(0, 8, 0).Radius(tokenRadiusPill).Background(p.text.Alpha(0.2)).Children(func() {
+		ui.Box(c).Height(4).Radius(tokenRadiusPill).WidthPercent(value * 100).Background(p.text)
 	})
 }
 
@@ -1851,7 +1863,7 @@ func nativeVolume(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, sho
 	}
 	if showSlider {
 		volume := m.Volume
-		s := nativeSlider(c.Key("volume"), &volume, 1, p).Width(93).Label(a.Tr("shellVolume"))
+		s := nativeSlider(c.Key("volume"), &volume, 1, p).Width(96).Label(a.Tr("shellVolume"))
 		if s.Changed() {
 			a.Volume(volume)
 		}
@@ -1939,6 +1951,7 @@ func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 			if overlay {
 				artSize = min(artSize, max(nativeCoverMin, windowHeight-600))
 			}
+			artSize = nativeGridFloor(artSize)
 			// Lyrics first: the cover becomes a thumbnail beside the title and
 			// the lyrics take the rest. A video keeps its size.
 			lyricsFirst := m.LyricsExpanded && m.selectedPanelTab() == "lyrics" && !m.Video

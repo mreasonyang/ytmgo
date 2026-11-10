@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"math"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -14,11 +15,15 @@ import (
 // The app's look comes from the design guidebook (design/README.md) through
 // the generated tokens. This keeps literal values out of the view code:
 // colours, corners, type sizes and shadows come from tokens or the palette,
-// and literal spacing sits on the guidebook's scale.
+// and every literal spatial value (padding, margin, gap, size, position) is a
+// multiple of the 4 px base unit; 1 px hairlines are the one exception.
 func TestNativeViewsUseDesignTokens(t *testing.T) {
-	spacing := map[float64]bool{0: true, 4: true, 8: true, 12: true, 16: true, 24: true, 32: true, 48: true, 72: true}
+	onGrid := func(v float64) bool { return v == math.Trunc(v) && int(v)%4 == 0 }
 	spaceCalls := map[string]bool{"Padding": true, "PaddingX": true, "PaddingY": true, "PaddingStart": true, "PaddingEnd": true,
-		"PaddingTop": true, "PaddingBottom": true, "Gap": true, "Margin": true, "MarginTop": true, "MarginBottom": true}
+		"PaddingTop": true, "PaddingBottom": true, "Gap": true, "Margin": true, "MarginTop": true, "MarginBottom": true,
+		"Size": true, "Width": true, "Height": true, "MinWidth": true, "MinHeight": true, "MaxWidth": true, "MaxHeight": true,
+		"Left": true, "Top": true, "Right": true, "Bottom": true}
+	hairline := map[string]bool{"Size": true, "Width": true, "Height": true}
 	files, err := filepath.Glob("native_*.go")
 	if err != nil {
 		t.Fatal(err)
@@ -97,8 +102,8 @@ func TestNativeViewsUseDesignTokens(t *testing.T) {
 				report("Shadow with literal values; use a tokenShadow elevation")
 			case spaceCalls[sel.Sel.Name]:
 				for _, arg := range call.Args {
-					if v, ok := literal(arg); ok && !spacing[v] {
-						report("%s(%g) is off the spacing scale", sel.Sel.Name, v)
+					if v, ok := literal(arg); ok && !onGrid(v) && !(v == 1 && hairline[sel.Sel.Name]) {
+						report("%s(%g) is off the 4 px grid", sel.Sel.Name, v)
 					}
 				}
 			}

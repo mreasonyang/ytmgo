@@ -65,7 +65,11 @@ in `native_style.go`, display-title styling in `native_fonts.go` (system font on
   tokens' `product` measures.
 - **No literal styling.** `TestNativeViewsUseDesignTokens` parses the view
   code and fails on a literal colour, corner, type size or shadow, or on
-  spacing off the scale (0, 4, 8, 12, 16, 24, 32, 48, 72). Values that are
+  any literal spatial value off the 4 px grid, in every file of the package.
+  Corners are radius tokens (8, 12, 16, 24; `TestRadiusScale`) or half a
+  size, including those passed to the artwork helpers, and nest smaller
+  inside (guidebook §7): the queue's rows are flat bands its card clips.
+  Tooltips go through `nativeTip`, since MyGo's own draws a 5 px corner. Values that are
   geometry rather than design (a slider inset equal to its thumb's radius)
   are named constants derived from what they depend on.
 - **Shadows** are the tokens' elevations: `Shadow(tokenShadowArt.args())`.

@@ -12,7 +12,7 @@ func nativeVideoQualityControl(c *ui.Context, m *UIModel, a ViewActions, p nativ
 	sel := ui.SelectBase(c, &chosen)
 	sel.Trigger.Height(height).Width(width).PaddingX(12).Gap(8).Radius(tokenRadiusControl).AlignItems(ui.Center).Background(p.input).TextColor(p.text).Label(a.Tr("nativeVideoQuality")).Disabled(a.SetVideoQuality == nil)
 	if m.VideoQualityError != "" {
-		sel.Trigger.Tooltip(a.Tr(m.VideoQualityError))
+		nativeTip(c, sel.Trigger, a.Tr(m.VideoQualityError), p)
 	}
 	if sel.Trigger.Hovered() || sel.Open() {
 		sel.Trigger.Background(p.highlight)

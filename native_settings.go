@@ -50,7 +50,7 @@ func nativeSheet(c *ui.Context, open *bool, scroll *ui.ScrollState, title string
 		if compact {
 			panel.Height(height)
 		} else {
-			panel.MaxHeight(min(height-48, 780)).Radius(tokenRadiusPanel).Border(1, p.line)
+			panel.MaxHeight(min(height-48, 780)).Radius(tokenRadiusSheet).Border(1, p.line)
 			// The scrim and the hairline set the dialog apart; on the dark
 			// scrim a shadow can't be seen, so only light draws one.
 			if !p.dark {
@@ -80,7 +80,7 @@ func nativeSettingsGroup(c *ui.Context, p nativePalette, title string, inset flo
 		if title != "" {
 			ui.Text(c, title).FontSize(tokenSizeSmall).FontWeight(700).PaddingX(4)
 		}
-		ui.Column(c).Radius(tokenRadiusControl).Background(p.raised).Clip().Children(func() {
+		ui.Column(c).Radius(tokenRadiusPanel).Background(p.raised).Clip().Children(func() {
 			first := true
 			for _, row := range rows {
 				if row == nil {
@@ -97,7 +97,7 @@ func nativeSettingsGroup(c *ui.Context, p nativePalette, title string, inset flo
 }
 
 func nativeSettingTile(c *ui.Context, icon string, bg, fg ui.Color) {
-	ui.Box(c).Size(32, 32).Shrink(0).Radius(tokenRadiusControl).Background(bg).TextColor(fg).Center().Children(func() {
+	ui.Box(c).Size(32, 32).Shrink(0).Radius(tokenRadiusArt).Background(bg).TextColor(fg).Center().Children(func() {
 		ui.Icon(c, nativeIcons[icon]).Size(20, 20)
 	})
 }

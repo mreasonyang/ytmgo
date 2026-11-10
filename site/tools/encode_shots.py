@@ -66,11 +66,14 @@ def social(home: Path, icon: Image.Image) -> None:
         wash.line([(0, y), (w, y)], fill=tuple(round(c * k) for c in tint))
     shot = Image.open(home).convert("RGB")
     shot = shot.resize((760, 760 * shot.height // shot.width), Image.LANCZOS)
+    # At this scale (760 of 1440) the app's 16 px panels draw at 8.4, 4.2 from
+    # the edge, so the frame's corner nests at control (12), as on the page.
+    corner = TOKENS["radius"]["control"]
     mask = Image.new("L", shot.size, 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, *shot.size), 16, fill=255)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, *shot.size), corner, fill=255)
     card.paste(shot, (560, 150), mask)
     draw = ImageDraw.Draw(card)
-    draw.rounded_rectangle((559, 149, 560 + shot.width, 150 + shot.height), 16, outline=tuple(round(c * .4) for c in tint), width=1)
+    draw.rounded_rectangle((559, 149, 560 + shot.width, 150 + shot.height), corner + 1, outline=tuple(round(c * .4) for c in tint), width=1)
     badge = icon.resize((76, 76), Image.LANCZOS)
     card.paste(badge, (64, 64), badge)
     brand = font("sans-serif", 44, 800)

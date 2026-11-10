@@ -270,7 +270,7 @@ design guard and the website's lint fail on an off-grid value.
 | --- | --- | --- | --- |
 | Global bar | 64 | 64 | 60, in-page |
 | Library | 300, collapsible to a 72 rail | 72 rail | Library tab |
-| Page panel | radius 12, inset 24 | same | full bleed, inset 16 |
+| Page panel | radius 16, inset 24 | same | full bleed, inset 16 |
 | Now Playing | 360 docked | 380 floating | sheet |
 | Player | 80, three zones | 80 | 60 mini player + 64 tab bar |
 
@@ -283,17 +283,40 @@ pointer and 44 for touch.
 
 ## 7. Shape and depth
 
+Corners come from one scale in 4 px steps: **8, 12, 16, 24, 36, 44**, and no
+other value. Four of them have roles; 36 and 44 are free for larger
+surfaces when a design needs them.
+
 | Token | Radius | Use |
 | --- | --- | --- |
-| `art` | 4 | Artwork up to 64 px, thumbnails, keycaps, items inside menus |
-| `control` | 8 | Rows, tiles, cards, menus, inputs, command boxes, artwork above 64 px |
-| `panel` | 12 | Panels, dialogs, sheets, popovers, screenshots, the lyrics panel |
+| `art` | 8 | Artwork up to 64 px, thumbnails, keycaps, icon tiles, segments, items inside menus, tooltips |
+| `control` | 12 | Rows, tiles, cards, menus and popovers, inputs, command boxes, artwork above 64 px |
+| `panel` | 16 | Panels, the mini player, groups inside a sheet, the lyrics panel, website cards |
+| `sheet` | 24 | Dialogs and sheets |
 | `pill` | capsule | Buttons, chips, search, badges, progress bars |
 | round | 50 % | Icon buttons, play buttons, avatars, artist art |
 | `icon` | 22 % | The app icon, everywhere it appears |
 
-**Nesting:** an inner corner is the outer radius minus the padding between
-them, never less than `art`.
+A capsule and a circle are shapes, not radii: their corner is half their
+height, whatever that is. The app icon's corner is a share of its size.
+
+**Nesting:** a shape inside another has a smaller corner, smaller by no more
+than the space between them: outer > inner, and outer − inner ≤ padding.
+So the roles step up as they hold one another: art 8 in a row 12 in a panel
+16, a tile 8 in a group 16 in a sheet 24. Where a chain would need one step
+more than the space allows, the inner shapes give up their own corners: a
+list inside a card (the Now Playing queue) is made of flat bands that the
+card clips, as the Settings groups are. A shape flush with its container
+(the art of a quick-access tile) takes no corner of its own either; the
+container's clip draws it. A focus ring nests around its element the same
+way: element radius plus the ring's offset.
+
+A screenshot nests around the panels in it at the scale it is shown:
+showing a 1440 px window at scale s, its corner must exceed 16s by no more
+than 8s (the frame gap), so it is 16 from 960 px wide, 12 from 720, and 8
+below; the phone shot's frame is 16 from 280, 12 from 212. Below about
+480 px (a phone's viewport) the panels inside draw at 4 or less and nothing
+on the scale nests; the frame stays at the floor, 8.
 
 **Depth:** a shadow must separate something that floats or lifts; it is
 never decoration. Shadows are black at an opacity tuned on dark surfaces;
@@ -384,7 +407,8 @@ tooltip. The website uses icons only on actions and platform names.
 ## 11. Components
 
 **Product:**
-- **Track row:** 56 high, radius `control`, 40 art (`art` radius). Number,
+- **Track row:** 56 high, radius `control`, 40 art (`art` radius); in the
+  Now Playing card a flat band across the card. Number,
   title over artist, album, duration in mono. The playing indicator has its
   own slot, so columns line up whether a row plays or not, and a list whose
   rows all come from one album (an album's own page) drops the Album column. The number becomes a play glyph
@@ -415,8 +439,11 @@ tooltip. The website uses icons only on actions and platform names.
   "Follow playback". Lines scrolled past the view's top or bottom fade out
   over 24 rather than being cut, and an edge fades only while more lies
   beyond it.
-- **Dialogs and sheets:** radius `panel`, `raised`, one inverted primary
-  action.
+- **Dialogs and sheets:** radius `sheet`, `raised`, one inverted primary
+  action; their groups `panel`, rows in a group flat or `control`, icon
+  tiles `art`.
+- **Tooltips:** inverted, `micro` text, radius `art`, the `tooltip`
+  elevation, 8 from their anchor.
 
 **Brand:**
 - **Track head:** the section's row from the app's track table: number,
@@ -424,7 +451,8 @@ tooltip. The website uses icons only on actions and platform names.
   reader is in it.
 - **Title + body:** a display title, then a `lead` paragraph in
   `secondary`, no wider than 46 characters.
-- **Media panel:** a real screenshot or a live replica, radius `panel`,
+- **Media panel:** a real screenshot (its corner nests at its shown size,
+  §7) or a live replica, radius `panel`,
   with a hairline ring. No drop shadow: on the black page one can't be
   seen, and the ring does the separating. No fake window chrome. A replica
   follows the app's surfaces: the lyrics demo is the Now Playing panel,
@@ -475,7 +503,7 @@ marked artwork rules.
 | --- | --- | --- |
 | Tokens | Hand-written in `native_style.go` | Generated from `tokens.json` (`native_tokens_gen.go`), checked by a test |
 | Coral | Also errors, selection, Premium, open library item, every active toggle | Play only; errors `attention` with an icon, selection inverted, Premium neutral, non-playback toggles `text` with a dot |
-| Radii | 6, 8, 10, 12, 14 | `art` 4, `control` 8, `panel` 12, nested inner corners |
+| Radii | 4, 5, 6, 8, 10, 12, 14 | The scale 8, 12, 16, 24: `art` 8, `control` 12, `panel` 16, `sheet` 24, every nest smaller inside |
 | Type | Base 14; 11, 14, 16, 20, 22 in use | The scale: 12, 13, 15, 17, 22, 24, 32, title |
 | Display titles | System font 800, ad hoc | System font at the display weight and leading, through one helper (`nativeDisplay`) |
 | Feedback | Native defaults | Buttons press to 96 %; play controls grow 105 % |

@@ -168,6 +168,17 @@ html:not(.js) .nav, .nav.is-scrolled { background: color-mix(in srgb, var(--base
 .shot { margin-block: 0; }
 figure.shot:not([class*=wrap]) { margin-inline: 0; }
 .shot img, .lyrics { border-radius: var(--r-panel); box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 10%, transparent); } /* on the black page a hairline separates; a drop shadow can't be seen */
+/* A screenshot's corner nests around the app's panels in it (16, 8 from the
+   window's edge), drawn at the shot's scale s: it must exceed 16s by no more
+   than 8s, so it steps down as the shot shrinks. A 1440 px window: */
+.shot { container-type: inline-size; }
+.shot img { border-radius: var(--r-art); }
+@container (min-width: 720px) { .shot img { border-radius: var(--r-control); } }
+@container (min-width: 960px) { .shot img { border-radius: var(--r-panel); } }
+/* A 420 px phone window, whose mini player card is the panel: */
+.shot--narrow img { border-radius: var(--r-art); }
+@container (min-width: 212px) { .shot--narrow img { border-radius: var(--r-control); } }
+@container (min-width: 280px) { .shot--narrow img { border-radius: var(--r-panel); } }
 .shot--sticky { position: sticky; top: 96px; }
 
 /* Points: the supporting details of a section, separated by hairlines. */

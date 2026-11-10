@@ -17,6 +17,12 @@ import (
 // colours, corners, type sizes and shadows come from tokens or the palette,
 // and every literal spatial value (padding, margin, gap, size, position) is a
 // multiple of the 4 px base unit; 1 px hairlines are the one exception.
+// Corners come from the radius tokens (or are half a size: a circle or a
+// capsule), including the corners handed to the artwork helpers, and tips
+// go through nativeTip, as MyGo's own tooltip draws off the scale.
+// artworkHelpers take a corner as their fourth argument.
+var artworkHelpers = map[string]bool{"nativeArtwork": true, "nativePlayerArtwork": true, "nativeCover": true}
+
 func TestNativeViewsUseDesignTokens(t *testing.T) {
 	onGrid := func(v float64) bool { return v == math.Trunc(v) && int(v)%4 == 0 }
 	spaceCalls := map[string]bool{"Padding": true, "PaddingX": true, "PaddingY": true, "PaddingStart": true, "PaddingEnd": true,
@@ -24,7 +30,8 @@ func TestNativeViewsUseDesignTokens(t *testing.T) {
 		"Size": true, "Width": true, "Height": true, "MinWidth": true, "MinHeight": true, "MaxWidth": true, "MaxHeight": true,
 		"Left": true, "Top": true, "Right": true, "Bottom": true}
 	hairline := map[string]bool{"Size": true, "Width": true, "Height": true}
-	files, err := filepath.Glob("native_*.go")
+	// Every file of the main package: view code is not only in native_*.go.
+	files, err := filepath.Glob("*.go")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,11 +70,16 @@ func TestNativeViewsUseDesignTokens(t *testing.T) {
 			if !ok {
 				return true
 			}
+			at := fset.Position(call.Pos())
+			if id, ok := call.Fun.(*ast.Ident); ok && artworkHelpers[id.Name] && len(call.Args) > 3 {
+				if lit, ok := call.Args[3].(*ast.BasicLit); ok && lit.Value != "0" {
+					problems = append(problems, fmt.Sprintf("%s:%d: %s with corner %s; use a radius token", at.Filename, at.Line, id.Name, lit.Value))
+				}
+			}
 			sel, ok := call.Fun.(*ast.SelectorExpr)
 			if !ok {
 				return true
 			}
-			at := fset.Position(call.Pos())
 			report := func(format string, args ...any) {
 				problems = append(problems, fmt.Sprintf("%s:%d: %s", at.Filename, at.Line, fmt.Sprintf(format, args...)))
 			}
@@ -87,6 +99,8 @@ func TestNativeViewsUseDesignTokens(t *testing.T) {
 				if v, ok := literal(call.Args[0]); ok && v != 0 {
 					report("Radius(%g); use a radius token", v)
 				}
+			case sel.Sel.Name == "Tooltip" && len(call.Args) == 1:
+				report("Tooltip; use nativeTip, which draws the guidebook's tip")
 			case sel.Sel.Name == "FontSize" && len(call.Args) == 1:
 				if v, ok := literal(call.Args[0]); ok {
 					report("FontSize(%g); use a type token", v)

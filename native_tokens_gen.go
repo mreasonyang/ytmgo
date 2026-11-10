@@ -69,10 +69,11 @@ const (
 	tokenSizeSmall              = 15
 	tokenSizeTitleMin           = 32
 	tokenSizeTitleMax           = 72
-	tokenRadiusArt              = 4
-	tokenRadiusControl          = 8
-	tokenRadiusPanel            = 12
+	tokenRadiusArt              = 8
+	tokenRadiusControl          = 12
+	tokenRadiusPanel            = 16
 	tokenRadiusPill             = 999
+	tokenRadiusSheet            = 24
 	tokenDisplayWeight          = 800
 	tokenDisplayLeading         = 1.05
 	tokenDisplayLeadingCJK      = 1.18

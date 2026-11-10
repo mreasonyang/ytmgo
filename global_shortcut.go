@@ -256,7 +256,7 @@ func nativeShortcutSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 	ui.Column(c).Children(func() {
 		nativeSettingRow(c, p, narrow, "play", a.Tr("nativeShortcutGlobal"), a.Tr("nativeShortcutGlobalShortHint"), func() {
 			if m.ShortcutRecording {
-				field := ui.Button(c, a.Tr("nativeShortcutRecording")).Height(36).MinWidth(170).PaddingX(14).Radius(8).Border(2, p.accent).Background(p.input).TextColor(p.text).AutoFocus().InputMethod(false)
+				field := ui.Button(c, a.Tr("nativeShortcutRecording")).Height(36).MinWidth(168).PaddingX(12).Radius(tokenRadiusControl).Border(2, p.text).Background(p.input).TextColor(p.text).AutoFocus().InputMethod(false)
 				if narrow {
 					field.Grow(1)
 				}
@@ -298,7 +298,8 @@ func nativeShortcutSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 			m.shortcutFieldFocused = false
 			off := m.GlobalShortcut == disabledGlobalShortcut
 			label := a.Tr("nativeShortcutRecord")
-			field := ui.ButtonBase(c).Height(36).MinWidth(170).PaddingX(5).Radius(8).AlignItems(ui.Center).Justify(ui.Center).Background(p.input).Border(1, p.line).Label(label).Tooltip(label).Disabled(a.BeginShortcut == nil)
+			field := ui.ButtonBase(c).Height(36).MinWidth(168).PaddingX(8).Radius(tokenRadiusControl).AlignItems(ui.Center).Justify(ui.Center).Background(p.input).Border(1, p.line).Label(label).Disabled(a.BeginShortcut == nil)
+			nativeTip(c, field, label, p)
 			if narrow {
 				field.Grow(1)
 			}
@@ -325,7 +326,11 @@ func nativeShortcutSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 			}
 		})
 		if m.ShortcutError != "" {
-			ui.Text(c, a.Tr(m.ShortcutError)).Padding(0, 16, 14, 64).FontSize(13).LineHeight(1.4).TextColor(p.accentText)
+			// Under the row's text: its padding, the icon tile and the gap.
+			ui.Row(c).Padding(0, 16, 16, 64).Gap(8).AlignItems(ui.Center).Children(func() {
+				ui.Icon(c, nativeIcons["alert"]).Size(16, 16).Shrink(0).TextColor(p.attention)
+				ui.Text(c, a.Tr(m.ShortcutError)).Grow(1).MinWidth(0).FontSize(tokenSizeMeta).LineHeight(1.4).TextColor(p.text)
+			})
 		}
 	})
 }

@@ -136,12 +136,12 @@ const (
 	nativeImmersiveGutter = 48
 	// The Now Playing cover: at least nativeCoverMin, and a nativeCoverShare
 	// of the height it shares with the lyrics, which is the window less
-	// nativeNowPlayingChrome (the global bar, player bar, panel padding,
+	// nativeNowPlayingChrome (the global bar, player bar, frame gap, panel padding,
 	// header, media switch, title and the lyrics card's chips, measured).
 	// Lyrics first, it is a nativeCoverThumb beside the title.
 	nativeCoverMin         = 120
 	nativeCoverShare       = 0.45
-	nativeNowPlayingChrome = 448
+	nativeNowPlayingChrome = 456
 	nativeCoverThumb       = 56
 )
 
@@ -197,7 +197,7 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 	ui.Column(c).Fill().Background(p.base).TextColor(p.text).Children(func() {
 		// Immersive mode drops the global bar. Under a hidden title bar its
 		// header moves out of the panel to take the bar's place instead.
-		top, header := float32(8), float32(0)
+		top, header := float32(tokenProductFrameGap), float32(0)
 		if !m.Immersive {
 			nativeTopbar(c, m, a, p, width)
 			top = 0
@@ -205,7 +205,9 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 			header = nativeImmersiveHeader(c, m, a, p, width)
 			top = 0
 		}
-		ui.Row(c).Grow(1).MinHeight(0).AlignItems(ui.Stretch).Gap(8).Padding(top, 8, 0).Children(func() {
+		// Panels sit a frame gap from every edge, the player bar's too: flush
+		// against it their bottom corners would sit on the bar's colour.
+		ui.Row(c).Grow(1).MinHeight(0).AlignItems(ui.Stretch).Gap(tokenProductFrameGap).Padding(top, tokenProductFrameGap, tokenProductFrameGap).Children(func() {
 			if !m.Immersive {
 				nativeLibrary(c, m, a, p, width)
 			}
@@ -214,7 +216,7 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 				var scrolled *ui.ScrollState
 				nativePageWash(nativePageLayer(c), m, a, p, &scrolled).Children(func() {
 					if m.Immersive {
-						nativeImmersive(c, m, a, p, width, height-nativePlayerHeight-top-header, header == 0)
+						nativeImmersive(c, m, a, p, width, height-nativePlayerHeight-top-header-tokenProductFrameGap, header == 0)
 					} else {
 						scrolled = nativeContent(c, m, a, p, false)
 					}

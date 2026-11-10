@@ -14,7 +14,11 @@ func TestNativeLyricsExpansionGivesReaderMoreSpace(t *testing.T) {
 	for _, size := range []struct {
 		width, height int
 		minimumGain   float32
-	}{{1440, 900, 180}, {1440, 640, 30}, {960, 740, 40}, {420, 640, 30}} {
+	}{
+		// 1440×900: the frame gap above the player bar made the panel 8
+		// shorter, so the cover the expansion gives back is 4 smaller (196,
+		// was 200) and the gain 178 (was 182).
+		{1440, 900, 176}, {1440, 640, 30}, {960, 740, 40}, {420, 640, 30}} {
 		t.Run(fmt.Sprintf("%dx%d", size.width, size.height), func(t *testing.T) {
 			m, a := nativeTimedLyricsFixture()
 			m.Panel = true

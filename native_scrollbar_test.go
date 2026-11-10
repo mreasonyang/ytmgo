@@ -82,3 +82,42 @@ func TestScrollbarFadesWhileThePointerRests(t *testing.T) {
 		t.Fatalf("dragging the drawn thumb did not scroll (%g -> %g)", before, st.Y)
 	}
 }
+
+// Lyrics following playback scroll by themselves: that isn't the reader, so
+// the bar doesn't flash on every line.
+func TestScrollbarIgnoresLyricsFollowingPlayback(t *testing.T) {
+	m, a := nativeTimedLyricsFixture()
+	p := palette(true)
+	tt := ui.NewTester(func(c *ui.Context) { nativePanelCard(c, m, a, p).Grow(1) }, 360, 340)
+	tt.SetScale(2)
+	tt.Frame()
+	view, ok := tt.Find("Lyrics · Content")
+	if !ok {
+		t.Fatal("lyrics viewport missing")
+	}
+	thumbShown := func() bool {
+		img := tt.Image()
+		_, _, _, _ = img.At(0, 0).RGBA()
+		bg, _, _, _ := img.At(int(2*(view.X+view.W-30)), int(2*(view.Y+4))).RGBA()
+		for y := view.Y + 4; y < view.Y+view.H-4; y += 2 {
+			r, _, _, _ := img.At(int(2*(view.X+view.W-3-nativeScrollbarWidth/2)), int(2*y)).RGBA()
+			if r>>8 > bg>>8+8 {
+				return true
+			}
+		}
+		return false
+	}
+	for line := 1; line < 12; line++ {
+		m.Position = float64(line*5) + 0.5
+		for range 3 {
+			tt.Advance(100 * time.Millisecond)
+			tt.Frame()
+		}
+		if thumbShown() {
+			t.Fatalf("the bar flashed as the lyrics followed line %d", line)
+		}
+	}
+	if !tt.HasText("Synthetic lyric line 11") {
+		t.Fatal("the lyrics did not follow playback")
+	}
+}

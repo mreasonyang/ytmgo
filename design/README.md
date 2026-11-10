@@ -130,7 +130,7 @@ dark only.
 | `selection` | 20 % white | 20 % `text` | Selected text |
 | `inverseHover` | `#dbdbdb` | `#303030` | A hovered inverted button |
 | `scrim` | 60 % black | 40 % black | Dims the window behind a dialog |
-| `veil` | 60 % `base` | 60 % `base` | A surface over moving content: the sticky nav (with blur), the immersive card over the cover |
+| `veil` | 70 % `base` | 70 % `base` | A surface over moving content: the sticky nav (with blur), the immersive card over the cover. 70 % keeps `secondary` links at 5:1 over white content |
 
 Dark text roles are white made translucent, so on a tint or a cover's wash
 they take its colour; on black they are exactly the greys in brackets.

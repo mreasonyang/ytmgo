@@ -196,6 +196,8 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 						c.Invalidate()
 					} else {
 						state.revealLine(visible, current)
+						// The lyrics moved themselves, not the reader: no bar.
+						nativeScrollbarFollowed(scroll, &state.scroll)
 					}
 				}
 			}

@@ -30,7 +30,7 @@ var tokenDark = nativePalette{
 	surface:      ui.Hex("#121212"),
 	text:         ui.Hex("#ffffff"),
 	track:        ui.Hex("#ffffff4d"),
-	veil:         ui.Hex("#00000099"),
+	veil:         ui.Hex("#000000b3"),
 	dark:         true,
 }
 
@@ -56,7 +56,7 @@ var tokenLight = nativePalette{
 	surface:      ui.Hex("#ffffff"),
 	text:         ui.Hex("#121212"),
 	track:        ui.Hex("#00000036"),
-	veil:         ui.Hex("#e9e9eb99"),
+	veil:         ui.Hex("#e9e9ebb3"),
 }
 
 // tokenTints are the header tints in the guidebook's order; a page's tint

@@ -1891,7 +1891,9 @@ func nativeProgressLine(c *ui.Context, m *UIModel, p nativePalette) {
 	if m.Duration > 0 {
 		value = float32(max(0, min(1, m.Position/m.Duration)))
 	}
-	ui.Box(c).Height(4).Shrink(0).Margin(0, 8, 0).Radius(tokenRadiusPill).Background(p.track).Children(func() {
+	// Inset by the card's corner: at the card's foot, nearer an edge, the
+	// corner's curve would slice the line's ends.
+	ui.Box(c).Height(4).Shrink(0).Margin(0, tokenRadiusPanel, 0).Radius(tokenRadiusPill).Background(p.track).Children(func() {
 		ui.Box(c).Height(4).Radius(tokenRadiusPill).WidthPercent(value * 100).Background(p.text)
 	})
 }
@@ -2438,6 +2440,14 @@ func nativeScrollbar(c *ui.Context, scroll ui.Element, st *ui.ScrollState, p nat
 			painter.Fill(bar, col, nativeScrollbarWidth/2)
 		}
 	})
+}
+
+// nativeScrollbarFollowed tells a scroller's bar that its content moved
+// itself (lyrics following playback): the bar shows for the reader's
+// scrolling, not for that.
+func nativeScrollbarFollowed(scroll ui.Element, st *ui.ScrollState) {
+	s := ui.Local(scroll, "scrollbar", func() nativeScrollbarState { return nativeScrollbarState{} })
+	s.x, s.y = st.X, st.Y
 }
 
 // nativeScrollbarThumbs are the thumbs MyGo would draw (its scrollBars and

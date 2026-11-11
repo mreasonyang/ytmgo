@@ -22,8 +22,14 @@ func artworkAllocationUnit(path string) (int64, error) {
 	if err := windows.GetVolumePathName(p, &root[0], uint32(len(root))); err != nil {
 		return 0, err
 	}
-	var sectors, bytesPerSector uint32
-	ok, _, err := getArtworkClusterSize.Call(uintptr(unsafe.Pointer(&root[0])), uintptr(unsafe.Pointer(&sectors)), uintptr(unsafe.Pointer(&bytesPerSector)), 0, 0)
+	var sectors, bytesPerSector, freeClusters, totalClusters uint32
+	ok, _, err := getArtworkClusterSize.Call(
+		uintptr(unsafe.Pointer(&root[0])),
+		uintptr(unsafe.Pointer(&sectors)),
+		uintptr(unsafe.Pointer(&bytesPerSector)),
+		uintptr(unsafe.Pointer(&freeClusters)),
+		uintptr(unsafe.Pointer(&totalClusters)),
+	)
 	if ok == 0 {
 		return 0, err
 	}

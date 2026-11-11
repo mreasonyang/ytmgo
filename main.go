@@ -56,6 +56,7 @@ type desktop struct {
 	powerPlaybackSuspended          bool
 	powerGeneration                 uint64
 	art                             *artworkCache
+	artworkScale                    float64
 	ctx                             context.Context
 	cancel                          context.CancelFunc
 	pageCancel, playCancel          context.CancelFunc
@@ -202,6 +203,10 @@ func main() {
 		}
 		titleBar, titleBarHeight := mainWindowTitleBar(runtime.GOOS)
 		a.window = mygo.NewWindow(mygo.WindowOptions{Title: locales.AppName(), Width: 1440, Height: 940, MinWidth: 380, MinHeight: 640, StateKey: "native-main", TitleBarStyle: titleBar, TitleBarHeight: titleBarHeight, BackgroundColor: "light-dark(#e7e7ea, #050506)", Content: ui.View(a.view)})
+		a.updateArtworkScale()
+		a.window.OnMove(a.updateArtworkScale)
+		a.window.OnResize(a.updateArtworkScale)
+		mygo.Screen.OnDisplaysChanged(a.updateArtworkScale)
 		a.windowVisible = true
 		a.window.OnHide(func() { a.cancelShortcut(); a.windowVisible = false; a.syncVideo() })
 		a.window.OnShow(func() { a.windowVisible = true; a.syncVideo() })
@@ -259,11 +264,21 @@ func (a *desktop) show() {
 	}
 }
 
+func (a *desktop) updateArtworkScale() {
+	scale := mygo.Screen.DisplayMatching(a.window.Bounds()).ScaleFactor
+	if scale > 0 && scale != a.artworkScale {
+		a.artworkScale = scale
+		a.invalidate()
+	}
+}
+
 func (a *desktop) view(c *ui.Context) {
 	frame := artworkFrame{cache: a.art}
 	nativeView(c, &a.model, a.actions(frame.get))
 	a.prefetchNextCover(&frame)
-	frame.submit()
+	if frame.submit() {
+		c.Invalidate()
+	}
 	a.syncVideo()
 }
 
@@ -277,7 +292,7 @@ func (a *desktop) prefetchNextCover(frame *artworkFrame) {
 }
 
 func (a *desktop) actions(artwork func(string, int, artworkPriority) ui.ImageSource) ViewActions {
-	actions := ViewActions{LyricsClock: a.lyricsClock, BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, SetVideoQuality: a.setVideoQuality, SetLyricsExpanded: a.setLyricsExpanded, RetryPlayback: a.retryPlayback, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: artwork, ArtworkTint: a.art.tint}
+	actions := ViewActions{artworkScale: a.artworkScale, artworkPeek: a.art.peek, LyricsClock: a.lyricsClock, BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, SetVideoQuality: a.setVideoQuality, SetLyricsExpanded: a.setLyricsExpanded, RetryPlayback: a.retryPlayback, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: artwork, ArtworkTint: a.art.tint}
 	if style, _ := mainWindowTitleBar(runtime.GOOS); style == mygo.TitleBarHidden {
 		actions.AppMenu = a.appMenu
 	}

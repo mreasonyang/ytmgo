@@ -13,6 +13,7 @@ third-party code; the root license does not relicense those portions.
 | Go runtime and golang.org/x modules | BSD-3-Clause, with applicable nested notices | [Go](https://go.dev/LICENSE), exact module versions in `go.mod` / `go.sum` |
 | MyGo | MIT, with Apache-2.0 shader subcomponent notices | [MyGo](https://github.com/egoist/mygo), version resolved from `go.mod` |
 | purego | Apache-2.0 | [purego](https://github.com/ebitengine/purego) |
+| httpcache | Apache-2.0 | [bartventer/httpcache](https://github.com/bartventer/httpcache), version resolved from `go.mod`; RFC 9111 client-side HTTP caching |
 | go-text/typesetting | Unlicense OR BSD-3-Clause, with applicable nested notices | [typesetting](https://github.com/go-text/typesetting) |
 | YouTube.js 18.3.0 | MIT | [YouTube.js](https://github.com/LuanRT/YouTube.js); extraction algorithms and the adapted `getNsigProcessorFn` in `internal/streaming/format.go` |
 | Meriyah 7.4.1 | ISC | [Meriyah](https://github.com/meriyah/meriyah); script parser |

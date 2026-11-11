@@ -112,6 +112,7 @@ type ViewActions struct {
 	LyricsClock                                         func() (seconds float64, playing bool)
 	Appearance, Language                                func(string)
 	Artwork                                             func(string, int, artworkPriority) ui.ImageSource
+	artworkPeek                                         func(string, int) ui.ImageSource
 	// ArtworkTint is the colour a loaded cover lends the interface.
 	ArtworkTint                   func(string) (ui.Color, bool)
 	Video                         func(bool)
@@ -123,10 +124,12 @@ type ViewActions struct {
 	SetShortcut                   func(string)
 	// AppMenu fills the application menu button, where a hidden title bar
 	// leaves the window no menu bar (Linux, Windows); nil hides the button.
-	AppMenu          func(*ui.Menu)
-	artViewport      ui.Rect
-	viewportScroll   *ui.ScrollState
-	secondaryArtwork bool
+	AppMenu              func(*ui.Menu)
+	artViewport          ui.Rect
+	viewportScroll       *ui.ScrollState
+	secondaryArtwork     bool
+	artworkScale         float64
+	artworkDX, artworkDY float32
 }
 
 // Window geometry. Above 1180 DIPs the library is a full panel and Now Playing
@@ -671,7 +674,7 @@ func nativeAvatar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, siz
 	}
 	var avatar ui.ImageSource
 	if m.SignedIn && m.AccountAvatar != "" && a.Artwork != nil {
-		avatar = a.Artwork(m.AccountAvatar, int(math.Ceil(float64(size)*2)), artAvatar)
+		avatar = a.Artwork(m.AccountAvatar, a.artworkPixels(size), artAvatar)
 	}
 	return ui.Box(c).Size(size, size).Shrink(0).Radius(size / 2).Clip().Background(bg).TextColor(fg).Center().PassThrough().Children(func() {
 		if avatar != nil {
@@ -1614,8 +1617,15 @@ func nativeShortcutTile(c *ui.Context, item catalog.Item, m *UIModel, a ViewActi
 	}
 }
 
-// The current cover is shared by the panel and transport. Resolve it on the
-// first frame, even before layout; only lists need viewport-based scheduling.
+func (a ViewActions) artworkPixels(size float32) int {
+	scale := a.artworkScale
+	if scale <= 0 {
+		scale = 1
+	}
+	return int(math.Ceil(float64(size) * scale))
+}
+
+// The panel and transport share the playing cover, even before layout.
 func nativePlayerArtwork(c *ui.Context, src string, size, radius float32, a ViewActions, p nativePalette) ui.Element {
 	return nativeCover(c, src, size, radius, a, p, artPlayer)
 }
@@ -1632,10 +1642,11 @@ func nativeCover(c *ui.Context, src string, size, radius float32, a ViewActions,
 	box := ui.Box(c).Size(size, size).Shrink(0).Radius(radius).Clip().Center()
 	var artwork ui.ImageSource
 	if a.Artwork != nil && src != "" && priority == artPlayer {
-		artwork = a.Artwork(src, int(math.Ceil(float64(size)*2)), artPlayer)
+		artwork = a.Artwork(src, a.artworkPixels(size), artPlayer)
 	} else if a.Artwork != nil && src != "" {
 		bounds := box.Bounds()
-		if bounds.W == 0 || bounds.H == 0 {
+		unmeasured := bounds.W == 0 || bounds.H == 0
+		if unmeasured {
 			// Bounds describe the previous layout; resolve a new cover on the
 			// next frame, once we know whether its scroll containers reveal it.
 			c.Invalidate()
@@ -1644,10 +1655,15 @@ func nativeCover(c *ui.Context, src string, size, radius float32, a ViewActions,
 			if a.viewportScroll == nil {
 				viewport.W, viewport.H = c.Size()
 			}
+			bounds.X -= a.artworkDX
+			bounds.Y -= a.artworkDY
 			visible := nativeIntersection(bounds, viewport)
 			if visible.W > 0 && visible.H > 0 {
-				artwork = a.Artwork(src, int(math.Ceil(float64(size)*2)), priority)
+				artwork = a.Artwork(src, a.artworkPixels(size), priority)
 			}
+		}
+		if artwork == nil && unmeasured && a.artworkPeek != nil {
+			artwork = a.artworkPeek(src, a.artworkPixels(size))
 		}
 	}
 	return box.Background(p.highlight).Children(func() {
@@ -1671,11 +1687,21 @@ type nativeArtworkScroll struct {
 func nativeArtworkViewport(c *ui.Context, a ViewActions, scroller ui.Element) ViewActions {
 	state := ui.Local(scroller, "artwork-scroll", func() nativeArtworkScroll { return nativeArtworkScroll{} })
 	scroller.TrackScroll(&state.scroll)
+	// Bounds come from the last layout. The parent scroll displacement
+	// moves this viewport; its own displacement moves only its contents.
+	bounds := scroller.Bounds()
+	bounds.X -= a.artworkDX
+	bounds.Y -= a.artworkDY
 	if state.x != state.scroll.X || state.y != state.scroll.Y {
+		dx := state.scroll.X - state.x
+		if c.Direction() == ui.RightToLeft {
+			dx = -dx
+		}
+		a.artworkDX += dx
+		a.artworkDY += state.scroll.Y - state.y
 		state.x, state.y = state.scroll.X, state.scroll.Y
 		c.Invalidate()
 	}
-	bounds := scroller.Bounds()
 	if bounds.W == 0 || bounds.H == 0 {
 		c.Invalidate()
 	}

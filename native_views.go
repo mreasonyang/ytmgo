@@ -67,6 +67,7 @@ type UIModel struct {
 	wasImmersive, immersiveFromDock, docked bool
 	immersiveAt                             time.Time
 	floating                                nativeFloatState // the floating Now Playing sheet's motion
+	volumeKeyedAt                           time.Time        // a key last changed the volume: show it
 }
 
 // Saved-account restoration as the view presents it; account.go owns the
@@ -899,9 +900,14 @@ func (s nativeFloatState) arrival(now time.Time) float32 {
 
 // nativeFloating reports whether the floating Now Playing sheet is on screen
 // and how far it has arrived, including while it is leaving.
+// nativeFloatingWanted reports whether Now Playing floats over the window.
+func nativeFloatingWanted(m *UIModel, width float32) bool {
+	return m.Panel && !m.Immersive && width <= 1180
+}
+
 func nativeFloating(c *ui.Context, m *UIModel, width float32) (bool, float32) {
 	s := &m.floating
-	want := m.Panel && !m.Immersive && width <= 1180
+	want := nativeFloatingWanted(m, width)
 	now := c.Now()
 	if m.instantMotion || c.Preferences().ReduceMotion || m.Immersive || width > 1180 {
 		*s = nativeFloatState{open: want}
@@ -2045,7 +2051,7 @@ func nativePlayerBarContent(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 			if nativeIconButton(c, "queue", a.Tr("shellQueue"), p, m.Panel && m.selectedPanelTab() == "queue", 32).Clicked() {
 				nativeTogglePanel(m, "queue")
 			}
-			nativeVolume(c, m, a, p, width > 1000)
+			nativeVolume(c, m, a, p, width > 1000, !nativeFloatingWanted(m, width))
 			if width > 1000 {
 				nativeIconButton(c, "more", a.Tr("shellMore"), p, false, 32).Disabled(m.Current.ID == "").Menu(nativeTrackMenu(m.Current, m, a))
 			}
@@ -2167,6 +2173,7 @@ type nativeSeekState struct {
 	trackID                  string
 	value                    float64
 	pressed, dirty, canceled bool
+	keyedAt                  time.Time // a key last moved it
 }
 
 func nativeSeek(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
@@ -2181,7 +2188,7 @@ func nativeSeek(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 	}
 	row.Children(func() {
 		ui.Text(c, nativeTime(state.value)).Width(40).TextAlign(ui.End).FontSize(tokenSizeMicro).TextColor(p.secondary)
-		s := nativeSlider(c.Key("seek"), &state.value, max(1, m.Duration), p, true).Grow(1).Label(a.Tr("shellProgress")).Disabled(!enabled)
+		s := nativeSlider(c.Key("seek"), &state.value, max(1, m.Duration), p, true, nativeReadoutFresh(c, state.keyedAt)).Grow(1).Label(a.Tr("shellProgress")).Disabled(!enabled)
 		changed, pressed := s.Changed(), s.Pressed()
 		if changed {
 			state.dirty = true
@@ -2200,11 +2207,15 @@ func nativeSeek(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 			a.Seek(state.value)
 		}
 		state.pressed = pressed
-		if enabled && !state.canceled && (s.Hovered() || pressed) {
+		// A key that moves it shows where it went, as dragging does.
+		if changed && !pressed {
+			state.keyedAt = c.Now()
+		}
+		if keyed := nativeReadoutFresh(c, state.keyedAt); enabled && !state.canceled && (keyed || s.Hovered() || pressed) {
 			preview := state.value
-			if !pressed {
+			if !keyed && !pressed {
 				x, _, _ := s.PointerPosition()
-				preview = float64(max(0, min(1, (x-5)/max(1, s.LayoutBounds().W-10)))) * m.Duration
+				preview = float64(nativeSliderFraction(s, x)) * m.Duration
 			}
 			nativeSliderReadout(c.Key("seek-readout"), s, p, nativeTime(math.Round(preview)), preview/m.Duration)
 		}
@@ -2214,12 +2225,39 @@ func nativeSeek(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 
 // nativeSliderThumb is the slider thumb's diameter; the track is inset by
 // its radius so the thumb stays inside the control at either end.
-const nativeSliderThumb = 12
+const (
+	nativeSliderThumb  = 12
+	nativeSliderHeight = 24
+)
+
+// nativeReadoutLinger is how long a slider's value stays shown after a key
+// moves it (the volume shortcuts, or the arrows on a focused slider).
+const nativeReadoutLinger = time.Second
+
+// nativeReadoutFresh reports whether a key moved a slider at keyed recently
+// enough to still show its value, and asks for the frame that hides it.
+func nativeReadoutFresh(c *ui.Context, keyed time.Time) bool {
+	if keyed.IsZero() {
+		return false
+	}
+	left := nativeReadoutLinger - c.Now().Sub(keyed)
+	if left <= 0 {
+		return false
+	}
+	c.After(left)
+	return true
+}
+
+// nativeSliderFraction is where x, across the slider, falls on its track.
+func nativeSliderFraction(s ui.Element, x float32) float32 {
+	return max(0, min(1, (x-nativeSliderThumb/2)/max(1, s.LayoutBounds().W-nativeSliderThumb)))
+}
 
 // A playback slider (seek) turns coral under the pointer; others (volume)
-// stay text, since coral means play.
-func nativeSlider(c *ui.Context, value *float64, maximum float64, p nativePalette, playback bool) ui.Element {
-	s := ui.SliderBase(c, value, 0, maximum).Height(24).PaddingX(nativeSliderThumb / 2)
+// stay text, since coral means play. marked shows the thumb without the
+// pointer or the focus, as when a shortcut moves it.
+func nativeSlider(c *ui.Context, value *float64, maximum float64, p nativePalette, playback, marked bool) ui.Element {
+	s := ui.SliderBase(c, value, 0, maximum).Height(nativeSliderHeight).PaddingX(nativeSliderThumb / 2)
 	hovered := s.Hovered() || s.Focused() || s.Pressed()
 	fraction := float32(max(0, min(1, *value/maximum)))
 	s.Draw(func(painter *ui.Painter, r ui.Rect) {
@@ -2232,22 +2270,29 @@ func nativeSlider(c *ui.Context, value *float64, maximum float64, p nativePalett
 			col = p.accent
 		}
 		painter.Fill(fill, col, 2)
-		if hovered {
+		if hovered || marked {
 			painter.Fill(ui.Rect{X: track.X + fill.W - nativeSliderThumb/2, Y: r.Y + r.H/2 - nativeSliderThumb/2, W: nativeSliderThumb, H: nativeSliderThumb}, p.text, nativeSliderThumb/2)
 		}
 	})
 	return s
 }
 
-// Slider values stay visible while pressed, including when a drag leaves the
-// track. Ordinary tooltips dismiss on press, so use a non-interactive overlay.
+// nativeSliderReadout shows a slider's value over the thumb at fraction.
+// It stays while pressed, including when a drag leaves the track, so it is
+// a non-interactive overlay: ordinary tooltips dismiss on press. It is a
+// tooltip by the guidebook (inverted, micro, art corners) and stands 8 off
+// its anchor, the thumb, not off the slider's taller hit area.
 func nativeSliderReadout(c *ui.Context, slider ui.Element, p nativePalette, text string, fraction float64) {
-	x := 5 + max(0, slider.LayoutBounds().W-10)*float32(max(0, min(1, fraction)))
+	x := nativeSliderThumb/2 + max(0, slider.LayoutBounds().W-nativeSliderThumb)*float32(max(0, min(1, fraction)))
+	thumbTop := float32(nativeSliderHeight-nativeSliderThumb) / 2
 	ui.Overlay(c, func() {
-		ui.Text(c, text).AttachTo(slider, ui.AnchorTopLeft, ui.AnchorBottom).Margin(0, 0, 8, x).
-			Padding(4, 8).Radius(tokenRadiusPill).Background(p.raised).TextColor(p.text).FontSize(tokenSizeMicro).FontWeight(600).
-			Shadow(tokenShadowTooltip.args(p)).PassThrough().Role(ui.RoleTooltip)
+		nativeReadout(c, text, p).AttachTo(slider, ui.AnchorTopLeft, ui.AnchorBottom).Margin(0, 0, 8-thumbTop, x)
 	})
+}
+
+func nativeReadout(c *ui.Context, text string, p nativePalette) ui.Element {
+	return ui.Text(c, text).Padding(4, 8).Radius(tokenRadiusArt).Background(p.text).TextColor(p.base).FontSize(tokenSizeMicro).
+		Shadow(tokenShadowTooltip.args(p)).PassThrough().Role(ui.RoleTooltip)
 }
 
 func nativeProgressLine(c *ui.Context, m *UIModel, p nativePalette) {
@@ -2262,25 +2307,41 @@ func nativeProgressLine(c *ui.Context, m *UIModel, p nativePalette) {
 	})
 }
 
-func nativeVolume(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, showSlider bool) {
+// nativeVolume is the mute button and, with room, the volume slider.
+// keyed shows the volume for a moment after the volume shortcuts change it,
+// over the slider or, without one, the button; only one of the volume
+// controls in view takes it.
+func nativeVolume(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, showSlider, keyed bool) {
 	icon, key := "volume", "shellMute"
 	if m.Muted || m.Volume == 0 {
 		icon, key = "volume-off", "shellUnmute"
 	} else if m.Volume < 0.5 {
 		icon = "volume-low"
 	}
-	if nativeIconButton(c, icon, a.Tr(key), p, false, 32).Clicked() {
+	keyed = keyed && nativeReadoutFresh(c, m.volumeKeyedAt)
+	value := fmt.Sprintf("%.0f%%", m.Volume*100)
+	b := nativeIconButton(c, icon, a.Tr(key), p, false, 32)
+	if b.Clicked() {
 		a.Mute()
 	}
-	if showSlider {
-		volume := m.Volume
-		s := nativeSlider(c.Key("volume"), &volume, 1, p, false).Width(96).Label(a.Tr("shellVolume"))
-		if s.Changed() {
-			a.Volume(volume)
+	if !showSlider {
+		if keyed {
+			ui.Overlay(c.Key("volume-readout"), func() {
+				nativeReadout(c, value, p).AttachTo(b, ui.AnchorTop, ui.AnchorBottom).Margin(0, 0, 8, 0)
+			})
 		}
-		if s.Hovered() || s.Pressed() {
-			nativeSliderReadout(c.Key("volume-readout"), s, p, fmt.Sprintf("%.0f%%", volume*100), volume)
+		return
+	}
+	volume := m.Volume
+	s := nativeSlider(c.Key("volume"), &volume, 1, p, false, keyed).Width(96).Label(a.Tr("shellVolume"))
+	if s.Changed() {
+		a.Volume(volume)
+		if !s.Pressed() {
+			m.volumeKeyedAt = c.Now()
 		}
+	}
+	if keyed || s.Hovered() || s.Pressed() {
+		nativeSliderReadout(c.Key("volume-readout"), s, p, fmt.Sprintf("%.0f%%", volume*100), volume)
 	}
 }
 
@@ -2419,7 +2480,7 @@ func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 					}
 				})
 				nativeSeek(c, m, a, p)
-				ui.Row(c).Shrink(0).AlignItems(ui.Center).Justify(ui.Center).Children(func() { nativeVolume(c, m, a, p, true) })
+				ui.Row(c).Shrink(0).AlignItems(ui.Center).Justify(ui.Center).Children(func() { nativeVolume(c, m, a, p, true, true) })
 			}
 			// Keyed: the layouts above it differ, and its reading position must
 			// survive switching between them.
@@ -3162,9 +3223,11 @@ func nativeKeyboard(c *ui.Context, m *UIModel, a ViewActions) {
 	}
 	if c.Shortcut(ui.Cmd, ui.KeyUp) {
 		a.Volume(min(1, m.Volume+0.05))
+		m.volumeKeyedAt = c.Now()
 	}
 	if c.Shortcut(ui.Cmd, ui.KeyDown) {
 		a.Volume(max(0, m.Volume-0.05))
+		m.volumeKeyedAt = c.Now()
 	}
 	if c.Shortcut(ui.Cmd|ui.Shift, ui.KeyH) {
 		m.Immersive = false
@@ -3257,7 +3320,7 @@ func nativeExpandedTransport(c *ui.Context, m *UIModel, a ViewActions, p nativeP
 			if nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 32).Disabled(m.Current.ID == "").Clicked() {
 				a.Like()
 			}
-			nativeVolume(c, m, a, p, true)
+			nativeVolume(c, m, a, p, true, true)
 			nativeIconButton(c, "more", a.Tr("shellMore"), p, false, 32).Disabled(m.Current.ID == "").Menu(nativeTrackMenu(m.Current, m, a))
 		})
 	})

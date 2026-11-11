@@ -500,7 +500,10 @@ tooltip. The website uses icons only on actions and platform names.
   action; their groups `panel`, rows in a group flat or `control`, icon
   tiles `art`.
 - **Tooltips:** inverted, `micro` text, radius `art`, the `tooltip`
-  elevation, 8 from their anchor.
+  elevation, 8 from their anchor. A slider's value (time, volume) is one,
+  anchored on the thumb rather than the taller hit area: shown under the
+  pointer and while dragging, and for a second after a key moves it, the
+  volume shortcuts included.
 
 **Brand:**
 - **Track head:** the section's row from the app's track table: number,

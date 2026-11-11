@@ -264,3 +264,39 @@ func TestOpeningACollectionCarriesItsCover(t *testing.T) {
 		t.Fatal("the page cut to its header: nothing was on its way a third through")
 	}
 }
+
+// On a narrow window Now Playing floats: it rises from the bottom, where the
+// mini player that opens it is, and sinks back before it goes.
+func TestFloatingNowPlayingRisesAndSinks(t *testing.T) {
+	m, a := nativeViewFixture()
+	m.Panel = false
+	tt := motionTester(m, a, 420, 860)
+	tt.Frame()
+	if err := tt.Click(a.Tr("shellOpenNowPlaying")); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(tokenMotionBase / 3)
+	tt.Frame()
+	rising := rect(t, tt, a.Tr("shellClosePanel"))
+	motionShot(t, tt, "floating-open-third")
+	tt.Advance(tokenMotionBase)
+	tt.Frame()
+	open := rect(t, tt, a.Tr("shellClosePanel"))
+	if !between(rising.Y, open.Y, open.Y+nativeFloatRise) {
+		t.Fatalf("the sheet cut in: close button at %.1f a third through, %.1f open", rising.Y, open.Y)
+	}
+	m.Panel = false
+	tt.Frame()
+	tt.Advance(tokenMotionBase / 3)
+	tt.Frame()
+	sinking, ok := tt.Find(a.Tr("shellClosePanel"))
+	if !ok || !between(sinking.Y, open.Y, open.Y+nativeFloatRise) {
+		t.Fatalf("the sheet cut out instead of sinking: %v %v", sinking, ok)
+	}
+	tt.Advance(tokenMotionBase)
+	tt.Frame()
+	tt.Frame()
+	if _, ok := tt.Find(a.Tr("shellClosePanel")); ok {
+		t.Fatal("the sheet stayed after sinking")
+	}
+}

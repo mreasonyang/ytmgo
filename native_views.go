@@ -63,6 +63,7 @@ type UIModel struct {
 	// it is docked now.
 	wasImmersive, immersiveFromDock, docked bool
 	immersiveAt                             time.Time
+	floating                                nativeFloatState // the floating Now Playing sheet's motion
 }
 
 // Saved-account restoration as the view presents it; account.go owns the
@@ -202,14 +203,22 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 	} else {
 		nativeDesktopFrame(c, m, a, p, width, height)
 	}
-	if m.Panel && !m.Immersive && width <= 1180 {
+	if shown, arrived := nativeFloating(c, m, width); shown {
 		panelWidth := min(width-16, 380)
-		ui.DialogBase(c, &m.Panel, func(backdrop, panel ui.Element) {
-			backdrop.Background(p.scrim)
-			panel.Width(panelWidth).Height(min(height-100, 760)).Radius(tokenRadiusPanel).Background(p.surface).Shadow(tokenShadowHero.args(p)).Clip().Children(func() {
+		open := true
+		ui.DialogBase(c, &open, func(backdrop, panel ui.Element) {
+			// It rises from the bottom, where the mini player and the player
+			// bar that open it are, and sinks back there as it closes. A dialog
+			// lies over the window, after MyGo's transitions: it moves itself.
+			backdrop.Background(p.scrim.Alpha(float32(p.scrim.A) / 255 * arrived))
+			panel.Width(panelWidth).Height(min(height-100, 760)).Radius(tokenRadiusPanel).Background(p.surface).Shadow(tokenShadowHero.args(p)).Clip().
+				Translate(0, nativeFloatRise*(1-arrived)).Opacity(arrived).Children(func() {
 				nativeNowPlaying(c, m, a, p, panelWidth, true, firstPlayback).Fill()
 			})
 		}).Label(a.Tr("shellNowPlaying"))
+		if !open {
+			m.Panel = false
+		}
 	}
 	nativeSheets(c, m, a, p, width, height)
 	if m.ShortcutRecording && !m.Settings && a.CancelShortcut != nil {
@@ -806,6 +815,61 @@ func nativeLibraryPanelWidth(m *UIModel, width float32) float32 {
 // (wider windows) rather than floating over it.
 func nativeDockedNowPlaying(m *UIModel, width float32) bool {
 	return m.Panel && !m.Immersive && width > 1180
+}
+
+// nativeFloatRise is how far the floating Now Playing sheet rises as it
+// opens, and sinks as it closes.
+const nativeFloatRise = 64
+
+type nativeFloatState struct {
+	open          bool
+	since, closed time.Time
+}
+
+// nativeFloating reports whether the floating Now Playing sheet shows (on
+// windows too narrow to dock it), and how far it has arrived, 0 to 1: it
+// rises in over the base motion and, closed, sinks out over it before it
+// goes. Without motion it comes and goes at once.
+func nativeFloating(c *ui.Context, m *UIModel, width float32) (bool, float32) {
+	s := &m.floating
+	want := m.Panel && !m.Immersive && width <= 1180
+	now := c.Now()
+	still := m.instantMotion || c.Preferences().ReduceMotion
+	switch {
+	case want && !s.open:
+		s.open, s.since, s.closed = true, now, time.Time{}
+	case want:
+		s.closed = time.Time{}
+	case s.open && s.closed.IsZero():
+		if still || m.Immersive || width > 1180 {
+			s.open = false
+		} else {
+			s.closed = now
+		}
+	}
+	if !s.open {
+		return false, 0
+	}
+	if still {
+		return want, 1
+	}
+	progress := func(from time.Time) float32 {
+		return max(0, min(1, float32(now.Sub(from))/float32(tokenMotionBase)))
+	}
+	if !s.closed.IsZero() {
+		k := progress(s.closed)
+		if k >= 1 {
+			s.open = false
+			return false, 0
+		}
+		c.AnimationFrame()
+		return true, 1 - tokenMotionEase(k)
+	}
+	k := progress(s.since)
+	if k < 1 {
+		c.AnimationFrame()
+	}
+	return true, tokenMotionEase(k)
 }
 
 // nativeDockSlide is how docked Now Playing comes and goes: across its own

@@ -3,7 +3,7 @@
   "slug": "ytmgo",
   "identifier": "si.kyun.ytmgo",
   "copyright": "Copyright 2026 ytmgo contributors",
-  "version": "0.0.65",
+  "version": "0.0.66",
   "out": "build",
   "icon": "resources/icon.png",
   "macos": {

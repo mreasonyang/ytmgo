@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -160,5 +161,25 @@ func artworkProhibitedResponse(headers http.Header) bool {
 // This is a conservative lifetime for decoded pixels, not a network-cache TTL.
 // A miss/expired image goes through httpcache, which owns HTTP reuse decisions.
 func artworkFreshUntil(headers http.Header, requested time.Time) time.Time {
+	// Convert an explicit Expires deadline to the origin's lifetime so
+	// the existing public-admission, Date and Age checks still apply.
+	if expires, err := http.ParseTime(headers.Get("Expires")); err == nil {
+		for directive := range strings.SplitSeq(strings.Join(headers.Values("Cache-Control"), ","), ",") {
+			name, _, _ := strings.Cut(directive, "=")
+			if strings.EqualFold(strings.TrimSpace(name), "max-age") {
+				return httpfreshness.FreshUntil(headers, requested, time.Duration(1<<63-1))
+			}
+		}
+		date, err := http.ParseTime(headers.Get("Date"))
+		if err != nil {
+			date = requested
+		}
+		seconds := int64(expires.Sub(date) / time.Second)
+		if seconds <= 0 {
+			return time.Time{}
+		}
+		headers = headers.Clone()
+		headers.Add("Cache-Control", "max-age="+strconv.FormatInt(seconds, 10))
+	}
 	return httpfreshness.FreshUntil(headers, requested, time.Duration(1<<63-1))
 }

@@ -325,6 +325,11 @@ func TestNativeLyricsPanelKeyboardReadingSurvivesMediaSwitch(t *testing.T) {
 			m.Position = 51
 			tt.Frame()
 			requireLyricCentered(t, tt, 10)
+			if focused {
+				m.Position = 56
+				tt.Frame()
+				tt.Advance(tokenMotionSlow / 4)
+			}
 			tt.Key(0, ui.KeyPageDown)
 			settleLyricGlide(tt)
 			lineOffset := func() float32 {

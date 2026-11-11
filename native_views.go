@@ -2944,7 +2944,7 @@ func nativeScrollbar(c *ui.Context, scroll ui.Element, st *ui.ScrollState, p nat
 // scrolling, not for that, even where the move is at once (less motion).
 func nativeScrollbarFollowed(scroll ui.Element, st *ui.ScrollState) {
 	s := ui.Local(scroll, "scrollbar", func() nativeScrollbarState { return nativeScrollbarState{} })
-	s.x, s.y, s.gliding = st.X, st.Y, true
+	s.x, s.y, s.gliding, s.keyGlide = st.X, st.Y, true, false
 }
 
 // nativeScrollbarThumbs are the thumbs MyGo would draw (its scrollBars and

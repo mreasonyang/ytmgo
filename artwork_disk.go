@@ -48,7 +48,7 @@ func artworkDiskKey(raw string) string {
 	if err != nil || !artworkURL(u) || u.ForceQuery || u.Fragment != "" {
 		return ""
 	}
-	if u.RawQuery != "" && !catalog.IsArtworkProxyURL(u) {
+	if u.RawQuery != "" && !catalog.IsPublicArtworkQuery(u) {
 		return ""
 	}
 	sum := sha256.Sum256([]byte(raw))

@@ -25,6 +25,8 @@ var metadataCountPatterns = []*regexp.Regexp{
 
 var publicVideoArtworkPath = regexp.MustCompile(`^/(?:vi|vi_webp)/[a-zA-Z0-9_-]{11}/[a-zA-Z0-9_-]+\.(?:jpg|webp)$`)
 var publicSystemArtworkPath = regexp.MustCompile(`^/youtube/media/ytm/images/pbg/[a-zA-Z0-9_@.-]+\.(?:png|jpg|webp)$`)
+var playlistCoverPath = regexp.MustCompile(`^/pl_c/[A-Za-z0-9_-]{1,128}/studio_square_thumbnail\.jpg$`)
+var playlistCoverOption = regexp.MustCompile(`^[A-Za-z0-9_-]+={0,2}$`)
 
 // System playlists and mixes use Google's dedicated static artwork directory,
 // independently of the album/video image CDNs. Keep this allowance narrow.
@@ -49,6 +51,30 @@ func IsArtworkProxyURL(u *url.URL) bool {
 	query, err := url.ParseQuery(u.RawQuery)
 	options := query["r"]
 	return err == nil && len(query) == 1 && len(options) == 1 && len(options[0]) > 0
+}
+
+// IsPublicArtworkQuery reports whether the query is part of a supported
+// public image URL. Studio playlist covers return 404 without sqp and rs.
+func IsPublicArtworkQuery(u *url.URL) bool {
+	if IsArtworkProxyURL(u) {
+		return true
+	}
+	if u == nil || u.Scheme != "https" || !strings.EqualFold(u.Host, "i.ytimg.com") || u.User != nil || u.Fragment != "" {
+		return false
+	}
+	if u.RawPath != "" || !playlistCoverPath.MatchString(u.Path) || len(u.String()) > 4096 {
+		return false
+	}
+	q, err := url.ParseQuery(u.RawQuery)
+	if err != nil || len(q) != 2 {
+		return false
+	}
+	for _, name := range []string{"sqp", "rs"} {
+		if values := q[name]; len(values) != 1 || !playlistCoverOption.MatchString(values[0]) {
+			return false
+		}
+	}
+	return true
 }
 
 // The parser follows display containers only. Menus, logging payloads and
@@ -589,10 +615,10 @@ func safeArtwork(raw string) string {
 		return ""
 	}
 	host := strings.ToLower(u.Hostname())
-	if IsArtworkProxyURL(u) {
-		return raw
-	}
 	if u.RawQuery != "" {
+		if IsPublicArtworkQuery(u) {
+			return raw
+		}
 		// Public video thumbnails have a stable path. Remove service-added
 		// sizing/tracking query fields instead of retaining opaque URL tokens.
 		if (host == "ytimg.com" || strings.HasSuffix(host, ".ytimg.com")) && publicVideoArtworkPath.MatchString(u.Path) {

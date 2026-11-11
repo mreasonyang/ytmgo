@@ -61,15 +61,21 @@ func TestNativeShortImmersiveVideoUsesHeightBudget(t *testing.T) {
 							}
 							return originalArtwork(source, edge, priority)
 						}
-						// 609/640 windows leave 409/440 DIPs of immersive content: the
-						// cover takes what the switch, gaps and the title block, as the
-						// fonts lay it out, leave; a video keeps that height budget.
-						mediaWidth := float32(width) - 16 - 80 - 40 - min(380, float32(width)*0.32)
-						want := float32(height-200) - 32 - 48 - nativeImmersiveTitleHeight(m, a, mediaWidth)
+						// 609/640 windows leave 401/432 DIPs of immersive content (the
+						// frame gap above the player bar included): the cover takes what
+						// the switch, gaps and the title block, as the fonts lay it out,
+						// leave; a video keeps that height budget.
+						// The column's room: the stage less the gutters, the card, the
+						// space between them and the cover shadow's pad. The title wraps
+						// to the column, which nativeImmersiveLayout sizes with the media.
+						mediaWidth := float32(width) - 2*tokenProductFrameGap - 2*nativeImmersiveGutter - nativeImmersivePair - min(380, float32(width)*0.32) - 2*tokenShadowArt.blur
+						column := nativeImmersiveLayout(m, a, mediaWidth, float32(height-200-tokenProductFrameGap)).column
+						want := float32(height-200-tokenProductFrameGap) - 32 - 48 - nativeImmersiveTitleHeight(m, a, column)
 						tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, height)
 						video := nativeAssertVisible(t, tt, a.Tr("nativeVideo"), width, height)
 						viewport := nativeAssertVisible(t, tt, a.Tr("shellContent"), width, height)
-						if math.Abs(float64(video.W-min(mediaWidth, want*16/9))) > 2 || video.W > viewport.W+1 || video.X < viewport.X-1 || video.X+video.W > viewport.X+viewport.W+1 || math.Abs(float64(video.W/video.H-16.0/9.0)) > 0.01 {
+						// Sizes floor to the 4 grid.
+						if math.Abs(float64(video.W-min(mediaWidth, want*16/9))) > 4 || video.W > viewport.W+1 || video.X < viewport.X-1 || video.X+video.W > viewport.X+viewport.W+1 || math.Abs(float64(video.W/video.H-16.0/9.0)) > 0.01 {
 							t.Fatalf("short-window video wastes width or overflows its column: video=%+v viewport=%+v budget=%v", video, viewport, want)
 						}
 						nativeAssertVisible(t, tt, m.Current.Title, width, height)
@@ -95,7 +101,7 @@ func TestNativeShortImmersiveVideoUsesHeightBudget(t *testing.T) {
 								}
 							}
 						}
-						if math.Abs(float64(bounds.Dx())-float64(want)) > 2 || math.Abs(float64(bounds.Dy())-float64(want)) > 2 {
+						if math.Abs(float64(bounds.Dx())-float64(want)) > 4 || math.Abs(float64(bounds.Dy())-float64(want)) > 4 {
 							t.Fatalf("cover dimensions changed: got=%v want=%v square", bounds.Size(), want)
 						}
 						if err := tt.Click(a.Tr("nativeVideo")); err != nil || !m.Video {

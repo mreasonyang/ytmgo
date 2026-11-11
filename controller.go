@@ -9,10 +9,21 @@ import (
 	"time"
 
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/ui"
 	"ytmgo/internal/catalog"
 )
 
 func (a *desktop) navigate(route string) {
+	if a.model.glideToTop(route) {
+		a.invalidate()
+		return
+	}
+	a.openRoute(route)
+}
+
+// Account changes open the destination even when the previous account was
+// looking at the same route and its old scroll position is still on screen.
+func (a *desktop) openRoute(route string) {
 	a.model.Immersive = false
 	a.browseParams = ""
 	if route == "search" {
@@ -22,6 +33,18 @@ func (a *desktop) navigate(route string) {
 	}
 	a.loadPage(route, "", true)
 }
+
+// glideToTop glides the page back to its top when route is the page shown
+// and it is scrolled down, as choosing a tab already shown does, and reports
+// whether it did; at the top, choosing it loads the page again.
+func (m *UIModel) glideToTop(route string) bool {
+	if route != m.Route || route == "search" || m.Immersive || m.Loading || m.pageScroll == nil || m.pageScroll.Y <= 0.5 {
+		return false
+	}
+	m.pageScroll.ScrollTo(0, 0, ui.Animation{Duration: tokenMotionSlow, Ease: tokenMotionEase})
+	return true
+}
+
 func (a *desktop) search(q string) {
 	q = strings.TrimSpace(q)
 	if q != "" {
@@ -33,11 +56,18 @@ func (a *desktop) openItem(it catalog.Item) {
 	if it.BrowseID != "" && it.Kind != "song" && it.Kind != "video" {
 		a.browseParams = it.BrowseParams
 		a.loadPage("browse:"+it.BrowseID, "", true)
+		// The header shows at once from what the item already says, so its
+		// cover can travel there from the item's; the rest comes as it loads.
+		a.model.Page = catalog.Page{Title: it.Title, Creator: it.Artist, Artwork: it.Artwork}
 	} else if it.ID != "" {
 		a.playItem(it)
 	}
 }
-func (a *desktop) reload() { a.loadPage(a.model.Route, a.model.Query, false) }
+func (a *desktop) reload() {
+	location := a.currentPageLocation()
+	a.browseParams = location.params
+	a.loadPage(location.route, location.query, false)
+}
 
 // signedOutLibraryPage leaves the explanation and its action to the library
 // card instead of repeating them under the heading.
@@ -52,6 +82,7 @@ func (a *desktop) loadPage(route, q string, record bool) {
 	a.pageGeneration++
 	generation := a.pageGeneration
 	a.pageCancel = nil
+	a.likedChanges = nil
 	a.model.Route = route
 	a.model.Query = q
 	a.model.Loading = true
@@ -61,16 +92,19 @@ func (a *desktop) loadPage(route, q string, record bool) {
 	a.model.Page = catalog.Page{}
 	if route == "library" {
 		if a.model.LibraryLoaded && a.libraryPage != nil {
-			a.model.Page = a.cachedLibraryPage()
-			a.model.Loading = false
 			a.model.LibraryCached = true
+			a.model.Page = a.libraryDisplayPage()
+			a.model.Loading = false
 		}
 		if a.model.SignedIn {
+			a.pushHistory(record)
 			request := a.loadLibrary(!record)
-			request.pageGeneration, request.record = generation, record
+			request.pageGeneration = generation
 		} else if !a.model.LibraryCached {
 			a.model.Loading = false
 			a.model.Page = signedOutLibraryPage(a.tr)
+			a.pushHistory(record)
+		} else {
 			a.pushHistory(record)
 		}
 		a.invalidate()
@@ -82,6 +116,9 @@ func (a *desktop) loadPage(route, q string, record bool) {
 	}
 	params := a.browseParams
 	a.pageCancel = cancel
+	// Reserve the destination before it finishes: Retry updates this entry,
+	// and Back can still reach the origin after a failed or pending load.
+	a.pushHistory(record)
 	a.invalidate()
 	go func() {
 		defer cancel()
@@ -112,6 +149,7 @@ func (a *desktop) loadPage(route, q string, record bool) {
 				return
 			}
 			a.model.Page = page
+			a.reconcileLikedMusic()
 			switch route {
 			case "home":
 				a.model.Page.Title = a.greeting()
@@ -120,7 +158,7 @@ func (a *desktop) loadPage(route, q string, record bool) {
 			case "search":
 				a.model.Page.Title = q
 			}
-			a.pushHistory(record)
+			a.pushHistory(false)
 		})
 	}()
 }
@@ -130,7 +168,6 @@ func (a *desktop) loadPage(route, q string, record bool) {
 type libraryRequest struct {
 	cancel         context.CancelFunc
 	pageGeneration uint64
-	record         bool
 	scope          string
 }
 
@@ -146,9 +183,13 @@ func (a *desktop) loadLibrary(force ...bool) *libraryRequest {
 	a.libraryRequest = request
 	a.model.LibraryRefreshing = true
 	a.model.LibraryErrorKey = ""
+	extent := 0
+	if a.libraryPage != nil {
+		extent = len(a.libraryPage.Items)
+	}
 	go func() {
 		defer cancel()
-		page, err := a.catalog.Library(ctx)
+		page, err := loadLibraryExtent(ctx, a.catalog, extent)
 		a.post(func() { a.finishLibrary(request, page, err) })
 	}()
 	return request
@@ -180,15 +221,14 @@ func (a *desktop) finishLibrary(request *libraryRequest, page catalog.Page, err 
 	a.model.Loading = false
 	if err != nil {
 		if a.model.LibraryLoaded {
-			a.model.Page = a.cachedLibraryPage()
+			a.model.Page = a.libraryDisplayPage()
 			return
 		}
 		a.catalogFailure(err)
 		return
 	}
-	page.Title = a.tr("shellLibraryTitle")
-	a.model.Page = page
-	a.pushHistory(request.record)
+	a.model.Page = a.libraryDisplayPage()
+	a.pushHistory(false)
 }
 
 func (a *desktop) resetLibrary() {
@@ -229,9 +269,15 @@ func (a *desktop) greeting() string {
 }
 
 func (a *desktop) pushHistory(record bool) {
-	entry := historyEntry{route: a.model.Route, query: a.model.Query, page: a.model.Page, params: a.browseParams}
-	if record {
-		a.history = append(a.history[:a.historyIndex+1], entry)
+	location := pageLocation{a.model.Route, a.model.Query, a.browseParams}
+	if !record {
+		location = a.currentPageLocation()
+	}
+	entry := historyEntry{route: location.route, query: location.query, page: a.model.Page, params: location.params,
+		openedCover: a.model.openedCover, needsReload: a.model.Loading && a.model.Page.Continuation == "", likedChanges: a.likedChanges}
+	if record || a.historyIndex < 0 || a.historyIndex >= len(a.history) {
+		end := min(max(a.historyIndex+1, 0), len(a.history))
+		a.history = append(a.history[:end], entry)
 		if len(a.history) > 24 {
 			a.history = a.history[1:]
 		}
@@ -242,6 +288,13 @@ func (a *desktop) pushHistory(record bool) {
 	a.model.CanBack = a.historyIndex > 0
 	a.model.CanForward = a.historyIndex+1 < len(a.history)
 }
+
+func (a *desktop) invalidateHistory() {
+	for i := range a.history {
+		a.history[i].needsReload = true
+	}
+}
+
 func (a *desktop) travel(delta int) {
 	i := a.historyIndex + delta
 	if i < 0 || i >= len(a.history) {
@@ -256,6 +309,8 @@ func (a *desktop) travel(delta int) {
 	a.model.Route = e.route
 	a.model.Query = e.query
 	a.model.Page = e.page
+	a.likedChanges = e.likedChanges
+	a.model.openedCover = e.openedCover
 	a.browseParams = e.params
 	a.model.Loading = false
 	a.model.Error = ""
@@ -263,6 +318,18 @@ func (a *desktop) travel(delta int) {
 	a.model.Immersive = false
 	a.model.CanBack = i > 0
 	a.model.CanForward = i+1 < len(a.history)
+	if e.needsReload {
+		a.loadPage(e.route, e.query, false)
+		return
+	}
+	// The sidebar keeps refreshing Library while another route is visible.
+	// Returning joins that request or shows the result it already delivered.
+	if e.route == "library" && a.model.LibraryLoaded && a.libraryPage != nil {
+		if a.libraryRequest != nil {
+			a.libraryRequest.pageGeneration = a.pageGeneration
+		}
+		a.model.Page = a.libraryDisplayPage()
+	}
 	a.invalidate()
 }
 
@@ -394,6 +461,7 @@ func (a *desktop) startTrackAt(it catalog.Item, at time.Duration) {
 			} else if err == nil {
 				a.endedHandled = false
 				state := a.player.Snapshot()
+				a.learnVideo(state)
 				recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 				mygo.NowPlaying.Set(mygo.NowPlayingInfo{Title: it.Title, Artist: it.Artist, Album: it.Album, Duration: state.Duration, Position: state.Position, State: mygo.PlaybackPlaying, Commands: mygo.MediaPlay | mygo.MediaPause | mygo.MediaNext | mygo.MediaPrevious | mygo.MediaSeek})
 				a.prepareNext()
@@ -596,36 +664,52 @@ func (a *desktop) resume() {
 }
 
 func (a *desktop) loadMore() {
-	if a.model.Loading || a.model.Page.Continuation == "" {
+	if a.model.Loading || a.model.Page.Continuation == "" || nativeContinuationExpired(&a.model) {
 		return
 	}
-	token := a.model.Page.Continuation
+	previous := a.model.Page
+	location := a.currentPageLocation()
 	generation := a.pageGeneration
 	a.model.Loading = true
 	a.model.Error = ""
 	a.model.ErrorScope = ""
+	ctx, cancel := context.WithTimeout(a.ctx, 45*time.Second)
+	a.pageCancel = cancel
 	go func() {
-		ctx, cancel := context.WithTimeout(a.ctx, 25*time.Second)
 		defer cancel()
-		page, err := a.catalog.Continue(ctx, token)
+		started := time.Now()
+		page, replace, err := continuePage(ctx, a.catalog, location, previous)
 		a.post(func() {
-			a.finishContinuation(generation, page, err)
+			if generation != a.pageGeneration {
+				return
+			}
+			recordContinuationDiagnostic(a.diagnosticPath, err, time.Since(started))
+			a.finishPageContinuation(generation, page, replace, err)
 		})
 	}()
 }
 
 func (a *desktop) finishContinuation(generation uint64, page catalog.Page, err error) {
+	a.finishPageContinuation(generation, page, false, err)
+}
+
+func (a *desktop) finishPageContinuation(generation uint64, page catalog.Page, replace bool, err error) {
 	if generation != a.pageGeneration {
 		return
 	}
 	a.model.Loading = false
 	if err != nil {
-		a.catalogFailure(err)
+		a.model.setContinuationFailure(err, a.trArgs)
 		return
 	}
-	a.model.Page.Items = append(a.model.Page.Items, page.Items...)
-	a.model.Page.Shelves = append(a.model.Page.Shelves, page.Shelves...)
-	a.model.Page.Continuation = page.Continuation
+	if replace {
+		a.model.Page = page
+	} else {
+		a.model.Page.Items = append(a.model.Page.Items, page.Items...)
+		a.model.Page.Shelves = append(a.model.Page.Shelves, page.Shelves...)
+		a.model.Page.Continuation = page.Continuation
+	}
+	a.reconcileLikedMusic()
 	if a.model.Route == "library" && a.model.SignedIn {
 		saved := a.model.Page
 		a.libraryPage = &saved
@@ -715,7 +799,7 @@ func (a *desktop) like() {
 		a.signIn()
 		return
 	}
-	id := a.model.Current.ID
+	track := a.model.Current
 	if a.likeCancel != nil {
 		a.likeCancel()
 	}
@@ -727,7 +811,7 @@ func (a *desktop) like() {
 	liked := !a.model.Liked
 	go func() {
 		defer cancel()
-		err := a.catalog.Like(ctx, id, liked)
+		err := a.catalog.Like(ctx, track.ID, liked)
 		a.post(func() {
 			if accountGeneration != a.accountGeneration || mutationGeneration != a.likeGeneration {
 				return
@@ -736,31 +820,8 @@ func (a *desktop) like() {
 				a.setError("nativeAccountError")
 				a.model.ErrorScope = ""
 			} else {
-				a.setLiked(id, liked)
+				a.confirmLike(track, liked)
 			}
 		})
 	}()
-}
-
-func (a *desktop) setLiked(id string, liked bool) {
-	update := func(it *catalog.Item) {
-		if it.ID == id {
-			it.Liked, it.LikeKnown = liked, true
-		}
-	}
-	update(&a.model.Current)
-	if a.model.Current.ID == id {
-		a.model.Liked = liked
-	}
-	for i := range a.model.Queue {
-		update(&a.model.Queue[i])
-	}
-	for i := range a.model.Page.Items {
-		update(&a.model.Page.Items[i])
-	}
-	for s := range a.model.Page.Shelves {
-		for i := range a.model.Page.Shelves[s].Items {
-			update(&a.model.Page.Shelves[s].Items[i])
-		}
-	}
 }

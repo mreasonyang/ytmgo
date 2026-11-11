@@ -76,7 +76,7 @@ gh workflow run macos-package.yml --repo mreasonyang/ytmgo --ref main -f mode=no
 
 ## 5. 自动升级发布
 
-应用使用 MyGo 0.7.1 的原生更新窗口。稳定 feed 是：
+应用使用 MyGo 0.8.0 的原生更新窗口。稳定 feed 是：
 
 ```text
 https://github.com/mreasonyang/ytmgo/releases/latest/download/update-darwin-arm64.json

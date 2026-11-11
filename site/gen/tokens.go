@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -18,12 +20,17 @@ type tokens struct {
 	Tint map[string]string `json:"tint"`
 	Font struct {
 		Display struct {
-			Weight   int     `json:"weight"`
-			Width    int     `json:"width"`
-			Tracking float64 `json:"tracking"`
-			Leading  float64 `json:"leading"`
+			Weight     int     `json:"weight"`
+			Tracking   float64 `json:"tracking"`
+			Leading    float64 `json:"leading"`
+			LeadingCJK float64 `json:"leadingCJK"`
 		} `json:"display"`
 	} `json:"font"`
+	Wash struct {
+		Dark     float64 `json:"dark"`
+		BrandTop float64 `json:"brandTop"`
+		BrandMid float64 `json:"brandMid"`
+	} `json:"wash"`
 	Size    map[string]json.RawMessage `json:"size"`
 	SizeCJK map[string]fluid           `json:"sizeCJK"`
 	Radius  map[string]json.RawMessage `json:"radius"`
@@ -31,11 +38,13 @@ type tokens struct {
 		Fast  int     `json:"fast"`
 		Base  int     `json:"base"`
 		Slow  int     `json:"slow"`
+		Morph int     `json:"morph"`
 		Ease  string  `json:"ease"`
 		Press float64 `json:"press"`
 		Grow  float64 `json:"grow"`
 	} `json:"motion"`
-	Product map[string]int `json:"product"`
+	Product map[string]int             `json:"product"`
+	Shadow  map[string]json.RawMessage `json:"shadow"`
 	Brand   struct {
 		Wrap     int            `json:"wrap"`
 		WrapWide int            `json:"wrapWide"`
@@ -118,11 +127,15 @@ func (t *tokens) css() (string, error) {
 		return "", fmt.Errorf("tokens: the default tint rust is missing")
 	}
 	prop("tint", rust)
+	// Washes: a cover's colour (as the app's) and the brand's section tints.
+	prop("wash-cover", fmt.Sprintf("%g%%", math.Round(t.Wash.Dark*100)))
+	prop("wash-brand-top", fmt.Sprintf("%g%%", math.Round(t.Wash.BrandTop*100)))
+	prop("wash-brand-mid", fmt.Sprintf("%g%%", math.Round(t.Wash.BrandMid*100)))
 	d := t.Font.Display
 	prop("display-weight", fmt.Sprint(d.Weight))
-	prop("display-width", fmt.Sprintf("%d%%", d.Width))
 	prop("display-tracking", fmt.Sprintf("%gem", d.Tracking))
 	prop("display-leading", fmt.Sprint(d.Leading))
+	prop("display-leading-cjk", fmt.Sprint(d.LeadingCJK))
 	for _, k := range sortedKeys(t.Size) {
 		var px float64
 		if json.Unmarshal(t.Size[k], &px) == nil {
@@ -151,6 +164,7 @@ func (t *tokens) css() (string, error) {
 	prop("d-fast", fmt.Sprintf("%dms", m.Fast))
 	prop("d-base", fmt.Sprintf("%dms", m.Base))
 	prop("d-slow", fmt.Sprintf("%dms", m.Slow))
+	prop("d-morph", fmt.Sprintf("%dms", m.Morph))
 	prop("ease", m.Ease)
 	prop("press-scale", fmt.Sprint(m.Press))
 	prop("grow-scale", fmt.Sprint(m.Grow))
@@ -166,6 +180,14 @@ func (t *tokens) css() (string, error) {
 	prop("s-block", fmt.Sprintf("%dpx", br.Block))
 	prop("s-gap", fmt.Sprintf("%dpx", br.Gap))
 	prop("button", fmt.Sprintf("%dpx", br.Button))
+	// Elevations, for the dark appearance the website uses.
+	for _, k := range sortedKeys(t.Shadow) {
+		var v [3]float64
+		if json.Unmarshal(t.Shadow[k], &v) != nil {
+			continue // $comment, lightScale
+		}
+		prop("shadow-"+kebab(k), fmt.Sprintf("0 %gpx %gpx rgb(0 0 0 / %g)", v[0], v[1], v[2]))
+	}
 	b.WriteString("}\n")
 
 	block()
@@ -199,12 +221,21 @@ func (t *tokens) css() (string, error) {
 }
 
 var (
-	hexColor     = regexp.MustCompile(`#[0-9a-fA-F]{3,8}\b`)
-	rgbColor     = regexp.MustCompile(`\brgba?\(`)
-	radiusDecl   = regexp.MustCompile(`border-radius:\s*([^;}]+)`)
+	hexColor   = regexp.MustCompile(`#[0-9a-fA-F]{3,8}\b`)
+	rgbColor   = regexp.MustCompile(`\brgba?\(`)
+	radiusDecl = regexp.MustCompile(`border-radius:\s*([^;}]+)`)
+	// A drop shadow: an offset and a blur, not a 0 0 0 1px ring or an inset.
+	dropShadow = regexp.MustCompile(`(inset\s+)?\b-?\d+(?:px)?\s+-?\d+px\s+\d+px`)
+	boxShadow  = regexp.MustCompile(`box-shadow:\s*([^;}]+)`)
+	// Spatial properties, whose px values sit on the 4 px grid. Not
+	// border-*, outline widths, shadows or type, which the grid exempts.
+	spatialDecl  = regexp.MustCompile(`(?:^|[\s;{])((?:padding|margin|inset|scroll-margin|scroll-padding)(?:-[a-z-]+)?|gap|row-gap|column-gap|width|height|min-width|min-height|max-width|max-height|top|left|right|bottom|translate|flex-basis|outline-offset)\s*:\s*([^;}]+)`)
+	pxValue      = regexp.MustCompile(`(-?\d*\.?\d+)px`)
 	fontSizeDecl = regexp.MustCompile(`font-size:\s*([^;}]+)`)
 	fontDecl     = regexp.MustCompile(`(?:^|[\s;{])font:\s*([^;}]+)`)
 	customProp   = regexp.MustCompile(`(?:^|[\s;{])(--[a-z0-9-]+)\s*:`)
+	// A colour mixed by hand: color-mix with a literal share.
+	adHocMix = regexp.MustCompile(`color-mix\((?:[^()]|\([^()]*\))*?\d+(?:\.\d+)?%`)
 )
 
 // lintCSS keeps site.css on the tokens: colours, radii and font sizes come
@@ -220,6 +251,25 @@ func lintCSS(css string, generated string) error {
 		n := i + 1
 		if !strings.Contains(line, "artwork") && (hexColor.MatchString(line) || rgbColor.MatchString(line)) {
 			problems = append(problems, fmt.Sprintf("line %d: literal colour; use a colour role", n))
+		}
+		if !strings.Contains(line, "artwork") && adHocMix.MatchString(line) {
+			problems = append(problems, fmt.Sprintf("line %d: colour mixed by hand; use a colour role or a wash token", n))
+		}
+		if !strings.Contains(line, "artwork") && !strings.HasPrefix(strings.TrimSpace(line), "@media") {
+			for _, m := range spatialDecl.FindAllStringSubmatch(line, -1) {
+				for _, v := range pxValue.FindAllStringSubmatch(m[2], -1) {
+					if f, _ := strconv.ParseFloat(v[1], 64); f != 0 && f != 1 && f != -1 && math.Mod(f, 4) != 0 {
+						problems = append(problems, fmt.Sprintf("line %d: %s %spx is off the 4 px grid", n, m[1], v[1]))
+					}
+				}
+			}
+		}
+		for _, m := range boxShadow.FindAllStringSubmatch(line, -1) {
+			for _, d := range dropShadow.FindAllStringSubmatch(m[1], -1) {
+				if d[1] == "" {
+					problems = append(problems, fmt.Sprintf("line %d: drop shadow %q; use a --shadow token", n, d[0]))
+				}
+			}
 		}
 		for _, m := range radiusDecl.FindAllStringSubmatch(line, -1) {
 			if v := strings.TrimSpace(m[1]); !strings.HasPrefix(v, "var(--r-") && v != "50%" && v != "0" && v != "inherit" {

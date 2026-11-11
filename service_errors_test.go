@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -10,7 +11,22 @@ import (
 	"ytmgo/internal/player"
 )
 
+func TestTemporaryContinuationFailureKeepsRetryAfterExpiredPage(t *testing.T) {
+	for _, err := range []error{context.DeadlineExceeded, &catalog.HTTPError{Stage: "browse", StatusCode: 429}} {
+		m, actions := nativeViewFixture()
+		m.Page.Continuation = "page-2"
+		m.setContinuationFailure(catalog.ErrExpiredContinuation, actions.TrArgs)
+		m.setContinuationFailure(err, actions.TrArgs)
+		if m.errorMessage.key != "nativeCatalogMoreError" || nativeContinuationExpired(m) || !nativeContinuationFailed(m) {
+			t.Fatal("temporary pagination failure inherited the expired-page action")
+		}
+	}
+}
+
 func TestServiceErrorClassificationRequiresMatchingEvidence(t *testing.T) {
+	if catalogErrorKey(fmt.Errorf("wrapped: %w", catalog.ErrExpiredContinuation)) != "nativeCatalogPageExpired" {
+		t.Fatal("expired pagination was classified as a network error")
+	}
 	for _, tc := range []struct {
 		status         int
 		redirect, want string

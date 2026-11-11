@@ -1,0 +1,126 @@
+{
+  "command": [
+    "go",
+    "test",
+    "-race",
+    "-json",
+    "-count=1",
+    "-timeout=600s",
+    "./..."
+  ],
+  "package_count": 21,
+  "exit_code": 0,
+  "elapsed_seconds": 410.189,
+  "passed_tests": 1543,
+  "skipped_tests": 40,
+  "diagnostic_categories": [],
+  "race_source_locations": [],
+  "failed_tests": [],
+  "package_results": [
+    {
+      "Action": "skip",
+      "Package": "ytmgo/cmd/icon",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/design/gen",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/cmd/login-icon",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/designtokens",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/httpfreshness",
+      "Elapsed": 0
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/internal/preference",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/language",
+      "Elapsed": 1.433
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/appearance",
+      "Elapsed": 1.442
+    },
+    {
+      "Action": "skip",
+      "Package": "ytmgo/locales",
+      "Elapsed": 0
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/netproxy",
+      "Elapsed": 1.474
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/cmd/sign-desktop-update",
+      "Elapsed": 1.4809999999999999
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/librarysnapshot",
+      "Elapsed": 1.505
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/cmd/update-package",
+      "Elapsed": 1.67
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountsession",
+      "Elapsed": 1.9060000000000001
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/videoquality",
+      "Elapsed": 1.328
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/site/gen",
+      "Elapsed": 1.968
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/catalog",
+      "Elapsed": 5.002
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/player",
+      "Elapsed": 18.467
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/streaming",
+      "Elapsed": 29.758
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo/internal/accountlogin",
+      "Elapsed": 50.702
+    },
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Elapsed": 406.292
+    }
+  ]
+}

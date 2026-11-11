@@ -79,18 +79,44 @@ type nativeLyricsFollow struct {
 	drag           nativeLyricsDrag
 	cueCenters     []float32
 	viewportCenter float32
+	// glideTo is where a glide to the sung line goes; gliding holds while it
+	// does, so its steps are not taken for the reader scrolling.
+	glideTo float32
+	gliding bool
+	// placed reports whether the current layout has positioned the sung line.
+	placed bool
 }
 
-// revealLine centers the sung line within the lyrics viewport without moving
-// the outer player panel. Oversized lines start at the top for readability.
-func (s *nativeLyricsFollow) revealLine(view, line ui.Rect) {
-	if view.H <= 0 || line.H <= 0 {
-		return
+// revealLine glides the sung line, top in the content and h high, to the
+// middle of a viewport viewH high, without moving the outer player panel;
+// an oversized line starts at the top for readability. A new line glides
+// over the slow motion, as the website's lyrics do; while one glides, it
+// is not asked again. On first layout or resize, place the line immediately
+// if the lyrics are at rest. A glide already in progress follows the new center.
+func (s *nativeLyricsFollow) revealLine(viewH, top, h float32) bool {
+	if viewH <= 0 || h <= 0 {
+		return false
 	}
-	top := line.Y - view.Y
-	y := s.scroll.Y + top - max(0, (view.H-line.H)/2)
-	s.scroll.Y = max(0, min(y, s.scroll.MaxY))
-	s.expectedY = s.scroll.Y
+	y := max(0, min(top-max(0, (viewH-h)/2), s.scroll.MaxY))
+	if !s.placed {
+		s.placed = true
+		if !s.scroll.Scrolling() {
+			s.scroll.Y, s.expectedY = y, y
+			return true
+		}
+		// ScrollTo still owns the offset while it animates. Retarget that
+		// glide below so its next step is recognized as automatic scrolling.
+	}
+	if s.gliding {
+		if math.Abs(float64(y-s.glideTo)) < 0.5 {
+			return false
+		}
+	} else if math.Abs(float64(y-s.scroll.Y)) < 0.5 {
+		return false
+	}
+	s.glideTo, s.gliding = y, true
+	s.scroll.ScrollTo(s.scroll.X, y, ui.Animation{Duration: tokenMotionSlow, Ease: tokenMotionEase})
+	return true
 }
 
 func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) ui.Element {
@@ -104,21 +130,39 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 	if resized || !nativeLyricsCanSeek(m, a) {
 		state.cancelDrag()
 	}
-	// A wheel, key or scrollbar takes over when it moves the lyrics.
-	// Layout can also clamp the offset if the content becomes shorter.
-	if state.scroll.Y != min(state.expectedY, state.scroll.MaxY) {
+	// A wheel, key or scrollbar takes over when it moves the lyrics (and
+	// stops a glide). A glide's own steps, and the one that ends it on its
+	// line, are not the reader. Layout can also clamp the offset if the
+	// content becomes shorter.
+	moved := state.scroll.Y != min(state.expectedY, state.scroll.MaxY)
+	onLine := math.Abs(float64(state.scroll.Y-min(state.glideTo, state.scroll.MaxY))) < 1
+	glided := state.gliding && (state.scroll.Scrolling() || onLine)
+	// A glide that ended away from its line was turned elsewhere, by a key.
+	turned := state.gliding && !state.scroll.Scrolling() && !onLine
+	if moved && !glided || turned {
 		state.follow = false
+	}
+	if !state.scroll.Scrolling() {
+		state.gliding = false
 	}
 	state.expectedY = state.scroll.Y
 	state.width, state.height, state.language = width, height, m.Language
 	return body.Children(func() {
 		if len(m.LyricLines) == 0 && m.LyricsAvailable {
-			ui.Text(c, a.Tr("nativeLyricsUnsynced")).Shrink(0).FontSize(12).TextColor(p.secondary)
+			ui.Text(c, a.Tr("nativeLyricsUnsynced")).Shrink(0).FontSize(tokenSizeMicro).TextColor(p.secondary)
 		}
 		scroll := ui.Scroll(c.Key("lyrics-scroll")).Grow(1).MinHeight(0).Gap(12).TrackScroll(&state.scroll).Focusable().Label(a.Tr("shellLyrics") + " · " + a.Tr("shellContent"))
 		scroll.HandleInput(func(ev ui.InputEvent) bool {
 			return state.dragInput(ev, m, a)
 		})
+		nativeScrollbar(c, scroll, &state.scroll, p, nil, func() {
+			// Keyboard scrolling uses the same ScrollTo as playback. Give
+			// the reader control as soon as their key starts a scroll.
+			state.follow, state.gliding = false, false
+		})
+		// Lines scrolled past an edge fade out instead of being sliced; an edge
+		// fades only while there is more beyond it.
+		scroll.Effect(nativeEdgeFade{top: state.scroll.Y > 0.5, bottom: state.scroll.Y < state.scroll.MaxY-0.5})
 		view := scroll.LayoutBounds()
 		visible := view
 		if a.viewportScroll != nil {
@@ -127,7 +171,9 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 		state.viewportCenter = visible.Y - view.Y + visible.H/2
 		state.releaseDrag(m, a, scroll)
 		if nativeLyricsCanSeek(m, a) {
-			scroll.Cursor(ui.CursorGrab).Tooltip(a.Tr("nativeLyricsDragHint"))
+			// The grab cursor says it drags; a tip over the lyrics would cover
+			// the chips above them as the reader rests on a line.
+			scroll.Cursor(ui.CursorGrab).Description(a.Tr("nativeLyricsDragHint"))
 			if state.drag.pressed {
 				scroll.Cursor(ui.CursorGrabbing)
 			}
@@ -146,7 +192,7 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 				if lyrics == "" {
 					lyrics, color = a.Tr("nativeLyricsUnavailable"), p.secondary
 				}
-				ui.Text(c, lyrics).FontSize(20).FontWeight(700).LineHeight(1.6).TextColor(color)
+				ui.Text(c, lyrics).FontSize(tokenSizeLineMin).FontWeight(700).LineHeight(1.6).TextColor(color)
 			} else {
 				// Leave enough room to center even the first and last cues. Keep
 				// these spaces fixed during manual reading so resizing the panel
@@ -155,14 +201,18 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 				state.cueCenters = state.cueCenters[:0]
 				var first, last, current ui.Rect
 				for i, line := range m.LyricLines {
-					color := p.secondary
-					if i == active {
+					// Sung lines muted, the current one text, the rest dim.
+					color := p.dim
+					switch {
+					case i == active:
 						color = p.text
+					case i < active:
+						color = p.muted
 					}
 					if state.drag.moved && i == state.drag.selected {
 						color = p.accent
 					}
-					row := ui.Text(c.Key(fmt.Sprintf("lyric-%d", i)), line.Text).Shrink(0).FontSize(20).FontWeight(700).LineHeight(1.6).TextColor(color)
+					row := ui.Text(c.Key(fmt.Sprintf("lyric-%d", i)), line.Text).Shrink(0).FontSize(tokenSizeLineMin).FontWeight(700).LineHeight(1.6).TextColor(color)
 					if i == 0 {
 						first = row.LayoutBounds()
 					}
@@ -185,14 +235,16 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 					trailing.Height(bottom)
 					if resized || paddingChanged {
 						// Center using bounds from the updated layout next frame.
+						state.placed = false
 						c.Invalidate()
-					} else {
-						state.revealLine(visible, current)
+					} else if state.revealLine(visible.H, current.Y-leading.LayoutBounds().Y-(visible.Y-view.Y), current.H) {
+						// The lyrics move themselves, not the reader: no bar.
+						nativeScrollbarFollowed(scroll, &state.scroll)
 					}
 				}
 			}
 			if m.LyricsSource != "" {
-				ui.Text(c, m.LyricsSource).FontSize(12).TextColor(p.secondary).Shrink(0)
+				ui.Text(c, m.LyricsSource).FontSize(tokenSizeMicro).TextColor(p.secondary).Shrink(0)
 			}
 		})
 		nativeLyricsDragPreview(c, scroll, state, m, a, p)
@@ -205,4 +257,49 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 			}
 		}
 	})
+}
+
+// nativeEdgeFade fades an element's top and bottom edges to transparent, as
+// CSS's mask-image does on the website's lyrics: it draws the rendered
+// element in strips, each with less alpha toward the edge, so it fades over
+// whatever lies behind (a card, or a cover's blur in immersive mode).
+type nativeEdgeFade struct{ top, bottom bool }
+
+// nativeEdgeFadeSize is how far into the element an edge fades.
+const nativeEdgeFadeSize = 24
+
+func (nativeEdgeFade) EffectMargin() ui.Point { return ui.Point{} }
+
+func (f nativeEdgeFade) PaintEffect(p *ui.Painter, box ui.Rect, content *ui.Bitmap, _ ui.Point) {
+	w, h := content.Size()
+	if box.H <= 0 || w == 0 || h == 0 {
+		return
+	}
+	px := float32(h) / box.H // bitmap pixels per DIP
+	fade := min(float32(nativeEdgeFadeSize), box.H/3)
+	top, bottom := float32(0), float32(0)
+	if f.top {
+		top = fade
+	}
+	if f.bottom {
+		bottom = fade
+	}
+	band := func(y0, y1, alpha float32) {
+		if y1 <= y0 {
+			return
+		}
+		var o ui.ImageOptions
+		if alpha < 1 {
+			o.Tint = ui.Color{R: 255, G: 255, B: 255, A: uint8(alpha*255 + 0.5)}
+		}
+		p.ImageRegion(content, ui.Rect{X: 0, Y: y0 * px, W: float32(w), H: (y1 - y0) * px}, ui.Rect{X: box.X, Y: box.Y + y0, W: box.W, H: y1 - y0}, o)
+	}
+	band(top, box.H-bottom, 1)
+	// One strip per DIP: smooth at any scale, and few enough to be cheap.
+	for i := float32(0); i < top; i++ {
+		band(i, min(i+1, top), (i+0.5)/top)
+	}
+	for i := float32(0); i < bottom; i++ {
+		band(box.H-bottom+i, min(box.H-bottom+i+1, box.H), 1-(i+0.5)/bottom)
+	}
 }

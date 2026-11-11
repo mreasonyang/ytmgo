@@ -1367,6 +1367,22 @@ func (msgs Messages) ShellSettings() string {
 	return Catalog.Format(msgs.locale, "shellSettings", nil)
 }
 
+// ShellBackToSettings says "Back to Settings"
+// in the language the app shows.
+//
+// Accessible name of the back button leading the Keyboard shortcuts sheet
+// when it was opened from Settings.
+func ShellBackToSettings() string { return In(i18n.Locale()).ShellBackToSettings() }
+
+// ShellBackToSettings says "Back to Settings"
+// in the language of msgs.
+//
+// Accessible name of the back button leading the Keyboard shortcuts sheet
+// when it was opened from Settings.
+func (msgs Messages) ShellBackToSettings() string {
+	return Catalog.Format(msgs.locale, "shellBackToSettings", nil)
+}
+
 // ShellAppMenu says "Application menu"
 // in the language the app shows.
 //
@@ -1437,6 +1453,22 @@ func ShellOpenNowPlaying() string { return In(i18n.Locale()).ShellOpenNowPlaying
 // Accessible name of the artwork / title buttons.
 func (msgs Messages) ShellOpenNowPlaying() string {
 	return Catalog.Format(msgs.locale, "shellOpenNowPlaying", nil)
+}
+
+// ShellCloseNowPlaying says "Close Now Playing"
+// in the language the app shows.
+//
+// Accessible name of the player bar's artwork / title button while Now
+// Playing shows: a second click closes it.
+func ShellCloseNowPlaying() string { return In(i18n.Locale()).ShellCloseNowPlaying() }
+
+// ShellCloseNowPlaying says "Close Now Playing"
+// in the language of msgs.
+//
+// Accessible name of the player bar's artwork / title button while Now
+// Playing shows: a second click closes it.
+func (msgs Messages) ShellCloseNowPlaying() string {
+	return Catalog.Format(msgs.locale, "shellCloseNowPlaying", nil)
 }
 
 // ShellIdleTitle says "Not playing"
@@ -2495,6 +2527,26 @@ func (msgs Messages) NativeCatalogError() string {
 	return Catalog.Format(msgs.locale, "nativeCatalogError", nil)
 }
 
+// NativeCatalogPageExpired says "This list is out of date. Reload it to continue browsing."
+// in the language the app shows.
+func NativeCatalogPageExpired() string { return In(i18n.Locale()).NativeCatalogPageExpired() }
+
+// NativeCatalogPageExpired says "This list is out of date. Reload it to continue browsing."
+// in the language of msgs.
+func (msgs Messages) NativeCatalogPageExpired() string {
+	return Catalog.Format(msgs.locale, "nativeCatalogPageExpired", nil)
+}
+
+// NativeCatalogMoreError says "Unable to load more music right now. Please try again."
+// in the language the app shows.
+func NativeCatalogMoreError() string { return In(i18n.Locale()).NativeCatalogMoreError() }
+
+// NativeCatalogMoreError says "Unable to load more music right now. Please try again."
+// in the language of msgs.
+func (msgs Messages) NativeCatalogMoreError() string {
+	return Catalog.Format(msgs.locale, "nativeCatalogMoreError", nil)
+}
+
 // NativeNoLyrics says "Lyrics are not available for this track."
 // in the language the app shows.
 func NativeNoLyrics() string { return In(i18n.Locale()).NativeNoLyrics() }
@@ -2593,6 +2645,46 @@ func NativeArtwork() string { return In(i18n.Locale()).NativeArtwork() }
 // in the language of msgs.
 func (msgs Messages) NativeArtwork() string {
 	return Catalog.Format(msgs.locale, "nativeArtwork", nil)
+}
+
+// NativeVideoTheater says "Fill the view with the video"
+// in the language the app shows.
+func NativeVideoTheater() string { return In(i18n.Locale()).NativeVideoTheater() }
+
+// NativeVideoTheater says "Fill the view with the video"
+// in the language of msgs.
+func (msgs Messages) NativeVideoTheater() string {
+	return Catalog.Format(msgs.locale, "nativeVideoTheater", nil)
+}
+
+// NativeVideoTheaterExit says "Restore the video's size"
+// in the language the app shows.
+func NativeVideoTheaterExit() string { return In(i18n.Locale()).NativeVideoTheaterExit() }
+
+// NativeVideoTheaterExit says "Restore the video's size"
+// in the language of msgs.
+func (msgs Messages) NativeVideoTheaterExit() string {
+	return Catalog.Format(msgs.locale, "nativeVideoTheaterExit", nil)
+}
+
+// NativeVideoFullScreen says "Full screen"
+// in the language the app shows.
+func NativeVideoFullScreen() string { return In(i18n.Locale()).NativeVideoFullScreen() }
+
+// NativeVideoFullScreen says "Full screen"
+// in the language of msgs.
+func (msgs Messages) NativeVideoFullScreen() string {
+	return Catalog.Format(msgs.locale, "nativeVideoFullScreen", nil)
+}
+
+// NativeVideoExitFullScreen says "Exit full screen"
+// in the language the app shows.
+func NativeVideoExitFullScreen() string { return In(i18n.Locale()).NativeVideoExitFullScreen() }
+
+// NativeVideoExitFullScreen says "Exit full screen"
+// in the language of msgs.
+func (msgs Messages) NativeVideoExitFullScreen() string {
+	return Catalog.Format(msgs.locale, "nativeVideoExitFullScreen", nil)
 }
 
 // NativeVideoUnavailable says "Video is temporarily unavailable."

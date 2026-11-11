@@ -114,6 +114,9 @@ type Media struct {
 	Lease         *Lease
 	Duration      time.Duration
 	Width, Height int
+	// Video reports that the track has moving pictures: a music video, not
+	// an art track's (or an upload's) cover held still for its length.
+	Video bool
 }
 type extracted struct {
 	Code      string `json:"code"`

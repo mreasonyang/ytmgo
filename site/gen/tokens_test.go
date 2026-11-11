@@ -39,6 +39,11 @@ func TestLintCatchesDrift(t *testing.T) {
 		"literal font size": ".a { font-size: 14px; }",
 		"literal font":      ".a { font: 700 14px/1 var(--sans); }",
 		"redefined token":   ".a { --accent: red; }",
+		"hand-made shadow":  ".a { box-shadow: 0 16px 40px var(--base); }",
+		"off-grid padding":  ".a { padding: 10px 16px; }",
+		"off-grid size":     ".a { width: 18px; }",
+		"off-grid offset":   ".a { translate: 0 -2px; }",
+		"hand-mixed colour": ".a { color: color-mix(in srgb, var(--text) 72%, transparent); }",
 	} {
 		if lintCSS(line, generated) == nil {
 			t.Errorf("%s: %q passed the lint", name, line)
@@ -54,6 +59,11 @@ func TestLintAllowsTokensAndMarkedArtwork(t *testing.T) {
 		".a { font: 600 var(--t-meta) var(--sans); }",
 		".a { background: linear-gradient(#18143a, #f08a4b); } /* artwork: a cover */",
 		".a { --p: 0%; }",
+		".a { box-shadow: var(--shadow-popover), 0 0 0 1px var(--line); }",
+		".a { box-shadow: inset 0 0 0 1px var(--line); }",
+		".a { padding: 12px 20px; gap: 8px; width: 1240px; border-right: 2px solid var(--line); }",
+		".a { height: 1px; }",
+		".a { background: color-mix(in srgb, var(--tint) var(--wash-brand-top), var(--base)); }",
 	} {
 		if err := lintCSS(line, generated); err != nil {
 			t.Errorf("%q: %v", line, err)

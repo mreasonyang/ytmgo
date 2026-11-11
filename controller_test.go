@@ -2,9 +2,42 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"ytmgo/internal/catalog"
 )
+
+func TestExpiredContinuationKeepsPageAndPlaybackUntilReload(t *testing.T) {
+	for _, err := range []error{catalog.ErrExpiredContinuation, catalog.ErrSessionChanged} {
+		t.Run(err.Error(), func(t *testing.T) {
+			m, actions := nativeViewFixture()
+			m.Page.Continuation = "expired-page"
+			m.SignedIn = true
+			a := &desktop{model: *m, pageGeneration: 7}
+			a.model.setContinuationFailure(fmt.Errorf("wrapped: %w", err), actions.TrArgs)
+			if a.model.Loading || a.model.errorMessage.key != "nativeCatalogPageExpired" || !nativeContinuationExpired(&a.model) {
+				t.Fatal("invalidated pagination did not offer a page reload")
+			}
+			if len(a.model.Page.Items) != len(m.Page.Items) || a.model.Page.Continuation != "expired-page" ||
+				a.model.Current != m.Current || a.model.Playing != m.Playing || a.model.Position != m.Position || len(a.model.Queue) != len(m.Queue) || !a.model.SignedIn {
+				t.Fatal("pagination failure changed existing content, playback or account state")
+			}
+			// Neither automatic nor direct LoadMore may retry this dead cursor.
+			a.loadMore()
+			if a.model.Loading || !nativeContinuationExpired(&a.model) {
+				t.Fatal("expired cursor was submitted again")
+			}
+		})
+	}
+}
+
+func TestStaleExpiredContinuationCannotChangeNewerPage(t *testing.T) {
+	a := &desktop{pageGeneration: 8, model: UIModel{Loading: true, Page: catalog.Page{Title: "new page", Continuation: "new-cursor"}}}
+	a.finishContinuation(7, catalog.Page{}, catalog.ErrExpiredContinuation)
+	if !a.model.Loading || a.model.Error != "" || a.model.Page.Title != "new page" || a.model.Page.Continuation != "new-cursor" {
+		t.Fatal("stale pagination failure changed the new page")
+	}
+}
 
 func TestPauseInvalidatesQueuedResume(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())

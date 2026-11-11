@@ -3,9 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"image"
+	"image/color"
+	"image/draw"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 	"ytmgo/internal/accountsession"
@@ -122,6 +126,84 @@ func TestCachedLibraryRemainsVisibleWhileRefreshingAndAfterFailure(t *testing.T)
 	a.clearAccountContent()
 	if a.libraryPage != nil || a.libraryScope != "" || a.model.LibraryCached || len(a.model.LibraryItems) != 0 {
 		t.Fatal("account change retained restored library state")
+	}
+}
+
+// Sample the main panel before, during and after a delayed Library refresh.
+// The sidebar already has the same covers, and Home shows them in larger tiles.
+func TestLibraryClickKeepsRowCoversDuringRefresh(t *testing.T) {
+	const raw = "https://i.ytimg.com/vi/abc123DEF_-/hqdefault.jpg"
+	rows := []catalog.Item{
+		{Title: "First album", Kind: "album", BrowseID: "MPREfirst", Artwork: raw},
+		{Title: "Second album", Kind: "album", BrowseID: "MPREsecond", Artwork: raw},
+		{Title: "Saved playlist", Kind: "playlist", BrowseID: "VLsaved", Artwork: raw},
+	}
+	live := catalog.Page{Items: rows, Shelves: []catalog.Shelf{{Items: rows}}, Continuation: "next-page"}
+	ink := color.RGBA{R: 25, G: 223, B: 93, A: 255}
+	im := image.NewRGBA(image.Rect(0, 0, 8, 8))
+	draw.Draw(im, im.Bounds(), image.NewUniform(ink), image.Point{}, draw.Src)
+	bitmap := ui.NewBitmap(im)
+
+	for _, test := range []struct {
+		source string
+		width  int
+	}{{"memory", 1280}, {"disk", 1280}, {"memory", 420}, {"disk", 420}} {
+		t.Run(fmt.Sprintf("%s-%d", test.source, test.width), func(t *testing.T) {
+			saved := live
+			if test.source == "disk" {
+				saved = librarysnapshot.Metadata(live)
+			}
+			m, a := nativeViewFixture()
+			m.SignedIn, m.LibraryLoaded, m.LibraryItems = true, true, rows
+			m.instantMotion = false
+			pending := &libraryRequest{}
+			app := &desktop{model: *m, historyIndex: -1, libraryPage: &saved, libraryRequest: pending}
+			app.model.LibraryRefreshing = true
+			a.Navigate, a.LoadMore = app.navigate, nil
+			a.artworkPeek = func(src string, _ int) ui.ImageSource {
+				if src == raw {
+					return bitmap
+				}
+				return nil
+			}
+			a.Artwork = func(src string, edge int, _ artworkPriority) ui.ImageSource { return a.artworkPeek(src, edge) }
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, &app.model, a) }, test.width, 800)
+			if err := tt.Click(a.Tr("shellNavLibrary")); err != nil || app.model.Route != "library" {
+				t.Fatalf("Library click failed: %v", err)
+			}
+			checkRows := func() {
+				t.Helper()
+				page := rect(t, tt, a.Tr("shellContent"))
+				img := tt.Image()
+				pixels := 0
+				for y := int(page.Y); y < int(page.Y+page.H); y++ {
+					for x := int(page.X); x < int(page.X+page.W); x++ {
+						if img.RGBAAt(x, y) == ink {
+							pixels++
+						}
+					}
+				}
+				if pixels < len(rows)*32*32 || pixels > len(rows)*40*40 {
+					t.Fatalf("main panel painted %d cover pixels, expected three 40-DIP thumbnails", pixels)
+				}
+			}
+			checkRows()
+			for elapsed := time.Duration(0); elapsed < tokenMotionMorph; elapsed += time.Second / 60 {
+				tt.Advance(time.Second / 60)
+				checkRows()
+			}
+			if app.model.Page.Continuation != "" {
+				t.Fatal("pending refresh exposed the previous continuation")
+			}
+			app.finishLibrary(pending, live, nil)
+			tt.Frame()
+			checkRows()
+			tt.Advance(tokenMotionMorph)
+			checkRows()
+			if app.model.Page.Continuation != live.Continuation {
+				t.Fatal("refreshed library lost its continuation")
+			}
+		})
 	}
 }
 

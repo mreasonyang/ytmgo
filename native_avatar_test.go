@@ -17,6 +17,7 @@ func TestNativeAccountAvatarImageAndMenu(t *testing.T) {
 				m, a := nativeViewFixture()
 				m.SignedIn, m.MusicPremium, m.Appearance = true, true, appearance
 				m.AccountAvatar = "synthetic-avatar"
+				a.artworkScale = 2 // match a native Retina window's display scale
 				avatarColor := color.RGBA{215, 61, 163, 255}
 				photo := image.NewRGBA(image.Rect(0, 0, 64, 64))
 				draw.Draw(photo, photo.Bounds(), image.NewUniform(avatarColor), image.Point{}, draw.Src)

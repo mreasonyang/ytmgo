@@ -23,6 +23,52 @@ by a row from the app's own track table and washed in one of the app's
 header tints. A player bar follows the reader; the last track is "Press
 play". The website shows the product by performing it, not by describing it.
 
+### Lineage
+
+ytmGO brings Spotify's desktop design language to YouTube Music; the launch
+copy says so, and the design means it. What it borrows is the **language**:
+the arrangement and behaviour people already know, so they can listen
+without learning a new app. What makes ytmGO recognisably itself is its
+own, and nothing of Spotify's identity is ever taken.
+
+**Borrowed: structure and behaviour.**
+- The window: a black frame holding rounded panels, a global bar with a
+  centred search field, a library panel with filter chips, a three-zone
+  player bar, and Now Playing as a side panel.
+- The patterns: a numbered track table whose number becomes a play glyph on
+  hover; a collection header with a large cover and a round play button;
+  quick-access tiles on Home; a play button that rises on a hovered card;
+  page headers washed in colour; a mini player above a tab bar in narrow
+  windows.
+
+These are layout and interaction conventions. They're described by what
+they do, and drawn and built by ytmGO.
+
+**Never borrowed: identity.**
+- **Colour.** No Spotify Green (`#1DB954`, `#1ED760`) or any green standing
+  in for it. ytmGO's colour is coral, and it means play.
+- **Type.** Not Spotify's typefaces (Circular, Spotify Mix) or lookalikes
+  chosen to resemble them. ytmGO uses the system font.
+- **Marks.** Not Spotify's logo, wordmark, app icon or their shapes. ytmGO's
+  mark is its coral play ring.
+- **Assets.** Not Spotify's icons, illustrations, imagery, screenshots,
+  sounds or animation. ytmGO draws its own interface; its icons are adapted
+  from Lucide (§8).
+- **Words.** Not Spotify's feature and product names ("Wrapped", "Discover
+  Weekly", "Blend" and the like), slogans or marketing copy.
+
+**Naming Spotify.** Mention Spotify only to say plainly where the design
+language comes from, or that ytmGO isn't affiliated with it: in the launch
+copy, the FAQ and the disclaimer. Never in a way that suggests
+endorsement, partnership or that ytmGO is a Spotify product.
+
+**Where ytmGO is its own.** Coral as the one colour of play; the playing
+cover's colour leading the player (§4.4); a heavy system-font display
+hierarchy; lyrics and immersive mode as first-class views; Chinese and Japanese
+designed rather than fitted; and, on the website, the record. When adding
+something new, look here first: a feature should feel familiar in where it
+sits and how it behaves, and like ytmGO in how it looks.
+
 ## 2. Principles
 
 1. **The music leads.** Artwork, lyrics and the playing track carry colour
@@ -45,7 +91,7 @@ play". The website shows the product by performing it, not by describing it.
 | | Product (app) | Brand (website, social, film) |
 | --- | --- | --- |
 | Purpose | Listening, all day | First impression, one visit |
-| Type | System UI font; display face for display titles | Display face for titles, system UI font for text |
+| Type | System font; display titles at 800 | System font; display titles at 800, larger |
 | Density | Compact, 15 px text | Generous, 17 px text |
 | Motion | State changes only | State changes, one fade-in per block, the two product demonstrations |
 | Colour | Neutral chrome, art-driven washes | The same palette; whole sections washed in tints |
@@ -71,14 +117,28 @@ dark only.
 | `input` | `#242424` | `#ececee` | Secondary pills, segmented tracks |
 | `highlight` | `#2a2a2a` | `#e1e1e4` | Hovered round buttons, menus, placeholders |
 | `text` | `#ffffff` | `#121212` | Titles, primary labels, inverted buttons |
-| `secondary` | `#b3b3b3` | `#5a5a5f` | Artists, body copy, meta |
-| `muted` | `#8f8f8f` | `#6b6b70` | Notes, placeholders, table headings |
+| `secondary` | 70 % white (`#b3b3b3` on black) | `#5a5a5f` | Artists, body copy, lead paragraphs, links, meta |
+| `muted` | 56 % white (`#8f8f8f` on black) | `#6b6b70` | Notes, placeholders, table headings, sung lyric lines |
+| `dim` | 34 % white | 34 % `text` | Upcoming lyric lines and unsung words only (decorative, §4.5) |
 | `accent` | `#ff5a4f` | `#e8382d` | Play: fills and glyphs |
 | `accentText` | `#ff5a4f` | `#b8261c` | Play: text (≥ 4.5:1 on every surface) |
 | `onAccent` | `#000000` | `#ffffff` | Content on an accent fill |
 | `attention` | `#ffb35c` | `#8a5300` | Errors and warnings, always with an icon and words |
-| `line` / `hover` / `press` | 10 % / 7 % / 12 % white | 10 % / 5 % / 9 % black | Hairlines and interaction washes |
-| `track` | `#4d4d4d` | `#c9c9cd` | Unfilled progress and sliders |
+| `line` | 10 % white | 10 % black | Hairlines, dividers, rings around images |
+| `hover` / `press` | 7 % / 12 % white | 5 % / 9 % black | Quiet fills at rest / hovered; hovered rows |
+| `track` | 30 % white | 21 % black | Unfilled progress and sliders, outline buttons |
+| `selection` | 20 % white | 20 % `text` | Selected text |
+| `inverseHover` | `#dbdbdb` | `#303030` | A hovered inverted button |
+| `scrim` | 60 % black | 40 % black | Dims the window behind a dialog |
+| `veil` | 70 % `base` | 70 % `base` | A surface over moving content: the sticky nav (with blur), the video's controls. 70 % keeps `secondary` links at 5:1 over white content |
+| `pane` | 70 % `base` | 70 % `surface` | A card over the immersive ambience: the lyrics and queue card. Light takes `surface`, as `base` over a wash of its own tone vanishes; translucent text (`dim`) keeps its ratio on either, so the tone is for the card, not the words |
+
+Dark text roles are white made translucent, so on a tint or a cover's wash
+they take its colour; on black they are exactly the greys in brackets.
+These are the only colours: no other share of a role, mixed by hand, is
+allowed (the site's lint and the app's design test reject one). The
+exceptions are the washes, whose strengths are tokens (`wash`), and
+artwork.
 
 ### 4.2 What coral means
 
@@ -108,12 +168,47 @@ hash so a page always keeps its tint: blue `#2d46b9`, violet `#8d67ab`, teal
 `#1e7a6b`, rust `#b0472b`, steel `#477d95`, brown `#7d4b32`, slate `#5179a1`
 and raspberry `#a13d63`.
 
-A wash runs from the tint at the top (78 % tint over black) through 34 % at
-260 px into the background. Pages with artwork wash in their blurred cover
-instead. The website gives each track one tint; the intro and the download
+In the app a page's wash runs from the tint at `wash.dark` (50 %; light
+32 %) at the top to nothing. The website's sections are the brand's, and
+richer: the tint at `wash.brandTop` (70 %) over black, through
+`wash.brandMid` (34 %) at 260 px into the background. 70 % is the most
+that keeps `secondary` text at 4.5:1 at the top on every tint. Pages with artwork wash the same way in their
+cover's colour (§4.4), never in a blurred copy of the cover, which turns
+blotchy; a cover without colour leaves the page neutral. Only immersive
+mode, where the cover is the subject, fills the view with its blur. A wash
+belongs to its page's header, so it **scrolls away with the header**; it
+never stays pinned while a list scrolls through it. What is fixed to a
+viewport is only what describes that viewport: edge fades (shown while
+there is more beyond the edge), the immersive ambience, and the washes of
+panels that don't scroll (the player bar, a docked Now Playing panel); a
+floating Now Playing sheet scrolls, so its wash scrolls away like a page's.
+Scrolling edges follow three conventions: a list under a fixed header (the
+library, a sheet) gets a hairline under the header once content has scrolled
+beneath it and a fade at its bottom while more lies below; a panel that
+scrolls whole (the page, the floating Now Playing sheet), whose header
+scrolls away with it, fades at its bottom the same way, its top being the
+panel's own edge; a list inside a card (lyrics, queue) fades at whichever
+edge has more beyond it. Rows are
+never cut off at an edge without one of these. The website gives each track one tint; the intro and the download
 share rust, so the record starts and ends in the same light.
 
-### 4.4 Contrast
+### 4.4 What's playing lends its colour
+
+The playing track's cover colours the player: the Now Playing panel washes
+down from it, the player bar glows with it behind the track and fades out
+before the transport, and the compact mini player is filled with it, more
+weakly (28 % dark, 16 % light) since it holds text: its secondary text keeps
+4.5:1 on every colour the picker can return, which a test checks. The
+colour is read once from the cover when it loads: the hue carrying the most
+colour (vivid, bright pixels outweigh large dark ones; near-black, near-white
+and grey don't count), normalised to one brightness and a bounded saturation
+so text stays readable on any cover. A cover without colour lends none, and
+the chrome stays neutral. Washes are 50 % (dark) or 32 % (light) of the tint,
+the same strength as an app page's header wash (`wash` in the tokens); the player
+bar's is 70 % of that. Coral is never replaced by a cover's colour:
+play stays coral.
+
+### 4.5 Contrast
 
 Text is at least 4.5:1 against what's behind it, large display text and
 interface glyphs 3:1. Dimmed states (upcoming lyric lines, disabled
@@ -124,14 +219,17 @@ becomes readable by itself. Colour is never the only carrier of state.
 
 ### 5.1 Faces
 
+**ytmGO uses the system font, always.** It ships no typefaces: the app
+registers none and the website loads none.
+
 | Face | Use |
 | --- | --- |
-| **System UI** (SF Pro, Segoe UI, Noto Sans; PingFang, Microsoft YaHei/JhengHei, Hiragino) | All interface and running text |
-| **Bricolage Grotesque**, 720 weight, 88 % width, −3.5 % tracking | Display titles only: the hero, section and collection titles, big figures, lyric lines in the demo. Latin only; CJK display uses the system face at 800 |
-| **JetBrains Mono** | Numbers that line up: track numbers, durations, times, versions, code. Never sentences |
+| **System UI** (SF Pro, Segoe UI, Noto Sans; PingFang, Microsoft YaHei/JhengHei, Hiragino) | All text, display titles included. Titles are the same face at the display weight (800) and leading (1.05; 1.18 in CJK), with the platform's own spacing and optical sizes: no added tracking |
+| **System monospace** (SF Mono, Cascadia Mono, Menlo, Consolas) | Numbers that line up: track numbers, durations, times, versions, code. Never sentences |
 
-Both shipped faces are SIL Open Font License 1.1; the licence text travels
-with the files.
+The system face reads natively on every platform, covers every script
+without fallbacks, and can't be shadowed, mis-cut or mis-licensed; what
+makes ytmGO's type its own is the scale, weight and hierarchy, not a face.
 
 ### 5.2 Scale
 
@@ -148,8 +246,13 @@ with the files.
 | `title` | 32–72 | Collection title | Section titles |
 | `hero` | 54–136 | — | The one hero headline |
 
-Weights: 400 text, 600 labels, 700 headings, 800 system display. Leading:
-0.96 display, 1.2 headings, 1.35 interface, 1.6 running text (1.8 in CJK).
+Weights: 400 text, 600 labels, 700 headings, 800 display. Leading:
+1.05 display, 1.2 headings, 1.35 interface, 1.6 running text (1.8 in CJK).
+
+**Every heading at `h3` and above is a display title**, set at the display
+weight and leading: page, shelf, sheet and empty-state titles alike. Quiet
+labels (a panel's name, a title bar's) are `meta`/`body` at 600–700. Nothing
+is letter-spaced: the system face's own spacing is right at every size.
 
 **One giant moment per surface.** The website has one hero size; the app's
 largest type is a collection title.
@@ -160,19 +263,26 @@ largest type is a collection title.
   (`word-break: keep-all`) and break only at spaces, punctuation and phrase
   marks. In locale strings a `|` marks a phrase boundary
   (`你的音乐，|值得不止一个|浏览器标签页`). The website turns marks into
-  `<wbr>`; the app will do the same with its own shaping.
+  `<wbr>`; the app joins each phrase's characters with word joiners.
 - Running text breaks anywhere, with strict kinsoku, 1.8 leading, +2 %
   tracking and automatic CJK–Latin spacing.
 - Display sizes step down (`sizeCJK`): full-width glyphs are about twice as
   wide as the condensed Latin face.
-- No negative tracking, no Latin display face on CJK, no faux italics.
+- No negative tracking, no faux italics.
 - Text carries its `lang`, so each script gets its own fonts; Japanese kana
   never falls back to Chinese fonts.
 - Names stay whole: a no-break space joins "YouTube Music".
 
 ## 6. Space and layout
 
-Space comes from one scale: **4, 8, 12, 16, 24, 32, 48, 72, 104, 144**.
+**The base unit is 4 px.** Every spatial value is a positive multiple of
+4: padding, margins, gaps, component widths and heights, icon sizes and
+their containers, and positioning offsets. Exempt: 1 px borders, hairlines
+and dividers, and shadows' blur and spread. A size computed at run time
+(an icon from its button, a cover from the window) is rounded to the grid.
+Prefer the scale **4, 8, 12, 16, 24, 32, 48, 72, 104, 144**; other
+multiples (20, 28, 40) are allowed where the scale can't fit. The app's
+design guard and the website's lint fail on an off-grid value.
 
 **Product** (from `tokens.json` → `product`):
 
@@ -180,7 +290,7 @@ Space comes from one scale: **4, 8, 12, 16, 24, 32, 48, 72, 104, 144**.
 | --- | --- | --- | --- |
 | Global bar | 64 | 64 | 60, in-page |
 | Library | 300, collapsible to a 72 rail | 72 rail | Library tab |
-| Page panel | radius 12, inset 24 | same | full bleed, inset 16 |
+| Page panel | radius 16, inset 24 | same | full bleed, inset 16 |
 | Now Playing | 360 docked | 380 floating | sheet |
 | Player | 80, three zones | 80 | 60 mini player + 64 tab bar |
 
@@ -193,25 +303,80 @@ pointer and 44 for touch.
 
 ## 7. Shape and depth
 
+Corners come from one scale in 4 px steps: **8, 12, 16, 24, 36, 44**, and no
+other value. Four of them have roles; 36 and 44 are free for larger
+surfaces when a design needs them.
+
 | Token | Radius | Use |
 | --- | --- | --- |
-| `art` | 4 | Artwork up to 64 px, thumbnails, keycaps, items inside menus |
-| `control` | 8 | Rows, tiles, cards, menus, inputs, command boxes, artwork above 64 px |
-| `panel` | 12 | Panels, dialogs, sheets, popovers, screenshots, the lyrics panel |
+| `art` | 8 | Artwork up to 64 px, thumbnails, keycaps, icon tiles, segments, items inside menus, tooltips |
+| `control` | 12 | Rows, tiles, cards, menus and popovers, inputs, command boxes, artwork above 64 px |
+| `panel` | 16 | Panels, the mini player, groups inside a sheet, the lyrics panel, website cards |
+| `sheet` | 24 | Dialogs and sheets |
 | `pill` | capsule | Buttons, chips, search, badges, progress bars |
 | round | 50 % | Icon buttons, play buttons, avatars, artist art |
 | `icon` | 22 % | The app icon, everywhere it appears |
 
-**Nesting:** an inner corner is the outer radius minus the padding between
-them, never less than `art`.
+A capsule and a circle are shapes, not radii: their corner is half their
+height, whatever that is. The app icon's corner is a share of its size.
 
-**Depth:** shadows only on artwork, floating panels, popovers and dialogs.
-Everything else is flat and separated by `line` hairlines or surface steps.
+**Nesting:** a shape inside another has a smaller corner, smaller by no more
+than the space between them: outer > inner, and outer − inner ≤ padding.
+So the roles step up as they hold one another: art 8 in a row 12 in a panel
+16, a tile 8 in a group 16 in a sheet 24. Where a chain would need one step
+more than the space allows, the inner shapes give up their own corners: a
+list inside a card (the Now Playing queue) is made of flat bands that the
+card clips, as the Settings groups are. A shape flush with its container
+(the art of a quick-access tile) takes the container's corners on the
+sides it shares (12, 0, 0, 12), never 0 with the container's clip left to
+round it: MyGo's GPU renderer rounds only the innermost clip, so an inner
+clip squares the outer corners off. A focus ring nests around its element the same
+way: element radius plus the ring's offset.
+
+A screenshot nests around the panels in it at the scale it is shown:
+showing a 1440 px window at scale s, its corner must exceed 16s by no more
+than 8s (the frame gap), so it is 16 from 960 px wide, 12 from 720, and 8
+below; the phone shot's frame is 16 from 280, 12 from 212. Below about
+480 px (a phone's viewport) the panels inside draw at 4 or less and nothing
+on the scale nests; the frame stays at the floor, 8.
+
+**Depth:** a shadow must separate something that floats or lifts; it is
+never decoration. Shadows are black at an opacity tuned on dark surfaces;
+light appearance draws them at `lightScale` (38 %) of it, since black on
+white reads far heavier.
+- **Shadowed:** a collection's cover and the immersive cover (`art`),
+  floating panels (`hero`), popovers, tooltips, the play button that rises
+  over a hovered card's art, and a card's art while hovered.
+- **Not shadowed:** cards at rest (spacing separates them), the collection's
+  coral play button (its fill is its affordance), and dialogs in dark
+  appearance, where the scrim and hairline already set them apart and a
+  shadow on the scrim can't be seen.
+- **Edges before shadows:** on a light page, a cover gets a 1 px `line`
+  border, since a pale cover on white needs an edge a light shadow can't
+  give. Everything else is flat, separated by `line` hairlines or surface
+  steps.
 
 ## 8. Iconography
 
-One 24 px grid, 1.8 px round strokes. Filled variants mark the active
-destination and the primary transport glyphs. Icons label actions; they
+One 24 px grid, 1.8 px round strokes, adapted from Lucide (ISC; its
+Feather-derived icons MIT, notice in `resources/notices`). New icons come
+from the same set, redrawn to the same stroke, or are drawn to match it;
+never from another app's interface. **One glyph, one meaning:** the
+diagonal expand arrows always mean immersive mode; a panel that grows or
+shrinks in place uses vertical chevrons, and a control whose glyph changes
+with its state needs no active dot. Filled variants mark the active
+destination and the primary transport glyphs. **Optical, not geometric, centring:** a
+glyph is centred by where the eye puts its weight, between its bounding
+box and its ink's centroid. Asymmetric glyphs carry their correction in
+their path (play right of centre, the heart 1 unit low, shuffle 1.5 units
+left). **Optical corrections never break the 4 px grid:** they live in a
+glyph's own geometry (its path, viewBox or clip), never in an off-grid
+padding or offset. A leading download icon's viewBox is shifted 2 units
+so its ink sits as far from the pill's edge as the label's does; digits and
+wordmarks are centred by their cap height (`text-box: trim-both cap
+alphabetic`), not their line box; a chevron is a glyph centred on the line,
+where the system font's cap height also centres.
+Check by measuring rendered ink, not by eye. Icons label actions; they
 don't decorate. Icon-only buttons always have an accessible name and a
 tooltip. The website uses icons only on actions and platform names.
 
@@ -221,7 +386,8 @@ tooltip. The website uses icons only on actions and platform names.
 | --- | --- | --- |
 | `fast` | 150 ms | Hover and press colour, small state changes |
 | `base` | 250 ms | Menus, disclosures, panel changes |
-| `slow` | 700 ms | Lyrics scrolling, fade-ins |
+| `slow` | 700 ms | Lyrics scrolling, fade-ins, a cover's colour blending to the next |
+| `morph` | 400 ms | Long journeys across the window: into and out of immersive mode, a collection's cover into its page |
 | `ease` | `cubic-bezier(.2, .7, .2, 1)` | Everything that eases |
 
 - **Motion shows the product or its state.** The product animates state:
@@ -230,17 +396,61 @@ tooltip. The website uses icons only on actions and platform names.
 - **The website may add only:** the sung headline and the lyrics demo
   (they *are* the product), and one fade-in per block as it scrolls into
   view. No count-ups, no tilts, no parallax, no per-row staggers.
-- Only opacity and transforms animate.
+- **Scrolling the product does** glides over `slow` along `ease`: the
+  lyrics to each sung line, a page back to its top when its tab is chosen
+  again (at the top, choosing it reloads), the website to a section, a
+  track or its top (both logos). The keys that page (arrows, Page Up/Down,
+  Home/End) glide over `base`, as browsers smooth them, and leave a
+  focused control the keys it uses. What the reader moves directly (a
+  wheel, a drag, the website player's seek) follows them at once, and
+  grabbing a glide stops it. A view that appears or relays out arrives at
+  its place without gliding there.
+- **Continuity: what persists moves; it never vanishes and reappears.**
+  When a state changes, the elements both states share carry the eye from
+  one to the other:
+  - Lyrics expand: the cover shrinks into the thumbnail beside the title
+    while the title, the switch and the card move to their places
+    (`base`); restoring runs it back.
+  - Now Playing docks by sliding in from the right edge, where the
+    controls that open it are, and slides back out; the page keeps its
+    width until the panel has gone, then eases to fill the room. Floating,
+    it rises from the bottom and sinks back.
+  - Immersive mode: the cover grows from the one that was showing (the
+    panel's or the player bar's) and shrinks back into the one that will;
+    the lyrics card travels with it; the library and the global bar fade as
+    the page grows over their room (`morph`). The cover and the card fly
+    over the window, never cut by the column or panel they land in, and
+    each goes one way, with no swing past its place: docked Now Playing,
+    their destination on the way back, fades in where it is rather than
+    sliding in under them.
+  - Opening a collection, its header shows at once from the card, and the
+    card's cover travels into it (`morph`); Back carries it home.
+  - Settings and Keyboard shortcuts are one sheet: its frame takes the
+    next page's width as the pages slide, Settings from the left.
+  - Track changes: covers cross-fade, titles rise 8 into place over the
+    last fading, and cover colours blend (`slow`). Cover and video are one
+    frame that changes shape. Small swaps (a play glyph, a card's view, a
+    chip's fill, the website's Copy) cross-fade over `fast`; popovers drop
+    4 into place as they fade in.
+- Only opacity and transforms animate, except a shared element's frame
+  (a cover or a card on its journey) and a sheet's or panel's size, which
+  morph.
 - Reduced motion, the website player's pause, and no JavaScript all show
   the final state immediately. Nothing is ever hidden waiting for motion.
 
 ## 10. Interaction
 
+- **Scroll bars** show as a list scrolls and as the pointer comes over it,
+  and fade after a second at rest, wherever the pointer rests; on the
+  bar's own strip they stay, brighter (`muted` for `track`), to be grabbed.
 - **Hover only on what acts.** Rows and cards that open something get the
   `hover` wash; text and tables that don't, get nothing.
-- **Hover response by kind:** capsule buttons change colour; round play
-  controls grow to 105 %; icon buttons go from `secondary` to `text`;
-  rows wash. **Every** control presses to 96 %.
+- **Hover response by kind:** capsule buttons change colour (to
+  `inverseHover`, `highlight` or `press`); play controls, round or the
+  coral capsule, grow to 105 %, as coral never shifts; icon buttons go from `secondary` to `text`;
+  rows wash. Every **button** (capsules, chips, icon and play buttons)
+  presses to 96 %; rows and cards answer with the `press` wash, since a
+  whole row shrinking would jump.
 - **Button hierarchy:** accent (play, one in view) → inverted (primary) →
   outline (secondary) → plain link (tertiary). Brand buttons are 48 high,
   the player bar's 36; product pills 36, chips 32.
@@ -248,6 +458,9 @@ tooltip. The website uses icons only on actions and platform names.
 - **Labels tell the truth.** A button that downloads names the file or
   platform; a button that only navigates says where it goes ("Download
   ytmGO" leads to the download section).
+- **Destructive actions are neutral:** signing out or clearing data is
+  `text`, never coral (play) or `attention` (errors); the confirmation
+  names what will be lost.
 - **Selection is inversion:** a selected chip, tab or segment is `text` on
   `base`. A playing item is coral.
 - **Focus** is a 2 px `text` ring, 3 px out, on every focusable element.
@@ -259,8 +472,11 @@ tooltip. The website uses icons only on actions and platform names.
 ## 11. Components
 
 **Product:**
-- **Track row:** 56 high, radius `control`, 40 art (`art` radius). Number,
-  title over artist, album, duration in mono. The number becomes a play glyph
+- **Track row:** 56 high, radius `control`, 40 art (`art` radius); in the
+  Now Playing card a flat band across the card. Number,
+  title over artist, album, duration in mono. The playing indicator has its
+  own slot, so columns line up whether a row plays or not, and a list whose
+  rows all come from one album (an album's own page) drops the Album column. The number becomes a play glyph
   on hover and an equalizer while playing; the title turns coral.
 - **Library row:** 64 high, 48 art (round for artists), title over
   "kind · owner". The open collection is washed and its title is `text`
@@ -272,13 +488,42 @@ tooltip. The website uses icons only on actions and platform names.
   then the 56 coral play button.
 - **Player bar:** 80 high, three zones: now playing (56 art), transport
   (white round play/pause, icon buttons, progress with mono times),
-  and output (lyrics, queue, volume, more, expand).
+  and output (lyrics, queue, volume, more, expand); washed with the playing
+  cover's colour behind the track (§4.4).
+- **Immersive layout:** the media column (cover or video, the switch, the
+  title and artist, centred) and the lyrics card are one group, centred in
+  the stage, 64 apart; the card runs from the media's top to the artist's
+  line. The media takes the height the text leaves; the column is the
+  wider of the media and the title's own width, which wraps past 560.
+- **Now Playing panel:** washed from the top in the playing cover's colour;
+  the track title is a display title. Lyrics are a first-class view, so the
+  cover never takes first claim on the height: it gets 45 % of the space it
+  shares with the lyrics (at least 120, at most the panel's width). Lyrics
+  first, the cover becomes a 56 thumbnail in one row with the title, artist
+  and like, the Cover/Video switch beneath, and the lyrics take the rest; a
+  video keeps its size. The reader's choice and reading position survive
+  switching. A video takes the panel's full width (16:9) at any height; the
+  switch is there only for a track that has one.
+- **Video controls:** over the video's corner (8 in) under the pointer, 32
+  icon buttons on the stage's `veil`: fill the play view (a toggle, with its
+  dot) and full screen. Full screen is the black stage, the video as large
+  as it fits, and the transport over a scrim fading from clear to `veil`
+  up from its foot (a band would cut the picture), shown while the pointer
+  moves or playback pauses; it fades in and out over `fast`.
 - **Chips** 32, capsule, `hover` fill, inverted when selected. **Pills** 36.
-- **Lyrics:** the current line is `text` and slightly larger, past lines
-  60 %, future lines 34 %; it follows playback until you scroll, then offers
-  "Follow playback".
-- **Dialogs and sheets:** radius `panel`, `raised`, one inverted primary
-  action.
+- **Lyrics:** the current line is `text` and slightly larger, sung lines
+  `muted`, upcoming lines `dim`; it follows playback until you scroll, then offers
+  "Follow playback". Lines scrolled past the view's top or bottom fade out
+  over 24 rather than being cut, and an edge fades only while more lies
+  beyond it.
+- **Dialogs and sheets:** radius `sheet`, `raised`, one inverted primary
+  action; their groups `panel`, rows in a group flat or `control`, icon
+  tiles `art`.
+- **Tooltips:** inverted, `micro` text, radius `art`, the `tooltip`
+  elevation, 8 from their anchor. A slider's value (time, volume) is one,
+  anchored on the thumb rather than the taller hit area: shown under the
+  pointer and while dragging, and for a second after a key moves it, the
+  volume shortcuts included.
 
 **Brand:**
 - **Track head:** the section's row from the app's track table: number,
@@ -286,8 +531,14 @@ tooltip. The website uses icons only on actions and platform names.
   reader is in it.
 - **Title + body:** a display title, then a `lead` paragraph in
   `secondary`, no wider than 46 characters.
-- **Media panel:** a real screenshot or a live replica, radius `panel`,
-  with a hairline ring and a soft shadow. No fake window chrome.
+- **Media panel:** a real screenshot (its corner nests at its shown size,
+  §7) or a live replica, radius `panel`,
+  with a hairline ring. No drop shadow: on the black page one can't be
+  seen, and the ring does the separating. No fake window chrome. A replica
+  follows the app's surfaces: the lyrics demo is the Now Playing panel,
+  washed from the top in its playing cover's colour (§4.4), not in its
+  section's tint. Website shadows use the elevation tokens
+  (`--shadow-*`), and only on what floats, as the language menu.
 - **Points:** supporting details, separated by hairlines, stacked beside the
   copy or in a grid beneath it. Optional `body`-size bold titles.
 - **Figures:** a display-size number over a `small` label; with a note on
@@ -326,21 +577,24 @@ tooltip. The website uses icons only on actions and platform names.
 and fails if `site.css` hard-codes a colour, radius or font size outside the
 marked artwork rules.
 
-**App:** to adopt when it is redesigned. Known gaps against this guidebook:
+**App:** adopted on the `app-guidebook-redesign` branch:
 
-| Area | App today | Guidebook |
+| Area | Before | Now |
 | --- | --- | --- |
-| Tokens | Hand-written in `native_style.go` | Generated from `tokens.json` |
-| Panels | Radius 8 | `panel` 12 |
-| Rows, tiles, card art | Radius 6 | `control` 8 (card art inside padding: nested) |
-| Dialogs | Radius 14 | `panel` 12 |
-| Menus, segmented tracks | Radius 10 | `control` 8 |
-| Coral | Also error text, selected text, the Premium avatar, the open library item's title | Play only; errors `attention`, selection inverted, Premium neutral, navigation `text` |
-| Errors | Accent text | `attention` with an icon and words |
-| Type | Base 14; sizes 11, 14, 16, 20, 22 in use | The scale: 12, 13, 15, 17, 24, 32, display |
-| Display titles | System font 800 | Bricolage Grotesque for Latin display titles |
-| CJK headings | No phrase marks in the locale catalogue | Phrase marks, kept whole |
-| Press feedback | Each control's native default | 96 % for every control |
+| Tokens | Hand-written in `native_style.go` | Generated from `tokens.json` (`native_tokens_gen.go`), checked by a test |
+| Coral | Also errors, selection, Premium, open library item, every active toggle, the hovered volume slider | Play only; errors `attention` with an icon, selection inverted, Premium neutral, non-playback toggles `text` with a dot |
+| Colour shares | Text at 20, 30, 86 %, base at 35 %, coral at 25 %, made in the views | Roles only: `track`, `selection`, `inverseHover`, `veil`, `pane`, `dim`; lyric lines `muted` / `dim` |
+| Radii | 4, 5, 6, 8, 10, 12, 14 | The scale 8, 12, 16, 24: `art` 8, `control` 12, `panel` 16, `sheet` 24, every nest smaller inside |
+| Type | Base 14; 11, 14, 16, 20, 22 in use | The scale: 12, 13, 15, 17, 22, 24, 32, title |
+| Display titles | System font 800, ad hoc | System font at the display weight and leading, through one helper (`nativeDisplay`) |
+| Feedback | Native defaults | Buttons press to 96 %; play controls grow 105 % |
+
+**CJK phrase marks:** adopted. The app's catalog marks its headings with
+`|` like the website's locales; `phrases` (i18n_phrases.go) joins each
+phrase's characters with invisible word joiners (U+2060), which MyGo's line
+breaker honours, so headings break only at the marks. Catalogue names from
+YouTube Music can't be marked and break as the system breaks them, as on the
+website.
 
 ## 14. Changing the guidebook
 

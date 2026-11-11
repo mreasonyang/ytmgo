@@ -104,9 +104,19 @@ func (it Item) LibraryMetadata() Item {
 	return it
 }
 
+// PlaylistSection identifies the stream a Liked Music shelf came from.
+type PlaylistSection uint8
+
+const (
+	PlaylistSectionUnknown PlaylistSection = iota
+	PlaylistSectionTracks
+	PlaylistSectionExtras
+)
+
 type Shelf struct {
-	Title string `json:"title"`
-	Items []Item `json:"items"`
+	Title           string          `json:"title"`
+	Items           []Item          `json:"items"`
+	PlaylistSection PlaylistSection `json:"-"`
 }
 
 // Items contains the flattened, deduplicated page contents. Shelves preserves
@@ -304,10 +314,11 @@ func (c *Client) Continue(ctx context.Context, handle string) (Page, error) {
 	if !ok || time.Now().After(entry.expires) {
 		return Page{}, ErrExpiredContinuation
 	}
-	if entry.cursor.query {
-		return c.loadPage(ctx, entry.endpoint, entry.payload, entry.title, entry.cursor.token, entry.visitorData, entry.album, entry.deferred)
+	payload := entry.payload
+	if !entry.cursor.query {
+		payload = map[string]any{"continuation": entry.cursor.token}
 	}
-	return c.loadPage(ctx, entry.endpoint, map[string]any{"continuation": entry.cursor.token}, entry.title, "", entry.visitorData, entry.album, entry.deferred)
+	return c.loadPage(ctx, entry.endpoint, payload, entry.title, entry.cursor, entry.visitorData, entry.album, entry.deferred)
 }
 
 func (c *Client) page(ctx context.Context, endpoint string, payload map[string]any, title string) (Page, error) {
@@ -317,7 +328,7 @@ func (c *Client) page(ctx context.Context, endpoint string, payload map[string]a
 	}
 	key, _ := json.Marshal(payload)
 	page, err := memoized(c, ctx, &c.pages, endpoint+":"+string(key), 2*time.Minute, 8<<20, pageBytes, func(work context.Context) (Page, error) {
-		return c.loadPage(work, endpoint, payload, title, "", "", album, nil)
+		return c.loadPage(work, endpoint, payload, title, pageCursor{}, "", album, nil)
 	})
 	if err == nil && page.Continuation != "" {
 		c.mu.RLock()
@@ -330,16 +341,21 @@ func (c *Client) page(ctx context.Context, endpoint string, payload map[string]a
 	return clonePage(page), err
 }
 
-func (c *Client) loadPage(ctx context.Context, endpoint string, payload map[string]any, title, queryContinuation, visitorData string, album *albumMetadata, deferred *continuation) (Page, error) {
+func (c *Client) loadPage(ctx context.Context, endpoint string, payload map[string]any, title string, cursor pageCursor, visitorData string, album *albumMetadata, deferred *continuation) (Page, error) {
 	ctx, scope, err := c.operation(ctx)
 	if err != nil {
 		return Page{}, err
 	}
-	response, err := c.apiRequestWithOptions(ctx, endpoint, payload, requestOptions{queryContinuation: queryContinuation, visitorData: visitorData})
+	options := requestOptions{visitorData: visitorData}
+	if cursor.query {
+		options.queryContinuation = cursor.token
+	}
+	response, err := c.apiRequestWithOptions(ctx, endpoint, payload, options)
 	if err != nil {
 		return Page{}, err
 	}
-	page, token, err := parsePage(response)
+	likedMusicRoot := cursor.token == "" && textAt(payload, "browseId") == "VLLM"
+	page, token, err := parsePageForStream(response, likedMusicRoot, cursor.section)
 	if err != nil {
 		return Page{}, err
 	}
@@ -487,8 +503,8 @@ func (c *Client) Like(ctx context.Context, videoID string, liked bool) error {
 		return err
 	}
 	// Ratings and library contents changed; keep unrelated lyric results.
-	c.queues.reset()
-	c.pages.reset()
+	c.queues.invalidate()
+	c.pages.invalidate()
 	return nil
 }
 

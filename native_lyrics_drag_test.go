@@ -15,16 +15,23 @@ func TestNativeLyricsDragSeeksLastSelectionOnlyOnRelease(t *testing.T) {
 			t.Run(fmt.Sprintf("playing_%t_width_%d", playing, width), func(t *testing.T) {
 				m, a := nativeTimedLyricsFixture()
 				m.Position, m.Playing = 41, playing
+				// Rows wrap to different heights, as real lyrics do and as
+				// platform fonts make the fixture's lines do at 240 (the
+				// immersive lyrics card is 243 wide in a 761 window). This
+				// line wraps further than its neighbours on every platform.
+				m.LyricLines[10].Text = "Synthetic lyric line 10, long enough to wrap further than its neighbours"
 				var seeks []float64
 				a.Seek = func(at float64) { seeks = append(seeks, at) }
 				tt := ui.NewTester(func(c *ui.Context) { nativePanelCard(c, m, a, palette(true)).Grow(1) }, width, 340)
 				v, _ := tt.Find("Lyrics · Content")
-				r := requireLyricCentered(t, tt, 8)
-				next, _ := tt.Find("Synthetic lyric line 09")
-				step := next.Y - r.Y
+				requireLyricCentered(t, tt, 8)
 				x, y := v.X+v.W/2, v.Y+v.H/2
 				tt.Press(x, y)
-				tt.Move(x, y-3*step)
+				// A held drag moves the lyrics with the pointer, one to one, and
+				// selects the cue nearest the centre line; it doesn't snap. Drag
+				// cue 11 onto the line as a reader does, by where it is, not by a
+				// fixed row pitch: rows differ in height.
+				y = dragLyricOntoCenter(t, tt, x, y, 11)
 				// Changing the clock must not fight the pointer or commit early.
 				m.Position = 71
 				tt.Frame()
@@ -35,10 +42,10 @@ func TestNativeLyricsDragSeeksLastSelectionOnlyOnRelease(t *testing.T) {
 					t.Fatal("preview does not identify the selected cue time")
 				}
 				requireLyricCentered(t, tt, 11)
-				tt.Move(x, y-step) // The last selection wins, not the farthest one.
+				y = dragLyricOntoCenter(t, tt, x, y, 9) // The last selection wins, not the farthest one.
 				requireLyricCentered(t, tt, 9)
 				nativeSnapshot(t, tt, fmt.Sprintf("lyrics-drag-preview-%d", width))
-				tt.Release(x, y-step)
+				tt.Release(x, y)
 				if len(seeks) != 1 || seeks[0] != 45 || m.Position != 45 || m.Playing != playing {
 					t.Fatalf("release changed playback incorrectly: seeks=%v position=%v playing=%t", seeks, m.Position, m.Playing)
 				}
@@ -55,6 +62,39 @@ func TestNativeLyricsDragSeeksLastSelectionOnlyOnRelease(t *testing.T) {
 			})
 		}
 	}
+}
+
+// dragLyricOntoCenter moves a held pointer, from y, until a cue is in view,
+// then by the cue's measured offset so its centre sits on the viewport's
+// centre line. It returns the pointer's new y.
+func dragLyricOntoCenter(t *testing.T, tt *ui.Tester, x, y float32, line int) float32 {
+	t.Helper()
+	v, _ := tt.Find("Lyrics · Content")
+	for range 20 {
+		r, ok := tt.Find(fmt.Sprintf("Synthetic lyric line %02d", line))
+		// Find gives the row clipped to the viewport, so a row touching an
+		// edge may be cut off: only a row clear of both edges is whole.
+		if ok && r.H > 0 && r.Y > v.Y+1 && r.Y+r.H < v.Y+v.H-1 {
+			// The lyrics follow the pointer one to one: moving it by the
+			// cue's offset centres the cue.
+			y -= r.Y + r.H/2 - (v.Y + v.H/2)
+			tt.Move(x, y)
+			return y
+		}
+		if !ok {
+			t.Fatalf("line %d is not laid out", line)
+		}
+		// Not yet whole: drag a third of the viewport toward it. A row out
+		// of view clips to the edge it lies beyond.
+		if r.Y+r.H/2 > v.Y+v.H/2 {
+			y -= v.H / 3 // below: lift the lyrics
+		} else {
+			y += v.H / 3 // above: lower them
+		}
+		tt.Move(x, y)
+	}
+	t.Fatalf("line %d never came into view while dragging", line)
+	return y
 }
 
 func TestNativeLyricsDragReleaseOutsideAndEndpoints(t *testing.T) {

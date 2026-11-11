@@ -157,13 +157,13 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 
 ## 播放架构、网络代理与隐私边界
 
-**ytmGO** 是使用 Go 与 **MyGo 0.7.1** 构建的跨平台 YouTube Music 桌面客户端。应用对外品牌显示名统一为 **ytmGO**；仓库名、发行文件前缀、Bundle ID（`si.kyun.ytmgo`）、内部辅助进程标识以及本地用户数据目录保留技术标识 `ytmgo`。
+**ytmGO** 是使用 Go 与 **MyGo 0.8.0** 构建的跨平台 YouTube Music 桌面客户端。应用对外品牌显示名统一为 **ytmGO**；仓库名、发行文件前缀、Bundle ID（`si.kyun.ytmgo`）、内部辅助进程标识以及本地用户数据目录保留技术标识 `ytmgo`。
 
 音乐主窗口采用 Go/MyGo 自绘界面（`ui.View`），控件由 MyGo 工具包绘制，而非各操作系统的标准控件库。Google 登录及未登录/普通账号按需播放验证使用独立的系统 WebView。曲库访问、账号状态核验、媒体格式选择与有界流式传输由 Go 直接处理；音频由 MyGo 输出到系统音频设备，视频仅在打开视频视图时由按需启动的 FFmpeg 解码器渲染。
 
 - **无 Node/jsdom 的播放运行时：** `make build` 打包 Go 主程序、轻量 Rust 脚本宿主（`ytmgo-playback-host`）和精简版 **FFmpeg 9.0.2**。播放器脚本提取在临时 **QuickJS** 进程中运行锁定的 MIT **YouTube.js** 提取器子集与 ISC **Meriyah** 解析器，返回有界转换代码后立即退出；签名求值每次使用全新 QuickJS 领域（32 MiB 内存上限与 3 秒中断保护）。普通账号与未登录模式的播放证明（MIT **BgUtils**）在独立、隐藏、非持久化的系统 WebView 中按需生成，并通过 CSP 禁止网络与媒体加载。安装包不分发 Node、npm 依赖树、jsdom 或完整 YouTube.js SDK。详见 [scripts/runtime/README.md](scripts/runtime/README.md)。
 - **有界流式传输与地址隔离：** 远端签名媒体地址与账号凭据只留在 Go 进程内存中；FFmpeg 仅通过 `stdin` 接收每个解码器独立的随机本地回环（loopback）能力地址。Go 直接按音频 **64 KiB**、视频 **512 KiB** 字节区间请求远端媒体，并以 **32 KiB** 背压转发；同时最多保持 4 个媒体租约与 4 条活动请求，不在磁盘上缓存整首歌曲。
-- **统一代理与封面缓存策略：** 曲库、账号核验、封面与媒体流请求共用 `internal/netproxy`：各平台优先读取显式 `HTTP_PROXY`、`HTTPS_PROXY` 和 `NO_PROXY` 环境变量；macOS 普通启动也会读取系统 HTTP、HTTPS 与 SOCKS 代理及排除规则；本地解码器回环连接始终直连。当前不执行 PAC 自动代理脚本，也不读取代理密码。封面加载优先调度当前视口内的可见图片，失败后按 2 秒至 1 分钟指数退避重试。明确允许公开缓存的封面会写入本地磁盘缓存（上限 **64 MiB / 512 个文件**，有效期最长 **24 小时**）；账号头像不写入磁盘封面缓存。
+- **统一代理与封面缓存策略：** 曲库、账号核验、封面与媒体流请求共用 `internal/netproxy`：各平台优先读取显式 `HTTP_PROXY`、`HTTPS_PROXY` 和 `NO_PROXY` 环境变量；macOS 普通启动也会读取系统 HTTP、HTTPS 与 SOCKS 代理及排除规则；本地解码器回环连接始终直连。当前不执行 PAC 自动代理脚本，也不读取代理密码。封面加载优先调度当前视口内的可见图片，失败后按 2 秒至 1 分钟指数退避重试。缩略图、浏览封面和播放器封面分别设有位图缓存额度，合计 **80 MiB**。公开封面遵循 HTTP 新鲜度与条件验证。所有封面 URL 的正文和元数据共用 **512 MiB** 磁盘额度。预计写入会超额时，按最近使用时间淘汰到额度的 **80%**。每次写入还会为所在卷保留 **256 MiB** 可用空间。账号头像只在内存中显示。
 - **脱敏本地诊断：** 应用数据目录下的 `native-diagnostics/audio-status.json`、`video-status.json` 和 `account-status.json` 仅记录固定枚举状态/错误类别、时间戳与应用版本（播放初始化失败时还可包含封闭枚举的阶段、bootstrap 步骤、HTTP 状态码、跳转类别与 MIME 类型），绝不写入媒体 URL、请求头、Cookie、账号标识、进程参数/环境变量或原始日志。
 
 ---

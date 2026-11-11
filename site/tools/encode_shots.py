@@ -11,6 +11,7 @@ Re-render only the card from the shipped home screen with:
     python3 site/tools/encode_shots.py --social
 """
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -27,6 +28,8 @@ def token(hex_value: str) -> tuple[int, int, int]:
 
 
 DARK = TOKENS["color"]["dark"]
+# The brand wash (design/README.md §4.3): the tint at the top, then mid.
+TOP, MID = TOKENS["wash"]["brandTop"], TOKENS["wash"]["brandMid"]
 SHOTS = ["home", "album", "immersive", "light", "compact"]
 
 
@@ -38,9 +41,18 @@ def encode(src: Path, dst: Path) -> None:
         im.resize(size, Image.LANCZOS).save(dst.with_name(f"{dst.name}@{scale}x.webp"), "WEBP", quality=84, method=6)
 
 
-def font(name: str, size: int, axes: list[int]) -> ImageFont.FreeTypeFont:
-    f = ImageFont.truetype(str(ASSETS / "fonts" / name), size)
-    f.set_variation_by_axes(axes)
+def font(family: str, size: int, weight: int) -> ImageFont.FreeTypeFont:
+    """The system's font for a fontconfig family ("sans-serif", "monospace"):
+    ytmGO ships no typefaces, so the card uses the system's, as the site does."""
+    style = ":bold" if weight >= 600 else ""
+    path = subprocess.run(["fc-match", "-f", "%{file}", family + style],
+                          capture_output=True, text=True, check=True).stdout
+    f = ImageFont.truetype(path, size)
+    try:
+        axes = f.get_variation_axes()
+    except OSError:
+        return f
+    f.set_variation_by_axes([weight if a["name"] in (b"Weight", "Weight") else a["default"] for a in axes])
     return f
 
 
@@ -52,30 +64,33 @@ def social(home: Path, icon: Image.Image) -> None:
     card = Image.new("RGB", (w, h), (0, 0, 0))
     wash = ImageDraw.Draw(card)
     for y in range(h):
-        k = max(0.0, 0.78 - 0.78 * y / (h * 0.9))
+        k = max(0.0, TOP - TOP * y / (h * 0.9))
         wash.line([(0, y), (w, y)], fill=tuple(round(c * k) for c in tint))
     shot = Image.open(home).convert("RGB")
     shot = shot.resize((760, 760 * shot.height // shot.width), Image.LANCZOS)
+    # At this scale (760 of 1440) the app's 16 px panels draw at 8.4, 4.2 from
+    # the edge, so the frame's corner nests at control (12), as on the page.
+    corner = TOKENS["radius"]["control"]
     mask = Image.new("L", shot.size, 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, *shot.size), 16, fill=255)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, *shot.size), corner, fill=255)
     card.paste(shot, (560, 150), mask)
     draw = ImageDraw.Draw(card)
-    draw.rounded_rectangle((559, 149, 560 + shot.width, 150 + shot.height), 16, outline=tuple(round(c * .4) for c in tint), width=1)
+    draw.rounded_rectangle((559, 149, 560 + shot.width, 150 + shot.height), corner + 1, outline=tuple(round(c * MID) for c in tint), width=1)
     badge = icon.resize((76, 76), Image.LANCZOS)
     card.paste(badge, (64, 64), badge)
-    brand = font("bricolage-grotesque.woff2", 44, [96, 720, 88])
+    brand = font("sans-serif", 44, 800)
     draw.text((156, 102), "ytm", font=brand, fill=token(DARK["text"]), anchor="lm")
     draw.text((156 + draw.textlength("ytm", font=brand), 102), "GO", font=brand, fill=token(DARK["accent"]), anchor="lm")
     lines = ("Your music", "deserves more than", "a browser tab")
     size = 76
-    while max(draw.textlength(t, font=font("bricolage-grotesque.woff2", size, [96, 720, 88])) for t in lines) > 466:
+    while max(draw.textlength(t, font=font("sans-serif", size, 800)) for t in lines) > 466:
         size -= 2
-    title = font("bricolage-grotesque.woff2", size, [96, 720, 88])
+    title = font("sans-serif", size, 800)
     y = 236
     for line in lines:
         draw.text((62, y), line, font=title, fill=token(DARK["text"]))
         y += round(size * 0.98)
-    mono = font("jetbrains-mono.woff2", 19, [500])
+    mono = font("monospace", 19, 500)
     draw.text((64, 548), "Free · macOS · Windows · Linux", font=mono, fill=token(DARK["secondary"]))
     card.save(ASSETS / "social.png", optimize=True)
 

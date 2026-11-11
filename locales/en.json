@@ -386,6 +386,10 @@
   "@shellSettings": {
     "description": "Icon button and popover name."
   },
+  "shellBackToSettings": "Back to Settings",
+  "@shellBackToSettings": {
+    "description": "Accessible name of the back button leading the Keyboard shortcuts sheet when it was opened from Settings."
+  },
   "shellAppMenu": "Application menu",
   "@shellAppMenu": {
     "description": "Icon button (Linux, Windows): opens the menu bar's menus, which the window's custom title bar has no room for."
@@ -405,6 +409,10 @@
   "shellOpenNowPlaying": "Open Now Playing",
   "@shellOpenNowPlaying": {
     "description": "Accessible name of the artwork / title buttons."
+  },
+  "shellCloseNowPlaying": "Close Now Playing",
+  "@shellCloseNowPlaying": {
+    "description": "Accessible name of the player bar's artwork / title button while Now Playing shows: a second click closes it."
   },
   "shellIdleTitle": "Not playing",
   "@shellIdleTitle": {
@@ -723,6 +731,8 @@
   "nativeRuntimeMissing": "The audio runtime is missing. Reinstall the complete ytmGO app.",
   "nativePlaybackError": "Unable to play this track. Try again or choose another song.",
   "nativeCatalogError": "Unable to load music. Check your connection and try again.",
+  "nativeCatalogPageExpired": "This list is out of date. Reload it to continue browsing.",
+  "nativeCatalogMoreError": "Unable to load more music right now. Please try again.",
   "nativeNoLyrics": "Lyrics are not available for this track.",
   "nativeLyricsUnavailable": "Lyrics are not available for this track.",
   "nativeAccountError": "Could not complete the account request. Please try again later.",
@@ -733,6 +743,10 @@
   "nativeAddToQueue": "Add to queue",
   "nativeVideo": "Video",
   "nativeArtwork": "Cover",
+  "nativeVideoTheater": "Fill the view with the video",
+  "nativeVideoTheaterExit": "Restore the video's size",
+  "nativeVideoFullScreen": "Full screen",
+  "nativeVideoExitFullScreen": "Exit full screen",
   "nativeVideoUnavailable": "Video is temporarily unavailable.",
   "nativeAccountStorageError": "Could not access encrypted session storage. Retry and allow ytmGO access if the system asks.",
   "nativeVerificationRequired": "Google requires additional verification. ytmGO cannot complete this request.",

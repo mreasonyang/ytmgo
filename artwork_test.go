@@ -58,7 +58,7 @@ func TestArtworkWorkRemainsBoundedWhileScrolling(t *testing.T) {
 		}
 	}
 	c.mu.Lock()
-	entries, queued := len(c.entries), len(c.queue)
+	entries, queued := len(c.small.entries)+len(c.browse.entries)+len(c.player.entries), len(c.queue)
 	c.mu.Unlock()
 	if len(frame.wanted) > artworkWorkers+artworkQueueLimit || entries > artworkWorkers || queued > artworkQueueLimit || maximum.Load() > artworkWorkers {
 		t.Fatalf("unbounded pending artwork: entries=%d queued=%d workers=%d", entries, queued, maximum.Load())
@@ -253,7 +253,7 @@ func artworkTestCache(t *testing.T, data []byte) *artworkCache {
 	c := newArtworkCache(ctx, nil)
 	t.Cleanup(func() { cancel(); c.workers.Wait() })
 	c.client.Transport = artworkTransport(func(*http.Request) (*http.Response, error) {
-		return &http.Response{StatusCode: http.StatusOK, ContentLength: -1, Body: io.NopCloser(bytes.NewReader(data))}, nil
+		return &http.Response{StatusCode: http.StatusOK, ContentLength: -1, Header: http.Header{"Cache-Control": {"public, max-age=3600"}}, Body: io.NopCloser(bytes.NewReader(data))}, nil
 	})
 	return c
 }
@@ -263,26 +263,33 @@ func TestArtworkResizePreservesAspectAndCapsRetainedPixels(t *testing.T) {
 	request := artRequest{url: "https://i.ytimg.com/vi/example/hqdefault.jpg", edge: 128}
 	requestTestArtwork(c, request.url, request.edge)
 	c.workers.Wait()
-	if c.entries[request].bitmap == nil {
+	if c.entry(request).bitmap == nil {
 		t.Fatal("valid artwork did not decode")
 	}
-	if w, h := c.entries[request].bitmap.Size(); w != 128 || h != 64 {
+	if w, h := c.entry(request).bitmap.Size(); w != 128 || h != 64 {
 		t.Fatalf("wrong artwork aspect or resolution: %dx%d", w, h)
 	}
-	if c.bytes <= 128*64*4 {
+	if c.small.bytes <= 128*64*4 {
 		t.Fatal("retained pixel budget excludes renderer mipmaps")
 	}
 	c = artworkTestCache(t, artworkTestPNG(t, 768, 768))
+	c.browse.limit = 4
 	for i := range 24 {
 		request := artRequest{url: fmt.Sprintf("https://i.ytimg.com/vi/%d/hqdefault.jpg", i), edge: artworkEdge}
 		requestTestArtwork(c, request.url, request.edge)
 		c.workers.Wait()
-		if c.bytes > artworkPixelBudget {
-			t.Fatalf("retained pixels exceeded budget after %d covers: %d", i+1, c.bytes)
+		if c.browse.bytes > artworkBrowseBudget {
+			t.Fatalf("retained pixels exceeded budget after %d covers: %d", i+1, c.browse.bytes)
 		}
 	}
-	if len(c.entries) >= 24 {
-		t.Fatal("decoded covers did not evict as the cache filled")
+	fullSize := 0
+	for _, e := range c.browse.entries {
+		if e.bitmap != nil {
+			fullSize++
+		}
+	}
+	if fullSize >= 24 {
+		t.Fatal("full-size bitmap entries did not evict at the configured entry limit")
 	}
 }
 
@@ -299,7 +306,7 @@ func TestArtworkRejectsOversizedDownloadAndDecode(t *testing.T) {
 			request := artRequest{url: "https://i.ytimg.com/vi/example/hqdefault.jpg", edge: artworkEdge}
 			requestTestArtwork(c, request.url, request.edge)
 			c.workers.Wait()
-			if c.entries[request].bitmap != nil || c.bytes != 0 || c.entries[request].cancel != nil {
+			if c.entry(request).bitmap != nil || c.small.bytes+c.browse.bytes+c.player.bytes != 0 || c.entry(request).cancel != nil {
 				t.Fatal("oversized image was retained or remained pending")
 			}
 		})
@@ -331,7 +338,7 @@ func TestArtworkFailedImageCanRecoverAfterBackoff(t *testing.T) {
 			request := artRequest{url: raw, edge: 128}
 			requestTestArtwork(c, raw, 128)
 			c.workers.Wait()
-			e := c.entries[request]
+			e := c.entry(request)
 			if e.cancel != nil || e.bitmap != nil || !e.retryAt.After(time.Now()) {
 				t.Fatal("failed image did not enter retry backoff")
 			}
@@ -359,7 +366,7 @@ func TestArtworkRetryBackoffIsCapped(t *testing.T) {
 	c := artworkTestCache(t, []byte("synthetic invalid image"))
 	request := artRequest{url: "https://i.ytimg.com/vi/example/hqdefault.jpg", edge: 128}
 	e := &artEntry{}
-	c.entries[request] = e
+	c.pool(request).entries[request] = e
 	for attempt := range 10 {
 		e.retryAt = time.Time{}
 		before := time.Now()
@@ -399,10 +406,10 @@ func TestArtworkRetryWakeHandlesDifferentDeadlines(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	redraws := make(chan struct{}, 8)
-	c := &artworkCache{ctx: ctx, entries: map[artRequest]*artEntry{}, redraw: func() { redraws <- struct{}{} }}
+	c := newArtworkCache(ctx, func() { redraws <- struct{}{} })
 	now := time.Now()
-	c.entries[artRequest{url: "first"}] = &artEntry{retryAt: now.Add(10 * time.Millisecond)}
-	c.entries[artRequest{url: "second"}] = &artEntry{retryAt: now.Add(500 * time.Millisecond)}
+	c.small.entries[artRequest{url: "first"}] = &artEntry{retryAt: now.Add(10 * time.Millisecond)}
+	c.small.entries[artRequest{url: "second"}] = &artEntry{retryAt: now.Add(500 * time.Millisecond)}
 	c.mu.Lock()
 	c.scheduleRetry(now)
 	c.mu.Unlock()
@@ -451,5 +458,36 @@ func TestSystemArtworkReachesDownloaderWithoutCDNSizeRewrite(t *testing.T) {
 		if artworkURL(u) {
 			t.Fatal("downloader accepts artwork outside the static directory")
 		}
+	}
+}
+
+// A cover that changes size bucket, as a panel opens or the window resizes,
+// paints from the size already cached instead of blanking to a placeholder:
+// a larger one as it is, a smaller one while its own size loads.
+func TestArtworkPaintsCachedSizeWhileItsBucketChanges(t *testing.T) {
+	c := artworkTestCache(t, artworkTestPNG(t, 16, 16))
+	const raw = "https://i.ytimg.com/vi/example/hqdefault.jpg"
+	medium := artRequest{url: artworkRequestAt(raw, 384), edge: 384}
+	requestTestArtwork(c, raw, 300)
+	c.workers.Wait()
+	cached := c.entry(medium)
+	if cached == nil || cached.bitmap == nil {
+		t.Fatal("the 384 cover did not load")
+	}
+	// Smaller: the larger cover paints, and nothing loads.
+	f := artworkFrame{cache: c}
+	if got := f.get(raw, 100, artPrimary); got != cached.bitmap {
+		t.Fatal("a smaller card blanked instead of painting the cached cover")
+	}
+	if len(f.wanted) != 0 {
+		t.Fatalf("a cover smaller than one cached loaded again: %v", f.wanted)
+	}
+	// Larger: the cached cover paints while the larger one loads.
+	f = artworkFrame{cache: c}
+	if got := f.get(raw, 500, artPrimary); got != cached.bitmap {
+		t.Fatal("a larger card blanked while its cover loads")
+	}
+	if len(f.wanted) != 1 {
+		t.Fatalf("the larger cover was not asked for: %v", f.wanted)
 	}
 }

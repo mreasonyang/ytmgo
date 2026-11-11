@@ -97,7 +97,8 @@ func TestVideoRetryReentersSameIDWithoutRestartingAudio(t *testing.T) {
 	p := &player.Player{}
 	frame := ui.NewBitmap(image.NewRGBA(image.Rect(0, 0, 8, 8)))
 	a := &desktop{ctx: context.Background(), video: v, player: p, windowVisible: true, videoID: "aaaaaaaaaaa", videoFrame: frame,
-		model: UIModel{Current: catalog.Item{ID: "aaaaaaaaaaa"}, Panel: true, Video: true, VideoError: "previous failure", VideoFrame: frame, Playing: true, Position: 73.125, Muted: true}}
+		videoAvailableID: "aaaaaaaaaaa",
+		model:            UIModel{Current: catalog.Item{ID: "aaaaaaaaaaa"}, Panel: true, Video: true, VideoAvailable: true, VideoError: "previous failure", VideoFrame: frame, Playing: true, Position: 73.125, Muted: true}}
 	a.videoActive.Store(true)
 	before := p.Snapshot()
 	a.syncVideo()
@@ -120,12 +121,13 @@ func TestVideoRetryReentersSameIDWithoutRestartingAudio(t *testing.T) {
 }
 
 func TestVideoRetryPreservesVisibilityAndCoverResourceRules(t *testing.T) {
-	for _, mode := range []string{"hidden", "cover", "panel_closed", "power_suspended"} {
+	for _, mode := range []string{"hidden", "cover", "panel_closed", "power_suspended", "song_without_video", "availability_of_another_track"} {
 		t.Run(mode, func(t *testing.T) {
 			v := &player.Video{}
 			defer v.Close()
 			a := &desktop{ctx: context.Background(), video: v, player: &player.Player{}, windowVisible: true, videoID: "aaaaaaaaaaa",
-				model: UIModel{Current: catalog.Item{ID: "aaaaaaaaaaa"}, Panel: true, Video: true, VideoError: "failure", VideoLoading: true}}
+				videoAvailableID: "aaaaaaaaaaa",
+				model:            UIModel{Current: catalog.Item{ID: "aaaaaaaaaaa"}, Panel: true, Video: true, VideoAvailable: true, VideoError: "failure", VideoLoading: true}}
 			a.videoActive.Store(true)
 			if mode == "hidden" {
 				a.windowVisible = false
@@ -133,6 +135,10 @@ func TestVideoRetryPreservesVisibilityAndCoverResourceRules(t *testing.T) {
 				a.model.Panel = false
 			} else if mode == "power_suspended" {
 				a.powerPlaybackSuspended = true
+			} else if mode == "song_without_video" {
+				a.model.VideoAvailable = false
+			} else if mode == "availability_of_another_track" {
+				a.videoAvailableID = "bbbbbbbbbbb" // still loading this one
 			}
 			a.setVideo(mode != "cover")
 			if a.videoID != "" || a.videoActive.Load() || a.model.VideoLoading || a.model.VideoError != "" {

@@ -420,13 +420,13 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 			// prepareAccountPlayback already invalidated only changed configurations.
 			a.finishAccountPlayback(replay)
 			if newIdentity {
-				a.navigate("library")
+				a.openRoute("library")
 				a.show()
 			} else if identityChanged {
 				if a.model.Route == "library" {
-					a.navigate("library")
+					a.openRoute("library")
 				} else {
-					a.navigate("home")
+					a.openRoute("home")
 				}
 			} else {
 				a.invalidate()
@@ -736,6 +736,7 @@ func (a *desktop) accountRequestFailure(key, category string, newIdentity bool) 
 }
 func (a *desktop) clearAccountContent() {
 	a.clearAccountAvatar()
+	a.likedChanges = nil
 	if a.likeCancel != nil {
 		a.likeCancel()
 	}
@@ -745,6 +746,7 @@ func (a *desktop) clearAccountContent() {
 	a.pageGeneration++
 	a.resetLibrary()
 	a.model.Page = catalog.Page{}
+	a.model.pageScroll = nil
 	a.model.Loading = false
 	a.model.Error = ""
 	a.model.ErrorScope = ""
@@ -842,7 +844,7 @@ func (a *desktop) signOut() {
 					} else {
 						recordAccountDiagnostic(a.diagnosticPath, "signed_out")
 						a.model.Error = ""
-						a.navigate("home")
+						a.openRoute("home")
 					}
 				})
 			}()

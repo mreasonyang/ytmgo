@@ -123,8 +123,17 @@ func nativeTimedLyricsFixture() (*UIModel, ViewActions) {
 	return m, a
 }
 
+// settleLyricGlide lets the lyrics' glide to the sung line land, as a
+// reader sees it do over the slow motion; the clock stands still otherwise.
+func settleLyricGlide(tt *ui.Tester) {
+	tt.Advance(tokenMotionSlow + 100*time.Millisecond)
+	tt.Frame()
+	tt.Frame()
+}
+
 func requireLyricVisible(t *testing.T, tt *ui.Tester, line int) ui.Rect {
 	t.Helper()
+	settleLyricGlide(tt)
 	r, ok := tt.Find(fmt.Sprintf("Synthetic lyric line %02d", line))
 	v, vok := tt.Find("Lyrics · Content")
 	if !ok || !vok || r.H <= 0 || r.Y < v.Y-1 || r.Y+r.H > v.Y+v.H+1 {
@@ -158,6 +167,7 @@ func TestNativeLyricsKeepsCurrentLineCentered(t *testing.T) {
 			m.LyricLines[8].Text = "A synthetic lyric that wraps across several rows in a narrow viewport"
 			m.Position = 41
 			tt.Frame()
+			settleLyricGlide(tt)
 			r, ok := tt.Find(m.LyricLines[8].Text)
 			v, vok := tt.Find("Lyrics · Content")
 			if !ok || !vok || r.H <= 32 || math.Abs(float64(r.Y+r.H/2-v.Y-v.H/2)) > 1 {
@@ -281,6 +291,85 @@ func TestNativeLyricsKeyboardHoverStopsFollow(t *testing.T) {
 	}
 }
 
+func TestNativeLyricsPanelKeyboardReadingSurvivesMediaSwitch(t *testing.T) {
+	for _, focused := range []bool{false, true} {
+		t.Run(fmt.Sprintf("focused_%t", focused), func(t *testing.T) {
+			m, a := nativeTimedLyricsFixture()
+			m.Panel, m.instantMotion = true, false
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
+			requireLyricCentered(t, tt, 0)
+			if err := tt.Click(a.Tr("shellLyrics") + " · " + a.Tr("shellNowPlaying")); err != nil {
+				t.Fatal(err)
+			}
+			hoverLyrics := func() {
+				view, _ := tt.Find("Lyrics · Content")
+				tt.Move(view.X+view.W/2, view.Y+view.H/2)
+			}
+			if focused {
+				for i := 0; i < 5 && !tt.Focused("Lyrics · Content"); i++ {
+					tt.Key(0, ui.KeyTab)
+				}
+				if !tt.Focused("Lyrics · Content") {
+					t.Fatal("could not focus lyrics")
+				}
+				tt.Move(0, 0)
+			} else {
+				hoverLyrics()
+			}
+			follow := a.Tr("nativeLyricsFollow")
+			tt.Key(0, ui.KeyPageUp)
+			settleLyricGlide(tt)
+			if tt.HasText(follow) {
+				t.Fatal("Page Up at the first line disabled follow")
+			}
+			m.Position = 51
+			tt.Frame()
+			requireLyricCentered(t, tt, 10)
+			if focused {
+				m.Position = 56
+				tt.Frame()
+				tt.Advance(tokenMotionSlow / 4)
+			}
+			tt.Key(0, ui.KeyPageDown)
+			settleLyricGlide(tt)
+			lineOffset := func() float32 {
+				t.Helper()
+				line, ok := tt.Find("Synthetic lyric line 15")
+				view, _ := tt.Find("Lyrics · Content")
+				if !ok || line.H <= 0 || line.Y < view.Y || line.Y+line.H > view.Y+view.H+1 {
+					t.Fatal("the line reached by Page Down is outside the viewport")
+				}
+				return line.Y - view.Y
+			}
+			readAt := lineOffset()
+			if !tt.HasText(follow) {
+				t.Fatal("Page Down did not suspend follow")
+			}
+			m.Position = 101
+			for _, mode := range []string{"nativeVideo", "nativeArtwork"} {
+				if err := tt.Click(a.Tr(mode)); err != nil || m.Video != (mode == "nativeVideo") {
+					t.Fatalf("could not switch to %s", mode)
+				}
+				settleLyricGlide(tt)
+				if !tt.HasText(follow) || math.Abs(float64(lineOffset()-readAt)) > 1 {
+					t.Fatalf("%s lost the keyboard reader's position", mode)
+				}
+			}
+			// The reader can resume while another key scroll is still moving.
+			hoverLyrics()
+			tt.Key(0, ui.KeyPageDown)
+			tt.Advance(tokenMotionBase / 4)
+			if err := tt.Click(follow); err != nil {
+				t.Fatal(err)
+			}
+			requireLyricCentered(t, tt, 20)
+			if tt.HasText(follow) {
+				t.Fatal("the previous key scroll interrupted resuming follow")
+			}
+		})
+	}
+}
+
 func TestNativeLyricsFollowIgnoresIncidentalInput(t *testing.T) {
 	for _, gesture := range []string{"horizontal drift", "scroll past top", "click"} {
 		t.Run(gesture, func(t *testing.T) {
@@ -342,4 +431,68 @@ func TestNativeLyricsFollowKeepsOuterPanelStill(t *testing.T) {
 			requireLyricVisible(t, tt, 25)
 		})
 	}
+}
+
+// Following playback, the lyrics glide to the next line over the slow
+// motion instead of jumping; asked for less motion, they move at once. When
+// they appear they are at their line already: nothing glides into place.
+func TestNativeLyricsGlideToTheNextLine(t *testing.T) {
+	lineCenter := func(tt *ui.Tester, line int) float32 {
+		r, _ := tt.Find(fmt.Sprintf("Synthetic lyric line %02d", line))
+		v, _ := tt.Find("Lyrics · Content")
+		return r.Y + r.H/2 - (v.Y + v.H/2)
+	}
+	m, a := nativeTimedLyricsFixture()
+	m.Position = 41 // line 8
+	tt := ui.NewTester(func(c *ui.Context) { nativePanelCard(c, m, a, palette(true)).Grow(1) }, 360, 340)
+	if d := lineCenter(tt, 8); math.Abs(float64(d)) > 1 {
+		t.Fatalf("lyrics glided into place on appearing: line 8 is %.1f off centre", d)
+	}
+	m.Position = 46 // line 9
+	tt.Frame()
+	start := lineCenter(tt, 9)
+	tt.Advance(tokenMotionSlow / 2)
+	tt.Frame()
+	half := lineCenter(tt, 9)
+	if !(math.Abs(float64(half)) > 1 && math.Abs(float64(half)) < math.Abs(float64(start))-1) {
+		t.Fatalf("the next line jumped instead of gliding: %.1f off centre, then %.1f half way", start, half)
+	}
+	settleLyricGlide(tt)
+	if d := lineCenter(tt, 9); math.Abs(float64(d)) > 1 {
+		t.Fatalf("the glide did not land: line 9 is %.1f off centre", d)
+	}
+
+	tt.SetPreferences(ui.Preferences{ReduceMotion: true})
+	m.Position = 51 // line 10
+	tt.Frame()
+	tt.Frame()
+	if d := lineCenter(tt, 10); math.Abs(float64(d)) > 1 {
+		t.Fatalf("with less motion the line did not move at once: %.1f off centre", d)
+	}
+}
+
+// Grabbing the lyrics as they glide stops the glide: they move with the
+// pointer, one to one, at once.
+func TestNativeLyricsDragTakesOverFromAGlide(t *testing.T) {
+	m, a := nativeTimedLyricsFixture()
+	m.Position, m.Playing = 41, true
+	a.Seek = func(float64) {}
+	tt := ui.NewTester(func(c *ui.Context) { nativePanelCard(c, m, a, palette(true)).Grow(1) }, 360, 340)
+	m.Position = 46 // line 9: a glide sets off
+	tt.Frame()
+	tt.Advance(tokenMotionSlow / 4)
+	tt.Frame()
+	v, _ := tt.Find("Lyrics · Content")
+	x, y := v.X+v.W/2, v.Y+v.H/2
+	tt.Press(x, y)
+	before, _ := tt.Find("Synthetic lyric line 09")
+	tt.Move(x, y-40)
+	tt.Move(x, y-80)
+	tt.Advance(tokenMotionSlow / 4)
+	tt.Frame()
+	after, _ := tt.Find("Synthetic lyric line 09")
+	if d := after.Y - before.Y; math.Abs(float64(d+80)) > 1 {
+		t.Fatalf("dragging 80 up moved the lyrics %.1f: the glide fought the pointer", d)
+	}
+	tt.Release(x, y-80)
 }

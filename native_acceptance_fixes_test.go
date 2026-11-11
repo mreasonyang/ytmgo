@@ -29,7 +29,7 @@ func TestNativeSearchAccessibleTypes(t *testing.T) {
 					ui.Column(c).Children(func() {
 						for i, item := range items {
 							if rows {
-								nativeTrack(c, item, i, m, a, palette(true), nativeTrackRow, false)
+								nativeTrack(c, item, i, m, a, palette(true), nativeTrackRow, false, true)
 							} else {
 								nativeCard(c, item, m, a, palette(true), nativeCardArt(false))
 							}

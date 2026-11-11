@@ -8,6 +8,8 @@ import (
 
 type freshKey struct{}
 
+var errResponseInvalidated = errors.New("catalog_response_invalidated")
+
 // Refresh bypasses completed responses, but still joins a network request
 // already in flight. Use only for an explicit user refresh/retry.
 func Refresh(ctx context.Context) context.Context { return context.WithValue(ctx, freshKey{}, true) }
@@ -30,14 +32,25 @@ type responseFlight[T any] struct {
 // All fields are protected by Client.mu. Results are private in-memory metadata,
 // never HTTP bodies or credentials. Callers clone mutable slices before use.
 type responseCache[T any] struct {
-	entries           map[string]*cachedResponse[T]
-	flights           map[string]*responseFlight[T]
-	generation, clock uint64
-	bytes             int
+	entries                         map[string]*cachedResponse[T]
+	flights                         map[string]*responseFlight[T]
+	generation, invalidation, clock uint64
+	bytes                           int
 }
 
 func (m *responseCache[T]) reset() {
 	m.generation++
+	m.discard()
+}
+
+// A mutation changes metadata, not identity. Restart affected reads without
+// surfacing an account/session error or publishing their pre-mutation result.
+func (m *responseCache[T]) invalidate() {
+	m.invalidation++
+	m.discard()
+}
+
+func (m *responseCache[T]) discard() {
 	clear(m.entries)
 	m.bytes = 0
 	for _, f := range m.flights {
@@ -54,6 +67,20 @@ func (m *responseCache[T]) remove(key string) {
 }
 
 func memoized[T any](c *Client, ctx context.Context, m *responseCache[T], key string, ttl time.Duration, budget int, size func(T) int, load func(context.Context) (T, error), cacheable ...func(T) bool) (T, error) {
+	ctx, _, err := c.operation(ctx)
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+	for {
+		value, err := memoizedOnce(c, ctx, m, key, ttl, budget, size, load, cacheable...)
+		if !errors.Is(err, errResponseInvalidated) {
+			return value, err
+		}
+	}
+}
+
+func memoizedOnce[T any](c *Client, ctx context.Context, m *responseCache[T], key string, ttl time.Duration, budget int, size func(T) int, load func(context.Context) (T, error), cacheable ...func(T) bool) (T, error) {
 	var zero T
 	ctx, scope, err := c.operation(ctx)
 	if err != nil {
@@ -87,7 +114,7 @@ func memoized[T any](c *Client, ctx context.Context, m *responseCache[T], key st
 		c.mu.Unlock()
 		return value, err
 	}
-	generation := m.generation
+	generation, invalidation := m.generation, m.invalidation
 	f := m.flights[key]
 	if f == nil {
 		if len(m.flights) >= 32 {
@@ -107,11 +134,13 @@ func memoized[T any](c *Client, ctx context.Context, m *responseCache[T], key st
 			cancel()
 			c.mu.Lock()
 			defer c.mu.Unlock()
-			if scopeErr := c.scopeErrorLocked(scope); scopeErr != nil {
-				err = scopeErr
-			}
 			if generation != m.generation {
 				err = ErrSessionChanged
+			} else if invalidation != m.invalidation {
+				err = errResponseInvalidated
+			}
+			if scopeErr := c.scopeErrorLocked(scope); scopeErr != nil {
+				err = scopeErr
 			}
 			if m.flights[key] == f {
 				delete(m.flights, key)
@@ -166,6 +195,9 @@ func memoized[T any](c *Client, ctx context.Context, m *responseCache[T], key st
 	}
 	if generation != m.generation {
 		return zero, ErrSessionChanged
+	}
+	if invalidation != m.invalidation {
+		return zero, errResponseInvalidated
 	}
 	return f.value, f.err
 }

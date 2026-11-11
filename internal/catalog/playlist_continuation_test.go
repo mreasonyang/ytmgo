@@ -64,6 +64,102 @@ func TestPlaylistContinuationMustRequestTrackPage(t *testing.T) {
 	}
 }
 
+func TestLikedMusicUntitledContinuationsKeepTheirSection(t *testing.T) {
+	appendRows := func(id, next string) object {
+		rows := []any{responsiveSong(id, id)}
+		if next != "" {
+			rows = append(rows, playlistContinuationItem(next))
+		}
+		return object{"onResponseReceivedActions": []any{object{"appendContinuationItemsAction": object{"continuationItems": rows}}}}
+	}
+	client := fixtureClient(t, func(w http.ResponseWriter, req *http.Request) {
+		var body object
+		_ = json.NewDecoder(req.Body).Decode(&body)
+		token := textAt(body, "continuation")
+		if token == "" {
+			token = req.URL.Query().Get("continuation")
+		}
+		var response object
+		switch token {
+		case "":
+			response = playlistPaginationResponse()
+			section := at(response, "contents", "twoColumnBrowseResultsRenderer", "secondaryContents", "sectionListRenderer")
+			shelf := arrayAt(section, "contents")[0].(object)["musicPlaylistShelfRenderer"].(object)
+			shelf["title"] = words("Liked Music")
+		case "synthetic-tracks-2":
+			response = appendRows("trk002ABC_-", "synthetic-tracks-3")
+		case "synthetic-tracks-3":
+			response = appendRows("trk003ABC_-", "")
+		case "synthetic-recommendations":
+			response = object{"continuationContents": object{"musicShelfContinuation": object{"contents": []any{
+				responsiveSong("rec001ABC_-", "One"), playlistContinuationItem("more-extras"),
+			}}}}
+		case "more-extras":
+			response = appendRows("rec002ABC_-", "last-extras")
+		case "last-extras":
+			response = appendRows("rec003ABC_-", "")
+		default:
+			t.Error("unexpected continuation")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		_ = json.NewEncoder(w).Encode(response)
+	})
+	ctx := context.Background()
+	page, err := client.Browse(ctx, "VLLM")
+	wantPages := []struct {
+		id      string
+		section PlaylistSection
+	}{
+		{"abc123DEF_-", PlaylistSectionTracks}, {"trk002ABC_-", PlaylistSectionTracks}, {"trk003ABC_-", PlaylistSectionTracks},
+		{"rec001ABC_-", PlaylistSectionExtras}, {"rec002ABC_-", PlaylistSectionExtras}, {"rec003ABC_-", PlaylistSectionExtras},
+	}
+	for i, want := range wantPages {
+		if i > 0 {
+			page, err = client.Continue(ctx, page.Continuation)
+		}
+		if err != nil || len(page.Shelves) != 1 || page.Shelves[0].PlaylistSection != want.section ||
+			len(page.Shelves[0].Items) != 1 || page.Shelves[0].Items[0].ID != want.id {
+			t.Fatalf("expected %s in section %d", want.id, want.section)
+		}
+	}
+	if page.Continuation != "" {
+		t.Fatal("extra cursor after the final recommendation")
+	}
+}
+
+func TestLikedMusicPlaylistWithoutTrackCursor(t *testing.T) {
+	client := fixtureClient(t, func(w http.ResponseWriter, req *http.Request) {
+		if req.URL.Query().Get("continuation") != "" {
+			_ = json.NewEncoder(w).Encode(object{"onResponseReceivedActions": []any{object{"appendContinuationItemsAction": object{
+				"continuationItems": []any{responsiveSong("rec002ABC_-", "Another recommendation")},
+			}}}})
+			return
+		}
+		response := playlistPaginationResponse()
+		section := at(response, "contents", "twoColumnBrowseResultsRenderer", "secondaryContents", "sectionListRenderer").(object)
+		section["contents"] = []any{
+			object{"musicPlaylistShelfRenderer": object{"contents": []any{responsiveSong("abc123DEF_-", "Track")}}},
+			object{"musicShelfRenderer": object{"contents": []any{responsiveSong("rec001ABC_-", "Recommendation")}}},
+		}
+		_ = json.NewEncoder(w).Encode(response)
+	})
+	ctx := context.Background()
+	page, err := client.Browse(ctx, "VLLM")
+	if err != nil || len(page.Shelves) != 2 || page.Shelves[0].PlaylistSection != PlaylistSectionTracks ||
+		page.Shelves[1].PlaylistSection != PlaylistSectionExtras || page.Continuation == "" {
+		t.Fatal("untitled tracks and recommendations lost their separate sections")
+	}
+	next, err := client.Continue(ctx, page.Continuation)
+	if err != nil || len(next.Shelves) != 1 || next.Shelves[0].PlaylistSection != PlaylistSectionExtras {
+		t.Fatal("outer cursor without a preceding track cursor lost its section")
+	}
+	ordinary, err := client.Browse(ctx, "VLsynthetic")
+	if err != nil || len(ordinary.Shelves) != 1 || ordinary.Shelves[0].PlaylistSection != PlaylistSectionUnknown || len(ordinary.Shelves[0].Items) != 2 {
+		t.Fatal("unrelated playlists changed their existing shelf grouping")
+	}
+}
+
 func setPlaylistCursor(shelf object, token string, query bool) {
 	if query {
 		shelf["continuations"] = []any{object{"nextContinuationData": object{"continuation": token}}}

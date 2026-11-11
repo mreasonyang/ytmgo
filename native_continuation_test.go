@@ -6,7 +6,50 @@ import (
 
 	"github.com/egoist/mygo/ui"
 	"ytmgo/internal/catalog"
+	"ytmgo/locales"
 )
+
+func TestNativeExpiredContinuationReloadsInsteadOfRetrying(t *testing.T) {
+	for _, locale := range locales.Catalog.Languages() {
+		t.Run(locale, func(t *testing.T) {
+			m, a := nativeViewFixture()
+			m.Language, m.Route = locale, "browse:VLlong"
+			m.Page = nativeContinuationPages(m)[m.Route]
+			m.Page.Continuation = "expired-page"
+			m.setContinuationFailure(catalog.ErrExpiredContinuation, a.TrArgs)
+			more, reloads := 0, 0
+			a.LoadMore = func() { more++ }
+			a.Reload = func() { reloads++ }
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1280, 800)
+			tt.Frame()
+			tt.Frame()
+			scroll := func(dy float32) {
+				r, ok := tt.Find(a.Tr("shellContent"))
+				if !ok {
+					t.Fatal("localized content scroller missing")
+				}
+				tt.Scroll(r.X+r.W/2, r.Y+r.H/2, 0, dy)
+				tt.Frame()
+				tt.Frame()
+			}
+			scroll(1e6)
+			scroll(-2000)
+			scroll(1e6)
+			if more != 0 {
+				t.Fatal("scrolling retried an invalid cursor")
+			}
+			if !tt.HasText(a.Tr("nativeCatalogPageExpired")) || tt.HasText(a.Tr("nativeCatalogError")) || tt.HasText(a.Tr("buttonRetry")) {
+				t.Fatal("expired page was presented as a retryable network error")
+			}
+			if err := tt.Click(a.Tr("buttonReload")); err != nil {
+				t.Fatal(err)
+			}
+			if reloads != 1 || more != 0 || len(m.Page.Items) != 60 || !m.Playing || m.Position != 48 {
+				t.Fatal("reload did not target the page or changed playback")
+			}
+		})
+	}
+}
 
 // nativeContinuationPages are the routes nativeContent shows, each with as
 // much of its kind of content as fills several screens.

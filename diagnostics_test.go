@@ -47,6 +47,30 @@ func TestCatalogDiagnosticsRetainOnlySafeFailureMetadata(t *testing.T) {
 	}
 }
 
+func TestContinuationDiagnosticSurvivesOtherCatalogRequests(t *testing.T) {
+	for _, tc := range []struct {
+		err      error
+		category string
+	}{
+		{catalog.ErrExpiredContinuation, "catalog_continuation_expired"},
+		{catalog.ErrSessionChanged, "catalog_continuation_invalidated"},
+		{&catalog.HTTPError{Stage: "browse", StatusCode: 429}, "catalog_http_error"},
+		{errors.New("synthetic-private-cursor"), "catalog_unavailable"},
+	} {
+		dir := t.TempDir()
+		recordContinuationDiagnostic(dir, tc.err, 17*time.Millisecond)
+		recordCatalogDiagnostic(dir, nil, time.Second)
+		data, err := os.ReadFile(filepath.Join(dir, "catalog-continuation-status.json"))
+		var row struct {
+			Category, Operation string
+			ElapsedMS           int64
+		}
+		if err != nil || json.Unmarshal(data, &row) != nil || row.Category != tc.category || row.Operation != "continuation" || row.ElapsedMS != 17 || strings.Contains(string(data), "synthetic") {
+			t.Fatal("pagination failure was overwritten or retained untrusted metadata")
+		}
+	}
+}
+
 func TestPlaybackDiagnosticsExcludeUntrustedDetails(t *testing.T) {
 	dir := t.TempDir()
 	recordPlaybackDiagnostic(dir, "audio", "synthetic-private-detail https://example.invalid/media")

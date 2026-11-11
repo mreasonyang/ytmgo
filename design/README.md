@@ -182,10 +182,13 @@ viewport is only what describes that viewport: edge fades (shown while
 there is more beyond the edge), the immersive ambience, and the washes of
 panels that don't scroll (the player bar, a docked Now Playing panel); a
 floating Now Playing sheet scrolls, so its wash scrolls away like a page's.
-Scrolling edges follow two conventions: a list under a fixed header (the
+Scrolling edges follow three conventions: a list under a fixed header (the
 library, a sheet) gets a hairline under the header once content has scrolled
-beneath it and a fade at its bottom while more lies below; a list inside a
-card (lyrics, queue) fades at whichever edge has more beyond it. Rows are
+beneath it and a fade at its bottom while more lies below; a panel that
+scrolls whole (the page, the floating Now Playing sheet), whose header
+scrolls away with it, fades at its bottom the same way, its top being the
+panel's own edge; a list inside a card (lyrics, queue) fades at whichever
+edge has more beyond it. Rows are
 never cut off at an edge without one of these. The website gives each track one tint; the intro and the download
 share rust, so the record starts and ends in the same light.
 

@@ -121,3 +121,25 @@ func TestScrollbarIgnoresLyricsFollowingPlayback(t *testing.T) {
 	}
 	requireLyricCentered(t, tt, 4) // they did follow, gliding
 }
+
+// The page panel ends as the library beside it does: rows reaching its
+// foot fade into the panel while more lies below, never cut flat.
+func TestPageFootFadesWhileMoreLiesBelow(t *testing.T) {
+	m, a := nativeViewFixture()
+	m.Appearance, m.Panel = "light", false
+	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1280, 720)
+	tt.Frame()
+	page := rect(t, tt, a.Tr("shellContent"))
+	// The album covers run past the foot at this height, 24 in from the
+	// page's left edge plus a cover's half.
+	x, foot := int(page.X+24+80), int(page.Y+page.H)-1
+	img := tt.Image()
+	surface := tokenLight.surface
+	near := func(a, b uint8) bool { return max(a, b)-min(a, b) < 8 }
+	if c := img.RGBAAt(x, foot); !near(c.R, surface.R) || !near(c.G, surface.G) || !near(c.B, surface.B) {
+		t.Fatalf("the page's foot is cut, not faded: %v at its last row", c)
+	}
+	if c := img.RGBAAt(x, foot-nativeFadeBelowSize-4); c.R > 200 && c.G > 200 && c.B > 200 {
+		t.Fatalf("no cover above the fade to fade: %v", c)
+	}
+}

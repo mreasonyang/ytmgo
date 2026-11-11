@@ -1311,7 +1311,9 @@ func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, co
 	scroll := ui.Scroll(c.Key("content-" + m.Route + "-" + m.Page.Title)).Grow(1).MinHeight(0).Label(a.Tr("shellContent"))
 	a = nativeArtworkViewport(c, a, scroll)
 	scrolled := a.viewportScroll
-	nativeScrollbar(c, scroll, scrolled, p, nil)
+	// The page has no fixed header (its own scrolls away), so its top is
+	// the panel's edge; its foot fades, as the library's beside it does.
+	nativeScrollbar(c, scroll, scrolled, p, nativeFadeBelow(scrolled, p.surface))
 	nativeLoadNearEnd(c, scroll, m, a)
 	scroll.Children(func() {
 		if strings.HasPrefix(m.Route, "browse:") && m.Page.Title != "" {
@@ -2552,7 +2554,7 @@ func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 		if overlay {
 			scroll := ui.Scroll(c).Grow(1).MinHeight(0).Gap(gap)
 			a = nativeArtworkViewport(c, a, scroll)
-			nativeScrollbar(c, scroll, a.viewportScroll, p, nil)
+			nativeScrollbar(c, scroll, a.viewportScroll, p, nativeFadeBelow(a.viewportScroll, p.surface))
 			scroll.Children(body)
 			return a.viewportScroll
 		}
@@ -2930,16 +2932,29 @@ func nativePageWash(layer ui.Element, m *UIModel, a ViewActions, p nativePalette
 // beneath the header, and a fade at its bottom while more lies below. Drawn
 // over the rows at paint time, from the scroll position then.
 func nativeScrollEdges(c *ui.Context, scroll ui.Element, st *ui.ScrollState, p nativePalette, bg ui.Color) {
+	below := nativeFadeBelow(st, bg)
 	nativeScrollbar(c, scroll, st, p, func(painter *ui.Painter, r ui.Rect) {
 		if st.Y > 0 {
 			painter.Fill(ui.Rect{X: r.X, Y: r.Y, W: r.W, H: 1}, p.line, 0)
 		}
-		if st.Y < st.MaxY-1 {
-			const fade = 40
-			painter.FillGradient(ui.Rect{X: r.X, Y: r.Y + r.H - fade, W: r.W, H: fade}, ui.LinearGradient{From: bg.Alpha(0), To: bg, Angle: 180}, 0)
-		}
+		below(painter, r)
 	})
 }
+
+// nativeFadeBelow fades a scroller's foot into bg, its panel's colour,
+// while more lies below: rows reaching a panel's edge fade there rather
+// than being cut. The library, the page and the floating Now Playing
+// sheet, side by side or over each other, all end this way.
+func nativeFadeBelow(st *ui.ScrollState, bg ui.Color) func(*ui.Painter, ui.Rect) {
+	return func(painter *ui.Painter, r ui.Rect) {
+		if st.Y < st.MaxY-1 {
+			painter.FillGradient(ui.Rect{X: r.X, Y: r.Y + r.H - nativeFadeBelowSize, W: r.W, H: nativeFadeBelowSize}, ui.LinearGradient{From: bg.Alpha(0), To: bg, Angle: 180}, 0)
+		}
+	}
+}
+
+// nativeFadeBelowSize is how far up a panel's foot fades.
+const nativeFadeBelowSize = 40
 
 // nativeScrollbarIdle is how long a scroller's bar stays after the last
 // scroll, or after the pointer comes over it, before fading.

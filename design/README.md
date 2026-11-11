@@ -482,6 +482,11 @@ tooltip. The website uses icons only on actions and platform names.
   (white round play/pause, icon buttons, progress with mono times),
   and output (lyrics, queue, volume, more, expand); washed with the playing
   cover's colour behind the track (§4.4).
+- **Immersive layout:** the media column (cover or video, the switch, the
+  title and artist, centred) and the lyrics card are one group, centred in
+  the stage, 64 apart; the card runs from the media's top to the artist's
+  line. The media takes the height the text leaves; the column is the
+  wider of the media and the title's own width, which wraps past 560.
 - **Now Playing panel:** washed from the top in the playing cover's colour;
   the track title is a display title. Lyrics are a first-class view, so the
   cover never takes first claim on the height: it gets 45 % of the space it

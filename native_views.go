@@ -2676,11 +2676,18 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 	}
 	panelWidth := min(float32(380), width*0.32)
 	contentHeight := max(float32(0), height-headerHeight-48)
-	// The frame gap on both sides, a gutter at each edge and one between the
-	// media and the panel.
-	mediaWidth := max(float32(1), width-2*tokenProductFrameGap-3*nativeImmersiveGutter-panelWidth)
-	ui.Row(c).Grow(1).MinHeight(0).Padding(24, nativeImmersiveGutter).Gap(nativeImmersiveGutter).AlignItems(ui.Center).Children(func() {
-		scroll := ui.Scroll(c).Grow(1).MinWidth(0).MinHeight(0).HeightPercent(100).Label(a.Tr("shellContent"))
+	// The media column and the card are one group, centred in the stage,
+	// the card as tall as the column (from the cover's top to the artist's
+	// line), so the two read as a pair rather than a cover adrift on the
+	// left and a card pinned to the right edge. The column scrolls for
+	// extra notices, so it is padded by the cover's shadow, which the
+	// scroll would otherwise clip; the row's far side takes the same pad
+	// so the group stays centred.
+	pad := float32(tokenShadowArt.blur)
+	room := max(float32(1), width-2*tokenProductFrameGap-2*nativeImmersiveGutter-nativeImmersivePair-panelWidth-2*pad)
+	layout := nativeImmersiveLayout(m, a, room, contentHeight)
+	ui.Row(c).Grow(1).MinHeight(0).Padding(24, nativeImmersiveGutter+pad, 24, nativeImmersiveGutter).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
+		scroll := ui.Scroll(c).Width(layout.column + 2*pad).Shrink(0).PaddingX(pad).MinHeight(0).HeightPercent(100).Label(a.Tr("shellContent"))
 		// The queue card is a sibling of the media column, so it keeps the
 		// outer viewport instead of the left column's clip.
 		media := nativeArtworkViewport(c, a, scroll)
@@ -2688,26 +2695,9 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 		scroll.Children(func() {
 			a := media
 			ui.Column(c).MinHeight(contentHeight).Shrink(0).Gap(24).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
-				// Reserve the switch, both gaps and the title block as the
-				// fonts actually lay it out. Extra artist lines/notices remain
-				// reachable by scrolling.
-				textHeight := 32 + 48 + nativeImmersiveTitleHeight(m, a, mediaWidth)
-				if m.PlaybackError != "" {
-					textHeight += 24 + 56
-				}
-				// The text has priority: the media takes whatever is left, even
-				// below its usual size, as a fixed floor would push the artist
-				// under the player. It keeps a pixel so its box keeps bounds.
-				mediaHeight := max(1, contentHeight-textHeight)
-				artSize := min(mediaWidth, mediaHeight)
-				if m.showsVideo() {
-					// A landscape video can use the same vertical budget as the
-					// square cover while filling more of the available column.
-					artSize = min(mediaWidth, mediaHeight*16/9)
-				}
 				// It grows from the cover that was showing, and shrinks back into
 				// the one that will; cover or video, it changes shape in place.
-				nativeMedia(c.Key("immersive-media"), m, a, p, artSize).Shadow(tokenShadowArt.args(p)).Transition(nativeLong(nativeMatch(nativeImmersiveCover(c, m, width))))
+				nativeMedia(c.Key("immersive-media"), m, a, p, layout.media).Shadow(tokenShadowArt.args(p)).Transition(nativeLong(nativeMatch(nativeImmersiveCover(c, m, width))))
 				if m.VideoAvailable {
 					nativeMediaSwitch(c, m, a, p).Transition(nativeFadeLong)
 				}
@@ -2717,9 +2707,68 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 		})
 		card := nativeLong(nativeMatch(nativeCardMatch{}))
 		card.Exit = &ui.Motion{}
-		nativePanelCard(c.Key("immersive-card"), m, a, p).Width(panelWidth).HeightPercent(90).Background(p.veil).Transition(card)
+		nativePanelCard(c.Key("immersive-card"), m, a, p).Width(panelWidth).Height(layout.height).Shrink(0).Margin(0, 0, 0, nativeImmersivePair-pad).Background(p.veil).Transition(card)
 	})
 }
+
+// nativeImmersivePair is the space between immersive mode's media column
+// and its card.
+const nativeImmersivePair = 64
+
+type nativeImmersiveSizes struct {
+	media  float32 // the media's width (a cover's side; a video is 16:9)
+	column float32 // the column's width: the media's, or the title's minimum
+	height float32 // the column's content, cover top to artist line: the card's height
+}
+
+// nativeImmersiveLayout fits the media column in room × height. The text
+// has priority: the media takes whatever height is left, even below its
+// usual size, as a fixed floor would push the artist under the player.
+// The title wraps to the column, the wider of the media and the title's
+// own width (to nativeImmersiveTitleMax), so they are sized together.
+func nativeImmersiveLayout(m *UIModel, a ViewActions, room, height float32) nativeImmersiveSizes {
+	var s nativeImmersiveSizes
+	text := func(column float32) float32 {
+		// The gap under the media, the switch and its gap, the title block
+		// as the fonts actually lay it out, and any notice.
+		h := 24 + nativeImmersiveTitleHeight(m, a, column)
+		if m.VideoAvailable {
+			h += 32 + 24
+		}
+		if m.PlaybackError != "" {
+			h += 24 + 56
+		}
+		return h
+	}
+	// The column hugs the title's own width up to nativeImmersiveTitleMax:
+	// the card keeps its distance from whichever is wider.
+	title, artist := nativeImmersiveTitleText(m, a)
+	titleW, _ := ui.ShapeText(title, nativeDisplayMetrics(tokenSizeH2, nativeDisplayLeading(title)), 0).Size()
+	artistW, _ := ui.ShapeText(artist, ui.Font{Size: tokenSizeBody, Weight: 500}, 0).Size()
+	natural := min(room, nativeImmersiveTitleMax, float32(math.Ceil(float64(max(titleW, artistW)))))
+	s.media = room
+	for range 3 {
+		s.column = max(s.media, natural)
+		media := max(1, height-text(s.column))
+		s.media = min(room, media)
+		if m.showsVideo() {
+			s.media = min(room, media*16/9)
+		}
+		s.media = max(1, nativeGridFloor(s.media))
+	}
+	s.column = max(s.media, natural)
+	shown := s.media
+	if m.showsVideo() {
+		shown = s.media * 9 / 16
+	}
+	s.height = min(height, max(nativeImmersiveCardMin, shown+text(s.column)))
+	return s
+}
+
+const (
+	nativeImmersiveTitleMax = 560 // the widest the title runs before it wraps: it may outreach the cover
+	nativeImmersiveCardMin  = 320 // the card's least height: lyrics need lines
+)
 
 func nativeImmersiveTitle(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool) {
 	ui.Column(c).Gap(8).AlignItems(ui.Center).Transition(nativeFadeLong).Children(func() {

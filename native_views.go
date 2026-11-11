@@ -58,6 +58,9 @@ type UIModel struct {
 	shortcutsFromSettings           bool            // Keyboard shortcuts was opened from Settings: it leads back
 	pageScroll                      *ui.ScrollState // the page's scrolling, as last built
 	instantMotion                   bool            // every frame without animation, for tests of layout
+
+	openedCover nativeCollectionMatch // source of the collection opened in this window
+
 	// Immersive mode's morph: when it last came or went, whether Now Playing
 	// was docked as it came (its cover is the one that grows), and whether
 	// it is docked now.
@@ -128,6 +131,7 @@ type ViewActions struct {
 	artViewport          ui.Rect
 	viewportScroll       *ui.ScrollState
 	secondaryArtwork     bool
+	collection           nativeCollectionMatch
 	artworkScale         float64
 	artworkDX, artworkDY float32
 }
@@ -210,6 +214,10 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 		panelWidth := min(width-16, 380)
 		open := true
 		ui.DialogBase(c, &open, func(backdrop, panel ui.Element) {
+			nativePlaybackShortcut(c, panel, m, a)
+			if panel.Shortcut(ui.Cmd, ui.KeyK) {
+				m.focusSearch()
+			}
 			// It rises from the bottom, where the mini player and the player
 			// bar that open it are, and sinks back there as it closes. A dialog
 			// lies over the window, after MyGo's transitions: it moves itself.
@@ -232,7 +240,9 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 // nativeDesktopFrame is Spotify's desktop arrangement: a global bar on the
 // window frame, three rounded panels, and the player bar across the bottom.
 func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {
-	ui.Column(c).Fill().Background(p.base).TextColor(p.text).Children(func() {
+	frame := ui.Column(c).Fill().Background(p.base).TextColor(p.text)
+	nativePlaybackShortcut(c, frame, m, a)
+	frame.Children(func() {
 		// Immersive mode drops the global bar. Under a hidden title bar its
 		// header moves out of the panel to take the bar's place instead.
 		top, header := float32(tokenProductFrameGap), float32(0)
@@ -289,7 +299,9 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 // nativeCompactFrame follows Spotify's phone layout: one full-bleed page, a
 // floating mini player and a tab bar.
 func nativeCompactFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {
-	ui.Column(c).Fill().Background(p.base).TextColor(p.text).Children(func() {
+	frame := ui.Column(c).Fill().Background(p.base).TextColor(p.text)
+	nativePlaybackShortcut(c, frame, m, a)
+	frame.Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Background(p.surface).Clip().Children(func() {
 			nativeBackdrop(c, m, a, p)
 			var scrolled *ui.ScrollState
@@ -386,18 +398,41 @@ func nativeImmersiveCover(c *ui.Context, m *UIModel, width float32) nativeCoverM
 	return nativeCoverMatch{"player-bar"}
 }
 
-// nativeCollectionMatch is a collection's cover, by its browse ID: opening
-// it from a card, a tile or a row, the cover travels into the page's header,
-// and back into the card when the page it came from returns.
-type nativeCollectionMatch struct{ id string }
+// Each entry has its own match, including two copies of one collection on Home.
+// The route distinguishes opening a persistent sidebar row from returning to it.
+type nativeCollectionMatch struct {
+	route  string
+	button uint64
+	id     string
+}
 
-// nativeCollectionArt gives a collection's cover its journey; id is its
-// browse ID, none for what opens no page.
-func nativeCollectionArt(art ui.Element, id string) ui.Element {
-	if id == "" {
+func nativeCollectionSource(m *UIModel, button ui.Element, item catalog.Item) nativeCollectionMatch {
+	if item.BrowseID == "" || item.ID != "" {
+		return nativeCollectionMatch{}
+	}
+	return nativeCollectionMatch{route: m.Route, button: button.ID(), id: item.BrowseID}
+}
+
+func (a ViewActions) openCollection(m *UIModel, item catalog.Item) {
+	m.openedCover = a.collection
+	a.Open(item)
+}
+
+func (match nativeCollectionMatch) art(art ui.Element) ui.Element {
+	if match.id == "" {
 		return art
 	}
-	return art.Transition(nativeLong(nativeMatch(nativeCollectionMatch{id})))
+	return art.Transition(nativeLong(nativeMatch(match)))
+}
+
+func (a ViewActions) collectionArt(c *ui.Context, item catalog.Item, size, radius float32, m *UIModel, p nativePalette) ui.Element {
+	// The sidebar stays on screen beside the header. Give its ordinary
+	// thumbnail a separate identity while the detail owns the match. On
+	// Back the returning thumbnail can then take the match from the header.
+	if a.collection.id != "" && a.collection.button == m.openedCover.button && m.Route == "browse:"+a.collection.id {
+		return nativeArtwork(c.Key("open-collection-thumbnail"), item.Artwork, size, radius, a, p).Transition(nativeLong(nativeMoves))
+	}
+	return a.collection.art(nativeArtwork(c, item.Artwork, size, radius, a, p))
 }
 
 // nativeCardMatch is the identity of the card holding the lyrics and the
@@ -843,54 +878,43 @@ func nativeDockedNowPlaying(m *UIModel, width float32) bool {
 const nativeFloatRise = 64
 
 type nativeFloatState struct {
-	open          bool
-	since, closed time.Time
+	open  bool
+	since time.Time
+	from  float32
 }
 
-// nativeFloating reports whether the floating Now Playing sheet shows (on
-// windows too narrow to dock it), and how far it has arrived, 0 to 1: it
-// rises in over the base motion and, closed, sinks out over it before it
-// goes. Without motion it comes and goes at once.
+// arrival is the current fraction of the opening movement. A reversal starts
+// from this same position and only takes the time for the remaining distance.
+func (s nativeFloatState) arrival(now time.Time) float32 {
+	to, distance := float32(0), s.from
+	if s.open {
+		to, distance = 1, 1-s.from
+	}
+	d := time.Duration(float64(tokenMotionBase) * float64(distance))
+	if s.since.IsZero() || d == 0 || now.Sub(s.since) >= d {
+		return to
+	}
+	return s.from + (to-s.from)*tokenMotionEase(float32(now.Sub(s.since))/float32(d))
+}
+
+// nativeFloating reports whether the floating Now Playing sheet is on screen
+// and how far it has arrived, including while it is leaving.
 func nativeFloating(c *ui.Context, m *UIModel, width float32) (bool, float32) {
 	s := &m.floating
 	want := m.Panel && !m.Immersive && width <= 1180
 	now := c.Now()
-	still := m.instantMotion || c.Preferences().ReduceMotion
-	switch {
-	case want && !s.open:
-		s.open, s.since, s.closed = true, now, time.Time{}
-	case want:
-		s.closed = time.Time{}
-	case s.open && s.closed.IsZero():
-		if still || m.Immersive || width > 1180 {
-			s.open = false
-		} else {
-			s.closed = now
-		}
+	if m.instantMotion || c.Preferences().ReduceMotion || m.Immersive || width > 1180 {
+		*s = nativeFloatState{open: want}
 	}
-	if !s.open {
-		return false, 0
+	arrived := s.arrival(now)
+	if want != s.open {
+		*s = nativeFloatState{open: want, from: arrived, since: now}
 	}
-	if still {
-		return want, 1
-	}
-	progress := func(from time.Time) float32 {
-		return max(0, min(1, float32(now.Sub(from))/float32(tokenMotionBase)))
-	}
-	if !s.closed.IsZero() {
-		k := progress(s.closed)
-		if k >= 1 {
-			s.open = false
-			return false, 0
-		}
+	if (want && arrived < 1) || (!want && arrived > 0) {
 		c.AnimationFrame()
-		return true, 1 - tokenMotionEase(k)
+		return true, arrived
 	}
-	k := progress(s.since)
-	if k < 1 {
-		c.AnimationFrame()
-	}
-	return true, tokenMotionEase(k)
+	return want, arrived
 }
 
 // nativeDockSlide is how docked Now Playing comes and goes: across its own
@@ -910,14 +934,15 @@ func nativeDock(c *ui.Context, row ui.Element, m *UIModel, width float32) (docke
 	s := ui.Local(row, "now-playing-dock", func() nativeDockState { return nativeDockState{} })
 	docked = nativeDockedNowPlaying(m, width)
 	now := c.Now()
+	animate := !m.Immersive && width > 1180 && !m.instantMotion && !c.Preferences().ReduceMotion
 	switch {
 	case docked:
 		s.shown, s.leaving = true, time.Time{}
-	case s.shown && s.leaving.IsZero() && !m.Immersive && width > 1180 && !m.instantMotion:
+	case s.shown && s.leaving.IsZero() && animate:
 		s.leaving = now
 	}
-	if !docked && !s.leaving.IsZero() {
-		if left := tokenMotionBase - now.Sub(s.leaving); left > 0 && !m.Immersive && width > 1180 {
+	if !docked && animate && !s.leaving.IsZero() {
+		if left := tokenMotionBase - now.Sub(s.leaving); left > 0 {
 			c.After(left)
 			return false, true
 		}
@@ -1048,15 +1073,25 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 		if !full {
 			pad = 4
 		}
-		scroll := ui.Scroll(c).Grow(1).MinHeight(0).Padding(0, pad, 8).Label(a.Tr("shellLibraryRegion"))
+		// Filters and status rows disappear in rail mode. Keep the list's
+		// identity so its thumbnails stay in their rows during the resize.
+		scroll := ui.Scroll(c.Key("library-scroll")).Grow(1).MinHeight(0).Padding(0, pad, 8).Label(a.Tr("shellLibraryRegion"))
 		clipped := nativeArtworkViewport(c, a, scroll)
 		nativeScrollEdges(c, scroll, clipped.viewportScroll, p, p.surface)
 		scroll.Children(func() {
-			for i, item := range items {
+			occurrences := make(map[string]int, len(items))
+			for _, item := range items {
 				if *filter != "" && nativeLibraryKind(item) != *filter {
 					continue
 				}
-				nativeLibraryRow(c.Key(fmt.Sprintf("library-%d", i)), item, m, clipped, p, full)
+				key := item.Key()
+				rowKey := key
+				if n := occurrences[key]; n > 0 {
+					// A continuation can overlap a previous page.
+					rowKey = fmt.Sprintf("%s#%d", key, n)
+				}
+				occurrences[key]++
+				nativeLibraryRow(c.Key(rowKey), item, m, clipped, p, full)
 			}
 		})
 	})
@@ -1164,9 +1199,18 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 	open := item.BrowseID != "" && m.Route == "browse:"+item.BrowseID
 	playing := item.ID != "" && item.ID == m.Current.ID
 	b := ui.ButtonBase(c).Height(tokenProductLibraryRow).Padding(8).Gap(12).Radius(tokenRadiusControl).Justify(ui.Start).Label(nativeItemLabel(item))
+	a.collection = nativeCollectionSource(m, b, item)
 	nativeTip(c, b, item.Title, p)
 	if m.LibraryCached && !m.SignedIn {
 		b.Disabled(true)
+	}
+	b.ContextMenu(nativeTrackMenu(item, m, a))
+	if b.Clicked() {
+		if item.ID != "" {
+			a.Play(item)
+		} else {
+			a.openCollection(m, item)
+		}
 	}
 	if !full {
 		b.Padding(4).Justify(ui.Center)
@@ -1183,7 +1227,7 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 		if item.Kind == "artist" {
 			radius = 48 / 2
 		}
-		nativeCollectionArt(nativeArtwork(c, item.Artwork, 48, radius, a, p), item.BrowseID)
+		a.collectionArt(c, item, 48, radius, m, p)
 		if !full {
 			return
 		}
@@ -1198,14 +1242,6 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 			ui.Icon(c, nativeIcons["volume"]).Size(16, 16).TextColor(p.accent)
 		}
 	})
-	b.ContextMenu(nativeTrackMenu(item, a))
-	if b.Clicked() {
-		if item.ID != "" {
-			a.Play(item)
-		} else {
-			a.Open(item)
-		}
-	}
 }
 
 func nativeContentInset(compact bool) float32 {
@@ -1491,6 +1527,10 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 // nativeCollectionHeader is the album/playlist/artist hero: cover, display
 // title and a primary play button over the page's colour wash.
 func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool, inset, contentWidth float32) {
+	cover := m.openedCover
+	if m.Route != "browse:"+cover.id {
+		cover = nativeCollectionMatch{}
+	}
 	if contentWidth == 0 {
 		contentWidth = 960
 	}
@@ -1508,14 +1548,14 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 	if compact && short {
 		ui.Row(c).Padding(8, inset, 0).Gap(16).AlignItems(ui.Center).Children(func() {
 			if m.Page.Artwork != "" {
-				nativeCollectionArt(nativeArtwork(c, m.Page.Artwork, min(96, contentWidth*0.25), tokenRadiusControl, a, p).Shrink(0), strings.TrimPrefix(m.Route, "browse:"))
+				cover.art(nativeArtwork(c, m.Page.Artwork, min(96, contentWidth*0.25), tokenRadiusControl, a, p).Shrink(0))
 			}
 			ui.Column(c).Grow(1).MinWidth(0).Gap(8).Children(func() { title(24) })
 		})
 	} else if compact {
 		ui.Column(c).Padding(8, inset, 0).Gap(12).Children(func() {
 			if m.Page.Artwork != "" {
-				nativeCollectionCover(nativeCollectionArt(nativeArtwork(c, m.Page.Artwork, min(contentWidth-2*inset-64, 224), tokenRadiusControl, a, p).AlignSelf(ui.Center), strings.TrimPrefix(m.Route, "browse:")), p)
+				nativeCollectionCover(cover.art(nativeArtwork(c, m.Page.Artwork, min(contentWidth-2*inset-64, 224), tokenRadiusControl, a, p).AlignSelf(ui.Center)), p)
 			}
 			title(26)
 		})
@@ -1530,7 +1570,7 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 		}
 		ui.Row(c).Padding(top, inset, 0).Gap(24).AlignItems(ui.End).Children(func() {
 			if m.Page.Artwork != "" {
-				nativeCollectionCover(nativeCollectionArt(nativeArtwork(c, m.Page.Artwork, art, tokenRadiusControl, a, p), strings.TrimPrefix(m.Route, "browse:")), p)
+				nativeCollectionCover(cover.art(nativeArtwork(c, m.Page.Artwork, art, tokenRadiusControl, a, p)), p)
 			}
 			ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
 				title(font)
@@ -1589,6 +1629,7 @@ func nativeMetadataHasCreator(subtitle, creator string) bool {
 func nativeShortcutTile(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p nativePalette) {
 	playing := item.ID != "" && item.ID == m.Current.ID
 	b := ui.ButtonBase(c).Height(tokenProductTile).MinWidth(0).PaddingEnd(12).Gap(12).Radius(tokenRadiusControl).Justify(ui.Start).Background(p.hover).Clip().Label(item.Title)
+	a.collection = nativeCollectionSource(m, b, item)
 	nativeTip(c, b, item.Title, p)
 	hovered := b.Hovered()
 	if hovered {
@@ -1598,7 +1639,7 @@ func nativeShortcutTile(c *ui.Context, item catalog.Item, m *UIModel, a ViewActi
 		// The art is flush with the tile's left side, so it takes the tile's
 		// corners there itself: MyGo's GPU renderer rounds only the innermost
 		// clip, and the art's own clip would square the tile's off.
-		nativeCollectionArt(nativeArtwork(c, item.Artwork, tokenProductTile, tokenRadiusControl, a, p).Radius(tokenRadiusControl, 0, 0, tokenRadiusControl), item.BrowseID)
+		a.collectionArt(c, item, tokenProductTile, tokenRadiusControl, m, p).Radius(tokenRadiusControl, 0, 0, tokenRadiusControl)
 		t := ui.Text(c, item.Title).Grow(1).MinWidth(0).FontSize(tokenSizeSmall).FontWeight(700).MaxLines(2).Ellipsis("…")
 		if playing {
 			t.TextColor(p.accentText)
@@ -1607,12 +1648,12 @@ func nativeShortcutTile(c *ui.Context, item catalog.Item, m *UIModel, a ViewActi
 			ui.Box(c).Size(32, 32).Shrink(0).Radius(tokenRadiusPill).Background(p.accent).TextColor(p.onAccent).Center().PassThrough().Children(func() { ui.Icon(c, nativeIcons["play"]).Size(16, 16) })
 		}
 	})
-	b.ContextMenu(nativeTrackMenu(item, a))
+	b.ContextMenu(nativeTrackMenu(item, m, a))
 	if b.Clicked() {
 		if item.ID != "" {
 			a.Play(item)
 		} else {
-			a.Open(item)
+			a.openCollection(m, item)
 		}
 	}
 }
@@ -1754,6 +1795,7 @@ func nativeCardArt(compact bool) float32 {
 // with a play button rising over playable covers on hover.
 func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p nativePalette, size float32) {
 	b := ui.ButtonBase(c).Column().Width(size + 24).Shrink(0).Padding(12).Gap(8).Radius(tokenRadiusControl).AlignItems(ui.Stretch).Justify(ui.Start).Label(nativeResultLabel(item, m, a))
+	a.collection = nativeCollectionSource(m, b, item)
 	if m.Route == "library" && m.LibraryCached && !m.SignedIn {
 		b.Disabled(true)
 	}
@@ -1767,7 +1809,7 @@ func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p n
 			radius = size / 2
 		}
 		ui.Box(c).Size(size, size).Shrink(0).Children(func() {
-			art := nativeCollectionArt(nativeArtwork(c, item.Artwork, size, radius, a, p), item.BrowseID)
+			art := a.collectionArt(c, item, size, radius, m, p)
 			if hovered {
 				art.Shadow(tokenShadowArt.args(p))
 			}
@@ -1787,12 +1829,12 @@ func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p n
 		}
 		ui.Text(c, subtitle).FontSize(tokenSizeMeta).LineHeight(1.4).TextColor(p.secondary).MaxLines(2).Ellipsis("…")
 	})
-	b.ContextMenu(nativeTrackMenu(item, a))
+	b.ContextMenu(nativeTrackMenu(item, m, a))
 	if b.Clicked() {
 		if item.ID != "" {
 			a.Play(item)
 		} else {
-			a.Open(item)
+			a.openCollection(m, item)
 		}
 	}
 }
@@ -1858,6 +1900,7 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 		pad, radius = 12, 0
 	}
 	b := ui.ButtonBase(c).Height(tokenProductRow).PaddingX(pad).Gap(16).Radius(radius).Justify(ui.Start).Label(nativeResultLabel(item, m, a))
+	a.collection = nativeCollectionSource(m, b, item)
 	if m.Route == "library" && m.LibraryCached && !m.SignedIn && mode != nativeTrackQueue {
 		b.Disabled(true)
 	}
@@ -1886,7 +1929,7 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 			if item.Kind == "artist" {
 				radius = 40 / 2
 			}
-			nativeCollectionArt(nativeArtwork(c, item.Artwork, 40, radius, a, p), item.BrowseID)
+			a.collectionArt(c, item, 40, radius, m, p)
 			ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
 				t := ui.Text(c, item.Title).FontSize(tokenSizeSmall).FontWeight(500).MaxLines(1).Ellipsis("…")
 				if playing {
@@ -1922,14 +1965,14 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 			ui.Text(c, duration).Width(48).Shrink(0).FontSize(tokenSizeMeta).TextColor(p.secondary).TextAlign(ui.End)
 		}
 	})
-	b.ContextMenu(nativeTrackMenu(item, a))
+	b.ContextMenu(nativeTrackMenu(item, m, a))
 	if b.Clicked() {
 		if mode == nativeTrackQueue {
 			a.PlayQueue(index)
 		} else if item.ID != "" {
 			a.Play(item)
 		} else {
-			a.Open(item)
+			a.openCollection(m, item)
 		}
 	}
 }
@@ -2004,7 +2047,7 @@ func nativePlayerBarContent(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 			}
 			nativeVolume(c, m, a, p, width > 1000)
 			if width > 1000 {
-				nativeIconButton(c, "more", a.Tr("shellMore"), p, false, 32).Disabled(m.Current.ID == "").Menu(nativeTrackMenu(m.Current, a))
+				nativeIconButton(c, "more", a.Tr("shellMore"), p, false, 32).Disabled(m.Current.ID == "").Menu(nativeTrackMenu(m.Current, m, a))
 			}
 			if nativeIconButton(c, "expand", a.Tr("shellImmersive"), p, m.Immersive, 32).Clicked() {
 				m.Immersive = !m.Immersive
@@ -2096,6 +2139,10 @@ func nativeMiniPlayer(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 	})
 }
 
+func (m *UIModel) canTogglePlayback() bool {
+	return m.Current.ID != "" || len(m.Queue) > 0
+}
+
 func nativePlayButton(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, size float32) {
 	if m.PlaybackLoading {
 		ui.ButtonBase(c).Size(size, size).Shrink(0).Radius(size / 2).Background(p.text).TextColor(p.base).Disabled(true).Label(a.Tr("shellLoading")).Children(func() { ui.Spinner(c.Key("loading")).Size(size*0.5, size*0.5).Transition(nativeSwap) })
@@ -2105,7 +2152,7 @@ func nativePlayButton(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 	if m.Playing {
 		icon, key = "pause", "shellPause"
 	}
-	b := ui.ButtonBase(c).Size(size, size).Shrink(0).Radius(size / 2).Label(a.Tr(key)).Background(p.text).TextColor(p.base).Disabled(m.Current.ID == "")
+	b := ui.ButtonBase(c).Size(size, size).Shrink(0).Radius(size / 2).Label(a.Tr(key)).Background(p.text).TextColor(p.base).Disabled(!m.canTogglePlayback())
 	nativeTip(c, b, a.Tr(key), p)
 	nativePlayFeedback(b)
 	b.Children(func() {
@@ -3049,7 +3096,7 @@ func (backdropLayer) PaintEffect(p *ui.Painter, box ui.Rect, content *ui.Bitmap,
 	}, ui.ImageOptions{})
 }
 
-func nativeTrackMenu(item catalog.Item, a ViewActions) func(*ui.Menu) {
+func nativeTrackMenu(item catalog.Item, m *UIModel, a ViewActions) func(*ui.Menu) {
 	return func(menu *ui.Menu) {
 		if item.ID != "" {
 			if menu.Item(a.Tr("shellPlay")).Chosen() {
@@ -3059,23 +3106,37 @@ func nativeTrackMenu(item catalog.Item, a ViewActions) func(*ui.Menu) {
 				a.QueueAppend(item)
 			}
 		} else if menu.Item(item.Title).Chosen() {
-			a.Open(item)
+			a.openCollection(m, item)
 		}
 	}
+}
+
+func nativePlaybackShortcut(c *ui.Context, scope ui.Element, m *UIModel, a ViewActions) {
+	if !m.canTogglePlayback() || m.Settings || m.Shortcuts || m.ShortcutRecording {
+		return
+	}
+	// A window shortcut alone lets Space click the last focused song or
+	// button. Bind its containing frame as well; text editors keep typing
+	// priority and Enter still activates the focused control.
+	focused := scope.Shortcut(0, ui.KeySpace)
+	window := c.Shortcut(0, ui.KeySpace)
+	if (focused || window) && !c.ShortcutRepeated() {
+		a.Toggle()
+	}
+}
+
+func (m *UIModel) focusSearch() {
+	m.Immersive, m.Panel, m.FocusSearch = false, false, true
+	// Drop the floating dialog immediately so the next keystroke goes to search.
+	m.floating = nativeFloatState{}
 }
 
 func nativeKeyboard(c *ui.Context, m *UIModel, a ViewActions) {
 	if m.ShortcutRecording {
 		return
 	}
-	// MyGo gives focused text editors and controls first refusal, including Space.
-	if c.Shortcut(0, ui.KeySpace) && m.Current.ID != "" {
-		a.Toggle()
-	}
 	if c.Shortcut(ui.Cmd, ui.KeyK) {
-		m.Immersive = false
-		m.Panel = false
-		m.FocusSearch = true
+		m.focusSearch()
 	}
 	if c.Shortcut(ui.Cmd, ui.KeyJ) {
 		m.Panel = !m.Panel
@@ -3114,10 +3175,10 @@ func nativeKeyboard(c *ui.Context, m *UIModel, a ViewActions) {
 			m.Shortcuts = false
 		} else if m.Settings {
 			m.Settings = false
-		} else if m.Panel {
-			m.Panel = false
 		} else if m.Immersive {
 			m.Immersive = false
+		} else if m.Panel {
+			m.Panel = false
 		}
 	}
 }
@@ -3193,7 +3254,7 @@ func nativeExpandedTransport(c *ui.Context, m *UIModel, a ViewActions, p nativeP
 				a.Like()
 			}
 			nativeVolume(c, m, a, p, true)
-			nativeIconButton(c, "more", a.Tr("shellMore"), p, false, 32).Disabled(m.Current.ID == "").Menu(nativeTrackMenu(m.Current, a))
+			nativeIconButton(c, "more", a.Tr("shellMore"), p, false, 32).Disabled(m.Current.ID == "").Menu(nativeTrackMenu(m.Current, m, a))
 		})
 	})
 }

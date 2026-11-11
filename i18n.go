@@ -9,7 +9,7 @@ import (
 
 func (a *desktop) tr(key string) string { return a.trArgs(key, nil) }
 func (a *desktop) trArgs(key string, args map[string]any) string {
-	return phrases(locales.Catalog.Format(mygo.App.Locale(), key, args))
+	return phrases(locales.Catalog.Format(i18n.Locale(), key, args))
 }
 func (a *desktop) applyLanguage() {
 	choice := language.Load(a.languagePath)
@@ -29,6 +29,7 @@ func (a *desktop) setLanguage(choice string) {
 	a.localeChanged()
 }
 func (a *desktop) localeChanged() {
+	a.invalidateHistory()
 	if a.catalog != nil {
 		a.catalog.SetLanguage(language.ServiceLanguage(mygo.App.Locale()))
 		if a.window != nil {

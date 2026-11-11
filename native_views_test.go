@@ -493,6 +493,160 @@ func TestNativeKeyboardAndContextMenu(t *testing.T) {
 	}
 }
 
+func TestNativeSpaceAfterClickingTrack(t *testing.T) {
+	for _, width := range []int{420, 1100, 1440} {
+		t.Run(fmt.Sprint(width), func(t *testing.T) {
+			m, a := nativeViewFixture()
+			plays := 0
+			play := a.Play
+			a.Play = func(item catalog.Item) {
+				plays++
+				play(item)
+			}
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, 900)
+			if err := tt.Click("Instant Crush · Daft Punk"); err != nil {
+				t.Fatal(err)
+			}
+			if plays != 1 || !m.Playing {
+				t.Fatalf("track click: plays=%d playing=%v", plays, m.Playing)
+			}
+			for _, playing := range []bool{false, true} {
+				tt.Key(0, ui.KeySpace)
+				if m.Playing != playing || plays != 1 {
+					t.Fatalf("Space after track click: playing=%v (want %v), track starts=%d (want 1)", m.Playing, playing, plays)
+				}
+			}
+			tt.Key(0, ui.KeyEnter)
+			if plays != 2 {
+				t.Fatal("Enter did not activate the focused track")
+			}
+		})
+	}
+}
+
+func TestNativeSpaceInFloatingNowPlaying(t *testing.T) {
+	m, a := nativeViewFixture()
+	m.Panel = true
+	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1100, 900)
+	tt.Key(0, ui.KeySpace)
+	if m.Playing || !m.Panel || m.Immersive {
+		t.Fatalf("Space in Now Playing: playing=%v panel=%v immersive=%v", m.Playing, m.Panel, m.Immersive)
+	}
+}
+
+func TestNativeSpaceInSettingsActivatesFocusedButton(t *testing.T) {
+	m, a := nativeViewFixture()
+	m.Settings = true
+	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
+	if !tt.Focused(a.Tr("shellClose")) {
+		t.Fatal("Settings did not focus its close button")
+	}
+	tt.Key(0, ui.KeySpace)
+	if m.Settings || !m.Playing {
+		t.Fatalf("Space on the Settings close button: settings=%v playing=%v", m.Settings, m.Playing)
+	}
+}
+
+func TestNativePlaybackStartsFromQueuedTrack(t *testing.T) {
+	for _, width := range []int{420, 1440} {
+		t.Run(fmt.Sprint(width), func(t *testing.T) {
+			m, a := nativeViewFixture()
+			m.Current, m.Queue, m.Playing = catalog.Item{}, nil, false
+			toggles := 0
+			a.Toggle = func() { toggles++ }
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, 900)
+			tt.Key(0, ui.KeySpace)
+			if toggles != 0 {
+				t.Fatal("Space triggered playback with an empty queue")
+			}
+			if err := tt.RightClick("Instant Crush · Daft Punk"); err != nil {
+				t.Fatal(err)
+			}
+			if err := tt.ChooseMenuItem(a.Tr("nativeAddToQueue")); err != nil {
+				t.Fatal(err)
+			}
+			if len(m.Queue) != 1 || m.Current.ID != "" {
+				t.Fatal("queueing the first song should leave it ready to play")
+			}
+			tt.Key(0, ui.KeySpace)
+			if toggles != 1 {
+				t.Fatal("Space did not start the queue")
+			}
+			if err := tt.Click(a.Tr("shellPlay")); err != nil || toggles != 2 {
+				t.Fatalf("play button did not start the queue: clicks=%d err=%v", toggles, err)
+			}
+		})
+	}
+}
+
+func TestNativeHeldSpaceTogglesOnce(t *testing.T) {
+	for _, width := range []int{1100, 1440} {
+		t.Run(fmt.Sprint(width), func(t *testing.T) {
+			m, a := nativeViewFixture()
+			m.Panel = width == 1100
+			toggles := 0
+			a.Toggle = func() { toggles++ }
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, 900)
+			if !m.Panel {
+				if err := tt.Click("Instant Crush · Daft Punk"); err != nil {
+					t.Fatal(err)
+				}
+			}
+			tt.KeyDown(ui.KeySpace)
+			for range 5 {
+				tt.KeyRepeat(0, ui.KeySpace)
+			}
+			tt.KeyUp(ui.KeySpace)
+			if toggles != 1 {
+				t.Fatalf("holding Space toggled %d times", toggles)
+			}
+			tt.Key(0, ui.KeySpace)
+			if toggles != 2 {
+				t.Fatal("the next physical press did not toggle playback")
+			}
+		})
+	}
+}
+
+func TestNativeFloatingPanelSearchFocus(t *testing.T) {
+	for _, width := range []int{420, 1100, 1440} {
+		t.Run(fmt.Sprint(width), func(t *testing.T) {
+			m, a := nativeViewFixture()
+			m.Panel, m.instantMotion = true, false
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, 900)
+			tt.Advance(tokenMotionBase)
+			tt.Key(ui.Cmd, ui.KeyK)
+			tt.Type("new")
+			tt.TypeKey(0, ui.KeySpace, " ")
+			tt.Type("mix")
+			if m.Panel || m.Immersive || m.Query != "new mix" || !m.Playing {
+				t.Fatalf("search from Now Playing: panel=%t immersive=%t query=%q playing=%t", m.Panel, m.Immersive, m.Query, m.Playing)
+			}
+		})
+	}
+}
+
+func TestNativeEscapeRestoresNowPlayingFromImmersive(t *testing.T) {
+	for _, width := range []int{420, 1100, 1440} {
+		t.Run(fmt.Sprint(width), func(t *testing.T) {
+			m, a := nativeViewFixture()
+			m.Panel = true
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, 900)
+			if err := enterImmersive(tt, a); err != nil {
+				t.Fatal(err)
+			}
+			tt.Key(0, ui.KeyEscape)
+			if m.Immersive || !m.Panel {
+				t.Fatalf("Escape from immersive view: immersive=%t panel=%t", m.Immersive, m.Panel)
+			}
+			tt.Key(0, ui.KeyEscape)
+			if m.Panel {
+				t.Fatal("the second Escape did not dismiss Now Playing")
+			}
+		})
+	}
+}
+
 func TestNativeMinimumWindow(t *testing.T) {
 	for _, width := range []int{380, 420, 760, 1100, 1440} {
 		t.Run(fmt.Sprint(width), func(t *testing.T) {
@@ -995,5 +1149,40 @@ func TestImmersiveHasOneButtonInView(t *testing.T) {
 		if !m.Immersive || !m.Panel {
 			t.Fatalf("%d: entering immersive mode: immersive=%v panel=%v", width, m.Immersive, m.Panel)
 		}
+	}
+}
+
+func TestNativeLibraryFocusFollowsPlaylistAcrossRefresh(t *testing.T) {
+	alpha := catalog.Item{Title: "Alpha playlist", Kind: "playlist", BrowseID: "VLshared", BrowseParams: "alpha"}
+	beta := catalog.Item{Title: "Beta playlist", Kind: "playlist", BrowseID: "VLshared", BrowseParams: "beta"}
+	m, actions := nativeViewFixture()
+	request := &libraryRequest{}
+	app := &desktop{model: *m, libraryRequest: request, historyIndex: -1}
+	app.model.SignedIn, app.model.LibraryLoaded, app.model.LibraryRefreshing = true, true, true
+	app.model.LibraryItems = []catalog.Item{alpha, beta}
+	app.model.Route = "explore"
+	var opens []string
+	actions.Open = func(it catalog.Item) {
+		opens = append(opens, it.Key())
+		app.model.Route = "browse:" + it.BrowseID
+		app.model.Page = catalog.Page{Title: it.Title}
+	}
+	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, &app.model, actions) }, 1440, 900)
+	if err := tt.Click(alpha.Title); err != nil {
+		t.Fatal(err)
+	}
+	if !tt.Focused(alpha.Title) {
+		t.Fatal("clicked sidebar item did not receive focus")
+	}
+	// Pages can overlap at a continuation boundary. The repeated destination
+	// must not take focus from an existing row or collide with another button.
+	app.finishLibrary(request, catalog.Page{Items: []catalog.Item{beta, alpha, beta}}, nil)
+	tt.Frame()
+	if !tt.Focused(alpha.Title) {
+		t.Fatal("refresh moved keyboard focus to a different playlist")
+	}
+	tt.Key(0, ui.KeyEnter)
+	if len(opens) != 2 || opens[0] != alpha.Key() || opens[1] != alpha.Key() {
+		t.Fatalf("click then Enter opened %v", opens)
 	}
 }

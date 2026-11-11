@@ -157,7 +157,7 @@ brew upgrade --cask --greedy mreasonyang/taps/ytmgo
 
 ## 播放架构、网络代理与隐私边界
 
-**ytmGO** 是使用 Go 与 **MyGo 0.7.2** 构建的跨平台 YouTube Music 桌面客户端。应用对外品牌显示名统一为 **ytmGO**；仓库名、发行文件前缀、Bundle ID（`si.kyun.ytmgo`）、内部辅助进程标识以及本地用户数据目录保留技术标识 `ytmgo`。
+**ytmGO** 是使用 Go 与 **MyGo 0.8.0** 构建的跨平台 YouTube Music 桌面客户端。应用对外品牌显示名统一为 **ytmGO**；仓库名、发行文件前缀、Bundle ID（`si.kyun.ytmgo`）、内部辅助进程标识以及本地用户数据目录保留技术标识 `ytmgo`。
 
 音乐主窗口采用 Go/MyGo 自绘界面（`ui.View`），控件由 MyGo 工具包绘制，而非各操作系统的标准控件库。Google 登录及未登录/普通账号按需播放验证使用独立的系统 WebView。曲库访问、账号状态核验、媒体格式选择与有界流式传输由 Go 直接处理；音频由 MyGo 输出到系统音频设备，视频仅在打开视频视图时由按需启动的 FFmpeg 解码器渲染。
 

@@ -90,10 +90,15 @@ type pageCursor struct {
 	token      string
 	query      bool
 	trackShelf bool
+	section    PlaylistSection
 	deferred   *pageCursor
 }
 
 func parsePage(response map[string]any) (Page, pageCursor, error) {
+	return parsePageForStream(response, false, PlaylistSectionUnknown)
+}
+
+func parsePageForStream(response map[string]any, likedMusicRoot bool, source PlaylistSection) (Page, pageCursor, error) {
 	page := Page{Items: []Item{}, Shelves: []Shelf{}}
 	contents, hasContents := response["contents"]
 	continuationContents, hasContinuation := response["continuationContents"]
@@ -108,21 +113,22 @@ func parsePage(response map[string]any) (Page, pageCursor, error) {
 	}
 	token := pageCursor{}
 	playlistCursor := pageCursor{}
+	hasTrackShelf := false
 	seen := make(map[string]bool)
-	appendShelf := func(title string, items []Item) {
+	appendShelf := func(title string, items []Item, section PlaylistSection) {
 		if len(items) == 0 {
 			return
 		}
 		// Search item sections are consecutive individual rows. Keep those in
 		// one untitled shelf so the native renderer retains the list layout.
-		if title == "" && len(page.Shelves) > 0 && page.Shelves[len(page.Shelves)-1].Title == "" {
+		if title == "" && len(page.Shelves) > 0 && page.Shelves[len(page.Shelves)-1].Title == "" && page.Shelves[len(page.Shelves)-1].PlaylistSection == section {
 			last := &page.Shelves[len(page.Shelves)-1]
 			last.Items = uniqueItems(append(last.Items, items...))
 		} else {
-			page.Shelves = append(page.Shelves, Shelf{Title: title, Items: items})
+			page.Shelves = append(page.Shelves, Shelf{Title: title, Items: items, PlaylistSection: section})
 		}
 		for _, item := range items {
-			key := itemKey(item)
+			key := item.Key()
 			if !seen[key] && len(page.Items) < maxItems {
 				page.Items = append(page.Items, item)
 				seen[key] = true
@@ -158,7 +164,8 @@ func parsePage(response map[string]any) (Page, pageCursor, error) {
 					// A playlist's section-list cursor loads recommendations;
 					// its own shelf cursor loads the remaining tracks. Keep both,
 					// including when every row on this page is unplayable.
-					if (kind == "musicPlaylistShelfRenderer" || kind == "musicPlaylistShelfContinuation") && playlistCursor.token == "" && origin.token != "" {
+					playlistShelf := kind == "musicPlaylistShelfRenderer" || kind == "musicPlaylistShelfContinuation"
+					if playlistShelf && playlistCursor.token == "" && origin.token != "" {
 						playlistCursor = origin
 						playlistCursor.trackShelf = true
 					}
@@ -180,7 +187,12 @@ func parsePage(response map[string]any) (Page, pageCursor, error) {
 							}
 						}
 					}
-					appendShelf(title, items)
+					section := PlaylistSectionUnknown
+					if playlistShelf && (likedMusicRoot || source == PlaylistSectionTracks) {
+						hasTrackShelf = true
+						section = PlaylistSectionTracks
+					}
+					appendShelf(title, items, section)
 					return
 				}
 			}
@@ -203,7 +215,7 @@ func parsePage(response map[string]any) (Page, pageCursor, error) {
 				walk(header, depth+1)
 			}
 			if items := directItem(node); len(items) > 0 {
-				appendShelf("", items)
+				appendShelf("", items, PlaylistSectionUnknown)
 				return
 			}
 			for _, key := range containerKeys {
@@ -217,6 +229,23 @@ func parsePage(response map[string]any) (Page, pageCursor, error) {
 	walk(contents, 0)
 	walk(continuationContents, 0)
 	walk(actions, 0)
+	if likedMusicRoot || source != PlaylistSectionUnknown {
+		// A playlist shelf owns the tracks, even without a title or cursor.
+		// Its siblings and the outer cursor belong to the extra sections.
+		// Bare continuation rows inherit the cursor that produced them.
+		other := source
+		playlistCursor.section = source
+		if hasTrackShelf {
+			other = PlaylistSectionExtras
+			playlistCursor.section = PlaylistSectionTracks
+		}
+		for i := range page.Shelves {
+			if page.Shelves[i].PlaylistSection == PlaylistSectionUnknown {
+				page.Shelves[i].PlaylistSection = other
+			}
+		}
+		token.section = other
+	}
 	if playlistCursor.token != "" {
 		if token.token != "" && (token.token != playlistCursor.token || token.query != playlistCursor.query) {
 			outer := token
@@ -328,7 +357,7 @@ func uniqueItems(items []Item) []Item {
 	result := make([]Item, 0, len(items))
 	seen := make(map[string]bool)
 	for _, item := range items {
-		key := itemKey(item)
+		key := item.Key()
 		if !seen[key] {
 			result = append(result, item)
 			seen[key] = true
@@ -337,7 +366,8 @@ func uniqueItems(items []Item) []Item {
 	return result
 }
 
-func itemKey(item Item) string {
+// Key identifies an item's playback or browse destination across catalog refreshes.
+func (item Item) Key() string {
 	if item.ID != "" {
 		return "video:" + item.ID
 	}

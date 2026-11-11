@@ -17,11 +17,19 @@ func (a *desktop) restoreCachedLibrary() {
 	a.model.LibraryLoaded, a.model.LibraryCached = true, true
 }
 
-func (a *desktop) cachedLibraryPage() catalog.Page {
+func (a *desktop) libraryDisplayPage() catalog.Page {
 	if a.libraryPage == nil {
 		return catalog.Page{Title: a.tr("shellLibraryTitle")}
 	}
-	page := librarysnapshot.Metadata(*a.libraryPage)
+	// Keep the live page's shelves while revalidating. The disk snapshot
+	// contains only items, which the Library landing page shows as rows.
+	page := *a.libraryPage
+	if len(page.Shelves) == 0 && len(page.Items) > 0 {
+		page.Shelves = []catalog.Shelf{{Items: page.Items}}
+	}
+	if !a.model.SignedIn || a.model.LibraryCached || a.libraryRequest != nil {
+		page.Continuation = ""
+	}
 	page.Title = a.tr("shellLibraryTitle")
 	return page
 }

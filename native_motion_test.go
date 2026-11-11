@@ -2,7 +2,10 @@ package main
 
 import (
 	"fmt"
+	"image"
+	"image/color"
 	"image/png"
+	"math"
 	"os"
 	"path/filepath"
 	"testing"
@@ -268,6 +271,32 @@ func TestOpeningACollectionCarriesItsCover(t *testing.T) {
 	}
 }
 
+func TestNestedCollectionHistoryRestoresCoverSources(t *testing.T) {
+	app := &desktop{model: UIModel{Route: "home"}, historyIndex: -1}
+	app.pushHistory(true)
+	album := nativeCollectionMatch{route: "home", button: 1, id: "album"}
+	playlist := nativeCollectionMatch{route: "browse:album", button: 2, id: "playlist"}
+	for _, cover := range []nativeCollectionMatch{album, playlist} {
+		app.model.openedCover = cover
+		app.model.Route = "browse:" + cover.id
+		app.pushHistory(true)
+	}
+	for _, step := range []struct {
+		delta int
+		want  nativeCollectionMatch
+	}{
+		{-1, album},
+		{-1, nativeCollectionMatch{}},
+		{1, album},
+		{1, playlist},
+	} {
+		app.travel(step.delta)
+		if got := app.model.openedCover; got != step.want {
+			t.Fatalf("cover source on %s: got %+v, want %+v", app.model.Route, got, step.want)
+		}
+	}
+}
+
 // On a narrow window Now Playing floats: it rises from the bottom, where the
 // mini player that opens it is, and sinks back before it goes.
 func TestFloatingNowPlayingRisesAndSinks(t *testing.T) {
@@ -343,5 +372,256 @@ func TestSidebarCollapseNarrows(t *testing.T) {
 	rail := rect(t, tt, a.Tr("shellContent")).X
 	if !between(half, rail, full) {
 		t.Fatalf("the library snapped: the page at %.1f, %.1f a third through, %.1f", full, half, rail)
+	}
+}
+
+// A selected collection also has a large cover in the page header. Its
+// sidebar thumbnail should stay aligned with its neighbors as the rail moves.
+func TestSidebarCollapseKeepsSelectedCoverInRow(t *testing.T) {
+	items := []catalog.Item{
+		{BrowseID: "VLLM", Title: "Liked Music", Artwork: "liked", Kind: "playlist"},
+		{BrowseID: "VLmix", Title: "New Release Mix", Artwork: "mix", Kind: "playlist"},
+		{BrowseID: "album-reference", Title: "Reference album", Artwork: "album", Kind: "album"},
+	}
+	ink := color.RGBA{R: 244, B: 195, A: 255}
+	solid := ui.NewBitmap(tintFill(48, 48, func(_, _ int) color.RGBA { return ink }))
+	check := func(t *testing.T, tt *ui.Tester) {
+		t.Helper()
+		frame := tt.Image()
+		scale := frame.Bounds().Dx() / 1440
+		var firstStart int
+		for i, item := range items {
+			row := rect(t, tt, item.Title)
+			y := int(row.Y+row.H/2) * scale
+			start, end := -1, -1
+			for x := int(row.X) * scale; x < int(row.X+row.W)*scale; x++ {
+				if frame.RGBAAt(x, y) == ink {
+					if start < 0 {
+						start = x
+					}
+					end = x
+				}
+			}
+			width := end - start + 1
+			if start < 0 || width != 48*scale {
+				t.Fatalf("%s cover at x=%d width=%d, want a visible 48 DIP thumbnail", item.Title, start, width)
+			}
+			if i == 0 {
+				firstStart = start
+			} else if start != firstStart {
+				t.Fatalf("%s cover at x=%d, first cover at x=%d", item.Title, start, firstStart)
+			}
+		}
+	}
+	for _, selected := range items[:2] {
+		t.Run(selected.Title, func(t *testing.T) {
+			m, a := nativeViewFixture()
+			m.SignedIn, m.LibraryLoaded, m.LibraryItems = true, true, items
+			a.Artwork = func(_ string, _ int, _ artworkPriority) ui.ImageSource { return solid }
+			a.Open = func(item catalog.Item) {
+				m.Route = "browse:" + item.BrowseID
+				m.Page = catalog.Page{Title: item.Title, Artwork: item.Artwork}
+			}
+			tt := motionTester(m, a, 1440, 900)
+			if err := tt.Click(nativeItemLabel(selected)); err != nil {
+				t.Fatal(err)
+			}
+			if m.Route != "browse:"+selected.BrowseID || m.openedCover.route != "home" || m.openedCover.button == 0 || m.openedCover.id != selected.BrowseID {
+				t.Fatalf("opening sidebar cover reached route %q with source %+v", m.Route, m.openedCover)
+			}
+			tt.Advance(tokenMotionMorph)
+			for _, key := range []string{"shellSidebarCollapse", "shellSidebarExpand"} {
+				if err := tt.Click(a.Tr(key)); err != nil {
+					t.Fatal(err)
+				}
+				check(t, tt)
+				for range 4 {
+					tt.Advance(tokenMotionMorph / 4)
+					check(t, tt)
+				}
+			}
+		})
+	}
+}
+
+// Paint a single collection in an unmistakable color. Reading its bounds from
+// the frame captures the presented position, including the matched animation.
+func collectionMarker(a *ViewActions, width int) func(*ui.Tester, ui.Rect) image.Rectangle {
+	ink := color.RGBA{R: 245, B: 147, A: 255}
+	solid := ui.NewBitmap(tintFill(64, 64, func(_, _ int) color.RGBA { return ink }))
+	a.artworkPeek = func(src string, _ int) ui.ImageSource {
+		if src == "marked-cover" {
+			return solid
+		}
+		return nil
+	}
+	a.Artwork = func(src string, edge int, _ artworkPriority) ui.ImageSource { return a.artworkPeek(src, edge) }
+	return func(tt *ui.Tester, area ui.Rect) image.Rectangle {
+		img := tt.Image()
+		scale := img.Bounds().Dx() / width
+		var bounds image.Rectangle
+		for y := int(area.Y); y < int(area.Y+area.H); y++ {
+			for x := int(area.X); x < int(area.X+area.W); x++ {
+				if img.RGBAAt(x*scale, y*scale) == ink {
+					bounds = bounds.Union(image.Rect(x, y, x+1, y+1))
+				}
+			}
+		}
+		return bounds
+	}
+}
+
+func TestHomeCollectionUsesTheClickedCopy(t *testing.T) {
+	for _, width := range []int{420, 1440} {
+		for _, openTile := range []bool{true, false} {
+			t.Run(fmt.Sprintf("%d/tile=%v", width, openTile), func(t *testing.T) {
+				m, a := nativeViewFixture()
+				item := catalog.Item{Title: "Saved mix", Kind: "playlist", BrowseID: "VLmix", Artwork: "marked-cover"}
+				m.SignedIn, m.LibraryLoaded, m.LibraryItems = true, true, []catalog.Item{item}
+				m.Page = catalog.Page{Title: "Welcome", Shelves: []catalog.Shelf{{Title: "Recommendations", Items: []catalog.Item{item}}}}
+				a.Open = func(it catalog.Item) {
+					m.Route = "browse:" + it.BrowseID
+					m.Page = catalog.Page{Title: it.Title, Artwork: it.Artwork}
+				}
+				marker := collectionMarker(&a, width)
+				tt := motionTester(m, a, width, 940)
+				tt.Advance(tokenMotionMorph)
+				page := rect(t, tt, a.Tr("shellContent"))
+				heading := rect(t, tt, "Recommendations")
+				area := page
+				if openTile {
+					area.H = heading.Y - page.Y
+				} else {
+					area.Y = heading.Y
+					area.H = page.Y + page.H - area.Y
+				}
+				clicked := marker(tt, area)
+				if clicked.Empty() {
+					t.Fatal("expected a cover to click")
+				}
+				tt.ClickAt(float32(clicked.Min.X+clicked.Dx()/2), float32(clicked.Min.Y+clicked.Dy()/2))
+				if m.Route != "browse:"+item.BrowseID {
+					t.Fatal("the collection did not open")
+				}
+				if start := marker(tt, page); start != clicked {
+					t.Fatalf("header started at %v, clicked %v", start, clicked)
+				}
+				tt.Advance(tokenMotionMorph)
+				if end := marker(tt, page); end == clicked || end.Empty() {
+					t.Fatalf("header did not arrive at its own bounds: %v", end)
+				}
+			})
+		}
+	}
+}
+
+func TestSidebarCollectionOnlyMatchesAcrossNavigation(t *testing.T) {
+	m, a := nativeViewFixture()
+	item := catalog.Item{Title: "Liked Music", Kind: "playlist", BrowseID: "VLLM", Artwork: "marked-cover"}
+	other := catalog.Item{Title: "Album", Kind: "album", BrowseID: "MPREalbum"}
+	m.SignedIn, m.LibraryLoaded, m.LibraryItems = true, true, []catalog.Item{item, other}
+	home := m.Page
+	a.Open = func(it catalog.Item) {
+		m.Route = "browse:" + it.BrowseID
+		m.Page = catalog.Page{Title: it.Title, Artwork: it.Artwork}
+	}
+	a.Back = func() { m.Route, m.Page, m.openedCover = "home", home, nativeCollectionMatch{} }
+	marker := collectionMarker(&a, 1440)
+	tt := motionTester(m, a, 1440, 940)
+	tt.Advance(tokenMotionMorph)
+	click := func(label string) {
+		t.Helper()
+		if err := tt.Click(label); err != nil {
+			t.Fatal(err)
+		}
+	}
+	page := rect(t, tt, a.Tr("shellContent"))
+	sidebar := rect(t, tt, a.Tr("shellLibraryRegion"))
+	thumb := marker(tt, sidebar)
+	if thumb.Dx() != 48 || thumb.Dy() != 48 {
+		t.Fatalf("initial thumbnail: %v", thumb)
+	}
+	click(nativeItemLabel(item))
+	if !marker(tt, page).Empty() {
+		t.Fatal("header jumped to its destination on the opening frame")
+	}
+	tt.Advance(tokenMotionMorph / 2)
+	half := marker(tt, page)
+	tt.Advance(tokenMotionMorph)
+	if end := marker(tt, page); half.Empty() || half == end || end.Empty() {
+		t.Fatalf("header transition: halfway %v, settled %v", half, end)
+	}
+
+	click(a.Tr("shellFilterAlbums"))
+	tt.Advance(tokenMotionMorph)
+	click(a.Tr("shellFilterClear"))
+	for range 5 {
+		if got := marker(tt, sidebar); got != thumb {
+			t.Fatalf("restored sidebar thumbnail: %v, expected %v", got, thumb)
+		}
+		tt.Advance(tokenMotionMorph / 4)
+	}
+
+	click(a.Tr("shellBack"))
+	if got := marker(tt, sidebar); got == thumb {
+		t.Fatal("Back jumped straight to the sidebar thumbnail")
+	}
+	tt.Advance(tokenMotionMorph / 2)
+	half = marker(tt, sidebar)
+	tt.Advance(tokenMotionMorph)
+	if end := marker(tt, sidebar); half.Empty() || half == end || end != thumb {
+		t.Fatalf("return transition: halfway %v, settled %v, expected %v", half, end, thumb)
+	}
+}
+
+func TestClosingDockWithReducedMotionFillsPageImmediately(t *testing.T) {
+	m, a := nativeViewFixture()
+	tt := motionTester(m, a, 1440, 900)
+	tt.SetPreferences(ui.Preferences{ReduceMotion: true})
+	pageWidth := func() float32 { return rect(t, tt, a.Tr("shellContent")).W }
+	wide := pageWidth()
+	m.Panel = true
+	tt.Frame()
+	if pageWidth() >= wide {
+		t.Fatal("expected the dock to occupy page space")
+	}
+	if err := tt.Click(a.Tr("shellClosePanel")); err != nil {
+		t.Fatal(err)
+	}
+	if got := pageWidth(); got != wide {
+		t.Fatalf("page width after closing: %.0f, want %.0f", got, wide)
+	}
+}
+
+func TestFloatingNowPlayingReversesFromVisiblePosition(t *testing.T) {
+	m, a := nativeViewFixture()
+	tt := motionTester(m, a, 420, 860)
+	closeLabel := a.Tr("shellClosePanel")
+	if err := tt.Click(a.Tr("shellOpenNowPlaying")); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(32 * time.Millisecond)
+	tt.Frame()
+	position := func() float32 { return rect(t, tt, closeLabel).Y }
+	opening := position()
+	if err := tt.Click(closeLabel); err != nil {
+		t.Fatal(err)
+	}
+	closing := position()
+	if math.Abs(float64(closing-opening)) > 1 {
+		t.Fatalf("close jumped from %.1f to %.1f", opening, closing)
+	}
+	tt.Advance(16 * time.Millisecond)
+	tt.Frame()
+	duringClose := position()
+	// The application menu can reopen the sheet before it finishes closing.
+	m.Panel = true
+	tt.Frame()
+	if reopened := position(); math.Abs(float64(reopened-duringClose)) > 1 {
+		t.Fatalf("reopen jumped from %.1f to %.1f", duringClose, reopened)
+	}
+	tt.Advance(tokenMotionBase)
+	if position() >= opening {
+		t.Fatal("the reopened panel did not arrive")
 	}
 }

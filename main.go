@@ -28,6 +28,9 @@ type historyEntry struct {
 	route, query string
 	params       string
 	page         catalog.Page
+	likedChanges likedMusicChanges
+	openedCover  nativeCollectionMatch
+	needsReload  bool
 }
 
 // UI state belongs to the main thread. Workers deliver results through post;
@@ -65,6 +68,7 @@ type desktop struct {
 	resumeCancel                    context.CancelFunc
 	preparedID                      string
 	likeCancel                      context.CancelFunc
+	likedChanges                    likedMusicChanges // edits since the current Liked Music page was requested
 	libraryRequest                  *libraryRequest
 	librarySnapshotPath             string
 	libraryScope                    string

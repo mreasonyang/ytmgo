@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -318,6 +319,10 @@ func artworkDiskInventory(t *testing.T, dir string) (int, int64, int) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	unit, err := artworkAllocationUnit(dir)
+	if err != nil || unit <= 0 {
+		t.Fatal("disk inventory allocation unit unavailable")
+	}
 	groups := map[string]bool{}
 	var total int64
 	temps := 0
@@ -338,7 +343,7 @@ func artworkDiskInventory(t *testing.T, dir string) (int, int64, int) {
 		if strings.HasPrefix(e.Name(), ".write-") {
 			temps++
 		}
-		total += artworkFileCharge(info)
+		total += max((info.Size()+unit-1)/unit*unit, artworkFileCharge(info))
 		if g, ok := artworkRecordName(e.Name()); ok {
 			groups[g] = true
 		}
@@ -346,46 +351,188 @@ func artworkDiskInventory(t *testing.T, dir string) (int, int64, int) {
 	return len(groups), total, temps
 }
 
-func TestArtworkDiskBoundsURLGroupsBytesAndLowWater(t *testing.T) {
-	for _, tc := range []struct {
-		name        string
-		count, size int
-	}{
-		{"bytes", 17, artworkDownloadLimit}, {"groups", artworkDiskEntries + 1, 1},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
+func TestArtworkDiskRetainsMoreThan512URLsBelowByteQuota(t *testing.T) {
+	if artworkDiskBudget != 512<<20 {
+		t.Fatal("default artwork disk budget is not 512 MiB")
+	}
+	dir := t.TempDir()
+	d := &artworkDisk{dir: dir, freeSpace: func(string) (uint64, error) { return 1 << 40, nil }}
+	const count = 600
+	raw := func(i int) string { return fmt.Sprintf("https://i.ytimg.com/byte-retention-%04d", i) }
+	body := func(i int) []byte { return []byte(fmt.Sprintf("complete-body-%04d", i)) }
+	started := time.Now()
+	for i := range count {
+		if setArtworkRecord(d, raw(i), "1", body(i)) != nil {
+			t.Fatalf("record admission failed at %d", i)
+		}
+	}
+	elapsed := time.Since(started)
+	groups, total, temps := artworkDiskInventory(t, dir)
+	if groups != count || total >= artworkDiskBudget || temps != 0 {
+		t.Fatalf("byte-bounded retention lost URLs: groups=%d bytes=%d temporary=%d", groups, total, temps)
+	}
+	for _, i := range []int{0, count - 1} {
+		got, err := d.Get(raw(i) + "#1")
+		if err != nil || !bytes.Equal(got, body(i)) {
+			t.Fatalf("below-quota record %d was evicted or changed", i)
+		}
+		index, err := d.Get(raw(i))
+		var refs []json.RawMessage
+		if err != nil || json.Unmarshal(index, &refs) != nil || len(refs) != 1 {
+			t.Fatal("retained URL lost its representation index")
+		}
+	}
+	t.Logf("retained_urls=%d charged_bytes=%d batch_write_ms=%.3f first_and_last_readable=true", groups, total, float64(elapsed.Microseconds())/1000)
+}
+
+// Write a valid header/index and a sparse body. The real quota charges logical
+// size as well as allocated blocks, without physically writing 512 MiB.
+func seedArtworkSparseRecord(t *testing.T, dir, raw string, size int64, used time.Time) {
+	t.Helper()
+	row, err := json.Marshal(map[string]string{"id": raw + "#1"})
+	if err != nil || size <= 4+int64(len(row)) {
+		t.Fatal("sparse reference encoding failed")
+	}
+	path := filepath.Join(dir, artworkDiskKey(raw)+".1")
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+	if err != nil {
+		t.Fatal("sparse record create failed")
+	}
+	var header [4]byte
+	binary.BigEndian.PutUint32(header[:], uint32(len(row)))
+	_, writeErr := io.Copy(f, io.MultiReader(bytes.NewReader(header[:]), bytes.NewReader(row), strings.NewReader("sparse-body")))
+	truncateErr, closeErr := f.Truncate(size), f.Close()
+	if writeErr != nil || truncateErr != nil || closeErr != nil || os.Chtimes(path, used, used) != nil {
+		t.Fatal("sparse record write or timestamp failed")
+	}
+}
+
+func TestArtworkDisk512MiBQuotaUsesLRUAndLowWater(t *testing.T) {
+	for _, replace := range []bool{false, true} {
+		name := "new-url"
+		if replace {
+			name = "atomic-replacement"
+		}
+		t.Run(name, func(t *testing.T) {
 			dir := t.TempDir()
-			d := &artworkDisk{dir: dir}
-			body := make([]byte, tc.size)
-			crossed := false
-			for i := range tc.count {
-				raw := fmt.Sprintf("https://i.ytimg.com/quota-%04d", i)
-				if err := setArtworkRecord(d, raw, "1", body); err != nil {
-					t.Fatalf("public record was not admitted at %d", i)
-				}
-				groups, total, temps := artworkDiskInventory(t, dir)
-				if total > artworkDiskBudget || groups > artworkDiskEntries || temps != 0 {
-					t.Fatal("committed cache exceeded disk quota or left a temp file")
-				}
-				if tc.name == "groups" && i == artworkDiskEntries {
-					if groups > artworkDiskEntries*4/5 {
-						t.Fatal("URL eviction did not reach 80 percent low-water")
-					}
-					crossed = true
-				}
-				if tc.name == "bytes" && i > 0 && total < int64(i+1)*artworkWriteCharge(int64(tc.size)) {
-					if !crossed && total > artworkDiskBudget*4/5 {
-						t.Fatal("byte eviction did not reach 80 percent low-water")
-					}
-					crossed = true
-				}
-				got, err := d.Get(raw + "#1")
-				if err != nil || !bytes.Equal(got, body) {
-					t.Fatal("newest committed response disappeared")
+			d := &artworkDisk{dir: dir, freeSpace: func(string) (uint64, error) { return 1 << 40, nil }}
+			lock, err := d.lock(true)
+			if err != nil {
+				t.Fatal("sparse fixture lock initialization failed")
+			}
+			lock.Close()
+			const size = int64(128 << 10)
+			const count = (512 << 20) / size
+			unit, err := artworkAllocationUnit(dir)
+			if err != nil || unit <= 0 || size%unit != 0 {
+				t.Fatal("sparse fixture allocation geometry unavailable")
+			}
+			raw := func(i int) string { return fmt.Sprintf("https://i.ytimg.com/sparse-quota-%04d", i) }
+			old := time.Now().Add(-24 * time.Hour)
+			for i := range int(count) {
+				seedArtworkSparseRecord(t, dir, raw(i), size, old.Add(time.Duration(i)*time.Second))
+			}
+			groups, before, temps := artworkDiskInventory(t, dir)
+			if int64(groups) != count || before != 512<<20 || temps != 0 {
+				t.Fatalf("fixture did not fill real quota: groups=%d bytes=%d", groups, before)
+			}
+			readStarted := time.Now()
+			index, err := d.Get(raw(0))
+			var refs []artworkRef
+			if err != nil || json.Unmarshal(index, &refs) != nil || len(refs) != 1 || refs[0].ID != raw(0)+"#1" {
+				t.Fatal("sparse first index unreadable")
+			}
+			got, err := d.Get(refs[0].ID)
+			readElapsed := time.Since(readStarted)
+			if err != nil || !bytes.HasPrefix(got, []byte("sparse-body")) {
+				t.Fatal("sparse first body unreadable")
+			}
+			// Reading makes the first-created URL recent; group 1 is now LRU.
+			incoming := "https://i.ytimg.com/sparse-new"
+			if replace {
+				incoming = raw(0)
+			}
+			body := []byte("new complete replacement body")
+			writeStarted := time.Now()
+			if setArtworkRecord(d, incoming, "1", body) != nil {
+				t.Fatal("cross-quota atomic admission failed")
+			}
+			writeElapsed := time.Since(writeStarted)
+			groups, after, temps := artworkDiskInventory(t, dir)
+			if after > artworkDiskBudget*4/5 || temps != 0 {
+				t.Fatalf("quota crossing missed low-water: bytes=%d temporary=%d", after, temps)
+			}
+			wantRemoved := int((before + unit - artworkDiskBudget*4/5 + size - 1) / size)
+			wantGroups := int(count) - wantRemoved
+			if !replace {
+				wantGroups++
+			}
+			if groups != wantGroups {
+				t.Fatalf("LRU removed wrong number of URL groups: got=%d want=%d", groups, wantGroups)
+			}
+			for i := 1; i <= wantRemoved; i++ {
+				if _, err := os.Stat(filepath.Join(dir, artworkDiskKey(raw(i))+".1")); !os.IsNotExist(err) {
+					t.Fatalf("cold URL %d survived older than retained URLs", i)
 				}
 			}
-			if !crossed {
-				t.Fatal("fixture did not cross the requested quota")
+			for _, i := range []int{0, wantRemoved + 1, int(count) - 1} {
+				data, err := d.Get(raw(i) + "#1")
+				if err != nil {
+					t.Fatalf("recent or next-oldest URL %d was evicted", i)
+				}
+				if i == 0 && replace {
+					if !bytes.Equal(data, body) {
+						t.Fatal("atomic replacement retained old body")
+					}
+				} else if !bytes.HasPrefix(data, []byte("sparse-body")) {
+					t.Fatal("retained sparse body changed")
+				}
+			}
+			data, err := d.Get(incoming + "#1")
+			if err != nil || !bytes.Equal(data, body) {
+				t.Fatal("newest complete body missing")
+			}
+			belowStarted := time.Now()
+			if setArtworkRecord(d, "https://i.ytimg.com/below-budget-scan", "1", body) != nil {
+				t.Fatal("below-budget insert failed in populated cache")
+			}
+			belowElapsed := time.Since(belowStarted)
+			t.Logf("mode=%s start_urls=%d start_bytes=%d retained_urls=%d retained_bytes=%d removed_urls=%d index_body_read_ms=%.3f quota_write_ms=%.3f below_budget_write_ms=%.3f", name, count, before, groups, after, wantRemoved, float64(readElapsed.Microseconds())/1000, float64(writeElapsed.Microseconds())/1000, float64(belowElapsed.Microseconds())/1000)
+		})
+	}
+}
+
+func TestArtworkDiskReserveIncludesPendingWrite(t *testing.T) {
+	for _, mode := range []string{"reserve-only", "one-byte-short", "exact-headroom"} {
+		t.Run(mode, func(t *testing.T) {
+			dir := t.TempDir()
+			const raw = "https://i.ytimg.com/exact-free-space"
+			body := []byte("complete reserved response")
+			row, _ := json.Marshal(map[string]string{"id": raw + "#1"})
+			unit, err := artworkAllocationUnit(dir)
+			if err != nil || unit <= 0 {
+				t.Fatal("allocation unit unavailable")
+			}
+			need := (int64(4+len(row)+len(body)) + unit - 1) / unit * unit
+			need = max(need, artworkWriteCharge(int64(4+len(row)+len(body))))
+			free := uint64(artworkDiskReserve) + uint64(need)
+			if mode == "reserve-only" {
+				free = artworkDiskReserve
+			} else if mode == "one-byte-short" {
+				free--
+			}
+			d := &artworkDisk{dir: dir, freeSpace: func(string) (uint64, error) { return free, nil }}
+			err = setArtworkRecord(d, raw, "1", body)
+			groups, total, temps := artworkDiskInventory(t, dir)
+			if mode == "exact-headroom" {
+				if err != nil || groups != 1 || total != need {
+					t.Fatal("exact reserve plus write headroom was rejected")
+				}
+			} else if err == nil || groups != 0 || total != 0 {
+				t.Fatal("write consumed the protected free-space reserve")
+			}
+			if temps != 0 || d.pendingBytes != 0 {
+				t.Fatal("admission retained temporary or pending data")
 			}
 		})
 	}

@@ -23,8 +23,7 @@ import (
 )
 
 const (
-	artworkDiskBudget     = 64 << 20
-	artworkDiskEntries    = 512
+	artworkDiskBudget     = 512 << 20
 	artworkDiskReserve    = 256 << 20
 	artworkDiskEntryLimit = artworkDownloadLimit + 64<<10
 	artworkRefLimit       = 16 << 10
@@ -310,8 +309,8 @@ type artworkDiskGroup struct {
 	used  time.Time
 }
 
-// Charge both old and incoming files during atomic replacement. Limits count
-// URL groups, whereas bytes cover every representation and its reference.
+// Charge both old and incoming files during atomic replacement. Each format
+// and Vary representation contributes its allocated bytes to the same limit.
 func (d *artworkDisk) makeRoom(incoming string, need int64) bool {
 	entries, err := os.ReadDir(d.dir)
 	if err != nil {
@@ -366,10 +365,6 @@ func (d *artworkDisk) makeRoom(incoming string, need int64) bool {
 			g.used = info.ModTime()
 		}
 	}
-	count := len(groups)
-	if groups[incoming] == nil {
-		count++
-	}
 	freeSpace := d.freeSpace
 	if freeSpace == nil {
 		freeSpace = artworkFreeSpace
@@ -380,19 +375,15 @@ func (d *artworkDisk) makeRoom(incoming string, need int64) bool {
 	}
 	need = max(charge(need), artworkWriteCharge(need))
 	required := uint64(need) + artworkDiskReserve
-	if total+need <= artworkDiskBudget && count <= artworkDiskEntries && free >= required {
+	if total+need <= artworkDiskBudget && free >= required {
 		return true
 	}
 
-	// Recover headroom in whichever quota triggered eviction. Re-read actual
+	// Recover headroom when crossing the byte limit. Re-read actual
 	// volume space after unlinking: snapshots and open handles can retain blocks.
 	byteTarget := int64(artworkDiskBudget)
-	countTarget := artworkDiskEntries
 	if total+need > byteTarget {
 		byteTarget = byteTarget * 4 / 5
-	}
-	if count > countTarget {
-		countTarget = countTarget * 4 / 5
 	}
 	oldest := make([]*artworkDiskGroup, 0, len(groups))
 	for _, g := range groups {
@@ -408,14 +399,13 @@ func (d *artworkDisk) makeRoom(incoming string, need int64) bool {
 			}
 		}
 		total -= g.size
-		count--
 		if free < required {
 			free, err = freeSpace(d.dir)
 			if err != nil {
 				return false
 			}
 		}
-		if total+need <= byteTarget && count <= countTarget && free >= required {
+		if total+need <= byteTarget && free >= required {
 			return true
 		}
 	}

@@ -170,8 +170,8 @@ in `native_style.go`, display-title styling in `native_fonts.go` (system font on
   and records in place when clicked; recording ends on a chord, Escape,
   Cancel or when focus leaves it. Off, the row offers Record shortcut by
   name. "View all" opens Keyboard shortcuts, which shares the sheet, spells
-  chords for the platform, and whose Configure returns with the Keyboard card
-  in view. Changes redraw the current native window and preserve playback.
+  chords for the platform, and whose Configure, or Back to Settings when it
+  was opened from there, returns with the Keyboard card in view. Changes redraw the current native window and preserve playback.
 - Menus, tray, global shortcut and OS Now Playing send commands to the same Go
   controller. Closing the main window on macOS hides it; quitting releases
   the native player, decoder and resolver helpers.

@@ -54,6 +54,7 @@ type UIModel struct {
 	settingsScroll, shortcutsScroll ui.ScrollState
 	shortcutFieldFocused            bool // the recorder has had the focus
 	revealShortcut                  bool // bring the global shortcut row into view
+	shortcutsFromSettings           bool // Keyboard shortcuts was opened from Settings: it leads back
 }
 
 // Saved-account restoration as the view presents it; account.go owns the

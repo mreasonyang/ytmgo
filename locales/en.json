@@ -386,6 +386,10 @@
   "@shellSettings": {
     "description": "Icon button and popover name."
   },
+  "shellBackToSettings": "Back to Settings",
+  "@shellBackToSettings": {
+    "description": "Accessible name of the back button leading the Keyboard shortcuts sheet when it was opened from Settings."
+  },
   "shellAppMenu": "Application menu",
   "@shellAppMenu": {
     "description": "Icon button (Linux, Windows): opens the menu bar's menus, which the window's custom title bar has no room for."

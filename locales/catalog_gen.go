@@ -1367,6 +1367,22 @@ func (msgs Messages) ShellSettings() string {
 	return Catalog.Format(msgs.locale, "shellSettings", nil)
 }
 
+// ShellBackToSettings says "Back to Settings"
+// in the language the app shows.
+//
+// Accessible name of the back button leading the Keyboard shortcuts sheet
+// when it was opened from Settings.
+func ShellBackToSettings() string { return In(i18n.Locale()).ShellBackToSettings() }
+
+// ShellBackToSettings says "Back to Settings"
+// in the language of msgs.
+//
+// Accessible name of the back button leading the Keyboard shortcuts sheet
+// when it was opened from Settings.
+func (msgs Messages) ShellBackToSettings() string {
+	return Catalog.Format(msgs.locale, "shellBackToSettings", nil)
+}
+
 // ShellAppMenu says "Application menu"
 // in the language the app shows.
 //

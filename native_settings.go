@@ -32,8 +32,10 @@ func nativeLanguageTitle(a ViewActions, id string) string {
 // nativeSheet is the frame Settings and Keyboard shortcuts share: a card over
 // the dimmed window with a fixed title bar and a scrolling body. A hairline
 // under the title shows content scrolled beneath it and a fade at the bottom
-// shows there is more; each sheet opens at its top.
-func nativeSheet(c *ui.Context, open *bool, scroll *ui.ScrollState, title string, a ViewActions, p nativePalette, width, height, maxWidth float32, body func(narrow bool)) {
+// shows there is more; each sheet opens at its top. A sheet opened from
+// another has back, a button leading its title bar named backLabel, which
+// returns there; Close, Escape and a click outside close it.
+func nativeSheet(c *ui.Context, open *bool, scroll *ui.ScrollState, title string, a ViewActions, p nativePalette, width, height, maxWidth float32, back func(), backLabel string, body func(narrow bool)) {
 	if !*open {
 		scroll.Y = 0
 		return
@@ -58,7 +60,14 @@ func nativeSheet(c *ui.Context, open *bool, scroll *ui.ScrollState, title string
 			}
 		}
 		panel.Children(func() {
-			ui.Row(c).Shrink(0).Padding(24, 16, 12, 24).AlignItems(ui.Center).Children(func() {
+			bar := ui.Row(c).Shrink(0).Padding(24, 16, 12, 24).AlignItems(ui.Center)
+			if back != nil {
+				bar.PaddingStart(16).Gap(8)
+			}
+			bar.Children(func() {
+				if back != nil && nativeIconButton(c, "back", backLabel, p, false, 36).Clicked() {
+					back()
+				}
 				nativeDisplay(ui.Text(c, title).FontSize(titleSize).Grow(1).MinWidth(0).MaxLines(1).Ellipsis("…"), title, titleSize)
 				if nativeIconButton(c, "close", a.Tr("shellClose"), p, false, 36).Clicked() {
 					*open = false
@@ -161,7 +170,7 @@ func nativeLinkButton(c *ui.Context, label string, p nativePalette, icon string)
 }
 
 func nativeSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {
-	nativeSheet(c, &m.Settings, &m.settingsScroll, a.Tr("shellSettings"), a, p, width, height, nativeSettingsWidth, func(narrow bool) {
+	nativeSheet(c, &m.Settings, &m.settingsScroll, a.Tr("shellSettings"), a, p, width, height, nativeSettingsWidth, nil, "", func(narrow bool) {
 		nativeSettingsGroup(c, p, a.Tr("menuAccount"), 64, func() { nativeAccountSettings(c, m, a, p, narrow) }, nativeSignOutRow(c, m, a, p))
 		nativeSettingsGroup(c, p, a.Tr("nativeSettingsGeneral"), 64,
 			func() {
@@ -184,6 +193,7 @@ func nativeSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, w
 					if nativeLinkButton(c, a.Tr("nativeSettingsViewAll"), p, "forward").Clicked() {
 						m.Settings = false
 						m.Shortcuts = true
+						m.shortcutsFromSettings = true
 					}
 				})
 			})
@@ -378,7 +388,16 @@ func nativeLanguageControl(c *ui.Context, m *UIModel, a ViewActions, p nativePal
 // nativeShortcuts lists the in-app shortcuts beside the global one, which
 // Settings configures.
 func nativeShortcuts(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {
-	nativeSheet(c, &m.Shortcuts, &m.shortcutsScroll, a.Tr("shellShortcuts"), a, p, width, height, nativeShortcutsWidth, func(narrow bool) {
+	if !m.Shortcuts {
+		m.shortcutsFromSettings = false
+	}
+	// Opened from Settings, the sheet leads back there, to the Keyboard card
+	// it was opened from; from the Help menu there is nothing to go back to.
+	var back func()
+	if m.shortcutsFromSettings {
+		back = func() { nativeShortcutsToSettings(m) }
+	}
+	nativeSheet(c, &m.Shortcuts, &m.shortcutsScroll, a.Tr("shellShortcuts"), a, p, width, height, nativeShortcutsWidth, back, a.Tr("shellBackToSettings"), func(narrow bool) {
 		ui.Text(c, a.Tr("nativeShortcutLocalHint")).FontSize(tokenSizeMeta).LineHeight(1.5).PaddingX(4).TextColor(p.secondary)
 		nativeSettingsGroup(c, p, "", 64, func() {
 			nativeSettingRow(c, p, narrow, "play", a.Tr("nativeShortcutGlobal"), "", func() {
@@ -388,9 +407,7 @@ func nativeShortcuts(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 					nativeKeycaps(c, p, nativeShortcutValue(m, a))
 				}
 				if nativeLinkButton(c, a.Tr("nativeShortcutConfigure"), p, "forward").Clicked() {
-					m.Shortcuts = false
-					m.Settings = true
-					m.revealShortcut = true
+					nativeShortcutsToSettings(m)
 				}
 			})
 		})
@@ -405,6 +422,14 @@ func nativeShortcuts(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 		}
 		nativeSettingsGroup(c, p, "", 16, rows...)
 	})
+}
+
+// nativeShortcutsToSettings leaves Keyboard shortcuts for Settings, with
+// its Keyboard card in view.
+func nativeShortcutsToSettings(m *UIModel) {
+	m.Shortcuts, m.shortcutsFromSettings = false, false
+	m.Settings = true
+	m.revealShortcut = true
 }
 
 // nativeLocalChord spells in-app accelerators, " / " between alternatives.

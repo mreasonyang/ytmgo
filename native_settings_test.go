@@ -166,3 +166,33 @@ func TestShortcutDisplayPlatformOrder(t *testing.T) {
 		t.Fatal("⌘ shown off macOS")
 	}
 }
+
+// Keyboard shortcuts opened from Settings leads back there, to the Keyboard
+// card; opened from the Help menu it has nothing to go back to.
+func TestNativeShortcutsLeadBackToSettings(t *testing.T) {
+	m, a, tt := nativeSettingsFixture(1280, 820)
+	tt.Frame()
+	if err := tt.Click(a.Tr("nativeSettingsViewAll")); err != nil {
+		t.Fatal(err)
+	}
+	if m.Settings || !m.Shortcuts {
+		t.Fatal("View all did not open Keyboard shortcuts")
+	}
+	if err := tt.Click(a.Tr("shellBackToSettings")); err != nil {
+		t.Fatalf("Keyboard shortcuts opened from Settings has no way back: %v", err)
+	}
+	if !m.Settings || m.Shortcuts {
+		t.Fatalf("Back did not return to Settings: settings=%v shortcuts=%v", m.Settings, m.Shortcuts)
+	}
+	tt.Frame()
+	if r, ok := tt.Find(a.Tr("nativeSettingsViewAll")); !ok || r.Y+r.H > 820-40 {
+		t.Fatalf("Settings did not come back to its Keyboard card: %v %v", r, ok)
+	}
+
+	// From the Help menu: the sheet alone, with no Back.
+	m.Settings, m.Shortcuts = false, true
+	tt.Frame()
+	if _, ok := tt.Find(a.Tr("shellBackToSettings")); ok {
+		t.Fatal("Keyboard shortcuts from the Help menu offers Back to nothing")
+	}
+}

@@ -2423,17 +2423,15 @@ func nativePanelTabs(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 		}
 		if !m.Immersive && !m.Video && m.selectedPanelTab() == "lyrics" {
 			ui.Spacer(c)
-			// The lyrics card grows over the cover, or gives the space back.
-			// Its glyph says which, so it needs no active dot; it sits in the
-			// chips' row in the chips' style, part of that control row.
-			icon, label := "grow-vertical", "nativeLyricsExpand"
+			// The lyrics card rises over the cover, or gives the room back:
+			// its glyph points the way the card's top edge will move, so it
+			// reads as this card's control, not a second "expand" beside
+			// immersive mode's. A plain icon button, as the panel's others.
+			icon, label := "chevrons-up", "nativeLyricsExpand"
 			if m.LyricsExpanded {
-				icon, label = "shrink-vertical", "nativeLyricsRestore"
+				icon, label = "chevrons-down", "nativeLyricsRestore"
 			}
-			b := nativeIconButton(c.Key("lyrics-layout"), icon, a.Tr(label), p, false, tokenProductChip).TextColor(p.text).Background(p.hover)
-			if b.Hovered() {
-				b.Background(p.press)
-			}
+			b := nativeIconButton(c.Key("lyrics-layout"), icon, a.Tr(label), p, false, tokenProductChip)
 			if b.Disabled(a.SetLyricsExpanded == nil).Clicked() {
 				a.SetLyricsExpanded(!m.LyricsExpanded)
 			}

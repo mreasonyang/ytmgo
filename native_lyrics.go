@@ -165,7 +165,9 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 		state.viewportCenter = visible.Y - view.Y + visible.H/2
 		state.releaseDrag(m, a, scroll)
 		if nativeLyricsCanSeek(m, a) {
-			nativeTip(c, scroll.Cursor(ui.CursorGrab), a.Tr("nativeLyricsDragHint"), p)
+			// The grab cursor says it drags; a tip over the lyrics would cover
+			// the chips above them as the reader rests on a line.
+			scroll.Cursor(ui.CursorGrab).Description(a.Tr("nativeLyricsDragHint"))
 			if state.drag.pressed {
 				scroll.Cursor(ui.CursorGrabbing)
 			}

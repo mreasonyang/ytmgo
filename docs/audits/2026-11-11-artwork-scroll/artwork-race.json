@@ -1,0 +1,28 @@
+{
+  "command": [
+    "go",
+    "test",
+    "-race",
+    "-json",
+    "-run",
+    "^TestArtwork",
+    "-count=1",
+    "-timeout=120s",
+    "."
+  ],
+  "package_count": 1,
+  "exit_code": 0,
+  "elapsed_seconds": 41.797,
+  "passed_tests": 79,
+  "skipped_tests": 1,
+  "diagnostic_categories": [],
+  "race_source_locations": [],
+  "failed_tests": [],
+  "package_results": [
+    {
+      "Action": "pass",
+      "Package": "ytmgo",
+      "Elapsed": 39.403
+    }
+  ]
+}

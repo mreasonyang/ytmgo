@@ -2,130 +2,163 @@ package main
 
 import (
 	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
-	"strconv"
+	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
 
-func TestArtworkDiskRequiresPublicFreshness(t *testing.T) {
-	start := time.Now().UTC().Truncate(time.Second)
-	header := http.Header{"Cache-Control": {"public, max-age=7200"}, "Age": {"900"}, "Date": {start.Add(-2 * time.Hour).Format(http.TimeFormat)}}
-	if got := artworkFreshUntil(header, start); !got.Equal(start) {
-		t.Fatal("origin date extended cache lifetime")
+func artworkHTTPResponse(data []byte, headers http.Header) *http.Response {
+	return &http.Response{StatusCode: 200, Proto: "HTTP/1.1", ProtoMajor: 1, ProtoMinor: 1, Header: headers, Body: io.NopCloser(bytes.NewReader(data)), ContentLength: int64(len(data))}
+}
+
+// Use a fresh loader to test persisted HTTP metadata, not the decoded pool.
+func loadHTTPArtwork(t *testing.T, dir, raw string, upstream artworkTransport) *artworkCache {
+	t.Helper()
+	c := artworkTestCache(t, nil)
+	c.disk = &artworkDisk{dir: dir}
+	c.client.Transport = upstream
+	requestTestArtwork(c, raw, 384)
+	c.workers.Wait()
+	if e := c.entry(artRequest{artworkRequestAt(raw, 384), 384}); e == nil || e.bitmap == nil {
+		t.Fatal("HTTP cache did not produce a decoded image")
 	}
-	header.Del("Date")
-	if got := artworkFreshUntil(header, start); !got.Equal(start.Add(105 * time.Minute)) {
-		t.Fatal("upstream age extended cache lifetime")
-	}
-	for _, change := range []struct{ field, value string }{
-		{"Age", "7200"}, {"Age", "invalid"}, {"Cache-Control", "max-age=7200"},
-		{"Cache-Control", "public, no-store, max-age=7200"}, {"Cache-Control", "public, private, max-age=7200"},
-		{"Cache-Control", "public, no-cache, max-age=7200"}, {"Cache-Control", "public, max-age=4, max-age=40"},
-		{"Cache-Control", "public, max-age=oops"}, {"Vary", "*"}, {"Vary", "Cookie"},
-		{"Vary", "Origin, Accept-Language"}, {"Set-Cookie", ""},
-	} {
-		h := header.Clone()
-		h.Set(change.field, change.value)
-		if artworkFreshUntil(h, start).After(start) {
-			t.Fatalf("unexpected freshness for %s", change.field)
-		}
-	}
-	header.Set("Cache-Control", "public, max-age=604800")
-	header.Set("Vary", "Origin, Accept-Encoding")
-	if got := artworkFreshUntil(header, start); !got.Equal(start.Add(artworkDiskMaxAge)) {
-		t.Fatal("local freshness limit not applied")
+	return c
+}
+
+func TestArtworkHTTPValidatorsAnd304(t *testing.T) {
+	for _, validator := range []string{"etag", "last-modified"} {
+		t.Run(validator, func(t *testing.T) {
+			dir := t.TempDir()
+			data := artworkTestPNG(t, 384, 192)
+			const raw = "https://i.ytimg.com/vi/synthetic/hqdefault.jpg"
+			requests, bodies := 0, 0
+			modified := time.Now().Add(-time.Hour).UTC().Format(http.TimeFormat)
+			upstream := artworkTransport(func(req *http.Request) (*http.Response, error) {
+				requests++
+				h := http.Header{"Cache-Control": {"public, max-age=0"}, "Date": {time.Now().UTC().Format(http.TimeFormat)}, "Age": {"10"}, "Last-Modified": {modified}}
+				if validator == "etag" {
+					h.Set("ETag", `"v1"`)
+				}
+				if requests == 1 {
+					bodies++
+					return artworkHTTPResponse(data, h), nil
+				}
+				if validator == "etag" && req.Header.Get("If-None-Match") != `"v1"` {
+					t.Error("ETag was not sent as If-None-Match")
+				}
+				if req.Header.Get("If-Modified-Since") != modified {
+					t.Error("Last-Modified was not sent as If-Modified-Since")
+				}
+				h.Set("Cache-Control", "public, max-age=3600")
+				return &http.Response{StatusCode: 304, Header: h, Body: http.NoBody}, nil
+			})
+			loadHTTPArtwork(t, dir, raw, upstream)
+			loadHTTPArtwork(t, dir, raw, upstream)
+			loadHTTPArtwork(t, dir, raw, upstream)
+			if requests != 2 || bodies != 1 {
+				t.Fatalf("304/fresh cache did not reuse the body: requests=%d bodies=%d", requests, bodies)
+			}
+		})
 	}
 }
 
-func TestArtworkDiskRestartExpiryAndCorruptFile(t *testing.T) {
+func TestArtworkHTTPChangedETagReplacesImage(t *testing.T) {
 	dir := t.TempDir()
-	data := artworkTestPNG(t, 384, 192)
-	const raw = "https://i.ytimg.com/vi/example/hqdefault.jpg"
-	key := artworkDiskKey(raw)
-	path := filepath.Join(dir, key)
-	var downloads int
-	restart := func(edge int) {
-		c := artworkTestCache(t, data)
-		c.disk = &artworkDisk{dir: dir}
-		transport := c.client.Transport
-		c.client.Transport = artworkTransport(func(r *http.Request) (*http.Response, error) {
-			downloads++
-			res, err := transport.RoundTrip(r)
-			res.Header = http.Header{"Cache-Control": {"public, max-age=86400"}}
-			return res, err
-		})
-		requestTestArtwork(c, raw, edge)
-		c.workers.Wait()
-		if c.entries[artRequest{raw, edge}].bitmap == nil {
-			t.Fatal("fresh loader did not produce a bitmap")
+	requests := 0
+	const raw = "https://i.ytimg.com/image"
+	upstream := artworkTransport(func(req *http.Request) (*http.Response, error) {
+		requests++
+		if requests == 2 && req.Header.Get("If-None-Match") != `"v1"` {
+			t.Error("old validator missing")
 		}
+		h := http.Header{"Cache-Control": {"public, max-age=0"}, "Etag": {fmt.Sprintf(`"v%d"`, requests)}}
+		return artworkHTTPResponse(artworkTestPNG(t, requests*32, 32), h), nil
+	})
+	loadHTTPArtwork(t, dir, raw, upstream)
+	c := loadHTTPArtwork(t, dir, raw, upstream)
+	if w, _ := c.entry(artRequest{raw, 384}).bitmap.Size(); w != 64 {
+		t.Fatal("changed ETag kept the old image")
 	}
-	restart(128)
-	b, err := os.ReadFile(path)
-	if err != nil || !bytes.Equal(b, data) {
-		t.Fatal("validated compressed artwork did not reach disk")
+}
+
+func TestArtworkHTTPNoCacheAlsoRevalidatesResidentPixels(t *testing.T) {
+	dir := t.TempDir()
+	data := artworkTestPNG(t, 384, 384)
+	requests := 0
+	const raw = "https://i.ytimg.com/image"
+	upstream := artworkTransport(func(req *http.Request) (*http.Response, error) {
+		requests++
+		h := http.Header{"Cache-Control": {"public, no-cache, max-age=3600"}, "Etag": {`"v1"`}}
+		if requests == 1 {
+			return artworkHTTPResponse(data, h), nil
+		}
+		if req.Header.Get("If-None-Match") != `"v1"` {
+			t.Error("no-cache reuse did not validate")
+		}
+		return &http.Response{StatusCode: 304, Header: h, Body: http.NoBody}, nil
+	})
+	c := loadHTTPArtwork(t, dir, raw, upstream)
+	for range 5 {
+		requestTestArtwork(c, raw, 384)
 	}
-	restart(384)
-	if downloads != 1 {
-		t.Fatal("fresh loader downloaded the same source again")
+	if requests != 1 {
+		t.Fatal("repainting the displayed image made HTTP requests")
 	}
-	expired := time.Now().Add(-time.Second)
-	if err := os.Chtimes(path, expired, expired); err != nil {
-		t.Fatal(err)
+	empty := artworkFrame{cache: c}
+	empty.submit()
+	if got := requestTestArtwork(c, raw, 384); got != nil {
+		t.Fatal("resident pixels bypassed no-cache validation after leaving the viewport")
 	}
-	restart(128)
-	if downloads != 2 {
-		t.Fatal("expired cover was reused")
-	}
-	if err := os.WriteFile(path, []byte("broken image"), 0600); err != nil {
-		t.Fatal(err)
-	}
-	fresh := time.Now().Add(time.Hour)
-	if err := os.Chtimes(path, fresh, fresh); err != nil {
-		t.Fatal(err)
-	}
-	restart(128)
-	restart(128)
-	if downloads != 3 {
-		t.Fatal("corrupt file was not replaced by one successful fetch")
+	c.workers.Wait()
+	if requests != 2 || c.entry(artRequest{raw, 384}).bitmap == nil {
+		t.Fatal("resident image was not revalidated")
 	}
 }
 
 func TestArtworkDiskSkipsTransientAndUncacheableResponses(t *testing.T) {
-	data := artworkTestPNG(t, 16, 16)
 	for _, tc := range []struct {
-		name, raw        string
-		priority         artworkPriority
-		header           string
-		redirect, broken bool
+		name, raw, control     string
+		avatar, cookie, broken bool
 	}{
-		{"avatar", "https://lh3.googleusercontent.com/photo", artAvatar, "public, max-age=86400", false, false},
-		{"query", "https://music.youtube.com/image/example?r=mix", artPrimary, "public, max-age=86400", false, false},
-		{"no store", "https://i.ytimg.com/image", artPrimary, "no-store", false, false},
-		{"redirect", "https://i.ytimg.com/image", artPrimary, "public, max-age=86400", true, false},
-		{"invalid image", "https://i.ytimg.com/image", artPrimary, "public, max-age=86400", false, true},
+		{"avatar", "https://lh3.googleusercontent.com/photo", "public, max-age=86400", true, false, false},
+		{"query", "https://i.ytimg.com/image?token=synthetic", "public, max-age=86400", false, false, false},
+		{"no-store", "https://i.ytimg.com/image", "public, no-store", false, false, false},
+		{"private", "https://i.ytimg.com/image", "private, max-age=3600", false, false, false},
+		{"cookie", "https://i.ytimg.com/image", "public, max-age=3600", false, true, false},
+		{"invalid", "https://i.ytimg.com/image", "public, max-age=3600", false, false, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			c := artworkTestCache(t, data)
+			c := artworkTestCache(t, nil)
 			dir := t.TempDir()
 			c.disk = &artworkDisk{dir: dir}
-			c.client.Transport = artworkTransport(func(r *http.Request) (*http.Response, error) {
-				if tc.redirect && r.URL.Path == "/image" {
-					return &http.Response{StatusCode: 302, Header: http.Header{"Location": {"https://i.ytimg.com/redirected"}}, Body: http.NoBody, Request: r}, nil
-				}
-				body := data
+			c.client.Transport = artworkTransport(func(*http.Request) (*http.Response, error) {
+				data := artworkTestPNG(t, 16, 16)
 				if tc.broken {
-					body = nil
+					data = nil
 				}
-				return &http.Response{StatusCode: 200, Header: http.Header{"Cache-Control": {tc.header}}, Body: io.NopCloser(bytes.NewReader(body)), ContentLength: int64(len(body)), Request: r}, nil
+				h := http.Header{"Cache-Control": {tc.control}}
+				if tc.cookie {
+					h.Set("Set-Cookie", "synthetic=value")
+				}
+				return artworkHTTPResponse(data, h), nil
 			})
+			priority := artPrimary
+			if tc.avatar {
+				priority = artAvatar
+			}
 			frame := artworkFrame{cache: c}
-			frame.get(tc.raw, 128, tc.priority)
+			frame.get(tc.raw, 128, priority)
 			frame.submit()
 			c.workers.Wait()
 			files, err := os.ReadDir(dir)
@@ -136,52 +169,629 @@ func TestArtworkDiskSkipsTransientAndUncacheableResponses(t *testing.T) {
 	}
 }
 
-func TestArtworkDiskBoundsBytesAndFiles(t *testing.T) {
+func TestArtworkHTTPCorruptStoreRefetches(t *testing.T) {
+	dir := t.TempDir()
+	data := artworkTestPNG(t, 32, 32)
+	requests := 0
+	const raw = "https://i.ytimg.com/image"
+	upstream := artworkTransport(func(*http.Request) (*http.Response, error) {
+		requests++
+		return artworkHTTPResponse(data, http.Header{"Cache-Control": {"public, max-age=3600"}}), nil
+	})
+	loadHTTPArtwork(t, dir, raw, upstream)
+	entries, _ := os.ReadDir(dir)
+	for _, e := range entries {
+		if e.Name() == ".lock" {
+			continue
+		}
+		if err := os.WriteFile(filepath.Join(dir, e.Name()), []byte("corrupt fixture"), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	loadHTTPArtwork(t, dir, raw, upstream)
+	loadHTTPArtwork(t, dir, raw, upstream)
+	if requests != 2 {
+		t.Fatal("corrupt HTTP cache did not recover with one full fetch")
+	}
+}
+
+func TestArtworkHTTPVarySeparatesRepresentations(t *testing.T) {
+	c := artworkTestCache(t, nil)
+	c.disk = &artworkDisk{dir: t.TempDir()}
+	requests := 0
+	c.client.Transport = artworkTransport(func(req *http.Request) (*http.Response, error) {
+		requests++
+		edge := 32
+		if req.Header.Get("Accept-Language") == "ja" {
+			edge = 64
+		}
+		return artworkHTTPResponse(artworkTestPNG(t, edge, 32), http.Header{"Cache-Control": {"public, max-age=3600"}, "Vary": {"Accept-Language"}}), nil
+	})
+	const raw = "https://i.ytimg.com/image"
+	client := c.artworkHTTPClient(artDemand{artRequest: artRequest{raw, 384}})
+	for _, language := range []string{"en", "ja", "en", "ja"} {
+		req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, raw, nil)
+		req.Header.Set("Accept-Language", language)
+		res, err := client.Do(req)
+		if err != nil {
+			t.Fatal("Vary request failed")
+		}
+		data, _ := io.ReadAll(res.Body)
+		res.Body.Close()
+		art := c.decode(t.Context(), data, 384)
+		expected := 32
+		if language == "ja" {
+			expected = 64
+		}
+		if art.bitmap == nil {
+			t.Fatal("Vary image missing")
+		}
+		if w, _ := art.bitmap.Size(); w != expected {
+			t.Fatal("Vary served another representation")
+		}
+	}
+	if requests != 2 {
+		t.Fatalf("Vary cache did not reuse each representation: %d requests", requests)
+	}
+}
+
+func TestArtworkHTTPAgeExpiresAndMaxAgePrecedence(t *testing.T) {
+	now := time.Now().UTC().Truncate(time.Second)
 	for _, tc := range []struct {
-		name  string
-		count int
-		size  int64
+		name, control, age string
+		expires            time.Time
+		requests           int
 	}{
-		{"bytes", artworkDiskBudget / artworkDownloadLimit, artworkDownloadLimit}, {"files", artworkDiskFiles, 1},
+		{"upstream-age", "public, max-age=3600", "7200", time.Time{}, 2},
+		{"expired", "public", "0", now.Add(-time.Hour), 2},
+		{"expires-fresh", "public", "0", now.Add(time.Hour), 1},
+		{"max-age-precedes-expires", "public, max-age=3600", "0", now.Add(-time.Hour), 1},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			dir := t.TempDir()
-			now := time.Now()
+			data := artworkTestPNG(t, 32, 32)
+			requests := 0
+			upstream := artworkTransport(func(req *http.Request) (*http.Response, error) {
+				requests++
+				h := http.Header{"Cache-Control": {tc.control}, "Date": {now.Format(http.TimeFormat)}, "Age": {tc.age}, "Etag": {`"v1"`}}
+				if !tc.expires.IsZero() {
+					h.Set("Expires", tc.expires.Format(http.TimeFormat))
+				}
+				if requests == 1 {
+					return artworkHTTPResponse(data, h), nil
+				}
+				if req.Header.Get("If-None-Match") != `"v1"` {
+					t.Error("stale HTTP response was not conditionally validated")
+				}
+				return &http.Response{StatusCode: 304, Header: http.Header{"Cache-Control": {"public, max-age=3600"}, "Date": {now.Format(http.TimeFormat)}, "Age": {"0"}}, Body: http.NoBody}, nil
+			})
+			for range 2 {
+				loadHTTPArtwork(t, dir, "https://i.ytimg.com/image", upstream)
+			}
+			if requests != tc.requests {
+				t.Fatalf("HTTP freshness policy mismatch: requests=%d", requests)
+			}
+		})
+	}
+}
+
+func TestArtworkHTTPNoStoreLeavesNoReusablePixels(t *testing.T) {
+	c := artworkTestCache(t, nil)
+	c.disk = &artworkDisk{dir: t.TempDir()}
+	requests := 0
+	const raw = "https://i.ytimg.com/image"
+	c.client.Transport = artworkTransport(func(*http.Request) (*http.Response, error) {
+		requests++
+		return artworkHTTPResponse(artworkTestPNG(t, 128, 128), http.Header{"Cache-Control": {"public, no-store"}}), nil
+	})
+	requestTestArtwork(c, raw, 128)
+	c.workers.Wait()
+	if requestTestArtwork(c, raw, 128) == nil {
+		t.Fatal("currently displayed image was discarded")
+	}
+	empty := artworkFrame{cache: c}
+	empty.submit()
+	if e := c.entry(artRequest{raw, 128}); e != nil && e.bitmap != nil {
+		t.Fatal("no-store pixels survived after leaving the viewport")
+	}
+	if requestTestArtwork(c, raw, 128) != nil {
+		t.Fatal("no-store image was reused")
+	}
+	c.workers.Wait()
+	if requests != 2 {
+		t.Fatal("no-store request was served from a cache")
+	}
+}
+
+func setArtworkRecord(d *artworkDisk, raw, variant string, body []byte) error {
+	id := raw + "#" + variant
+	if err := d.Set(id, body); err != nil {
+		return err
+	}
+	refs, _ := json.Marshal([]map[string]string{{"id": id}})
+	return d.Set(raw, refs)
+}
+
+func artworkDiskInventory(t *testing.T, dir string) (int, int64, int) {
+	t.Helper()
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	groups := map[string]bool{}
+	var total int64
+	temps := 0
+	for _, e := range entries {
+		info, err := e.Info()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if e.Name() == ".lock" {
+			if info.Size() != 0 {
+				t.Fatal("lock file contains data")
+			}
+			continue
+		}
+		if !info.Mode().IsRegular() {
+			t.Fatal("unexpected nonregular cache fixture")
+		}
+		if strings.HasPrefix(e.Name(), ".write-") {
+			temps++
+		}
+		total += artworkFileCharge(info)
+		if g, ok := artworkRecordName(e.Name()); ok {
+			groups[g] = true
+		}
+	}
+	return len(groups), total, temps
+}
+
+func TestArtworkDiskBoundsURLGroupsBytesAndLowWater(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		count, size int
+	}{
+		{"bytes", 17, artworkDownloadLimit}, {"groups", artworkDiskEntries + 1, 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := t.TempDir()
+			d := &artworkDisk{dir: dir}
+			body := make([]byte, tc.size)
+			crossed := false
 			for i := range tc.count {
-				path := filepath.Join(dir, fmt.Sprintf("%064x", i))
-				f, err := os.Create(path)
+				raw := fmt.Sprintf("https://i.ytimg.com/quota-%04d", i)
+				if err := setArtworkRecord(d, raw, "1", body); err != nil {
+					t.Fatalf("public record was not admitted at %d", i)
+				}
+				groups, total, temps := artworkDiskInventory(t, dir)
+				if total > artworkDiskBudget || groups > artworkDiskEntries || temps != 0 {
+					t.Fatal("committed cache exceeded disk quota or left a temp file")
+				}
+				if tc.name == "groups" && i == artworkDiskEntries {
+					if groups > artworkDiskEntries*4/5 {
+						t.Fatal("URL eviction did not reach 80 percent low-water")
+					}
+					crossed = true
+				}
+				if tc.name == "bytes" && i > 0 && total < int64(i+1)*artworkWriteCharge(int64(tc.size)) {
+					if !crossed && total > artworkDiskBudget*4/5 {
+						t.Fatal("byte eviction did not reach 80 percent low-water")
+					}
+					crossed = true
+				}
+				got, err := d.Get(raw + "#1")
+				if err != nil || !bytes.Equal(got, body) {
+					t.Fatal("newest committed response disappeared")
+				}
+			}
+			if !crossed {
+				t.Fatal("fixture did not cross the requested quota")
+			}
+		})
+	}
+}
+
+func TestArtworkDiskConcurrentWritersMergeVaryAndKeepAtomicBodies(t *testing.T) {
+	dir := t.TempDir()
+	const raw = "https://i.ytimg.com/concurrent-vary"
+	const writers = 24
+	var group sync.WaitGroup
+	var failures atomic.Int32
+	for i := range writers {
+		group.Go(func() {
+			d := &artworkDisk{dir: dir}
+			body := bytes.Repeat([]byte{byte(i + 1)}, 8192+i)
+			if setArtworkRecord(d, raw, fmt.Sprint(i+1), body) != nil {
+				failures.Add(1)
+			}
+		})
+	}
+	group.Wait()
+	if failures.Load() != 0 {
+		t.Fatal("concurrent writer failed")
+	}
+	d := &artworkDisk{dir: dir}
+	index, err := d.Get(raw)
+	if err != nil {
+		t.Fatal("merged index missing")
+	}
+	var refs []map[string]any
+	if json.Unmarshal(index, &refs) != nil || len(refs) != writers {
+		t.Fatalf("lost concurrent Vary representations: %d", len(refs))
+	}
+	for i := range writers {
+		got, err := d.Get(fmt.Sprintf("%s#%d", raw, i+1))
+		if err != nil || !bytes.Equal(got, bytes.Repeat([]byte{byte(i + 1)}, 8192+i)) {
+			t.Fatal("writer published a partial or different body")
+		}
+	}
+	groups, total, temps := artworkDiskInventory(t, dir)
+	if groups != 1 || temps != 0 || total > artworkDiskBudget {
+		t.Fatal("variants counted as independent URL groups or left temporary files")
+	}
+	if d.Delete(raw) != nil {
+		t.Fatal("URL group delete failed")
+	}
+	if _, err = d.Get(raw); err == nil {
+		t.Fatal("URL index survived group delete")
+	}
+}
+
+func TestArtworkDiskLowVolumeSpaceStopsAdmissionAndRechecks(t *testing.T) {
+	for _, mode := range []string{"unreclaimed", "reclaimed", "unavailable"} {
+		t.Run(mode, func(t *testing.T) {
+			dir := t.TempDir()
+			d := &artworkDisk{dir: dir}
+			const first = "https://i.ytimg.com/low-space-first"
+			if setArtworkRecord(d, first, "1", []byte("first-body")) != nil {
+				t.Fatal("initial fixture failed")
+			}
+			calls := 0
+			d.freeSpace = func(string) (uint64, error) {
+				calls++
+				if mode == "unavailable" {
+					return 0, errors.New("synthetic volume failure")
+				}
+				if mode == "reclaimed" && calls > 1 {
+					return artworkDiskReserve + 1<<20, nil
+				}
+				return artworkDiskReserve - 1, nil
+			}
+			const next = "https://i.ytimg.com/low-space-next"
+			err := setArtworkRecord(d, next, "1", []byte("next-body"))
+			if mode == "reclaimed" {
+				if err != nil || calls < 2 {
+					t.Fatal("freed space was not rechecked before admission")
+				}
+			} else if err == nil {
+				t.Fatal("low or unavailable free space admitted a response")
+			}
+			_, total, temps := artworkDiskInventory(t, dir)
+			if total > artworkDiskBudget || temps != 0 || d.pendingBytes != 0 {
+				t.Fatal("failed admission retained temporary or pending body bytes")
+			}
+		})
+	}
+}
+
+func TestArtworkDiskReclaimsAbandonedTemporaryAndLegacyFiles(t *testing.T) {
+	dir := t.TempDir()
+	for _, name := range []string{".write-abandoned", fmt.Sprintf("%064x", 1)} {
+		if os.WriteFile(filepath.Join(dir, name), []byte("abandoned fixture"), 0600) != nil {
+			t.Fatal("fixture write failed")
+		}
+	}
+	d := &artworkDisk{dir: dir}
+	if setArtworkRecord(d, "https://i.ytimg.com/cleanup", "1", []byte("complete body")) != nil {
+		t.Fatal("cleanup prevented admission")
+	}
+	groups, _, temps := artworkDiskInventory(t, dir)
+	if groups != 1 || temps != 0 {
+		t.Fatal("abandoned temporary file survived admission")
+	}
+	entries, _ := os.ReadDir(dir)
+	if len(entries) != 2 {
+		t.Fatal("legacy opaque file survived migration cleanup")
+	}
+}
+
+func TestArtworkDiskWriterProcess(t *testing.T) {
+	dir, variant := os.Getenv("YTMGO_ARTWORK_DISK_FIXTURE"), os.Getenv("YTMGO_ARTWORK_DISK_VARIANT")
+	if dir == "" || variant == "" {
+		t.Skip("isolated subprocess fixture")
+	}
+	d := &artworkDisk{dir: dir}
+	if setArtworkRecord(d, "https://i.ytimg.com/process-vary", variant, bytes.Repeat([]byte(variant), 8192)) != nil {
+		t.Fatal("fixture commit failed")
+	}
+}
+
+func TestArtworkDiskMultiProcessWriters(t *testing.T) {
+	executable, err := os.Executable()
+	if err != nil {
+		t.Fatal("test executable unavailable")
+	}
+	dir := t.TempDir()
+	const count = 8
+	children := make([]*exec.Cmd, count)
+	for i := range count {
+		child := exec.CommandContext(t.Context(), executable, "-test.run=^TestArtworkDiskWriterProcess$")
+		// No inherited credentials, auth stores, process inspection or raw logs.
+		child.Env = []string{"YTMGO_ARTWORK_DISK_FIXTURE=" + dir, "YTMGO_ARTWORK_DISK_VARIANT=" + fmt.Sprint(i+1)}
+		child.Stdout, child.Stderr = io.Discard, io.Discard
+		if child.Start() != nil {
+			t.Fatal("fixture child failed to start")
+		}
+		children[i] = child
+	}
+	for _, child := range children {
+		if child.Wait() != nil {
+			t.Fatal("fixture child failed")
+		}
+	}
+	d := &artworkDisk{dir: dir}
+	index, err := d.Get("https://i.ytimg.com/process-vary")
+	var refs []json.RawMessage
+	if err != nil || json.Unmarshal(index, &refs) != nil || len(refs) != count {
+		t.Fatal("process writers lost a Vary representation")
+	}
+	for i := range count {
+		variant := fmt.Sprint(i + 1)
+		body, err := d.Get("https://i.ytimg.com/process-vary#" + variant)
+		if err != nil || !bytes.Equal(body, bytes.Repeat([]byte(variant), 8192)) {
+			t.Fatal("process writer published partial body")
+		}
+	}
+	groups, _, temps := artworkDiskInventory(t, dir)
+	if groups != 1 || temps != 0 {
+		t.Fatal("process writes left temporary or duplicate groups")
+	}
+}
+
+type canceledArtworkBody struct {
+	ctx     context.Context
+	started chan struct{}
+	once    sync.Once
+}
+
+func (b *canceledArtworkBody) Read([]byte) (int, error) {
+	b.once.Do(func() { close(b.started) })
+	<-b.ctx.Done()
+	return 0, b.ctx.Err()
+}
+func (*canceledArtworkBody) Close() error { return nil }
+
+func TestArtworkHTTPCanceledBodyCannotPoisonCache(t *testing.T) {
+	c := artworkTestCache(t, nil)
+	dir := t.TempDir()
+	c.disk = &artworkDisk{dir: dir}
+	started := make(chan struct{})
+	data := artworkTestPNG(t, 384, 384)
+	var attempts atomic.Int32
+	c.client.Transport = artworkTransport(func(req *http.Request) (*http.Response, error) {
+		res := artworkHTTPResponse(data, http.Header{"Cache-Control": {"public, max-age=3600"}})
+		if attempts.Add(1) == 1 {
+			res.Body = &canceledArtworkBody{ctx: req.Context(), started: started}
+		}
+		return res, nil
+	})
+	const raw = "https://i.ytimg.com/canceled-body"
+	requestTestArtwork(c, raw, 384)
+	select {
+	case <-started:
+	case <-time.After(2 * time.Second):
+		t.Fatal("response body did not begin")
+	}
+	f := artworkFrame{cache: c}
+	f.submit()
+	c.workers.Wait()
+	groups, _, temps := artworkDiskInventory(t, dir)
+	if groups != 0 || temps != 0 {
+		t.Fatal("canceled partial body persisted")
+	}
+	requestTestArtwork(c, raw, 384)
+	c.workers.Wait()
+	if requestTestArtwork(c, raw, 384) == nil || attempts.Load() != 2 {
+		t.Fatal("canceled cache did not recover with one full body")
+	}
+	assertArtworkAccounting(t, c)
+}
+
+func TestArtworkHTTPNoStore304DoesNotLeaveReusableBody(t *testing.T) {
+	dir := t.TempDir()
+	data := artworkTestPNG(t, 32, 32)
+	requests, bodies := 0, 0
+	const raw = "https://i.ytimg.com/no-store-304"
+	upstream := artworkTransport(func(req *http.Request) (*http.Response, error) {
+		requests++
+		if requests == 2 {
+			if req.Header.Get("If-None-Match") != `"v1"` {
+				t.Error("304 fixture was not conditional")
+			}
+			return &http.Response{StatusCode: 304, Header: http.Header{"Cache-Control": {"no-store"}}, Body: http.NoBody}, nil
+		}
+		bodies++
+		return artworkHTTPResponse(data, http.Header{"Cache-Control": {"public, max-age=0"}, "Etag": {`"v1"`}}), nil
+	})
+	for range 3 {
+		loadHTTPArtwork(t, dir, raw, upstream)
+	}
+	if requests != 3 || bodies != 2 {
+		t.Fatalf("304 no-store reused prohibited body: requests=%d bodies=%d", requests, bodies)
+	}
+}
+
+func TestArtworkHTTPPublicWithdrawalReplacesWithoutPersisting(t *testing.T) {
+	for _, status := range []int{200, 304} {
+		for _, control := range []string{"no-store", "private, max-age=3600"} {
+			t.Run(fmt.Sprintf("%d-%s", status, strings.Split(control, ",")[0]), func(t *testing.T) {
+				dir := t.TempDir()
+				requests, bodies := 0, 0
+				data := artworkTestPNG(t, 32, 32)
+				const raw = "https://i.ytimg.com/public-withdrawal"
+				upstream := artworkTransport(func(req *http.Request) (*http.Response, error) {
+					requests++
+					if requests == 3 && (req.Header.Get("If-None-Match") != "" || req.Header.Get("If-Modified-Since") != "") {
+						t.Error("withdrawn public response retained validator")
+					}
+					h := http.Header{"Cache-Control": {"public, max-age=0"}, "Etag": {`"v1"`}}
+					if requests == 2 {
+						h.Set("Cache-Control", control)
+						if status == 304 {
+							return &http.Response{StatusCode: 304, Header: h, Body: http.NoBody}, nil
+						}
+					}
+					bodies++
+					return artworkHTTPResponse(data, h), nil
+				})
+				for range 3 {
+					loadHTTPArtwork(t, dir, raw, upstream)
+				}
+				expected := 3
+				if status == 304 {
+					expected = 2
+				}
+				if requests != 3 || bodies != expected {
+					t.Fatal("withdrawn public response remained reusable")
+				}
+			})
+		}
+	}
+}
+
+func TestArtworkHTTPStorageFailureStillDisplaysImage(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "not-a-directory")
+	if os.WriteFile(path, []byte("fixture"), 0600) != nil {
+		t.Fatal("storage failure fixture failed")
+	}
+	requests := 0
+	data := artworkTestPNG(t, 384, 384)
+	upstream := artworkTransport(func(*http.Request) (*http.Response, error) {
+		requests++
+		return artworkHTTPResponse(data, http.Header{"Cache-Control": {"public, max-age=3600"}}), nil
+	})
+	for range 2 {
+		loadHTTPArtwork(t, path, "https://i.ytimg.com/storage-failure", upstream)
+	}
+	if requests != 2 {
+		t.Fatal("failed storage did not degrade to ordinary download")
+	}
+}
+
+func TestArtworkHTTPVarySchemeChangeRetiresOldRepresentations(t *testing.T) {
+	for _, status := range []int{200, 304} {
+		t.Run(fmt.Sprint(status), func(t *testing.T) {
+			c := artworkTestCache(t, nil)
+			c.disk = &artworkDisk{dir: t.TempDir()}
+			requests, bodies := 0, 0
+			c.client.Transport = artworkTransport(func(req *http.Request) (*http.Response, error) {
+				requests++
+				h := http.Header{"Cache-Control": {"public, max-age=0"}, "Vary": {"Accept-Language"}, "Etag": {`"old"`}}
+				edge := 32
+				if req.Header.Get("Accept-Language") == "ja" {
+					edge = 64
+				}
+				if requests >= 3 {
+					h.Set("Vary", "Accept-Encoding")
+					h.Set("Cache-Control", "public, max-age=3600")
+					h.Set("Etag", `"new"`)
+					edge = 96
+					if status == 304 {
+						return &http.Response{StatusCode: 304, Header: h, Body: http.NoBody}, nil
+					}
+				}
+				bodies++
+				return artworkHTTPResponse(artworkTestPNG(t, edge, 32), h), nil
+			})
+			const raw = "https://i.ytimg.com/vary-scheme-change"
+			client := c.artworkHTTPClient(artDemand{artRequest: artRequest{raw, 384}})
+			for i, lang := range []string{"en", "ja", "en", "ja"} {
+				req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, raw, nil)
+				req.Header.Set("Accept-Language", lang)
+				req.Header.Set("Accept-Encoding", "identity")
+				res, err := client.Do(req)
 				if err != nil {
-					t.Fatal(err)
+					t.Fatal("Vary transition request failed")
 				}
-				if err = f.Truncate(tc.size); err != nil {
-					t.Fatal(err)
+				data, _ := io.ReadAll(res.Body)
+				res.Body.Close()
+				art := c.decode(t.Context(), data, 384)
+				if art.bitmap == nil {
+					t.Fatal("Vary transition image missing")
 				}
-				f.Close()
-				expiry := now.Add(time.Hour + time.Duration(i)*time.Second)
-				if err = os.Chtimes(path, expiry, expiry); err != nil {
-					t.Fatal(err)
+				want := 32
+				if i == 1 {
+					want = 64
+				}
+				if i >= 2 && status == 200 {
+					want = 96
+				}
+				if w, _ := art.bitmap.Size(); w != want {
+					t.Fatalf("Vary transition served wrong representation: got=%d want=%d", w, want)
 				}
 			}
-			d := artworkDisk{dir: dir}
-			key := artworkDiskKey("https://i.ytimg.com/new" + strconv.Itoa(tc.count))
-			d.write(key, []byte{1, 2}, now.Add(24*time.Hour))
-			entries, err := os.ReadDir(dir)
-			if err != nil {
-				t.Fatal(err)
+			wantBodies := 3
+			if status == 304 {
+				wantBodies = 2
 			}
-			var size int64
-			for _, e := range entries {
-				info, err := e.Info()
-				if err != nil {
-					t.Fatal(err)
+			if requests != 3 || bodies != wantBodies {
+				t.Fatalf("obsolete Vary scheme was not retired: requests=%d bodies=%d", requests, bodies)
+			}
+		})
+	}
+}
+
+func TestArtworkResidentExpiresFreshnessOnWarmReturn(t *testing.T) {
+	for _, tc := range []struct {
+		name, control string
+		expires       time.Duration
+		fresh         bool
+	}{
+		{"expires-only", "public", time.Hour, true},
+		{"max-age-zero-precedes-expires", "public, max-age=0", time.Hour, false},
+		{"expired", "public", -time.Hour, false},
+		{"no-cache", "public, no-cache", time.Hour, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := artworkTestCache(t, nil)
+			c.disk = &artworkDisk{dir: t.TempDir()}
+			requests, bodies := 0, 0
+			data := artworkTestPNG(t, 384, 384)
+			c.client.Transport = artworkTransport(func(req *http.Request) (*http.Response, error) {
+				requests++
+				h := http.Header{"Cache-Control": {tc.control}, "Expires": {time.Now().Add(tc.expires).UTC().Format(http.TimeFormat)}, "Date": {time.Now().UTC().Format(http.TimeFormat)}, "Etag": {`"v1"`}}
+				if requests > 1 {
+					if req.Header.Get("If-None-Match") != `"v1"` {
+						t.Error("stale resident cover did not validate")
+					}
+					h.Set("Cache-Control", "public, max-age=3600")
+					return &http.Response{StatusCode: 304, Header: h, Body: http.NoBody}, nil
 				}
-				size += info.Size()
+				bodies++
+				return artworkHTTPResponse(data, h), nil
+			})
+			const raw = "https://i.ytimg.com/resident-expires"
+			requestTestArtwork(c, raw, 384)
+			c.workers.Wait()
+			original := requestTestArtwork(c, raw, 384)
+			f := artworkFrame{cache: c}
+			f.submit()
+			got := requestTestArtwork(c, raw, 384)
+			if tc.fresh {
+				if got != original || got == nil {
+					t.Fatal("fresh Expires-only pixels did not retain bitmap on return")
+				}
+			} else if got != nil {
+				t.Fatal("stale resident image bypassed HTTP validation")
 			}
-			if size > artworkDiskBudget || len(entries) > artworkDiskFiles || !bytes.Equal(d.read(key), []byte{1, 2}) {
-				t.Fatal("disk limits prevented admission or exceeded their budgets")
+			c.workers.Wait()
+			want := 2
+			if tc.fresh {
+				want = 1
 			}
-			if _, err = os.Stat(filepath.Join(dir, fmt.Sprintf("%064x", 0))); !os.IsNotExist(err) {
-				t.Fatal("nearest expiry was not evicted")
+			if requests != want || bodies != 1 {
+				t.Fatalf("resident freshness body reuse mismatch: requests=%d bodies=%d", requests, bodies)
 			}
 		})
 	}

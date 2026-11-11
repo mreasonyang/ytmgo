@@ -1,0 +1,19 @@
+{
+  "command": [
+    "go",
+    "test",
+    "-json",
+    "-run",
+    "^TestArtwork(WarmNavigationFirstPresentedFramePaintsCover|EncodedAndTransientPixelPressureStayBounded)$",
+    "-count=1",
+    "."
+  ],
+  "presented_raster_frames": 30,
+  "warm_navigations": 10,
+  "placeholder_pixels": 0,
+  "encoded_fixture_bytes": 443008,
+  "pressure_cached_entries": 2,
+  "pressure_charged_bytes": 1687560,
+  "pressure_budget_bytes": 2097152,
+  "exit_code": 0
+}

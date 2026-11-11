@@ -1,0 +1,16 @@
+{
+  "command": [
+    "go",
+    "vet",
+    "./..."
+  ],
+  "package_count": 0,
+  "exit_code": 0,
+  "elapsed_seconds": 8.113,
+  "passed_tests": 0,
+  "skipped_tests": 0,
+  "diagnostic_categories": [],
+  "race_source_locations": [],
+  "failed_tests": [],
+  "package_results": []
+}

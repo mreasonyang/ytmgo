@@ -1,0 +1,11 @@
+{
+  "profile": "/tmp/ytmgo-artwork-live-profile-final",
+  "empty_before_launch": true,
+  "installed_app_untouched": true,
+  "fixed_profile_on_every_launch": true,
+  "binary_sha256": "0bd3eea0f7e2c712aef72bedb4f2f3443d238c5813cea1ee720fe5537fa65690",
+  "mygo_version": "0.7.2",
+  "runtime_commit": "27481e8",
+  "session_file_created_after_final_run": false,
+  "one_shot_relaunch_boundary": "An earlier automation state query restarted the old environment-gated bundle without the gate; app-owned Dev account restoration was briefly attempted. That process was stopped, the old executable removed, and every later launch used a fixed isolated bootstrap. Normal profile/auth files were not inspected."
+}

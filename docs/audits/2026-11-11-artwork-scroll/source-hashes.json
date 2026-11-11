@@ -1,0 +1,21 @@
+{
+  "runtime_commit": "27481e8",
+  "mygo_version": "0.7.2",
+  "sha256": {
+    "artwork.go": "e343d48a0c5fb7e581e8f52ba517ed2f857ef7d67599a98c2b4cbec4f5add912",
+    "artwork_http.go": "0d560b8cbbe8b3ab3caff51cf4ba0c7008e87e6b9cf2b71cce97488dc894b2a4",
+    "artwork_disk.go": "509ccef6c4198550e355dcbdb24783b4565b5f306cb09abb67614172b838eaef",
+    "artwork_disk_unix.go": "8f24a2c45ae882000e2f78e2b423912d804d7180e977e56eb462ac351a41eef7",
+    "artwork_disk_windows.go": "7180362feeeb2ddfdb60decd1c96b81e87ed2b71f1c7e46ef3e2e81fb7cb0290",
+    "native_views.go": "158530e32becbe89303eb01061ef6e06629e6235cd29767cc646bdb8ef531f33",
+    "main.go": "056d4fc90d7b85af4a9a56a80f9d17883bfa188a68cca0eeebf0c501ea331853",
+    "go.mod": "98293712c842d9f90a77d0201dbf646dcb580b20308952e31a82714f6d0c04fa",
+    "go.sum": "ab17882c3967e2d6f459b523f6057cf1687fe973d0ce4f31afd0807362e97946",
+    "artwork_test.go": "ea09ef045357a70930056b2c02ec257013d56409ca1e9625c4c5e68506a4e7f7",
+    "artwork_scroll_test.go": "06af8680daee55cf58e6beacd55963042e20f9a322a722d0dd2ceb35ade75297",
+    "artwork_disk_test.go": "ebda6e7bd9cb042d554e43a5b7a5aaf0d8724c7fd20c1339205c144137b87e28",
+    "artwork_desktop_acceptance_test.go": "ac3a1301c93cc73b3d5bba5e2042e031a0e61531e31027357102667e17cda9fe",
+    "native_avatar_test.go": "11b00b91f2104c7e2eb4bd7f9ebc16d6f0a09a2211c791c7210d138b45249166",
+    "native_playing_artwork_test.go": "2fe7a65a2814a36bf7f7fb677f713bda08c5c9cf970dea88157d447eca31fdda"
+  }
+}

@@ -61,7 +61,7 @@ func TestNowPlayingCoverAcrossSkips(t *testing.T) {
 				}
 			}
 		}
-		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader(bodies[id]))}, nil
+		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Cache-Control": {"public, max-age=3600"}}, Body: io.NopCloser(bytes.NewReader(bodies[id]))}, nil
 	})
 	// A list has already shown a thumbnail of the last playable track.
 	requestTestArtwork(cache, queue[3].Artwork, 128)
@@ -71,10 +71,12 @@ func TestNowPlayingCoverAcrossSkips(t *testing.T) {
 	m.Current, m.Queue, m.Page = queue[0], queue, catalog.Page{}
 	m.Panel, m.PanelTab = true, "lyrics"
 	app := &desktop{art: cache, model: *m, preparedID: queue[1].ID}
+	playerEdge := 0
 	tt := ui.NewTester(func(c *ui.Context) {
 		frame := artworkFrame{cache: cache}
 		actions.Artwork = frame.get
 		nativeView(c, &app.model, actions)
+		playerEdge = frame.playerEdge
 		app.prefetchNextCover(&frame)
 		frame.submit()
 	}, 1440, 940)
@@ -102,7 +104,7 @@ func TestNowPlayingCoverAcrossSkips(t *testing.T) {
 
 	assertCover("first")
 	app.art.mu.Lock()
-	warmed := app.art.entries[artRequest{artworkRequestAt(queue[1].Artwork, artworkEdge), artworkEdge}]
+	warmed := app.art.entry(artRequest{artworkRequestAt(queue[1].Artwork, playerEdge), playerEdge})
 	ready := warmed != nil && warmed.bitmap != nil
 	app.art.mu.Unlock()
 	if !ready {

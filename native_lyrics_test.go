@@ -291,6 +291,80 @@ func TestNativeLyricsKeyboardHoverStopsFollow(t *testing.T) {
 	}
 }
 
+func TestNativeLyricsPanelKeyboardReadingSurvivesMediaSwitch(t *testing.T) {
+	for _, focused := range []bool{false, true} {
+		t.Run(fmt.Sprintf("focused_%t", focused), func(t *testing.T) {
+			m, a := nativeTimedLyricsFixture()
+			m.Panel, m.instantMotion = true, false
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
+			requireLyricCentered(t, tt, 0)
+			if err := tt.Click(a.Tr("shellLyrics") + " · " + a.Tr("shellNowPlaying")); err != nil {
+				t.Fatal(err)
+			}
+			hoverLyrics := func() {
+				view, _ := tt.Find("Lyrics · Content")
+				tt.Move(view.X+view.W/2, view.Y+view.H/2)
+			}
+			if focused {
+				for i := 0; i < 5 && !tt.Focused("Lyrics · Content"); i++ {
+					tt.Key(0, ui.KeyTab)
+				}
+				if !tt.Focused("Lyrics · Content") {
+					t.Fatal("could not focus lyrics")
+				}
+				tt.Move(0, 0)
+			} else {
+				hoverLyrics()
+			}
+			follow := a.Tr("nativeLyricsFollow")
+			tt.Key(0, ui.KeyPageUp)
+			settleLyricGlide(tt)
+			if tt.HasText(follow) {
+				t.Fatal("Page Up at the first line disabled follow")
+			}
+			m.Position = 51
+			tt.Frame()
+			requireLyricCentered(t, tt, 10)
+			tt.Key(0, ui.KeyPageDown)
+			settleLyricGlide(tt)
+			lineOffset := func() float32 {
+				t.Helper()
+				line, ok := tt.Find("Synthetic lyric line 15")
+				view, _ := tt.Find("Lyrics · Content")
+				if !ok || line.H <= 0 || line.Y < view.Y || line.Y+line.H > view.Y+view.H+1 {
+					t.Fatal("the line reached by Page Down is outside the viewport")
+				}
+				return line.Y - view.Y
+			}
+			readAt := lineOffset()
+			if !tt.HasText(follow) {
+				t.Fatal("Page Down did not suspend follow")
+			}
+			m.Position = 101
+			for _, mode := range []string{"nativeVideo", "nativeArtwork"} {
+				if err := tt.Click(a.Tr(mode)); err != nil || m.Video != (mode == "nativeVideo") {
+					t.Fatalf("could not switch to %s", mode)
+				}
+				settleLyricGlide(tt)
+				if !tt.HasText(follow) || math.Abs(float64(lineOffset()-readAt)) > 1 {
+					t.Fatalf("%s lost the keyboard reader's position", mode)
+				}
+			}
+			// The reader can resume while another key scroll is still moving.
+			hoverLyrics()
+			tt.Key(0, ui.KeyPageDown)
+			tt.Advance(tokenMotionBase / 4)
+			if err := tt.Click(follow); err != nil {
+				t.Fatal(err)
+			}
+			requireLyricCentered(t, tt, 20)
+			if tt.HasText(follow) {
+				t.Fatal("the previous key scroll interrupted resuming follow")
+			}
+		})
+	}
+}
+
 func TestNativeLyricsFollowIgnoresIncidentalInput(t *testing.T) {
 	for _, gesture := range []string{"horizontal drift", "scroll past top", "click"} {
 		t.Run(gesture, func(t *testing.T) {

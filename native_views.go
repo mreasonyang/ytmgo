@@ -2857,7 +2857,7 @@ func nativeKeyScroll(st *ui.ScrollState, s *nativeScrollbarState, view ui.Rect, 
 // the bar's own strip, where MyGo lets the pointer grab it, they stay and
 // brighten. under paints beneath them in the same DrawOver (an element has
 // one), as the scroll edges do.
-func nativeScrollbar(c *ui.Context, scroll ui.Element, st *ui.ScrollState, p nativePalette, under func(*ui.Painter, ui.Rect)) {
+func nativeScrollbar(c *ui.Context, scroll ui.Element, st *ui.ScrollState, p nativePalette, under func(*ui.Painter, ui.Rect), onKeyScroll ...func()) {
 	s := ui.Local(scroll, "scrollbar", func() nativeScrollbarState { return nativeScrollbarState{} })
 	now := c.Now()
 	// The reader scrolling shows the bar; the app gliding it (ScrollTo,
@@ -2885,7 +2885,11 @@ func nativeScrollbar(c *ui.Context, scroll ui.Element, st *ui.ScrollState, p nat
 		nativeKeyScrollers = append(nativeKeyScrollers, nativeKeyScroller{focus: focus, over: over, scroll: func(key ui.Key) bool {
 			for _, k := range nativeScrollKeys {
 				if k.key == key && (k.vertical && st.MaxY > 0.5 || !k.vertical && st.MaxX > 0.5) {
-					return nativeKeyScroll(st, s, box, key, now)
+					moved := nativeKeyScroll(st, s, box, key, now)
+					if moved && len(onKeyScroll) > 0 {
+						onKeyScroll[0]()
+					}
+					return moved
 				}
 			}
 			return false

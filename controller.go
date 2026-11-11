@@ -50,6 +50,9 @@ func (a *desktop) openItem(it catalog.Item) {
 	if it.BrowseID != "" && it.Kind != "song" && it.Kind != "video" {
 		a.browseParams = it.BrowseParams
 		a.loadPage("browse:"+it.BrowseID, "", true)
+		// The header shows at once from what the item already says, so its
+		// cover can travel there from the item's; the rest comes as it loads.
+		a.model.Page = catalog.Page{Title: it.Title, Creator: it.Artist, Artwork: it.Artwork}
 	} else if it.ID != "" {
 		a.playItem(it)
 	}

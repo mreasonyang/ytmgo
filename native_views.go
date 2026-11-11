@@ -357,6 +357,20 @@ func nativeImmersiveCover(c *ui.Context, m *UIModel, width float32) nativeCoverM
 	return nativeCoverMatch{"player-bar"}
 }
 
+// nativeCollectionMatch is a collection's cover, by its browse ID: opening
+// it from a card, a tile or a row, the cover travels into the page's header,
+// and back into the card when the page it came from returns.
+type nativeCollectionMatch struct{ id string }
+
+// nativeCollectionArt gives a collection's cover its journey; id is its
+// browse ID, none for what opens no page.
+func nativeCollectionArt(art ui.Element, id string) ui.Element {
+	if id == "" {
+		return art
+	}
+	return art.Transition(nativeLong(nativeMatch(nativeCollectionMatch{id})))
+}
+
 // nativeCardMatch is the identity of the card holding the lyrics and the
 // queue, in Now Playing and in immersive mode.
 type nativeCardMatch struct{}
@@ -1081,7 +1095,7 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 		if item.Kind == "artist" {
 			radius = 48 / 2
 		}
-		nativeArtwork(c, item.Artwork, 48, radius, a, p)
+		nativeCollectionArt(nativeArtwork(c, item.Artwork, 48, radius, a, p), item.BrowseID)
 		if !full {
 			return
 		}
@@ -1406,14 +1420,14 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 	if compact && short {
 		ui.Row(c).Padding(8, inset, 0).Gap(16).AlignItems(ui.Center).Children(func() {
 			if m.Page.Artwork != "" {
-				nativeArtwork(c, m.Page.Artwork, min(96, contentWidth*0.25), tokenRadiusControl, a, p).Shrink(0)
+				nativeCollectionArt(nativeArtwork(c, m.Page.Artwork, min(96, contentWidth*0.25), tokenRadiusControl, a, p).Shrink(0), strings.TrimPrefix(m.Route, "browse:"))
 			}
 			ui.Column(c).Grow(1).MinWidth(0).Gap(8).Children(func() { title(24) })
 		})
 	} else if compact {
 		ui.Column(c).Padding(8, inset, 0).Gap(12).Children(func() {
 			if m.Page.Artwork != "" {
-				nativeCollectionCover(nativeArtwork(c, m.Page.Artwork, min(contentWidth-2*inset-64, 224), tokenRadiusControl, a, p).AlignSelf(ui.Center), p)
+				nativeCollectionCover(nativeCollectionArt(nativeArtwork(c, m.Page.Artwork, min(contentWidth-2*inset-64, 224), tokenRadiusControl, a, p).AlignSelf(ui.Center), strings.TrimPrefix(m.Route, "browse:")), p)
 			}
 			title(26)
 		})
@@ -1428,7 +1442,7 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 		}
 		ui.Row(c).Padding(top, inset, 0).Gap(24).AlignItems(ui.End).Children(func() {
 			if m.Page.Artwork != "" {
-				nativeCollectionCover(nativeArtwork(c, m.Page.Artwork, art, tokenRadiusControl, a, p), p)
+				nativeCollectionCover(nativeCollectionArt(nativeArtwork(c, m.Page.Artwork, art, tokenRadiusControl, a, p), strings.TrimPrefix(m.Route, "browse:")), p)
 			}
 			ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
 				title(font)
@@ -1496,7 +1510,7 @@ func nativeShortcutTile(c *ui.Context, item catalog.Item, m *UIModel, a ViewActi
 		// The art is flush with the tile's left side, so it takes the tile's
 		// corners there itself: MyGo's GPU renderer rounds only the innermost
 		// clip, and the art's own clip would square the tile's off.
-		nativeArtwork(c, item.Artwork, tokenProductTile, tokenRadiusControl, a, p).Radius(tokenRadiusControl, 0, 0, tokenRadiusControl)
+		nativeCollectionArt(nativeArtwork(c, item.Artwork, tokenProductTile, tokenRadiusControl, a, p).Radius(tokenRadiusControl, 0, 0, tokenRadiusControl), item.BrowseID)
 		t := ui.Text(c, item.Title).Grow(1).MinWidth(0).FontSize(tokenSizeSmall).FontWeight(700).MaxLines(2).Ellipsis("…")
 		if playing {
 			t.TextColor(p.accentText)
@@ -1642,7 +1656,7 @@ func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p n
 			radius = size / 2
 		}
 		ui.Box(c).Size(size, size).Shrink(0).Children(func() {
-			art := nativeArtwork(c, item.Artwork, size, radius, a, p)
+			art := nativeCollectionArt(nativeArtwork(c, item.Artwork, size, radius, a, p), item.BrowseID)
 			if hovered {
 				art.Shadow(tokenShadowArt.args(p))
 			}
@@ -1761,7 +1775,7 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 			if item.Kind == "artist" {
 				radius = 40 / 2
 			}
-			nativeArtwork(c, item.Artwork, 40, radius, a, p)
+			nativeCollectionArt(nativeArtwork(c, item.Artwork, 40, radius, a, p), item.BrowseID)
 			ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
 				t := ui.Text(c, item.Title).FontSize(tokenSizeSmall).FontWeight(500).MaxLines(1).Ellipsis("…")
 				if playing {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image/png"
 	"os"
 	"path/filepath"
@@ -8,6 +9,8 @@ import (
 	"time"
 
 	"github.com/egoist/mygo/ui"
+
+	"ytmgo/internal/catalog"
 )
 
 // motionTester is a tester with motion on, as the app runs: the layout
@@ -223,5 +226,41 @@ func TestImmersiveMorphsFromNowPlaying(t *testing.T) {
 	motionShot(t, tt, "immersive-out-half")
 	if !between(back.Y, immersive.Y, docked.Y) && !between(back.X, immersive.X, docked.X) {
 		t.Fatalf("the lyrics card cut out of immersive mode: %+v half way from %+v to %+v", back, immersive, docked)
+	}
+}
+
+// Opening a collection, its cover travels from the card into the page's
+// header, which shows at once from what the card says; the tracks follow as
+// they load. Half way it is on its way; it ends where the layout is.
+func TestOpeningACollectionCarriesItsCover(t *testing.T) {
+	m, a := nativeViewFixture()
+	m.Panel = false
+	for i := range m.Page.Shelves[1].Items {
+		m.Page.Shelves[1].Items[i].BrowseID = fmt.Sprintf("album-%d", i)
+	}
+	a.Open = func(item catalog.Item) {
+		// As desktop.openItem: the route, and a header seeded from the item.
+		m.Route, m.Loading = "browse:"+item.BrowseID, true
+		m.Page = catalog.Page{Title: item.Title, Creator: item.Artist, Artwork: item.Artwork}
+	}
+	tt := motionTester(m, a, 1440, 900)
+	tt.Frame()
+	if err := tt.Click("Discovery"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(tokenMotionMorph / 3)
+	tt.Frame()
+	early := tt.Image()
+	motionShot(t, tt, "collection-open-third")
+	tt.Advance(tokenMotionMorph)
+	tt.Frame()
+	settled := tt.Image()
+	m.instantMotion = true
+	tt.Frame()
+	if n := changedPixels(settled, tt.Image()); n > 0 {
+		t.Fatalf("the cover's journey ended %d pixels off the layout", n)
+	}
+	if n := changedPixels(early, settled); n == 0 {
+		t.Fatal("the page cut to its header: nothing was on its way a third through")
 	}
 }

@@ -58,6 +58,11 @@ type UIModel struct {
 	shortcutsFromSettings           bool            // Keyboard shortcuts was opened from Settings: it leads back
 	pageScroll                      *ui.ScrollState // the page's scrolling, as last built
 	instantMotion                   bool            // every frame without animation, for tests of layout
+	// Immersive mode's morph: when it last came or went, whether Now Playing
+	// was docked as it came (its cover is the one that grows), and whether
+	// it is docked now.
+	wasImmersive, immersiveFromDock, docked bool
+	immersiveAt                             time.Time
 }
 
 // Saved-account restoration as the view presents it; account.go owns the
@@ -162,6 +167,11 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 	}
 	before := nativePresentation(m)
 	nativeKeyboard(c, m, a)
+	// After the keys, which may have toggled it: this frame lays it out.
+	if m.Immersive != m.wasImmersive {
+		m.wasImmersive, m.immersiveAt = m.Immersive, c.Now()
+		m.immersiveFromDock = m.Immersive && m.docked
+	}
 	nativeKeyScrollers = nativeKeyScrollers[:0]
 	defer func() {
 		// The scrolling keys glide the scroller they are for, now that every
@@ -225,6 +235,7 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 		// against it their bottom corners would sit on the bar's colour.
 		row := ui.Row(c).Grow(1).MinHeight(0).AlignItems(ui.Stretch).Gap(tokenProductFrameGap).Padding(top, tokenProductFrameGap, tokenProductFrameGap)
 		docked, leaving := nativeDock(c, row, m, width)
+		m.docked = docked
 		pageWidth := nativePageWidth(m, width)
 		if leaving {
 			pageWidth -= nativePanelWidth + tokenProductFrameGap
@@ -233,7 +244,13 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 			if !m.Immersive {
 				nativeLibrary(c, m, a, p, width)
 			}
-			ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Radius(tokenRadiusPanel).Background(p.surface).Clip().Children(func() {
+			pagePanel := ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Radius(tokenRadiusPanel).Background(p.surface).Clip()
+			if nativeImmersing(c, m) {
+				// Into immersive mode the page panel grows over the library's
+				// and the global bar's room as they fade, and gives it back.
+				pagePanel.Transition(nativeLong(nativeMoves))
+			}
+			pagePanel.Children(func() {
 				nativeBackdrop(c, m, a, p)
 				var scrolled *ui.ScrollState
 				nativePageWash(nativePageLayer(c), m, a, p, &scrolled).Children(func() {
@@ -308,6 +325,41 @@ var nativeCrossfade = ui.ElementTransition{Duration: tokenMotionBase, Ease: toke
 // changes: up 8 from below and in, over the last one fading, as the
 // website's player has them.
 var nativeTrackText = ui.ElementTransition{Duration: tokenMotionBase, Ease: tokenMotionEase, Enter: &ui.Motion{Y: 8}, Exit: &ui.Motion{}}
+
+// nativeLong is nativeMorph for a long journey across the window, as
+// into and out of immersive mode: over the morph motion.
+func nativeLong(t ui.ElementTransition) ui.ElementTransition {
+	t.Duration = tokenMotionMorph
+	return t
+}
+
+// nativeFadeLong fades what immersive mode puts away or brings back (the
+// global bar, the library, its backdrop), in step with its morph.
+var nativeFadeLong = ui.ElementTransition{Duration: tokenMotionMorph, Ease: tokenMotionEase, Enter: &ui.Motion{}, Exit: &ui.Motion{}}
+
+// nativeImmersing reports whether immersive mode is coming or going: its
+// morph's long journeys use the morph motion while it does.
+func nativeImmersing(c *ui.Context, m *UIModel) bool {
+	return !m.immersiveAt.IsZero() && c.Now().Sub(m.immersiveAt) < tokenMotionMorph && !m.instantMotion
+}
+
+// nativeImmersiveCover is the immersive cover's identity: as it comes, the
+// cover it grows from (docked Now Playing's, else the player bar's); after,
+// the one it would shrink into were it to go now.
+func nativeImmersiveCover(c *ui.Context, m *UIModel, width float32) nativeCoverMatch {
+	fromDock := m.immersiveFromDock
+	if !nativeImmersing(c, m) {
+		fromDock = m.Panel && width > 1180
+	}
+	if fromDock {
+		return nativeCoverMatch{"now-playing"}
+	}
+	return nativeCoverMatch{"player-bar"}
+}
+
+// nativeCardMatch is the identity of the card holding the lyrics and the
+// queue, in Now Playing and in immersive mode.
+type nativeCardMatch struct{}
 
 // nativeCoverMatch is the playing cover's identity in a place that shows
 // it large or small (Now Playing's cover and its thumbnail): one appearing
@@ -449,7 +501,7 @@ func nativeChip(c *ui.Context, label string, p nativePalette, selected bool) ui.
 func nativeTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) {
 	bar := c.TitleBar()
 	left, right := nativeTitleBarInsets(bar, 16)
-	nativeTitleBarRow(c, bar).Height(max(nativeTopbarHeight, bar.Height)).Padding(0, right, 0, left).Gap(16).AlignItems(ui.Center).Children(func() {
+	nativeTitleBarRow(c, bar).Height(max(nativeTopbarHeight, bar.Height)).Padding(0, right, 0, left).Gap(16).AlignItems(ui.Center).Transition(nativeFadeLong).Children(func() {
 		ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
 			nativeAppMenuButton(c, a, p, 32)
 			if nativeCircleButton(c, "back", a.Tr("shellBack"), p, 32, false).Disabled(!m.CanBack).Clicked() {
@@ -797,7 +849,7 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 	a.secondaryArtwork = true
 	full := width > 1180 && !m.SidebarCollapsed
 	panelWidth := nativeLibraryPanelWidth(m, width)
-	panel := ui.Column(c).Width(panelWidth).Shrink(0).MinHeight(0).Background(p.surface).Radius(tokenRadiusPanel).Clip()
+	panel := ui.Column(c).Width(panelWidth).Shrink(0).MinHeight(0).Background(p.surface).Radius(tokenRadiusPanel).Clip().Transition(nativeFadeLong)
 	filter := ui.Local(panel, "library-filter", func() string { return "" })
 	panel.Children(func() {
 		libraryIcon := "library"
@@ -1781,7 +1833,9 @@ func nativePlayerBarContent(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 				info.Background(p.hover)
 			}
 			info.Children(func() {
-				nativePlayerArtwork(c, m.Current.Artwork, 56, tokenRadiusArt, a, p)
+				// Re-made as immersive mode comes or goes, so the cover leaving
+				// it can shrink back into this one (nativeImmersiveCover).
+				nativePlayerArtwork(c.Key(m.immersiveAt), m.Current.Artwork, 56, tokenRadiusArt, a, p).Transition(nativeLong(nativeMatch(nativeCoverMatch{"player-bar"})))
 				nativeTrackCaption(c, m, a, p)
 			})
 			if info.Clicked() {
@@ -2143,6 +2197,11 @@ func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 			// layouts and move between them; the cover shrinks into the
 			// thumbnail and grows back out of it (nativeCoverMatch).
 			cover := nativeMatch(nativeCoverMatch{"now-playing"})
+			card := nativeMoves
+			card.Match = nativeCardMatch{}
+			if nativeImmersing(c, m) {
+				cover, card = nativeLong(cover), nativeLong(card)
+			}
 			identity := func(art bool) {
 				ui.Row(c.Key("now-playing-identity")).Shrink(0).Gap(12).AlignItems(ui.Center).Transition(nativeMoves).Children(func() {
 					if art {
@@ -2187,16 +2246,16 @@ func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 			}
 			// Keyed: the layouts above it differ, and its reading position must
 			// survive switching between them.
-			card := nativePanelCard(c.Key("now-playing-card"), m, a, p).Transition(nativeMoves)
+			panelCard := nativePanelCard(c.Key("now-playing-card"), m, a, p).Transition(card)
 			if overlay {
-				card.Height(300 + lyricsExtra).Shrink(0)
+				panelCard.Height(300 + lyricsExtra).Shrink(0)
 				if revealLyrics {
 					// On short windows the card begins below the fold. Reveal it
 					// on entry only, so the reader can still scroll back to the cover.
-					card.ScrollIntoView()
+					panelCard.ScrollIntoView()
 				}
 			} else {
-				card.Grow(1).MinHeight(120)
+				panelCard.Grow(1).MinHeight(120)
 			}
 		}
 		if overlay {
@@ -2360,18 +2419,25 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 					// square cover while filling more of the available column.
 					artSize = min(mediaWidth, mediaHeight*16/9)
 				}
-				nativeMedia(c, m, a, p, artSize).Shadow(tokenShadowArt.args(p))
-				nativeMediaSwitch(c, m, a, p)
+				media := nativeMedia(c.Key("immersive-media"), m, a, p, artSize).Shadow(tokenShadowArt.args(p))
+				if !m.Video {
+					// It grows from the cover that was showing, and shrinks
+					// back into the one that will.
+					media.Transition(nativeLong(nativeMatch(nativeImmersiveCover(c, m, width))))
+				}
+				nativeMediaSwitch(c, m, a, p).Transition(nativeFadeLong)
 				nativeImmersiveTitle(c, m, a, p, false)
 				nativePlaybackNotice(c, m, a, p)
 			})
 		})
-		nativePanelCard(c, m, a, p).Width(panelWidth).HeightPercent(90).Background(p.veil)
+		card := nativeLong(nativeMatch(nativeCardMatch{}))
+		card.Exit = &ui.Motion{}
+		nativePanelCard(c.Key("immersive-card"), m, a, p).Width(panelWidth).HeightPercent(90).Background(p.veil).Transition(card)
 	})
 }
 
 func nativeImmersiveTitle(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool) {
-	ui.Column(c).Gap(8).AlignItems(ui.Center).Children(func() {
+	ui.Column(c).Gap(8).AlignItems(ui.Center).Transition(nativeFadeLong).Children(func() {
 		title, artist := nativeImmersiveTitleText(m, a)
 		size := float32(tokenSizeH2)
 		if compact {
@@ -2767,7 +2833,7 @@ const nativeWashHeight = 320
 // a transform: a transformed child makes MyGo allocate a full-size RGBA mask
 // for the rounded parent clip, which would erase the smaller canvas's savings.
 func nativeCoverBlur(c *ui.Context, artwork ui.ImageSource) ui.Element {
-	layer := ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(25).Effect(backdropLayer{}).PassThrough()
+	layer := ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(25).Effect(backdropLayer{}).PassThrough().Transition(nativeFadeLong)
 	layer.Children(func() { ui.Image(c, artwork).Fill().Fit(ui.Cover).Blur(17.5).PassThrough() })
 	return layer
 }

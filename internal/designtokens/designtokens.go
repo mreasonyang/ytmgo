@@ -25,9 +25,9 @@ func Generate(raw []byte) ([]byte, error) {
 		Size   map[string]json.RawMessage `json:"size"`
 		Radius map[string]json.RawMessage `json:"radius"`
 		Motion struct {
-			Fast, Base, Slow int
-			Press, Grow      float64
-			Ease             string
+			Fast, Base, Slow, Morph int
+			Press, Grow             float64
+			Ease                    string
 		} `json:"motion"`
 		Product map[string]int                                          `json:"product"`
 		Shadow  map[string]json.RawMessage                              `json:"shadow"`
@@ -83,7 +83,7 @@ func Generate(raw []byte) ([]byte, error) {
 	}
 	d := t.Font.Display
 	fmt.Fprintf(&b, "\ttokenDisplayWeight = %d\n\ttokenDisplayLeading = %g\n\ttokenDisplayLeadingCJK = %g\n", d.Weight, d.Leading, d.LeadingCJK)
-	fmt.Fprintf(&b, "\ttokenMotionFast = %d * time.Millisecond\n\ttokenMotionBase = %d * time.Millisecond\n\ttokenMotionSlow = %d * time.Millisecond\n", t.Motion.Fast, t.Motion.Base, t.Motion.Slow)
+	fmt.Fprintf(&b, "\ttokenMotionFast = %d * time.Millisecond\n\ttokenMotionBase = %d * time.Millisecond\n\ttokenMotionSlow = %d * time.Millisecond\n\ttokenMotionMorph = %d * time.Millisecond\n", t.Motion.Fast, t.Motion.Base, t.Motion.Slow, t.Motion.Morph)
 	fmt.Fprintf(&b, "\ttokenPressScale = %g\n\ttokenGrowScale = %g\n", t.Motion.Press, t.Motion.Grow)
 	for _, k := range sorted(t.Product) {
 		fmt.Fprintf(&b, "\ttokenProduct%s = %d\n", title(k), t.Product[k])

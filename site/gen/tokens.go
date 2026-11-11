@@ -38,6 +38,7 @@ type tokens struct {
 		Fast  int     `json:"fast"`
 		Base  int     `json:"base"`
 		Slow  int     `json:"slow"`
+		Morph int     `json:"morph"`
 		Ease  string  `json:"ease"`
 		Press float64 `json:"press"`
 		Grow  float64 `json:"grow"`
@@ -163,6 +164,7 @@ func (t *tokens) css() (string, error) {
 	prop("d-fast", fmt.Sprintf("%dms", m.Fast))
 	prop("d-base", fmt.Sprintf("%dms", m.Base))
 	prop("d-slow", fmt.Sprintf("%dms", m.Slow))
+	prop("d-morph", fmt.Sprintf("%dms", m.Morph))
 	prop("ease", m.Ease)
 	prop("press-scale", fmt.Sprint(m.Press))
 	prop("grow-scale", fmt.Sprint(m.Grow))

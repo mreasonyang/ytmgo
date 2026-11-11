@@ -88,6 +88,7 @@ const (
 	tokenMotionFast             = 150 * time.Millisecond
 	tokenMotionBase             = 250 * time.Millisecond
 	tokenMotionSlow             = 700 * time.Millisecond
+	tokenMotionMorph            = 400 * time.Millisecond
 	tokenPressScale             = 0.96
 	tokenGrowScale              = 1.05
 	tokenProductCardCover       = 164

@@ -14,7 +14,11 @@ import (
 // tests' fixture turns it off.
 func motionTester(m *UIModel, a ViewActions, width, height int) *ui.Tester {
 	m.instantMotion = false
-	return ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, height)
+	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, height)
+	if os.Getenv("YTMGO_MOTION_DIR") != "" {
+		tt.SetScale(2) // sharp frames to look at; slower
+	}
+	return tt
 }
 
 // between reports whether v is strictly on its way from a to b.
@@ -57,7 +61,6 @@ func TestLyricsExpandMorphs(t *testing.T) {
 	m.Panel = true
 	a.SetLyricsExpanded = func(expanded bool) { m.LyricsExpanded = expanded }
 	tt := motionTester(m, a, 1440, 900)
-	tt.SetScale(2)
 	tt.Frame()
 	before := rect(t, tt, "Lyrics · Content")
 	if err := tt.Click(a.Tr("nativeLyricsExpand")); err != nil {
@@ -120,7 +123,6 @@ func TestNowPlayingSlidesInAndOut(t *testing.T) {
 	m, a := nativeViewFixture()
 	m.Panel = false
 	tt := motionTester(m, a, 1440, 900)
-	tt.SetScale(2)
 	tt.Frame()
 	wide := rect(t, tt, a.Tr("shellContent")).W
 	m.Panel = true
@@ -157,7 +159,6 @@ func TestNowPlayingSlidesInAndOut(t *testing.T) {
 func TestSheetPagesSlideInOneFrame(t *testing.T) {
 	m, a, _ := nativeSettingsFixture(1280, 820)
 	tt := motionTester(m, a, 1280, 820)
-	tt.SetScale(2)
 	tt.Frame()
 	settings := rect(t, tt, a.Tr("shellClose"))
 	if err := tt.Click(a.Tr("nativeSettingsViewAll")); err != nil {
@@ -182,5 +183,45 @@ func TestSheetPagesSlideInOneFrame(t *testing.T) {
 	motionShot(t, tt, "sheet-back-half")
 	if !between(back.X, shortcuts.X, settings.X) {
 		t.Fatalf("going back cut: close at %.1f half way from %.1f to %.1f", back.X, shortcuts.X, settings.X)
+	}
+	tt.Advance(tokenMotionBase)
+	tt.Frame()
+	tt.Frame()
+	if r, ok := tt.Find(a.Tr("nativeSettingsViewAll")); !ok || r.H <= 0 || r.Y+r.H > 820-40 {
+		t.Fatalf("back in Settings, the Keyboard card is not in view: %v %v", r, ok)
+	}
+}
+
+// Into immersive mode the cover and the lyrics card travel from docked Now
+// Playing to their places (the card to the right column), while the
+// library and the global bar fade; out of it they travel back.
+func TestImmersiveMorphsFromNowPlaying(t *testing.T) {
+	m, a := nativeTimedLyricsFixture()
+	m.Panel = true
+	tt := motionTester(m, a, 1440, 900)
+	tt.Frame()
+	tt.Frame()
+	docked := rect(t, tt, "Lyrics · Content")
+	tt.Key(ui.Cmd|ui.Shift, ui.KeyF)
+	if !m.Immersive {
+		t.Fatal("⌘⇧F did not enter immersive mode")
+	}
+	tt.Advance(tokenMotionMorph / 2)
+	tt.Frame()
+	half := rect(t, tt, "Lyrics · Content")
+	motionShot(t, tt, "immersive-in-half")
+	tt.Advance(tokenMotionMorph)
+	tt.Frame()
+	immersive := rect(t, tt, "Lyrics · Content")
+	if !between(half.Y, docked.Y, immersive.Y) && !between(half.X, docked.X, immersive.X) {
+		t.Fatalf("the lyrics card cut into immersive mode: %+v, %+v half way, %+v", docked, half, immersive)
+	}
+	tt.Key(ui.Cmd|ui.Shift, ui.KeyF)
+	tt.Advance(tokenMotionMorph / 2)
+	tt.Frame()
+	back := rect(t, tt, "Lyrics · Content")
+	motionShot(t, tt, "immersive-out-half")
+	if !between(back.Y, immersive.Y, docked.Y) && !between(back.X, immersive.X, docked.X) {
+		t.Fatalf("the lyrics card cut out of immersive mode: %+v half way from %+v to %+v", back, immersive, docked)
 	}
 }

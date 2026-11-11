@@ -2707,7 +2707,7 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 		})
 		card := nativeLong(nativeMatch(nativeCardMatch{}))
 		card.Exit = &ui.Motion{}
-		nativePanelCard(c.Key("immersive-card"), m, a, p).Width(panelWidth).Height(layout.height).Shrink(0).Margin(0, 0, 0, nativeImmersivePair-pad).Background(p.veil).Transition(card)
+		nativePanelCard(c.Key("immersive-card"), m, a, p).Width(panelWidth).Height(layout.height).Shrink(0).Margin(0, 0, 0, nativeImmersivePair-pad).Background(p.pane).Transition(card)
 	})
 }
 
@@ -3469,6 +3469,16 @@ func nativeSetTheater(m *UIModel, on bool) {
 	m.VideoTheater, m.theaterFromPanel = false, false
 }
 
+// nativeFadeAt is an opacity fading over the fast motion from from toward
+// 1 (in) or 0 (out), elapsed into the fade.
+func nativeFadeAt(from float32, in bool, elapsed time.Duration) float32 {
+	k := min(1, float32(elapsed)/float32(tokenMotionFast))
+	if in {
+		return from + (1-from)*k
+	}
+	return from * (1 - k)
+}
+
 func nativeSetFullScreen(m *UIModel, a ViewActions, on bool) {
 	if m.VideoFullScreen == on {
 		return
@@ -3484,8 +3494,11 @@ func nativeSetFullScreen(m *UIModel, a ViewActions, on bool) {
 const nativeFullScreenIdle = 2500 * time.Millisecond
 
 type nativeFullScreenState struct {
-	x, y   float32
-	active time.Time
+	x, y    float32
+	active  time.Time
+	shown   bool
+	from    float32   // the controls' opacity when they last turned
+	changed time.Time // when they last turned
 }
 
 // nativeFullScreenVideo is the window in full screen: the video, as large
@@ -3508,6 +3521,25 @@ func nativeFullScreenVideo(c *ui.Context, m *UIModel, a ViewActions, width, heig
 	if !show {
 		root.Cursor(ui.CursorNone)
 	}
+	// The controls fade in and out (fast) rather than popping, timed here
+	// so a frozen clock (tests) never holds frames.
+	alpha := float32(0)
+	if show {
+		alpha = 1
+	}
+	if show != s.shown {
+		from := s.from
+		if !s.changed.IsZero() {
+			from = nativeFadeAt(s.from, s.shown, now.Sub(s.changed))
+		}
+		s.shown, s.from, s.changed = show, from, now
+	}
+	if !s.changed.IsZero() && !c.Preferences().ReduceMotion && !m.instantMotion {
+		alpha = nativeFadeAt(s.from, show, now.Sub(s.changed))
+		if alpha != 0 && alpha != 1 {
+			c.AnimationFrame()
+		}
+	}
 	root.Children(func() {
 		if m.showsVideo() {
 			w := min(width, height*16/9)
@@ -3515,10 +3547,13 @@ func nativeFullScreenVideo(c *ui.Context, m *UIModel, a ViewActions, width, heig
 		} else {
 			nativePlayerArtwork(c, m.Current.Artwork, nativeGridFloor(min(width, height)*0.7), tokenRadiusControl, a, stage)
 		}
-		if !show {
+		if alpha == 0 {
 			return
 		}
-		bar := ui.Column(c).Absolute().Left(0).Right(0).Bottom(0).Padding(16, 24).Gap(8).Background(stage.veil)
+		// A scrim fading up from the foot, not a band: the picture keeps its
+		// edge, and the controls read over any frame.
+		bar := ui.Column(c).Absolute().Left(0).Right(0).Bottom(0).Padding(80, 24, 16, 24).Gap(8).Opacity(alpha).
+			LinearGradient(ui.LinearGradient{From: stage.veil.Alpha(0), To: stage.veil, Angle: 180, End: 0.6})
 		bar.Children(func() {
 			nativeSeek(c, m, a, stage)
 			ui.Row(c).Gap(16).AlignItems(ui.Center).Children(func() {

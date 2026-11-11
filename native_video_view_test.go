@@ -119,3 +119,30 @@ func TestVideoFullScreen(t *testing.T) {
 		}
 	}
 }
+
+// The full screen controls stay while the pointer moves and fade out (over
+// the fast motion, not at once) once it rests during playback.
+func TestFullScreenControlsFadeWhenThePointerRests(t *testing.T) {
+	m, a := nativeViewFixture()
+	m.Video, m.VideoFullScreen = true, true
+	tt := motionTester(m, a, 1280, 800)
+	tt.Move(640, 400)
+	tt.Frame()
+	tt.Advance(tokenMotionFast)
+	tt.Frame()
+	exit := a.Tr("nativeVideoExitFullScreen")
+	if _, ok := tt.Find(exit); !ok {
+		t.Fatal("the controls did not come with the pointer")
+	}
+	// The rest counts from the move, a fast motion ago.
+	tt.Advance(nativeFullScreenIdle - tokenMotionFast + tokenMotionFast/2)
+	tt.Frame()
+	if _, ok := tt.Find(exit); !ok {
+		t.Fatal("the controls vanished at once instead of fading")
+	}
+	tt.Advance(tokenMotionFast)
+	tt.Frame()
+	if _, ok := tt.Find(exit); ok {
+		t.Fatal("the controls stayed over the playing video at rest")
+	}
+}

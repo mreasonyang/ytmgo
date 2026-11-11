@@ -25,8 +25,9 @@ type nativePalette struct {
 	// track is the unfilled part of progress bars and sliders.
 	track ui.Color
 	// scrim dims the window behind a dialog; veil is base, translucent, for a
-	// surface over artwork.
-	scrim, veil ui.Color
+	// surface over moving content. pane is a card over the immersive
+	// ambience: surface, translucent, so it lifts off a wash of base's tone.
+	scrim, veil, pane ui.Color
 	// dim is upcoming lyric lines: decorative, readable once they're sung.
 	dim ui.Color
 	// selection is selected text; inverseHover a hovered inverted button.

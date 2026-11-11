@@ -130,7 +130,8 @@ dark only.
 | `selection` | 20 % white | 20 % `text` | Selected text |
 | `inverseHover` | `#dbdbdb` | `#303030` | A hovered inverted button |
 | `scrim` | 60 % black | 40 % black | Dims the window behind a dialog |
-| `veil` | 70 % `base` | 70 % `base` | A surface over moving content: the sticky nav (with blur), the immersive card over the cover. 70 % keeps `secondary` links at 5:1 over white content |
+| `veil` | 70 % `base` | 70 % `base` | A surface over moving content: the sticky nav (with blur), the video's controls. 70 % keeps `secondary` links at 5:1 over white content |
+| `pane` | 70 % `base` | 70 % `surface` | A card over the immersive ambience: the lyrics and queue card. Light takes `surface`, as `base` over a wash of its own tone vanishes; translucent text (`dim`) keeps its ratio on either, so the tone is for the card, not the words |
 
 Dark text roles are white made translucent, so on a tint or a cover's wash
 they take its colour; on black they are exactly the greys in brackets.
@@ -499,8 +500,9 @@ tooltip. The website uses icons only on actions and platform names.
 - **Video controls:** over the video's corner (8 in) under the pointer, 32
   icon buttons on the stage's `veil`: fill the play view (a toggle, with its
   dot) and full screen. Full screen is the black stage, the video as large
-  as it fits, and the transport on a `veil` band at its foot while the
-  pointer moves.
+  as it fits, and the transport over a scrim fading from clear to `veil`
+  up from its foot (a band would cut the picture), shown while the pointer
+  moves or playback pauses; it fades in and out over `fast`.
 - **Chips** 32, capsule, `hover` fill, inverted when selected. **Pills** 36.
 - **Lyrics:** the current line is `text` and slightly larger, sung lines
   `muted`, upcoming lines `dim`; it follows playback until you scroll, then offers
@@ -574,7 +576,7 @@ marked artwork rules.
 | --- | --- | --- |
 | Tokens | Hand-written in `native_style.go` | Generated from `tokens.json` (`native_tokens_gen.go`), checked by a test |
 | Coral | Also errors, selection, Premium, open library item, every active toggle, the hovered volume slider | Play only; errors `attention` with an icon, selection inverted, Premium neutral, non-playback toggles `text` with a dot |
-| Colour shares | Text at 20, 30, 86 %, base at 35 %, coral at 25 %, made in the views | Roles only: `track`, `selection`, `inverseHover`, `veil`, `dim`; lyric lines `muted` / `dim` |
+| Colour shares | Text at 20, 30, 86 %, base at 35 %, coral at 25 %, made in the views | Roles only: `track`, `selection`, `inverseHover`, `veil`, `pane`, `dim`; lyric lines `muted` / `dim` |
 | Radii | 4, 5, 6, 8, 10, 12, 14 | The scale 8, 12, 16, 24: `art` 8, `control` 12, `panel` 16, `sheet` 24, every nest smaller inside |
 | Type | Base 14; 11, 14, 16, 20, 22 in use | The scale: 12, 13, 15, 17, 22, 24, 32, title |
 | Display titles | System font 800, ad hoc | System font at the display weight and leading, through one helper (`nativeDisplay`) |

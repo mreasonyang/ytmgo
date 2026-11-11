@@ -253,12 +253,11 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 			if !m.Immersive {
 				nativeLibrary(c, m, a, p, width)
 			}
-			pagePanel := ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Radius(tokenRadiusPanel).Background(p.surface).Clip()
-			if nativeImmersing(c, m) {
-				// Into immersive mode the page panel grows over the library's
-				// and the global bar's room as they fade, and gives it back.
-				pagePanel.Transition(nativeLong(nativeMoves))
-			}
+			// The page panel moves in step with what changes beside it: it grows
+			// over the library's and the global bar's room as immersive mode
+			// fades them, and follows the library to the rail and back and Now
+			// Playing's room as it goes, rather than jumping.
+			pagePanel := ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Radius(tokenRadiusPanel).Background(p.surface).Clip().Transition(nativeLong(nativeMoves))
 			pagePanel.Children(func() {
 				nativeBackdrop(c, m, a, p)
 				var scrolled *ui.ScrollState
@@ -329,6 +328,24 @@ var nativeMoves = ui.ElementTransition{Duration: tokenMotionBase, Ease: tokenMot
 // nativeCrossfade fades content that replaces content in place: the next
 // cover over the last, over the base motion.
 var nativeCrossfade = ui.ElementTransition{Duration: tokenMotionBase, Ease: tokenMotionEase, Enter: &ui.Motion{}, Exit: &ui.Motion{}}
+
+// nativeSwap cross-fades a small swap in place (a glyph, a card's view)
+// over the fast motion.
+var nativeSwap = ui.ElementTransition{Duration: tokenMotionFast, Ease: tokenMotionEase, Enter: &ui.Motion{}, Exit: &ui.Motion{}}
+
+// nativeAppear brings in a popover laid out over the window, where MyGo's
+// transitions don't reach: from 4 above and transparent to its place over
+// the fast motion, as the website's menus open.
+func nativeAppear(c *ui.Context, e ui.Element, still bool) ui.Element {
+	opened := ui.Local(e, "appeared", func() time.Time { return c.Now() })
+	k := float32(c.Now().Sub(*opened)) / float32(tokenMotionFast)
+	if k >= 1 || still || c.Preferences().ReduceMotion {
+		return e
+	}
+	c.AnimationFrame()
+	arrived := tokenMotionEase(max(0, k))
+	return e.Opacity(arrived).Translate(0, -4*(1-arrived))
+}
 
 // nativeTrackText is how a track's title and artist arrive as the track
 // changes: up 8 from below and in, over the last one fading, as the
@@ -508,7 +525,8 @@ func nativePill(c *ui.Context, label string, p nativePalette, primary bool) ui.E
 
 // nativeChip is a filter chip: translucent at rest, inverted when selected.
 func nativeChip(c *ui.Context, label string, p nativePalette, selected bool) ui.Element {
-	b := ui.Button(c, label).Height(tokenProductChip).MinHeight(tokenProductChip).Padding(0, 12).Radius(tokenRadiusPill).BorderWidth(0).FontSize(tokenSizeMeta).FontWeight(500).Background(p.hover).TextColor(p.text)
+	b := ui.Button(c, label).Height(tokenProductChip).MinHeight(tokenProductChip).Padding(0, 12).Radius(tokenRadiusPill).BorderWidth(0).FontSize(tokenSizeMeta).FontWeight(500).Background(p.hover).TextColor(p.text).
+		Transition(ui.ElementTransition{Duration: tokenMotionFast, Ease: tokenMotionEase, Colors: true})
 	if selected {
 		b.Selected(true).Background(p.text).TextColor(p.base)
 	} else if b.Hovered() {
@@ -927,7 +945,10 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 	a.secondaryArtwork = true
 	full := width > 1180 && !m.SidebarCollapsed
 	panelWidth := nativeLibraryPanelWidth(m, width)
-	panel := ui.Column(c).Width(panelWidth).Shrink(0).MinHeight(0).Background(p.surface).Radius(tokenRadiusPanel).Clip().Transition(nativeFadeLong)
+	// It fades with immersive mode, and narrows to the rail and back.
+	library := nativeFadeLong
+	library.Size = true
+	panel := ui.Column(c).Width(panelWidth).Shrink(0).MinHeight(0).Background(p.surface).Radius(tokenRadiusPanel).Clip().Transition(library)
 	filter := ui.Local(panel, "library-filter", func() string { return "" })
 	panel.Children(func() {
 		libraryIcon := "library"
@@ -2051,7 +2072,7 @@ func nativeMiniPlayer(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 
 func nativePlayButton(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, size float32) {
 	if m.PlaybackLoading {
-		ui.ButtonBase(c).Size(size, size).Shrink(0).Radius(size / 2).Background(p.text).TextColor(p.base).Disabled(true).Label(a.Tr("shellLoading")).Children(func() { ui.Spinner(c).Size(size*0.5, size*0.5) })
+		ui.ButtonBase(c).Size(size, size).Shrink(0).Radius(size / 2).Background(p.text).TextColor(p.base).Disabled(true).Label(a.Tr("shellLoading")).Children(func() { ui.Spinner(c.Key("loading")).Size(size*0.5, size*0.5).Transition(nativeSwap) })
 		return
 	}
 	icon, key := "play", "shellPlay"
@@ -2061,7 +2082,9 @@ func nativePlayButton(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 	b := ui.ButtonBase(c).Size(size, size).Shrink(0).Radius(size / 2).Label(a.Tr(key)).Background(p.text).TextColor(p.base).Disabled(m.Current.ID == "")
 	nativeTip(c, b, a.Tr(key), p)
 	nativePlayFeedback(b)
-	b.Children(func() { ui.Icon(c, nativeIcons[icon]).Size(nativeGrid(size*0.5), nativeGrid(size*0.5)) })
+	b.Children(func() {
+		ui.Icon(c.Key(icon), nativeIcons[icon]).Size(nativeGrid(size*0.5), nativeGrid(size*0.5)).Transition(nativeSwap)
+	})
 	if b.Clicked() {
 		a.Toggle()
 	}
@@ -2302,10 +2325,9 @@ func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 				identity(true)
 				mediaSwitch()
 			} else {
-				media := nativeMedia(c.Key("now-playing-media"), m, a, p, artSize).AlignSelf(ui.Center)
-				if !m.Video {
-					media.Transition(cover)
-				}
+				// Cover or video, the media frame is one element: switching
+				// changes its shape (square, 16:9) rather than replacing it.
+				nativeMedia(c.Key("now-playing-media"), m, a, p, artSize).AlignSelf(ui.Center).Transition(cover)
 				mediaSwitch()
 				identity(false)
 			}
@@ -2361,7 +2383,7 @@ func nativePanelCard(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 		if queue {
 			tabs.PaddingX(12)
 		}
-		nativePanelBody(c, m, a, p)
+		nativePanelBody(c, m, a, p).Transition(nativeSwap)
 	})
 }
 
@@ -2497,12 +2519,9 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 					// square cover while filling more of the available column.
 					artSize = min(mediaWidth, mediaHeight*16/9)
 				}
-				media := nativeMedia(c.Key("immersive-media"), m, a, p, artSize).Shadow(tokenShadowArt.args(p))
-				if !m.Video {
-					// It grows from the cover that was showing, and shrinks
-					// back into the one that will.
-					media.Transition(nativeLong(nativeMatch(nativeImmersiveCover(c, m, width))))
-				}
+				// It grows from the cover that was showing, and shrinks back into
+				// the one that will; cover or video, it changes shape in place.
+				nativeMedia(c.Key("immersive-media"), m, a, p, artSize).Shadow(tokenShadowArt.args(p)).Transition(nativeLong(nativeMatch(nativeImmersiveCover(c, m, width))))
 				nativeMediaSwitch(c, m, a, p).Transition(nativeFadeLong)
 				nativeImmersiveTitle(c, m, a, p, false)
 				nativePlaybackNotice(c, m, a, p)

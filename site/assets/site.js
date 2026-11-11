@@ -120,15 +120,22 @@
   }).catch(() => { /* The static links already point at the releases page. */ });
 
   // Copy buttons.
+  // Both labels share one cell, so the button keeps the longer one's width
+  // and "Copy" crosses into "Copied" in place rather than swapping.
   document.querySelectorAll("[data-copy]").forEach((button) => {
-    const original = button.textContent;
+    const idle = document.createElement("span");
+    const done = document.createElement("span");
+    idle.textContent = button.textContent;
+    done.textContent = fmt("copied");
+    done.setAttribute("aria-hidden", "true");
+    button.replaceChildren(idle, done);
     button.addEventListener("click", async () => {
       const text = button.parentNode.querySelector("code").textContent;
       try {
         await navigator.clipboard.writeText(text);
-        button.textContent = fmt("copied");
         button.classList.add("is-done");
-        setTimeout(() => { button.textContent = original; button.classList.remove("is-done"); }, 1600);
+        button.setAttribute("aria-label", done.textContent);
+        setTimeout(() => { button.classList.remove("is-done"); button.removeAttribute("aria-label"); }, 1600);
       } catch { /* Clipboard unavailable: the text stays selectable. */ }
     });
   });

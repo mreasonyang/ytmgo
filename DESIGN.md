@@ -90,6 +90,16 @@ in `native_style.go`, display-title styling in `native_fonts.go` (system font on
   claims leave a focused control's keys alone, where a scroller's own
   would take a radio group's Home. Choosing the shown page scrolled down
   glides it to its top (`UIModel.glideToTop`).
+- **Continuity** (guidebook §9): persistent pieces carry MyGo transitions:
+  `Match` for a cover or card that changes place (`nativeCoverMatch`,
+  `nativeCardMatch`, `nativeCollectionMatch`), keyed elements with
+  `nativeMoves` for what rearranges, Enter/Exit fades for what comes and
+  goes. Dialogs and popovers lie over the window, which MyGo lays out after
+  its transitions, so the sheet, the floating Now Playing and popovers move
+  themselves (`nativeSheet`, `nativeFloating`, `nativeAppear`). Layout tests
+  run without motion (`UIModel.instantMotion`, `DisableAnimations`); the
+  motion tests in native_motion_test.go turn it on and check each
+  transition half way and settled.
 - **Glides:** the lyrics follow playback with `ScrollTo` over
   `tokenMotionSlow` along `tokenMotionEase` (generated from the tokens'
   cubic-bezier), and arrive at their line at once when they appear or

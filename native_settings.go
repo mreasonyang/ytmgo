@@ -432,7 +432,7 @@ func nativeLanguageControl(c *ui.Context, m *UIModel, a ViewActions, p nativePal
 		ui.Icon(c, nativeIcons["chevron-down"]).Size(16, 16).TextColor(p.secondary)
 	})
 	sel.Popup(func(panel ui.Element) {
-		panel.Margin(8, 0, 0, 0).Padding(4).Radius(tokenRadiusControl).Background(p.raised).Border(1, p.line).Shadow(tokenShadowPopover.args(p))
+		nativeAppear(c, panel.Margin(8, 0, 0, 0).Padding(4).Radius(tokenRadiusControl).Background(p.raised).Border(1, p.line).Shadow(tokenShadowPopover.args(p)), m.instantMotion)
 		for _, option := range nativeLanguages {
 			title := nativeLanguageTitle(a, option.id)
 			item := sel.Item(title).Height(36).PaddingX(12).Gap(8).Radius(tokenRadiusArt).AlignItems(ui.Center).TextColor(p.text)

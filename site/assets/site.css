@@ -297,6 +297,11 @@ figure.shot:not([class*=wrap]) { margin-inline: 0; }
 .cmd code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; font: var(--t-meta)/1.8 var(--mono); color: var(--text); scrollbar-width: none; }
 .cmd__copy { flex: none; padding: 4px 12px; border: 0; border-radius: var(--r-art); background: var(--hover); color: var(--text); font: 600 var(--t-meta) var(--sans); cursor: pointer; transition: background-color var(--d-fast); }
 .cmd__copy:hover, .cmd__copy.is-done { background: var(--press); }
+.cmd__copy { display: grid; }
+.cmd__copy > span { grid-area: 1 / 1; transition: opacity var(--d-fast) var(--ease), translate var(--d-fast) var(--ease); }
+.cmd__copy > span + span, .cmd__copy.is-done > span:first-child { opacity: 0; translate: 0 4px; }
+.cmd__copy.is-done > span:first-child { translate: 0 -4px; }
+.cmd__copy.is-done > span + span { opacity: 1; translate: 0 0; }
 
 /* FAQ */
 .faq { padding: var(--s-section) 0; border-top: 1px solid var(--line); }

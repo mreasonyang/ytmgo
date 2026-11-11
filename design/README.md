@@ -382,7 +382,8 @@ tooltip. The website uses icons only on actions and platform names.
 | --- | --- | --- |
 | `fast` | 150 ms | Hover and press colour, small state changes |
 | `base` | 250 ms | Menus, disclosures, panel changes |
-| `slow` | 700 ms | Lyrics scrolling, fade-ins |
+| `slow` | 700 ms | Lyrics scrolling, fade-ins, a cover's colour blending to the next |
+| `morph` | 400 ms | Long journeys across the window: into and out of immersive mode, a collection's cover into its page |
 | `ease` | `cubic-bezier(.2, .7, .2, 1)` | Everything that eases |
 
 - **Motion shows the product or its state.** The product animates state:
@@ -400,7 +401,32 @@ tooltip. The website uses icons only on actions and platform names.
   wheel, a drag, the website player's seek) follows them at once, and
   grabbing a glide stops it. A view that appears or relays out arrives at
   its place without gliding there.
-- Only opacity and transforms animate.
+- **Continuity: what persists moves; it never vanishes and reappears.**
+  When a state changes, the elements both states share carry the eye from
+  one to the other:
+  - Lyrics expand: the cover shrinks into the thumbnail beside the title
+    while the title, the switch and the card move to their places
+    (`base`); restoring runs it back.
+  - Now Playing docks by sliding in from the right edge, where the
+    controls that open it are, and slides back out; the page keeps its
+    width until the panel has gone, then eases to fill the room. Floating,
+    it rises from the bottom and sinks back.
+  - Immersive mode: the cover grows from the one that was showing (the
+    panel's or the player bar's) and shrinks back into the one that will;
+    the lyrics card travels with it; the library and the global bar fade as
+    the page grows over their room (`morph`).
+  - Opening a collection, its header shows at once from the card, and the
+    card's cover travels into it (`morph`); Back carries it home.
+  - Settings and Keyboard shortcuts are one sheet: its frame takes the
+    next page's width as the pages slide, Settings from the left.
+  - Track changes: covers cross-fade, titles rise 8 into place over the
+    last fading, and cover colours blend (`slow`). Cover and video are one
+    frame that changes shape. Small swaps (a play glyph, a card's view, a
+    chip's fill, the website's Copy) cross-fade over `fast`; popovers drop
+    4 into place as they fade in.
+- Only opacity and transforms animate, except a shared element's frame
+  (a cover or a card on its journey) and a sheet's or panel's size, which
+  morph.
 - Reduced motion, the website player's pause, and no JavaScript all show
   the final state immediately. Nothing is ever hidden waiting for motion.
 

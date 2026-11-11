@@ -134,7 +134,8 @@ func TestNowPlayingSlidesInAndOut(t *testing.T) {
 	tt.Frame()
 	half := rect(t, tt, a.Tr("shellClosePanel"))
 	motionShot(t, tt, "now-playing-open-half")
-	tt.Advance(tokenMotionBase)
+	// The page eases to its new width over the morph motion.
+	tt.Advance(tokenMotionMorph)
 	tt.Frame()
 	open := rect(t, tt, a.Tr("shellClosePanel"))
 	if !between(half.X, open.X, open.X+nativePanelWidth) {
@@ -150,6 +151,8 @@ func TestNowPlayingSlidesInAndOut(t *testing.T) {
 		t.Fatalf("the page widened under the leaving panel: %.1f, was %.1f", w, narrow)
 	}
 	tt.Advance(tokenMotionBase)
+	tt.Frame()
+	tt.Advance(tokenMotionMorph)
 	tt.Frame()
 	if w := rect(t, tt, a.Tr("shellContent")).W; w != wide {
 		t.Fatalf("the page did not fill the room once the panel had gone: %.1f, want %.1f", w, wide)
@@ -298,5 +301,47 @@ func TestFloatingNowPlayingRisesAndSinks(t *testing.T) {
 	tt.Frame()
 	if _, ok := tt.Find(a.Tr("shellClosePanel")); ok {
 		t.Fatal("the sheet stayed after sinking")
+	}
+}
+
+// Cover to video, the media frame changes shape in place, from the square
+// to 16:9, rather than one frame replacing the other.
+func TestCoverToVideoChangesShape(t *testing.T) {
+	m, a := nativeViewFixture()
+	m.Panel = true
+	a.Video = func(on bool) { m.Video = on }
+	tt := motionTester(m, a, 1440, 900)
+	tt.Frame()
+	m.Video = true
+	tt.Frame()
+	tt.Advance(tokenMotionBase / 3)
+	tt.Frame()
+	half := rect(t, tt, a.Tr("nativeVideo"))
+	tt.Advance(tokenMotionBase)
+	tt.Frame()
+	video := rect(t, tt, a.Tr("nativeVideo"))
+	if !between(half.H, video.H, video.W) {
+		t.Fatalf("the frame cut to 16:9: %.1f high a third through, %.1f as video, %.1f as the square", half.H, video.H, video.W)
+	}
+}
+
+// The library narrows to the rail, and widens back, instead of snapping.
+func TestSidebarCollapseNarrows(t *testing.T) {
+	m, a := nativeViewFixture()
+	m.Panel = false
+	tt := motionTester(m, a, 1440, 900)
+	tt.Frame()
+	// The page's left edge follows the library's width.
+	full := rect(t, tt, a.Tr("shellContent")).X
+	m.SidebarCollapsed = true
+	tt.Frame()
+	tt.Advance(tokenMotionMorph / 3)
+	tt.Frame()
+	half := rect(t, tt, a.Tr("shellContent")).X
+	tt.Advance(tokenMotionMorph)
+	tt.Frame()
+	rail := rect(t, tt, a.Tr("shellContent")).X
+	if !between(half, rail, full) {
+		t.Fatalf("the library snapped: the page at %.1f, %.1f a third through, %.1f", full, half, rail)
 	}
 }

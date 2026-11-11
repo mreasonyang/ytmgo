@@ -84,6 +84,12 @@ in `native_style.go`, display-title styling in `native_fonts.go` (system font on
   software renderer the tests use rounds all of them), so content flush with
   a rounded container takes its corners itself rather than relying on the
   container's `Clip`.
+- **Glides:** the lyrics follow playback with `ScrollTo` over
+  `tokenMotionSlow` along `tokenMotionEase` (generated from the tokens'
+  cubic-bezier), and arrive at their line at once when they appear or
+  relayout. MyGo's glide overwrites an offset the app sets, so a drag turns
+  it to the pointer first; a glide's steps are not the reader scrolling,
+  for follow and for the scroll bar.
 - **Time readouts** occupy fixed-width slots, so progress labels don't shift
   adjacent controls.
 - **CJK headings** keep their phrases whole: mark phrase boundaries in a

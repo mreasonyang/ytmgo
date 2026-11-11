@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"math"
 
 	"github.com/egoist/mygo/ui"
@@ -71,8 +73,7 @@ func (s *nativeLyricsFollow) dragInput(ev ui.InputEvent, m *UIModel, a ViewActio
 			return true
 		}
 		s.drag.moved, s.follow = true, false
-		s.scroll.Y = max(0, min(s.drag.offset-dy, s.scroll.MaxY))
-		s.expectedY = s.scroll.Y
+		s.dragTo(max(0, min(s.drag.offset-dy, s.scroll.MaxY)))
 		s.selectDraggedLyric(m)
 		return true
 	case ui.InputPointerUp:
@@ -119,4 +120,15 @@ func nativeLyricsDragPreview(c *ui.Context, scroll ui.Element, s *nativeLyricsFo
 			Padding(4, 8).Radius(tokenRadiusPill).Background(p.raised).TextColor(p.text).FontSize(tokenSizeMicro).FontWeight(600).
 			Shadow(tokenShadowTooltip.args(p)).PassThrough().Role(ui.RoleTooltip)
 	})
+}
+
+// dragTo puts the lyrics at y under the pointer. A glide to the sung line
+// still on its way would overwrite the offset (MyGo's ScrollTo wins over
+// one the app sets), so it is turned to y, there at once.
+func (s *nativeLyricsFollow) dragTo(y float32) {
+	if s.scroll.Scrolling() {
+		s.scroll.ScrollTo(s.scroll.X, y, ui.Animation{Duration: time.Millisecond})
+	}
+	s.scroll.Y, s.expectedY = y, y
+	s.glideTo, s.gliding = y, false
 }

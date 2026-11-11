@@ -2412,7 +2412,7 @@ const nativeScrollbarIdle = time.Second
 
 type nativeScrollbarState struct {
 	x, y           float32
-	over           bool
+	over, gliding  bool
 	active, hidden time.Time
 }
 
@@ -2426,9 +2426,15 @@ type nativeScrollbarState struct {
 func nativeScrollbar(c *ui.Context, scroll ui.Element, st *ui.ScrollState, p nativePalette, under func(*ui.Painter, ui.Rect)) {
 	s := ui.Local(scroll, "scrollbar", func() nativeScrollbarState { return nativeScrollbarState{} })
 	now := c.Now()
+	// The reader scrolling shows the bar; the app gliding it (ScrollTo,
+	// to its last step) doesn't.
 	if st.X != s.x || st.Y != s.y {
-		s.x, s.y, s.active = st.X, st.Y, now
+		if !st.Scrolling() && !s.gliding {
+			s.active = now
+		}
+		s.x, s.y = st.X, st.Y
 	}
+	s.gliding = st.Scrolling()
 	px, py, over := scroll.PointerPosition()
 	if over && !s.over {
 		s.active = now
@@ -2479,12 +2485,12 @@ func nativeScrollbar(c *ui.Context, scroll ui.Element, st *ui.ScrollState, p nat
 	})
 }
 
-// nativeScrollbarFollowed tells a scroller's bar that its content moved
-// itself (lyrics following playback): the bar shows for the reader's
-// scrolling, not for that.
+// nativeScrollbarFollowed tells a scroller's bar that the app set it
+// moving (lyrics following playback): the bar shows for the reader's
+// scrolling, not for that, even where the move is at once (less motion).
 func nativeScrollbarFollowed(scroll ui.Element, st *ui.ScrollState) {
 	s := ui.Local(scroll, "scrollbar", func() nativeScrollbarState { return nativeScrollbarState{} })
-	s.x, s.y = st.X, st.Y
+	s.x, s.y, s.gliding = st.X, st.Y, true
 }
 
 // nativeScrollbarThumbs are the thumbs MyGo would draw (its scrollBars and

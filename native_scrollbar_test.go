@@ -107,17 +107,17 @@ func TestScrollbarIgnoresLyricsFollowingPlayback(t *testing.T) {
 		}
 		return false
 	}
-	for line := 1; line < 12; line++ {
+	// Each line's glide, sampled on its way and once it has landed.
+	for line := 1; line < 5; line++ {
 		m.Position = float64(line*5) + 0.5
-		for range 3 {
-			tt.Advance(100 * time.Millisecond)
+		tt.Frame()
+		for _, step := range []time.Duration{tokenMotionSlow / 2, tokenMotionSlow} {
+			tt.Advance(step)
 			tt.Frame()
-		}
-		if thumbShown() {
-			t.Fatalf("the bar flashed as the lyrics followed line %d", line)
+			if thumbShown() {
+				t.Fatalf("the bar flashed as the lyrics followed line %d", line)
+			}
 		}
 	}
-	if !tt.HasText("Synthetic lyric line 11") {
-		t.Fatal("the lyrics did not follow playback")
-	}
+	requireLyricCentered(t, tt, 4) // they did follow, gliding
 }

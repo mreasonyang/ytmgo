@@ -391,6 +391,11 @@ tooltip. The website uses icons only on actions and platform names.
 - **The website may add only:** the sung headline and the lyrics demo
   (they *are* the product), and one fade-in per block as it scrolls into
   view. No count-ups, no tilts, no parallax, no per-row staggers.
+- **Scrolling the product does** glides over `slow` along `ease`: the
+  lyrics to each sung line, the website to a section or track. What the
+  reader moves (a wheel, a drag, the website player's seek) follows them
+  at once, and grabbing a glide stops it. A view that appears or relays
+  out arrives at its place without gliding there.
 - Only opacity and transforms animate.
 - Reduced motion, the website player's pause, and no JavaScript all show
   the final state immediately. Nothing is ever hidden waiting for motion.

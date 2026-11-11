@@ -18,7 +18,7 @@ func Generate(raw []byte) ([]byte, error) {
 		Tint  orderedStrings               `json:"tint"`
 		Font  struct {
 			Display struct {
-				Weight int
+				Weight                        int
 				Tracking, Leading, LeadingCJK float64
 			}
 		} `json:"font"`
@@ -27,6 +27,7 @@ func Generate(raw []byte) ([]byte, error) {
 		Motion struct {
 			Fast, Base, Slow int
 			Press, Grow      float64
+			Ease             string
 		} `json:"motion"`
 		Product map[string]int                                          `json:"product"`
 		Shadow  map[string]json.RawMessage                              `json:"shadow"`
@@ -88,6 +89,12 @@ func Generate(raw []byte) ([]byte, error) {
 		fmt.Fprintf(&b, "\ttokenProduct%s = %d\n", title(k), t.Product[k])
 	}
 	b.WriteString(")\n")
+	// The easing curve, cubic-bezier(x1, y1, x2, y2) in the tokens, as CSS has it.
+	var x1, y1, x2, y2 float64
+	if _, err := fmt.Sscanf(strings.ReplaceAll(t.Motion.Ease, " ", ""), "cubic-bezier(%g,%g,%g,%g)", &x1, &y1, &x2, &y2); err != nil {
+		return nil, fmt.Errorf("tokens: motion ease %q is not a cubic-bezier: %w", t.Motion.Ease, err)
+	}
+	fmt.Fprintf(&b, "\n// tokenMotionEase is the tokens' easing curve, as the website's CSS uses it.\nvar tokenMotionEase = ui.CubicBezier(%g, %g, %g, %g)\n", x1, y1, x2, y2)
 	fmt.Fprintf(&b, "\n// Washes: how strongly a tint or cover colours the chrome.\nconst (\n\ttokenWashDark = %g\n\ttokenWashLight = %g\n\ttokenWashBar = %g\n\ttokenWashCardDark = %g\n\ttokenWashCardLight = %g\n)\n", t.Wash.Dark, t.Wash.Light, t.Wash.Bar, t.Wash.CardDark, t.Wash.CardLight)
 	b.WriteString("\n// Elevations: offset y, blur and the opacity of black.\nvar (\n")
 	for _, k := range sorted(t.Shadow) {

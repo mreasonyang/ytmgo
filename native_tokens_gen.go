@@ -110,6 +110,9 @@ const (
 	tokenProductTile            = 64
 )
 
+// tokenMotionEase is the tokens' easing curve, as the website's CSS uses it.
+var tokenMotionEase = ui.CubicBezier(0.2, 0.7, 0.2, 1)
+
 // Washes: how strongly a tint or cover colours the chrome.
 const (
 	tokenWashDark      = 0.5

@@ -79,18 +79,42 @@ type nativeLyricsFollow struct {
 	drag           nativeLyricsDrag
 	cueCenters     []float32
 	viewportCenter float32
+	// glideTo is where a glide to the sung line goes; gliding holds while it
+	// does, so its steps are not taken for the reader scrolling.
+	glideTo float32
+	gliding bool
+	// placed is whether the lyrics have been put at a line since they
+	// appeared or the layout changed: until then they go there at once.
+	placed bool
 }
 
-// revealLine centers the sung line within the lyrics viewport without moving
-// the outer player panel. Oversized lines start at the top for readability.
-func (s *nativeLyricsFollow) revealLine(view, line ui.Rect) {
-	if view.H <= 0 || line.H <= 0 {
-		return
+// revealLine glides the sung line, top in the content and h high, to the
+// middle of a viewport viewH high, without moving the outer player panel;
+// an oversized line starts at the top for readability. A new line glides
+// over the slow motion, as the website's lyrics do; while one glides, it
+// is not asked again. Lyrics that have just appeared, or whose layout just
+// changed, go to their line at once: they arrive there, nothing moves. It
+// reports whether it moved them.
+func (s *nativeLyricsFollow) revealLine(viewH, top, h float32) bool {
+	if viewH <= 0 || h <= 0 {
+		return false
 	}
-	top := line.Y - view.Y
-	y := s.scroll.Y + top - max(0, (view.H-line.H)/2)
-	s.scroll.Y = max(0, min(y, s.scroll.MaxY))
-	s.expectedY = s.scroll.Y
+	y := max(0, min(top-max(0, (viewH-h)/2), s.scroll.MaxY))
+	if !s.placed {
+		s.placed, s.gliding = true, false
+		s.scroll.Y, s.expectedY = y, y
+		return true
+	}
+	if s.gliding {
+		if math.Abs(float64(y-s.glideTo)) < 0.5 {
+			return false
+		}
+	} else if math.Abs(float64(y-s.scroll.Y)) < 0.5 {
+		return false
+	}
+	s.glideTo, s.gliding = y, true
+	s.scroll.ScrollTo(s.scroll.X, y, ui.Animation{Duration: tokenMotionSlow, Ease: tokenMotionEase})
+	return true
 }
 
 func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) ui.Element {
@@ -104,10 +128,17 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 	if resized || !nativeLyricsCanSeek(m, a) {
 		state.cancelDrag()
 	}
-	// A wheel, key or scrollbar takes over when it moves the lyrics.
-	// Layout can also clamp the offset if the content becomes shorter.
-	if state.scroll.Y != min(state.expectedY, state.scroll.MaxY) {
+	// A wheel, key or scrollbar takes over when it moves the lyrics (and
+	// stops a glide). A glide's own steps, and the one that ends it on its
+	// line, are not the reader. Layout can also clamp the offset if the
+	// content becomes shorter.
+	moved := state.scroll.Y != min(state.expectedY, state.scroll.MaxY)
+	glided := state.gliding && (state.scroll.Scrolling() || math.Abs(float64(state.scroll.Y-min(state.glideTo, state.scroll.MaxY))) < 1)
+	if moved && !glided {
 		state.follow = false
+	}
+	if !state.scroll.Scrolling() {
+		state.gliding = false
 	}
 	state.expectedY = state.scroll.Y
 	state.width, state.height, state.language = width, height, m.Language
@@ -192,11 +223,12 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 					leading.Height(top)
 					trailing.Height(bottom)
 					if resized || paddingChanged {
-						// Center using bounds from the updated layout next frame.
+						// Center using bounds from the updated layout next frame,
+						// at once: the layout moved, not the song.
+						state.placed = false
 						c.Invalidate()
-					} else {
-						state.revealLine(visible, current)
-						// The lyrics moved themselves, not the reader: no bar.
+					} else if state.revealLine(visible.H, current.Y-leading.LayoutBounds().Y-(visible.Y-view.Y), current.H) {
+						// The lyrics move themselves, not the reader: no bar.
 						nativeScrollbarFollowed(scroll, &state.scroll)
 					}
 				}

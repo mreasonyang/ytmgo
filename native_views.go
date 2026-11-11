@@ -2903,7 +2903,9 @@ func nativeKeyScroll(st *ui.ScrollState, s *nativeScrollbarState, view ui.Rect, 
 	if s.keyGlide && st.Scrolling() {
 		from = s.keyTo
 	}
-	if x == from[0] && y == from[1] {
+	// A glide can stop a hair off its end (0.00002 above the top): a key
+	// that would only take up that slack hasn't scrolled.
+	if math.Abs(float64(x-from[0])) < 0.5 && math.Abs(float64(y-from[1])) < 0.5 {
 		return false
 	}
 	s.keyTo, s.keyGlide, s.active = [2]float32{x, y}, true, now

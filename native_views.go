@@ -306,8 +306,15 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 			// Now Playing slides in from the window's right edge, where the
 			// controls that open it are, and back out there. As it goes, its
 			// room stays until it has gone, so the page fills it once, after.
+			// Back from immersive mode, it is where the cover and the card
+			// fly to: it fades in in place, as they land, rather than
+			// sliding under them.
 			if docked {
-				nativeNowPlaying(c.Key("now-playing-docked"), m, a, p, nativePanelWidth, false, false).Width(nativePanelWidth).Shrink(0).Transition(nativeDockSlide)
+				dock := nativeDockSlide
+				if nativeImmersing(c, m) {
+					dock = nativeFadeLong
+				}
+				nativeNowPlaying(c.Key("now-playing-docked"), m, a, p, nativePanelWidth, false, false).Width(nativePanelWidth).Shrink(0).Transition(dock)
 			} else if leaving {
 				ui.Box(c.Key("now-playing-room")).Width(nativePanelWidth).Shrink(0)
 			}
@@ -391,6 +398,18 @@ var nativeTrackText = ui.ElementTransition{Duration: tokenMotionBase, Ease: toke
 // into and out of immersive mode: over the morph motion.
 func nativeLong(t ui.ElementTransition) ui.ElementTransition {
 	t.Duration = tokenMotionMorph
+	return t
+}
+
+// nativeFlight is nativeLong for an element that matches across immersive
+// mode's way in or out: it flies over the window, out of the clips of the
+// column, scroller or panel it lands in, and from the motion of the
+// elements around it (the docked panel sliding) rather than adding to it:
+// without, the cover showed as a sliver cut by its new column's edge, and
+// leaving, it swung past its place with the panel's slide.
+func nativeFlight(t ui.ElementTransition) ui.ElementTransition {
+	t = nativeLong(t)
+	t.Fly = true
 	return t
 }
 
@@ -2028,7 +2047,14 @@ func nativePlayerBarContent(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 			info.Children(func() {
 				// Re-made as immersive mode comes or goes, so the cover leaving
 				// it can shrink back into this one (nativeImmersiveCover).
-				nativePlayerArtwork(c.Key(m.immersiveAt), m.Current.Artwork, 56, tokenRadiusArt, a, p).Transition(nativeLong(nativeMatch(nativeCoverMatch{"player-bar"})))
+				// Keyed by the morph, it is a new cover each way. Out of
+				// immersive mode it is where the cover flies back to; into
+				// it, the cover leaves from the old one, so the new one
+				// takes no part (else, flying, it would claim the match).
+				art := nativePlayerArtwork(c.Key(m.immersiveAt), m.Current.Artwork, 56, tokenRadiusArt, a, p)
+				if !m.Immersive {
+					art.Transition(nativeFlight(nativeMatch(nativeCoverMatch{"player-bar"})))
+				}
 				nativeTrackCaption(c, m, a, p)
 			})
 			if info.Clicked() {
@@ -2463,7 +2489,7 @@ func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 			card := nativeMoves
 			card.Match = nativeCardMatch{}
 			if nativeImmersing(c, m) {
-				cover, card = nativeLong(cover), nativeLong(card)
+				cover, card = nativeFlight(cover), nativeFlight(card)
 			}
 			identity := func(art bool) {
 				ui.Row(c.Key("now-playing-identity")).Shrink(0).Gap(12).AlignItems(ui.Center).Transition(nativeMoves).Children(func() {
@@ -2648,7 +2674,7 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 			size = min(stageW, stageH*16/9)
 		}
 		ui.Row(c).Grow(1).MinHeight(0).Padding(padY, padX).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
-			nativeMedia(c.Key("immersive-media"), m, a, p, nativeGridFloor(max(4, size))).Shadow(tokenShadowArt.args(p)).Transition(nativeLong(nativeMatch(nativeImmersiveCover(c, m, width))))
+			nativeMedia(c.Key("immersive-media"), m, a, p, nativeGridFloor(max(4, size))).Shadow(tokenShadowArt.args(p)).Transition(nativeFlight(nativeMatch(nativeImmersiveCover(c, m, width))))
 		})
 		return
 	}
@@ -2697,7 +2723,7 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 			ui.Column(c).MinHeight(contentHeight).Shrink(0).Gap(24).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
 				// It grows from the cover that was showing, and shrinks back into
 				// the one that will; cover or video, it changes shape in place.
-				nativeMedia(c.Key("immersive-media"), m, a, p, layout.media).Shadow(tokenShadowArt.args(p)).Transition(nativeLong(nativeMatch(nativeImmersiveCover(c, m, width))))
+				nativeMedia(c.Key("immersive-media"), m, a, p, layout.media).Shadow(tokenShadowArt.args(p)).Transition(nativeFlight(nativeMatch(nativeImmersiveCover(c, m, width))))
 				if m.VideoAvailable {
 					nativeMediaSwitch(c, m, a, p).Transition(nativeFadeLong)
 				}
@@ -2705,7 +2731,7 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 				nativePlaybackNotice(c, m, a, p)
 			})
 		})
-		card := nativeLong(nativeMatch(nativeCardMatch{}))
+		card := nativeFlight(nativeMatch(nativeCardMatch{}))
 		card.Exit = &ui.Motion{}
 		nativePanelCard(c.Key("immersive-card"), m, a, p).Width(panelWidth).Height(layout.height).Shrink(0).Margin(0, 0, 0, nativeImmersivePair-pad).Background(p.pane).Transition(card)
 	})

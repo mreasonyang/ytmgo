@@ -415,7 +415,11 @@ tooltip. The website uses icons only on actions and platform names.
   - Immersive mode: the cover grows from the one that was showing (the
     panel's or the player bar's) and shrinks back into the one that will;
     the lyrics card travels with it; the library and the global bar fade as
-    the page grows over their room (`morph`).
+    the page grows over their room (`morph`). The cover and the card fly
+    over the window, never cut by the column or panel they land in, and
+    each goes one way, with no swing past its place: docked Now Playing,
+    their destination on the way back, fades in where it is rather than
+    sliding in under them.
   - Opening a collection, its header shows at once from the card, and the
     card's cover travels into it (`morph`); Back carries it home.
   - Settings and Keyboard shortcuts are one sheet: its frame takes the

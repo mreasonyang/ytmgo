@@ -625,3 +625,85 @@ func TestFloatingNowPlayingReversesFromVisiblePosition(t *testing.T) {
 		t.Fatal("the reopened panel did not arrive")
 	}
 }
+
+// Into immersive mode and back, the cover, the lyrics card and the sung
+// line in it each travel one way, with no swing past their place, and the
+// cover flies whole (square, never a sliver cut by the column or the
+// panel it lands in).
+func TestImmersiveJourneyIsSmooth(t *testing.T) {
+	for _, panel := range []bool{true} {
+		t.Run(fmt.Sprintf("from-now-playing-%v", panel), func(t *testing.T) { immersiveJourney(t, panel) })
+	}
+}
+
+func immersiveJourney(t *testing.T, panel bool) {
+	m, a := nativeTimedLyricsFixture()
+	m.Panel, m.Appearance, m.Position = panel, "light", 52
+	for i := range m.LyricLines {
+		m.LyricLines[i].Text = fmt.Sprintf("L%02d I cannot convince you that I love you for a livin, will wait for you", i)
+	}
+	sung := m.LyricLines[10].Text
+	pink := color.RGBA{237, 19, 173, 255}
+	pic := image.NewRGBA(image.Rect(0, 0, 16, 16))
+	for i := range pic.Pix {
+		pic.Pix[i] = []uint8{pink.R, pink.G, pink.B, 255}[i%4]
+	}
+	m.Current.Artwork = "pink"
+	cover := ui.NewBitmap(pic)
+	art := a.Artwork
+	a.Artwork = func(src string, edge int, p artworkPriority) ui.ImageSource {
+		if src == "pink" {
+			return cover
+		}
+		return art(src, edge, p)
+	}
+	tt := motionTester(m, a, 1440, 900)
+	tt.Frame()
+	tt.Frame()
+	type pose struct{ coverX, coverW, cardX, cardY, line float32 }
+	measure := func() pose {
+		box := image.Rectangle{}
+		img := tt.Image()
+		for y := 0; y < 900-nativePlayerHeight; y++ {
+			for x := 0; x < 1440; x++ {
+				if img.RGBAAt(x, y) == pink {
+					box = box.Union(image.Rect(x, y, x+1, y+1))
+				}
+			}
+		}
+		if box.Dx() < 8 || math.Abs(float64(box.Dx()-box.Dy())) > 2 {
+			t.Fatalf("the cover is cut in flight: %v", box)
+		}
+		// Without Now Playing, the player bar's cover alone travels.
+		card, ok := tt.Find("Lyrics · Content")
+		line, _ := tt.Find(sung)
+		if !ok || !panel {
+			return pose{float32(box.Min.X), float32(box.Dx()), 0, 0, 0}
+		}
+		return pose{float32(box.Min.X), float32(box.Dx()), card.X, card.Y, line.Y - card.Y}
+	}
+	journey := func(name string) {
+		t.Helper()
+		from := measure()
+		tt.Key(ui.Cmd|ui.Shift, ui.KeyF)
+		var poses []pose
+		for i := 0; i < 12; i++ {
+			tt.Advance(tokenMotionMorph / 10)
+			tt.Frame()
+			poses = append(poses, measure())
+		}
+		to := poses[len(poses)-1]
+		prev := from
+		for i, p := range poses {
+			for _, v := range [][3]float32{{prev.coverX, p.coverX, to.coverX}, {prev.coverW, p.coverW, to.coverW}, {prev.cardX, p.cardX, to.cardX}, {prev.cardY, p.cardY, to.cardY}, {prev.line, p.line, to.line}} {
+				// Each step goes toward the end, and never past it.
+				if (v[2]-v[0])*(v[1]-v[0]) < -1 || (v[2]-v[1])*(v[2]-v[0]) < -1 {
+					t.Fatalf("%s, frame %d: %+v after %+v swings away from %+v", name, i+1, p, prev, to)
+				}
+			}
+			prev = p
+		}
+	}
+	journey("into immersive mode")
+	journey("out of immersive mode")
+}

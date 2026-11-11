@@ -83,8 +83,7 @@ type nativeLyricsFollow struct {
 	// does, so its steps are not taken for the reader scrolling.
 	glideTo float32
 	gliding bool
-	// placed is whether the lyrics have been put at a line since they
-	// appeared or the layout changed: until then they go there at once.
+	// placed reports whether the current layout has positioned the sung line.
 	placed bool
 }
 
@@ -92,18 +91,21 @@ type nativeLyricsFollow struct {
 // middle of a viewport viewH high, without moving the outer player panel;
 // an oversized line starts at the top for readability. A new line glides
 // over the slow motion, as the website's lyrics do; while one glides, it
-// is not asked again. Lyrics that have just appeared, or whose layout just
-// changed, go to their line at once: they arrive there, nothing moves. It
-// reports whether it moved them.
+// is not asked again. On first layout or resize, place the line immediately
+// if the lyrics are at rest. A glide already in progress follows the new center.
 func (s *nativeLyricsFollow) revealLine(viewH, top, h float32) bool {
 	if viewH <= 0 || h <= 0 {
 		return false
 	}
 	y := max(0, min(top-max(0, (viewH-h)/2), s.scroll.MaxY))
 	if !s.placed {
-		s.placed, s.gliding = true, false
-		s.scroll.Y, s.expectedY = y, y
-		return true
+		s.placed = true
+		if !s.scroll.Scrolling() {
+			s.scroll.Y, s.expectedY = y, y
+			return true
+		}
+		// ScrollTo still owns the offset while it animates. Retarget that
+		// glide below so its next step is recognized as automatic scrolling.
 	}
 	if s.gliding {
 		if math.Abs(float64(y-s.glideTo)) < 0.5 {
@@ -228,8 +230,7 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 					leading.Height(top)
 					trailing.Height(bottom)
 					if resized || paddingChanged {
-						// Center using bounds from the updated layout next frame,
-						// at once: the layout moved, not the song.
+						// Center using bounds from the updated layout next frame.
 						state.placed = false
 						c.Invalidate()
 					} else if state.revealLine(visible.H, current.Y-leading.LayoutBounds().Y-(visible.Y-view.Y), current.H) {

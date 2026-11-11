@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 )
@@ -102,6 +103,55 @@ func TestNativeLyricsExpansionPreservesVideoLayout(t *testing.T) {
 				t.Fatal("switching media lost the saved cover and lyrics layout")
 			}
 			nativeSnapshot(t, tt, fmt.Sprintf("lyrics-expanded-cover-after-video-%dx%d", size[0], size[1]))
+		})
+	}
+}
+
+func TestSwitchingNowPlayingMediaKeepsLyricsFollowing(t *testing.T) {
+	for _, startVideo := range []bool{false, true} {
+		t.Run(fmt.Sprintf("from-video-%t", startVideo), func(t *testing.T) {
+			m, a := nativeTimedLyricsFixture()
+			m.Panel, m.Video, m.instantMotion = true, startVideo, false
+			position := 41.0
+			a.LyricsClock = func() (float64, bool) { return position, true }
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
+			requireLyricCentered(t, tt, 8)
+
+			// Switch media while the current lyric is gliding into place.
+			position = 46
+			tt.Frame()
+			tt.Advance(tokenMotionSlow / 4)
+			switchTo, switchBack := a.Tr("nativeVideo"), a.Tr("nativeArtwork")
+			if startVideo {
+				switchTo, switchBack = switchBack, switchTo
+			}
+			if err := tt.Click(switchTo); err != nil || m.Video == startVideo {
+				t.Fatalf("media switch did not change presentation: %v", err)
+			}
+			for range 16 {
+				tt.Advance(50 * time.Millisecond)
+				if tt.HasText(a.Tr("nativeLyricsFollow")) {
+					t.Fatal("switching media suspended lyrics without a reader gesture")
+				}
+			}
+			requireLyricCentered(t, tt, 9)
+			position = 101
+			tt.Frame()
+			requireLyricCentered(t, tt, 20)
+
+			// Switching back should also respect someone reading manually.
+			view := rect(t, tt, "Lyrics · Content")
+			tt.Scroll(view.X+view.W/2, view.Y+view.H/2, 0, -120)
+			if !tt.HasText(a.Tr("nativeLyricsFollow")) {
+				t.Fatal("scrolling the lyrics did not pause following")
+			}
+			if err := tt.Click(switchBack); err != nil || m.Video != startVideo {
+				t.Fatalf("could not switch back to original media: %v", err)
+			}
+			settleLyricGlide(tt)
+			if !tt.HasText(a.Tr("nativeLyricsFollow")) {
+				t.Fatal("switching media resumed following during manual reading")
+			}
 		})
 	}
 }

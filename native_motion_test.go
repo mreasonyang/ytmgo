@@ -150,3 +150,37 @@ func TestNowPlayingSlidesInAndOut(t *testing.T) {
 		t.Fatalf("the page did not fill the room once the panel had gone: %.1f, want %.1f", w, wide)
 	}
 }
+
+// Settings and Keyboard shortcuts are one sheet: going on keeps the frame,
+// which takes the next page's width while the pages slide past, and going
+// back runs it the other way.
+func TestSheetPagesSlideInOneFrame(t *testing.T) {
+	m, a, _ := nativeSettingsFixture(1280, 820)
+	tt := motionTester(m, a, 1280, 820)
+	tt.SetScale(2)
+	tt.Frame()
+	settings := rect(t, tt, a.Tr("shellClose"))
+	if err := tt.Click(a.Tr("nativeSettingsViewAll")); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(tokenMotionBase / 2)
+	tt.Frame()
+	half := rect(t, tt, a.Tr("shellClose"))
+	motionShot(t, tt, "sheet-forward-half")
+	tt.Advance(tokenMotionBase)
+	tt.Frame()
+	shortcuts := rect(t, tt, a.Tr("shellClose"))
+	if !between(half.X, settings.X, shortcuts.X) {
+		t.Fatalf("the sheet cut to the next page: close at %.1f, %.1f half way, %.1f", settings.X, half.X, shortcuts.X)
+	}
+	if err := tt.Click(a.Tr("shellBackToSettings")); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(tokenMotionBase / 2)
+	tt.Frame()
+	back := rect(t, tt, a.Tr("shellClose"))
+	motionShot(t, tt, "sheet-back-half")
+	if !between(back.X, shortcuts.X, settings.X) {
+		t.Fatalf("going back cut: close at %.1f half way from %.1f to %.1f", back.X, shortcuts.X, settings.X)
+	}
+}

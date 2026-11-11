@@ -201,8 +201,7 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 			})
 		}).Label(a.Tr("shellNowPlaying"))
 	}
-	nativeSettings(c, m, a, p, width, height)
-	nativeShortcuts(c, m, a, p, width, height)
+	nativeSheets(c, m, a, p, width, height)
 	if m.ShortcutRecording && !m.Settings && a.CancelShortcut != nil {
 		a.CancelShortcut()
 	}

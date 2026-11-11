@@ -2,6 +2,7 @@ package main
 
 import (
 	"strings"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 )
@@ -29,30 +30,94 @@ func nativeLanguageTitle(a ViewActions, id string) string {
 	return a.Tr("shellLanguageSystem")
 }
 
-// nativeSheet is the frame Settings and Keyboard shortcuts share: a card over
-// the dimmed window with a fixed title bar and a scrolling body. A hairline
-// under the title shows content scrolled beneath it and a fade at the bottom
-// shows there is more; each sheet opens at its top. A sheet opened from
-// another has back, a button leading its title bar named backLabel, which
-// returns there; Close, Escape and a click outside close it.
-func nativeSheet(c *ui.Context, open *bool, scroll *ui.ScrollState, title string, a ViewActions, p nativePalette, width, height, maxWidth float32, back func(), backLabel string, body func(narrow bool)) {
-	if !*open {
-		scroll.Y = 0
+// nativeSheetPage is one page of the sheet Settings and Keyboard shortcuts
+// share: its body, title and scrolling, its width, and side, the way it
+// slides in from and out to (Settings left, Keyboard shortcuts right, so
+// going on and back each move one way). A page opened from another has
+// back, a button leading the title bar named backLabel.
+type nativeSheetPage struct {
+	key       string
+	title     string
+	scroll    *ui.ScrollState
+	maxWidth  float32
+	side      float32
+	back      func()
+	backLabel string
+	body      func(narrow bool)
+}
+
+// nativeSheets shows Settings or Keyboard shortcuts in one sheet over the
+// dimmed window: going from one to the other keeps the frame, which takes
+// the next page's size, while the pages slide past and the titles cross.
+// Close, Escape and a click outside close it. Each page opens at its top.
+func nativeSheets(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {
+	if !m.Settings {
+		m.settingsScroll.Y = 0
+	}
+	if !m.Shortcuts {
+		m.shortcutsScroll.Y = 0
+		m.shortcutsFromSettings = false
+	}
+	var page nativeSheetPage
+	switch {
+	case m.Shortcuts:
+		page = nativeShortcutsPage(c, m, a, p)
+	case m.Settings:
+		page = nativeSettingsPage(c, m, a, p)
+	default:
 		return
 	}
+	open := true
+	nativeSheet(c, &open, page, a, p, width, height, m.instantMotion)
+	if !open {
+		m.Settings, m.Shortcuts = false, false
+	}
+}
+
+// nativeSheet is the sheet's frame: a fixed title bar over a scrolling
+// body. A hairline under the title shows content scrolled beneath it and a
+// fade at the bottom shows there is more.
+type nativeSheetMotion struct {
+	key   string
+	since time.Time
+}
+
+func nativeSheet(c *ui.Context, open *bool, sheetPage nativeSheetPage, a ViewActions, p nativePalette, width, height float32, still bool) {
 	compact := width <= 760
-	sheet := min(maxWidth, width-48)
+	sheet := min(sheetPage.maxWidth, width-48)
 	titleSize := float32(tokenSizeH3)
 	if compact {
 		sheet = width
 	}
+	still = still || c.Preferences().ReduceMotion
 	ui.DialogBase(c, open, func(backdrop, panel ui.Element) {
 		backdrop.Background(p.scrim)
-		panel.Width(sheet).Background(p.surface).Clip()
+		// A dialog is laid out over the window, after MyGo's transitions, so
+		// the sheet moves itself: its width heads for the next page's, and
+		// the next page slides in from its side and fades in as it does.
+		panel.Background(p.surface).Clip()
+		motion := ui.Local(panel, "sheet-motion", func() nativeSheetMotion { return nativeSheetMotion{key: sheetPage.key} })
+		now := c.Now()
+		if motion.key != sheetPage.key {
+			motion.key, motion.since = sheetPage.key, now
+		}
+		arrived := float32(1)
+		if !motion.since.IsZero() && !still {
+			if k := float32(now.Sub(motion.since)) / float32(tokenMotionBase); k < 1 {
+				arrived = tokenMotionEase(max(0, k))
+				c.AnimationFrame()
+			}
+		}
+		pageWidth := sheet
+		if !compact && !still {
+			pageWidth = panel.AnimateWith("sheet-width", sheet, tokenMotionBase, tokenMotionEase)
+		}
+		page := ui.Column(c).Width(pageWidth)
 		if compact {
-			panel.Height(height)
+			page.Height(height)
 		} else {
-			panel.MaxHeight(min(height-48, 780)).Radius(tokenRadiusSheet).Border(1, p.line)
+			page.MaxHeight(min(height-48, 780))
+			panel.Radius(tokenRadiusSheet).Border(1, p.line)
 			// The scrim and the hairline set the dialog apart; on the dark
 			// scrim a shadow can't be seen, so only light draws one.
 			if !p.dark {
@@ -60,26 +125,32 @@ func nativeSheet(c *ui.Context, open *bool, scroll *ui.ScrollState, title string
 			}
 		}
 		panel.Children(func() {
-			bar := ui.Row(c).Shrink(0).Padding(24, 16, 12, 24).AlignItems(ui.Center)
-			if back != nil {
-				bar.PaddingStart(16).Gap(8)
-			}
-			bar.Children(func() {
-				if back != nil && nativeIconButton(c, "back", backLabel, p, false, 36).Clicked() {
-					back()
+			page.Children(func() {
+				bar := ui.Row(c).Shrink(0).Padding(24, 16, 12, 24).AlignItems(ui.Center)
+				if sheetPage.back != nil {
+					bar.PaddingStart(16).Gap(8)
 				}
-				nativeDisplay(ui.Text(c, title).FontSize(titleSize).Grow(1).MinWidth(0).MaxLines(1).Ellipsis("…"), title, titleSize)
-				if nativeIconButton(c, "close", a.Tr("shellClose"), p, false, 36).Clicked() {
-					*open = false
-				}
-			})
-			list := ui.Scroll(c).Grow(1).MinHeight(0).Padding(12, 24, 32, 24).Gap(24).TrackScroll(scroll)
-			nativeScrollEdges(c, list, scroll, p, p.surface)
-			list.Children(func() {
-				body(sheet-48 < nativeSettingsStack)
+				bar.Children(func() {
+					if sheetPage.back != nil {
+						b := nativeIconButton(c, "back", sheetPage.backLabel, p, false, 36).Opacity(arrived)
+						if b.Clicked() {
+							sheetPage.back()
+						}
+					}
+					nativeDisplay(ui.Text(c, sheetPage.title).FontSize(titleSize).Grow(1).MinWidth(0).MaxLines(1).Ellipsis("…").Opacity(arrived), sheetPage.title, titleSize)
+					if nativeIconButton(c.Key("sheet-close"), "close", a.Tr("shellClose"), p, false, 36).Clicked() {
+						*open = false
+					}
+				})
+				list := ui.Scroll(c.Key("body-"+sheetPage.key)).Grow(1).MinHeight(0).Padding(12, 24, 32, 24).Gap(24).TrackScroll(sheetPage.scroll).
+					Translate(sheetPage.side*(1-arrived), 0).Opacity(arrived)
+				nativeScrollEdges(c, list, sheetPage.scroll, p, p.surface)
+				list.Children(func() {
+					sheetPage.body(sheet-48 < nativeSettingsStack)
+				})
 			})
 		})
-	}).Label(title)
+	}).Label(sheetPage.title)
 }
 
 // nativeSettingsGroup is a titled card of rows divided by hairlines that start
@@ -169,8 +240,9 @@ func nativeLinkButton(c *ui.Context, label string, p nativePalette, icon string)
 	return b
 }
 
-func nativeSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {
-	nativeSheet(c, &m.Settings, &m.settingsScroll, a.Tr("shellSettings"), a, p, width, height, nativeSettingsWidth, nil, "", func(narrow bool) {
+// nativeSettingsPage is Settings, the sheet's first page.
+func nativeSettingsPage(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) nativeSheetPage {
+	return nativeSheetPage{key: "settings", title: a.Tr("shellSettings"), scroll: &m.settingsScroll, maxWidth: nativeSettingsWidth, side: -24, body: func(narrow bool) {
 		nativeSettingsGroup(c, p, a.Tr("menuAccount"), 64, func() { nativeAccountSettings(c, m, a, p, narrow) }, nativeSignOutRow(c, m, a, p))
 		nativeSettingsGroup(c, p, a.Tr("nativeSettingsGeneral"), 64,
 			func() {
@@ -217,7 +289,7 @@ func nativeSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, w
 			})
 			ui.Text(c, a.Tr("shellFooter")).FontSize(tokenSizeMicro).LineHeight(1.5).PaddingX(4).TextColor(p.muted)
 		})
-	})
+	}}
 }
 
 // nativeAccountSettings states the account and its plan (the status names
@@ -387,17 +459,15 @@ func nativeLanguageControl(c *ui.Context, m *UIModel, a ViewActions, p nativePal
 
 // nativeShortcuts lists the in-app shortcuts beside the global one, which
 // Settings configures.
-func nativeShortcuts(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {
-	if !m.Shortcuts {
-		m.shortcutsFromSettings = false
-	}
-	// Opened from Settings, the sheet leads back there, to the Keyboard card
-	// it was opened from; from the Help menu there is nothing to go back to.
+// nativeShortcutsPage is Keyboard shortcuts, the sheet's second page.
+// Opened from Settings, it leads back there, to the Keyboard card it was
+// opened from; from the Help menu there is nothing to go back to.
+func nativeShortcutsPage(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) nativeSheetPage {
 	var back func()
 	if m.shortcutsFromSettings {
 		back = func() { nativeShortcutsToSettings(m) }
 	}
-	nativeSheet(c, &m.Shortcuts, &m.shortcutsScroll, a.Tr("shellShortcuts"), a, p, width, height, nativeShortcutsWidth, back, a.Tr("shellBackToSettings"), func(narrow bool) {
+	return nativeSheetPage{key: "shortcuts", title: a.Tr("shellShortcuts"), scroll: &m.shortcutsScroll, maxWidth: nativeShortcutsWidth, side: 24, back: back, backLabel: a.Tr("shellBackToSettings"), body: func(narrow bool) {
 		ui.Text(c, a.Tr("nativeShortcutLocalHint")).FontSize(tokenSizeMeta).LineHeight(1.5).PaddingX(4).TextColor(p.secondary)
 		nativeSettingsGroup(c, p, "", 64, func() {
 			nativeSettingRow(c, p, narrow, "play", a.Tr("nativeShortcutGlobal"), "", func() {
@@ -421,7 +491,7 @@ func nativeShortcuts(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 			})
 		}
 		nativeSettingsGroup(c, p, "", 16, rows...)
-	})
+	}}
 }
 
 // nativeShortcutsToSettings leaves Keyboard shortcuts for Settings, with

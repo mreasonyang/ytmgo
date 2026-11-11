@@ -84,6 +84,12 @@ in `native_style.go`, display-title styling in `native_fonts.go` (system font on
   software renderer the tests use rounds all of them), so content flush with
   a rounded container takes its corners itself rather than relying on the
   container's `Clip`.
+- **Scrolling keys** are the window's (`nativeScrollKeys`), sent to the
+  innermost scroller holding the focus, else under the pointer, which
+  glides by them (`nativeKeyScroll`); MyGo's own jump at once. Window
+  claims leave a focused control's keys alone, where a scroller's own
+  would take a radio group's Home. Choosing the shown page scrolled down
+  glides it to its top (`UIModel.glideToTop`).
 - **Glides:** the lyrics follow playback with `ScrollTo` over
   `tokenMotionSlow` along `tokenMotionEase` (generated from the tokens'
   cubic-bezier), and arrive at their line at once when they appear or

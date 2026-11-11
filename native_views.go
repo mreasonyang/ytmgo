@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"slices"
 	"strings"
 	"time"
 
@@ -52,9 +53,10 @@ type UIModel struct {
 	// Presentation state for this window.
 	playbackViewSeen                bool // first playback opens Now Playing unless already visited
 	settingsScroll, shortcutsScroll ui.ScrollState
-	shortcutFieldFocused            bool // the recorder has had the focus
-	revealShortcut                  bool // bring the global shortcut row into view
-	shortcutsFromSettings           bool // Keyboard shortcuts was opened from Settings: it leads back
+	shortcutFieldFocused            bool            // the recorder has had the focus
+	revealShortcut                  bool            // bring the global shortcut row into view
+	shortcutsFromSettings           bool            // Keyboard shortcuts was opened from Settings: it leads back
+	pageScroll                      *ui.ScrollState // the page's scrolling, as last built
 }
 
 // Saved-account restoration as the view presents it; account.go owns the
@@ -156,7 +158,17 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 	m.playbackViewSeen = m.playbackViewSeen || m.Panel || m.Immersive
 	before := nativePresentation(m)
 	nativeKeyboard(c, m, a)
+	nativeKeyScrollers = nativeKeyScrollers[:0]
 	defer func() {
+		// The scrolling keys glide the scroller they are for, now that every
+		// scroller has been built; recording a shortcut takes every key.
+		if len(nativeKeyScrollers) > 0 && !m.ShortcutRecording {
+			for _, k := range nativeScrollKeys {
+				if c.Shortcut(0, k.key) {
+					nativeScrollByKey(k.key)
+				}
+			}
+		}
 		if before != nativePresentation(m) {
 			c.Invalidate()
 		}
@@ -220,6 +232,7 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 						nativeImmersive(c, m, a, p, width, height-nativePlayerHeight-top-header-tokenProductFrameGap, header == 0)
 					} else {
 						scrolled = nativeContent(c, m, a, p, false, nativePageWidth(m, width))
+						m.pageScroll = scrolled
 					}
 				})
 			})
@@ -244,6 +257,7 @@ func nativeCompactFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 				} else {
 					nativeCompactTopbar(c, m, a, p, width)
 					scrolled = nativeContent(c, m, a, p, true, width)
+					m.pageScroll = scrolled
 				}
 			})
 		})
@@ -2414,6 +2428,91 @@ type nativeScrollbarState struct {
 	x, y           float32
 	over, gliding  bool
 	active, hidden time.Time
+	// keyTo is where the keys sent the scroller, while keyGlide holds: a
+	// key held down heads on from there, not from where the glide is.
+	keyTo    [2]float32
+	keyGlide bool
+}
+
+// nativeScrollKeys are the keys that scroll pages in browsers, as MyGo's
+// own handling has them; vertical says which axis each moves.
+var nativeScrollKeys = []struct {
+	key      ui.Key
+	vertical bool
+}{{ui.KeyDown, true}, {ui.KeyUp, true}, {ui.KeyPageDown, true}, {ui.KeyPageUp, true}, {ui.KeyHome, true}, {ui.KeyEnd, true}, {ui.KeyRight, false}, {ui.KeyLeft, false}}
+
+// nativeKeyScroller is a scroller built in this frame that a scrolling key
+// may move: whether it holds the focus or is under the pointer, and how it
+// moves by a key, reporting whether it had room.
+type nativeKeyScroller struct {
+	focus, over bool
+	scroll      func(key ui.Key) bool
+}
+
+// nativeKeyScrollers are this frame's scrollers, outermost first (a
+// scroller is built before those inside it). nativeView sends the keys
+// once all are built: to the innermost holding the focus, or else under
+// the pointer, and outward while one has no room, as MyGo does. The keys
+// are the window's, so a focused control that uses one (a radio group's
+// Home, a menu button's Down, a text field) still gets it first.
+var nativeKeyScrollers []nativeKeyScroller
+
+// nativeScrollByKey sends key to this frame's scrollers, and reports
+// whether one moved.
+func nativeScrollByKey(key ui.Key) bool {
+	for _, focus := range []bool{true, false} {
+		for i := len(nativeKeyScrollers) - 1; i >= 0; i-- {
+			k := nativeKeyScrollers[i]
+			if (focus && k.focus || !focus && k.over) && k.scroll(key) {
+				return true
+			}
+		}
+		if focus && slices.ContainsFunc(nativeKeyScrollers, func(k nativeKeyScroller) bool { return k.focus }) {
+			return false // the focus is in a scroller: the pointer's don't take its keys
+		}
+	}
+	return false
+}
+
+// nativeKeyScroll glides st by key: a line (40), a page (all but a line,
+// at least half) or to an end, over the base motion, as browsers smooth the
+// keys. MyGo jumps at once; it reports whether st had room to move.
+func nativeKeyScroll(st *ui.ScrollState, s *nativeScrollbarState, view ui.Rect, key ui.Key, now time.Time) bool {
+	const line = 40
+	x, y := st.X, st.Y
+	if s.keyGlide && st.Scrolling() {
+		x, y = s.keyTo[0], s.keyTo[1]
+	}
+	page := max(view.H-line, view.H/2)
+	switch key {
+	case ui.KeyDown:
+		y += line
+	case ui.KeyUp:
+		y -= line
+	case ui.KeyPageDown:
+		y += page
+	case ui.KeyPageUp:
+		y -= page
+	case ui.KeyHome:
+		y = 0
+	case ui.KeyEnd:
+		y = st.MaxY
+	case ui.KeyRight:
+		x += line
+	case ui.KeyLeft:
+		x -= line
+	}
+	x, y = max(0, min(x, st.MaxX)), max(0, min(y, st.MaxY))
+	from := [2]float32{st.X, st.Y}
+	if s.keyGlide && st.Scrolling() {
+		from = s.keyTo
+	}
+	if x == from[0] && y == from[1] {
+		return false
+	}
+	s.keyTo, s.keyGlide, s.active = [2]float32{x, y}, true, now
+	st.ScrollTo(x, y, ui.Animation{Duration: tokenMotionBase, Ease: tokenMotionEase})
+	return true
 }
 
 // nativeScrollbar draws a scroller's bars in place of MyGo's, which the
@@ -2435,12 +2534,28 @@ func nativeScrollbar(c *ui.Context, scroll ui.Element, st *ui.ScrollState, p nat
 		s.x, s.y = st.X, st.Y
 	}
 	s.gliding = st.Scrolling()
+	if !s.gliding {
+		s.keyGlide = false
+	}
 	px, py, over := scroll.PointerPosition()
 	if over && !s.over {
 		s.active = now
 	}
 	s.over = over
 	box := scroll.Bounds()
+	// The scrolling keys glide, with the focus in the scroller (the
+	// innermost one that moves that way takes them; a focused control that
+	// uses a key keeps it) or, from nativeView, with the pointer over it.
+	if focus := scroll.FocusWithin(); (focus || over) && (st.MaxX > 0.5 || st.MaxY > 0.5) {
+		nativeKeyScrollers = append(nativeKeyScrollers, nativeKeyScroller{focus: focus, over: over, scroll: func(key ui.Key) bool {
+			for _, k := range nativeScrollKeys {
+				if k.key == key && (k.vertical && st.MaxY > 0.5 || !k.vertical && st.MaxX > 0.5) {
+					return nativeKeyScroll(st, s, box, key, now)
+				}
+			}
+			return false
+		}})
+	}
 	strip := float32(nativeScrollbarWidth + 6) // MyGo's grab strip
 	onBar := over && (st.MaxY > 0 && (c.Direction() == ui.RightToLeft && px <= strip || c.Direction() != ui.RightToLeft && px >= box.W-strip) ||
 		st.MaxX > 0 && py >= box.H-strip)

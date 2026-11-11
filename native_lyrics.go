@@ -133,8 +133,11 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 	// line, are not the reader. Layout can also clamp the offset if the
 	// content becomes shorter.
 	moved := state.scroll.Y != min(state.expectedY, state.scroll.MaxY)
-	glided := state.gliding && (state.scroll.Scrolling() || math.Abs(float64(state.scroll.Y-min(state.glideTo, state.scroll.MaxY))) < 1)
-	if moved && !glided {
+	onLine := math.Abs(float64(state.scroll.Y-min(state.glideTo, state.scroll.MaxY))) < 1
+	glided := state.gliding && (state.scroll.Scrolling() || onLine)
+	// A glide that ended away from its line was turned elsewhere, by a key.
+	turned := state.gliding && !state.scroll.Scrolling() && !onLine
+	if moved && !glided || turned {
 		state.follow = false
 	}
 	if !state.scroll.Scrolling() {

@@ -9,10 +9,15 @@ import (
 	"time"
 
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/ui"
 	"ytmgo/internal/catalog"
 )
 
 func (a *desktop) navigate(route string) {
+	if a.model.glideToTop(route) {
+		a.invalidate()
+		return
+	}
 	a.model.Immersive = false
 	a.browseParams = ""
 	if route == "search" {
@@ -22,6 +27,18 @@ func (a *desktop) navigate(route string) {
 	}
 	a.loadPage(route, "", true)
 }
+
+// glideToTop glides the page back to its top when route is the page shown
+// and it is scrolled down, as choosing a tab already shown does, and reports
+// whether it did; at the top, choosing it loads the page again.
+func (m *UIModel) glideToTop(route string) bool {
+	if route != m.Route || route == "search" || m.Immersive || m.Loading || m.pageScroll == nil || m.pageScroll.Y <= 0.5 {
+		return false
+	}
+	m.pageScroll.ScrollTo(0, 0, ui.Animation{Duration: tokenMotionSlow, Ease: tokenMotionEase})
+	return true
+}
+
 func (a *desktop) search(q string) {
 	q = strings.TrimSpace(q)
 	if q != "" {

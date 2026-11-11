@@ -57,6 +57,7 @@ type UIModel struct {
 	revealShortcut                  bool            // bring the global shortcut row into view
 	shortcutsFromSettings           bool            // Keyboard shortcuts was opened from Settings: it leads back
 	pageScroll                      *ui.ScrollState // the page's scrolling, as last built
+	instantMotion                   bool            // every frame without animation, for tests of layout
 }
 
 // Saved-account restoration as the view presents it; account.go owns the
@@ -156,6 +157,9 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 		m.Panel = true
 	}
 	m.playbackViewSeen = m.playbackViewSeen || m.Panel || m.Immersive
+	if m.instantMotion {
+		c.DisableAnimations()
+	}
 	before := nativePresentation(m)
 	nativeKeyboard(c, m, a)
 	nativeKeyScrollers = nativeKeyScrollers[:0]
@@ -220,7 +224,13 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 		}
 		// Panels sit a frame gap from every edge, the player bar's too: flush
 		// against it their bottom corners would sit on the bar's colour.
-		ui.Row(c).Grow(1).MinHeight(0).AlignItems(ui.Stretch).Gap(tokenProductFrameGap).Padding(top, tokenProductFrameGap, tokenProductFrameGap).Children(func() {
+		row := ui.Row(c).Grow(1).MinHeight(0).AlignItems(ui.Stretch).Gap(tokenProductFrameGap).Padding(top, tokenProductFrameGap, tokenProductFrameGap)
+		docked, leaving := nativeDock(c, row, m, width)
+		pageWidth := nativePageWidth(m, width)
+		if leaving {
+			pageWidth -= nativePanelWidth + tokenProductFrameGap
+		}
+		row.Children(func() {
 			if !m.Immersive {
 				nativeLibrary(c, m, a, p, width)
 			}
@@ -231,13 +241,18 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 					if m.Immersive {
 						nativeImmersive(c, m, a, p, width, height-nativePlayerHeight-top-header-tokenProductFrameGap, header == 0)
 					} else {
-						scrolled = nativeContent(c, m, a, p, false, nativePageWidth(m, width))
+						scrolled = nativeContent(c, m, a, p, false, pageWidth)
 						m.pageScroll = scrolled
 					}
 				})
 			})
-			if nativeDockedNowPlaying(m, width) {
-				nativeNowPlaying(c, m, a, p, nativePanelWidth, false, false).Width(nativePanelWidth).Shrink(0)
+			// Now Playing slides in from the window's right edge, where the
+			// controls that open it are, and back out there. As it goes, its
+			// room stays until it has gone, so the page fills it once, after.
+			if docked {
+				nativeNowPlaying(c.Key("now-playing-docked"), m, a, p, nativePanelWidth, false, false).Width(nativePanelWidth).Shrink(0).Transition(nativeDockSlide)
+			} else if leaving {
+				ui.Box(c.Key("now-playing-room")).Width(nativePanelWidth).Shrink(0)
 			}
 		})
 		nativePlayerBar(c, m, a, p, width).Height(nativePlayerHeight).Shrink(0)
@@ -275,6 +290,37 @@ func nativeCompactFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 // and follows the backdrop in paint order.
 func nativePageLayer(c *ui.Context) ui.Element {
 	return ui.Column(c).Absolute().Left(0).Top(0).WidthPercent(100).HeightPercent(100).MinHeight(0)
+}
+
+// nativeMorph moves what persists across a change of layout, as the
+// guidebook's panel changes do: over the base motion along the tokens'
+// ease. While the desktop asks for less motion, MyGo moves it at once.
+var nativeMorph = ui.ElementTransition{Duration: tokenMotionBase, Ease: tokenMotionEase}
+
+// nativeMoves is nativeMorph for where an element is and how large: the
+// pieces of a layout that rearranges around it.
+var nativeMoves = ui.ElementTransition{Duration: tokenMotionBase, Ease: tokenMotionEase, Position: true, Size: true}
+
+// nativeCrossfade fades content that replaces content in place: the next
+// cover over the last, over the base motion.
+var nativeCrossfade = ui.ElementTransition{Duration: tokenMotionBase, Ease: tokenMotionEase, Enter: &ui.Motion{}, Exit: &ui.Motion{}}
+
+// nativeTrackText is how a track's title and artist arrive as the track
+// changes: up 8 from below and in, over the last one fading, as the
+// website's player has them.
+var nativeTrackText = ui.ElementTransition{Duration: tokenMotionBase, Ease: tokenMotionEase, Enter: &ui.Motion{Y: 8}, Exit: &ui.Motion{}}
+
+// nativeCoverMatch is the playing cover's identity in a place that shows
+// it large or small (Now Playing's cover and its thumbnail): one appearing
+// grows or shrinks from where the other was, instead of cutting.
+type nativeCoverMatch struct{ place string }
+
+// nativeMatch is nativeMorph matching the element to the one before with
+// the identity id.
+func nativeMatch(id any) ui.ElementTransition {
+	t := nativeMorph
+	t.Match = id
+	return t
 }
 
 // nativeTip is the app's tooltip: Element.Tooltip's behaviour in the
@@ -695,6 +741,41 @@ func nativeLibraryPanelWidth(m *UIModel, width float32) float32 {
 // (wider windows) rather than floating over it.
 func nativeDockedNowPlaying(m *UIModel, width float32) bool {
 	return m.Panel && !m.Immersive && width > 1180
+}
+
+// nativeDockSlide is how docked Now Playing comes and goes: across its own
+// width from the window's right edge, fading, over the base motion.
+var nativeDockSlide = ui.ElementTransition{Duration: tokenMotionBase, Ease: tokenMotionEase, Enter: &ui.Motion{X: nativePanelWidth}, Exit: &ui.Motion{X: nativePanelWidth}}
+
+type nativeDockState struct {
+	shown   bool
+	leaving time.Time
+}
+
+// nativeDock reports whether Now Playing is docked in row, and whether it
+// is leaving: closed, still sliding out, its room kept until it has gone.
+// It goes at once without motion, or into immersive mode, or as the window
+// narrows past docking.
+func nativeDock(c *ui.Context, row ui.Element, m *UIModel, width float32) (docked, leaving bool) {
+	s := ui.Local(row, "now-playing-dock", func() nativeDockState { return nativeDockState{} })
+	docked = nativeDockedNowPlaying(m, width)
+	now := c.Now()
+	switch {
+	case docked:
+		s.shown, s.leaving = true, time.Time{}
+	case s.shown && s.leaving.IsZero() && !m.Immersive && width > 1180 && !m.instantMotion:
+		s.leaving = now
+	}
+	if !docked && !s.leaving.IsZero() {
+		if left := tokenMotionBase - now.Sub(s.leaving); left > 0 && !m.Immersive && width > 1180 {
+			c.After(left)
+			return false, true
+		}
+	}
+	if !docked {
+		s.shown, s.leaving = false, time.Time{}
+	}
+	return docked, false
 }
 
 // nativePageWidth is the page panel's width in a desktop window width wide:
@@ -1420,7 +1501,11 @@ func nativeCover(c *ui.Context, src string, size, radius float32, a ViewActions,
 		}
 	}
 	return box.Background(p.highlight).Children(func() {
-		if artwork != nil {
+		if artwork != nil && priority == artPlayer {
+			// The playing cover: the next one fades in over it, keyed by
+			// its image, as the track changes.
+			ui.Image(c.Key(artwork), artwork).Fill().Fit(ui.Cover).Transition(nativeCrossfade)
+		} else if artwork != nil {
 			ui.Image(c, artwork).Fill().Fit(ui.Cover)
 		} else {
 			ui.Icon(c, nativeIcons["note"]).Size(min(size*0.4, 48), min(size*0.4, 48)).TextColor(p.muted)
@@ -1773,7 +1858,7 @@ func nativeTrackCaption(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 		if title == "" {
 			title, artist = a.Tr("shellIdleTitle"), a.Tr("shellIdleSubtitle")
 		}
-		ui.Text(c, title).FontSize(tokenSizeSmall).FontWeight(600).MaxLines(1).Ellipsis("…")
+		ui.Text(c.Key("title-"+m.Current.ID), title).FontSize(tokenSizeSmall).FontWeight(600).MaxLines(1).Ellipsis("…").Transition(nativeTrackText)
 		if m.PlaybackError != "" {
 			artist = a.Tr("nativePlaybackFailedStatus")
 			if !m.Panel && !m.Immersive {
@@ -1782,7 +1867,7 @@ func nativeTrackCaption(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 		} else if nativeAwaitingAccount(m) {
 			artist = a.Tr("nativePlaybackAwaitingAccount")
 		}
-		caption := ui.Text(c, artist).FontSize(tokenSizeMicro).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+		caption := ui.Text(c.Key("artist-"+m.Current.ID), artist).FontSize(tokenSizeMicro).TextColor(p.secondary).MaxLines(1).Ellipsis("…").Transition(nativeTrackText)
 		if m.PlaybackError != "" {
 			caption.TextColor(p.attention)
 			nativeTip(c, caption, m.PlaybackError, p)
@@ -1808,8 +1893,9 @@ func nativeMiniPlayer(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 		if tint, ok := nativePlayingTint(m, a); ok {
 			card = p.raised.Mix(tint, nativeCardWash(p))
 		}
-		// Corners nest: card 16, the info button 12 four in, its art 8.
-		ui.Column(c).Height(tokenProductMiniPlayer).Radius(tokenRadiusPanel).Background(card).Clip().Children(func() {
+		// Corners nest: card 16, the info button 12 four in, its art 8. Its
+		// colour blends to the next cover's, as the washes do.
+		ui.Column(c).Height(tokenProductMiniPlayer).Radius(tokenRadiusPanel).Background(card).Clip().Transition(ui.ElementTransition{Duration: tokenMotionSlow, Ease: tokenMotionEase, Colors: true}).Children(func() {
 			ui.Row(c).Grow(1).PaddingX(4).Gap(4).AlignItems(ui.Center).Children(func() {
 				info := ui.ButtonBase(c).Grow(1).MinWidth(0).Height(48).Padding(4).Gap(8).Justify(ui.Start).Radius(tokenRadiusControl).Label(a.Tr("shellOpenNowPlaying")).Children(func() {
 					nativePlayerArtwork(c, m.Current.Artwork, 40, tokenRadiusArt, a, p)
@@ -2011,7 +2097,7 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 	return ui.Column(c).Background(p.surface).Radius(tokenRadiusPanel).MinHeight(0).Clip().Children(func() {
 		var scrolled *ui.ScrollState
 		layer := nativePageLayer(c).Padding(16).Gap(gap)
-		if tint, ok := nativePlayingTint(m, a); ok {
+		if tint, ok := nativePlayingTintOn(layer, m, a); ok {
 			nativeScrollingWash(layer, tint, nativeWashStrength(p), nativeNowPlayingWashHeight, &scrolled)
 		}
 		layer.Children(func() { scrolled = nativeNowPlayingBody(c, m, a, p, width, overlay, revealLyrics, windowHeight, gap) })
@@ -2054,27 +2140,37 @@ func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 			// the lyrics take the rest. A video keeps its size.
 			lyricsFirst := m.LyricsExpanded && m.selectedPanelTab() == "lyrics" && !m.Video
 			lyricsExtra := float32(0)
+			// The title, the media switch and the card persist across the two
+			// layouts and move between them; the cover shrinks into the
+			// thumbnail and grows back out of it (nativeCoverMatch).
+			cover := nativeMatch(nativeCoverMatch{"now-playing"})
 			identity := func(art bool) {
-				ui.Row(c).Shrink(0).Gap(12).AlignItems(ui.Center).Children(func() {
+				ui.Row(c.Key("now-playing-identity")).Shrink(0).Gap(12).AlignItems(ui.Center).Transition(nativeMoves).Children(func() {
 					if art {
-						nativePlayerArtwork(c, m.Current.Artwork, nativeCoverThumb, tokenRadiusArt, a, p)
+						nativePlayerArtwork(c, m.Current.Artwork, nativeCoverThumb, tokenRadiusArt, a, p).Transition(cover)
 					}
-					ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
-						nativeDisplay(ui.Text(c, m.Current.Title).FontSize(tokenSizeH3).LineHeight(1.2).MaxLines(2).Ellipsis("…"), m.Current.Title, tokenSizeH3)
-						ui.Text(c, m.Current.Artist).FontSize(tokenSizeSmall).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+					ui.Column(c.Key("now-playing-title")).Grow(1).MinWidth(0).Gap(4).Transition(nativeMoves).Children(func() {
+						nativeDisplay(ui.Text(c.Key("title-"+m.Current.ID), m.Current.Title).FontSize(tokenSizeH3).LineHeight(1.2).MaxLines(2).Ellipsis("…").Transition(nativeTrackText), m.Current.Title, tokenSizeH3)
+						ui.Text(c.Key("artist-"+m.Current.ID), m.Current.Artist).FontSize(tokenSizeSmall).TextColor(p.secondary).MaxLines(1).Ellipsis("…").Transition(nativeTrackText)
 					})
 					if nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 36).Clicked() {
 						a.Like()
 					}
 				})
 			}
+			mediaSwitch := func() {
+				nativeMediaSwitch(c.Key("now-playing-switch"), m, a, p).Transition(nativeMoves)
+			}
 			if lyricsFirst {
 				lyricsExtra = max(0, artSize-nativeCoverThumb)
 				identity(true)
-				nativeMediaSwitch(c, m, a, p)
+				mediaSwitch()
 			} else {
-				nativeMedia(c, m, a, p, artSize).AlignSelf(ui.Center)
-				nativeMediaSwitch(c, m, a, p)
+				media := nativeMedia(c.Key("now-playing-media"), m, a, p, artSize).AlignSelf(ui.Center)
+				if !m.Video {
+					media.Transition(cover)
+				}
+				mediaSwitch()
 				identity(false)
 			}
 			if overlay {
@@ -2092,7 +2188,7 @@ func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 			}
 			// Keyed: the layouts above it differ, and its reading position must
 			// survive switching between them.
-			card := nativePanelCard(c.Key("now-playing-card"), m, a, p)
+			card := nativePanelCard(c.Key("now-playing-card"), m, a, p).Transition(nativeMoves)
 			if overlay {
 				card.Height(300 + lyricsExtra).Shrink(0)
 				if revealLyrics {
@@ -2659,7 +2755,7 @@ func nativeScrollingWash(layer ui.Element, tint ui.Color, strength, height float
 		if y >= height {
 			return
 		}
-		painter.FillGradient(ui.Rect{X: r.X, Y: r.Y - y, W: r.W, H: height}, ui.LinearGradient{From: tint.Alpha(strength), To: tint.Alpha(0), Angle: 180}, 0)
+		painter.FillGradient(ui.Rect{X: r.X, Y: r.Y - y, W: r.W, H: height}, ui.LinearGradient{From: nativeWashOf(tint, strength), To: tint.Alpha(0), Angle: 180}, 0)
 	})
 }
 
@@ -2675,6 +2771,23 @@ func nativeCoverBlur(c *ui.Context, artwork ui.ImageSource) ui.Element {
 	layer := ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(25).Effect(backdropLayer{}).PassThrough()
 	layer.Children(func() { ui.Image(c, artwork).Fill().Fit(ui.Cover).Blur(17.5).PassThrough() })
 	return layer
+}
+
+// nativePlayingTintOn is nativePlayingTint as e shows it: a new cover's
+// colour blends in over the slow motion as the track changes, and a cover
+// without colour fades the wash away. It reports whether any shows.
+func nativePlayingTintOn(e ui.Element, m *UIModel, a ViewActions) (ui.Color, bool) {
+	target := ui.Color{}
+	if tint, ok := nativePlayingTint(m, a); ok {
+		target = tint
+	}
+	shown := e.AnimateColor("playing-tint", target, ui.Animation{Duration: tokenMotionSlow, Ease: tokenMotionEase})
+	return shown, shown.A > 0
+}
+
+// nativeWashOf is tint at strength, the share of it a fading colour keeps.
+func nativeWashOf(tint ui.Color, strength float32) ui.Color {
+	return tint.Alpha(strength * float32(tint.A) / 255)
 }
 
 // nativePlayingTint is the colour the playing track's cover lends the
@@ -2723,11 +2836,10 @@ const nativeNowPlayingWashHeight = 360
 // nativePlayerWash glows the playing cover's colour behind the player bar's
 // track, fading out toward the transport: what's playing carries colour.
 func nativePlayerWash(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
-	tint, ok := nativePlayingTint(m, a)
-	if !ok {
-		return
+	wash := ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(100).HeightPercent(100).PassThrough()
+	if tint, ok := nativePlayingTintOn(wash, m, a); ok {
+		wash.LinearGradient(ui.LinearGradient{From: nativeWashOf(tint, nativeWashStrength(p)*tokenWashBar), To: tint.Alpha(0), Angle: 90, End: 0.4})
 	}
-	ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(100).HeightPercent(100).LinearGradient(ui.LinearGradient{From: tint.Alpha(nativeWashStrength(p) * tokenWashBar), To: tint.Alpha(0), Angle: 90, End: 0.4}).PassThrough()
 }
 
 // The inner blur extends three sigma beyond its quarter-size image. Drawing
@@ -2818,8 +2930,8 @@ func nativeKeyboard(c *ui.Context, m *UIModel, a ViewActions) {
 	}
 }
 
-func nativeMediaSwitch(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
-	ui.Row(c).Shrink(0).Gap(8).Wrap().AlignItems(ui.Center).AlignSelf(ui.Center).Children(func() {
+func nativeMediaSwitch(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) ui.Element {
+	return ui.Row(c).Shrink(0).Gap(8).Wrap().AlignItems(ui.Center).AlignSelf(ui.Center).Children(func() {
 		for _, option := range []struct {
 			video bool
 			key   string

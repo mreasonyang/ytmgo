@@ -40,7 +40,7 @@ func pageTops(tt *ui.Tester) []float32 {
 // Page Down is under way half way through and a page down once it lands.
 func TestScrollKeysGlideThePage(t *testing.T) {
 	m, a := nativeViewFixture()
-	m.SignedIn, m.Route, m.Panel = true, "home", false
+	m.SignedIn, m.Route, m.Panel, m.instantMotion = true, "home", false, false
 	m.Page = nativeContinuationPages(m)["home"]
 	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
 	view, _ := tt.Find(a.Tr("shellContent"))

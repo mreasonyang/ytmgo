@@ -335,7 +335,7 @@ func TestNativePanelAndImmersive(t *testing.T) {
 				t.Fatalf("lyrics missing: %v", tt.Texts())
 			}
 			nativeSnapshot(t, tt, fmt.Sprintf("%d-panel", width))
-			if err := tt.Click(a.Tr("shellImmersive") + " · " + a.Tr("shellNowPlaying")); err != nil {
+			if err := enterImmersive(tt, a); err != nil {
 				t.Fatal(err)
 			}
 			if !m.Immersive {
@@ -504,7 +504,7 @@ func TestNativeMinimumWindow(t *testing.T) {
 			}
 			nativeAssertVisible(t, tt, a.Tr("shellClosePanel"), width, 640)
 			nativeSnapshot(t, tt, fmt.Sprintf("%d-short-panel", width))
-			if err := tt.Click(a.Tr("shellImmersive") + " · " + a.Tr("shellNowPlaying")); err != nil {
+			if err := enterImmersive(tt, a); err != nil {
 				t.Fatal(err)
 			}
 			nativeAssertVisible(t, tt, a.Tr("shellExitImmersive"), width, 640)
@@ -964,5 +964,36 @@ func TestPlayerBarTrackTogglesNowPlaying(t *testing.T) {
 	}
 	if _, ok := tt.Find(a.Tr("shellOpenNowPlaying")); !ok {
 		t.Fatal("the closed panel's track does not offer to open it")
+	}
+}
+
+// enterImmersive clicks the way into immersive mode the layout offers:
+// floating Now Playing's own, else the player bar's.
+func enterImmersive(tt *ui.Tester, a ViewActions) error {
+	if _, ok := tt.Find(a.Tr("shellImmersive") + " · " + a.Tr("shellNowPlaying")); ok {
+		return tt.Click(a.Tr("shellImmersive") + " · " + a.Tr("shellNowPlaying"))
+	}
+	return tt.Click(a.Tr("shellImmersive"))
+}
+
+// Immersive mode has one button where both would show: docked, Now Playing
+// sits above the player bar's and offers none of its own; floating, it
+// carries one, as the sheet covers the player bar. Entering never closes
+// the panel, so leaving comes back to it.
+func TestImmersiveHasOneButtonInView(t *testing.T) {
+	for _, width := range []int{1440, 900, 420} {
+		m, a := nativeViewFixture()
+		m.Panel = true
+		tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, 900)
+		_, own := tt.Find(a.Tr("shellImmersive") + " · " + a.Tr("shellNowPlaying"))
+		if docked := width > 1180; own == docked {
+			t.Errorf("%d: Now Playing's own immersive button shown=%v, docked=%v", width, own, docked)
+		}
+		if err := enterImmersive(tt, a); err != nil {
+			t.Fatalf("%d: %v", width, err)
+		}
+		if !m.Immersive || !m.Panel {
+			t.Fatalf("%d: entering immersive mode: immersive=%v panel=%v", width, m.Immersive, m.Panel)
+		}
 	}
 }

@@ -172,7 +172,9 @@ in `native_style.go`, display-title styling in `native_fonts.go` (system font on
 - Now Playing: cover or video, title and like, then a card with Queue and
   Lyrics chips. Floating and compact forms add their own transport.
 - Immersive: prominent artwork or contained video, title/artist, the queue and
-  lyrics card, and an explicit exit. Navigation exits immersive mode first.
+  lyrics card, and an explicit exit. Its button is the player bar's; floating
+  Now Playing (which covers the player bar) carries one too, docked Now
+  Playing doesn't. Entering never closes Now Playing, so leaving returns to it. Navigation exits immersive mode first.
 - Video: an explicit cover/video choice. Frames preserve source aspect ratio;
   there is no crop. Landscape video keeps the cover's height budget and uses
   the extra width, in compact and desktop immersive alike. Closing the panel or immersive surface stops video decoding.

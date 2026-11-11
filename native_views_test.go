@@ -29,7 +29,7 @@ func nativeViewFixture() (*UIModel, ViewActions) {
 	// An established playback session with Now Playing dismissed.
 	// Motion off: tests here check where things are, not how they move
 	// there; the motion tests turn it back on (instantMotion = false).
-	m := &UIModel{instantMotion: true, playbackViewSeen: true, Route: "home", Appearance: "dark", Language: "en", Current: items[0], Queue: items, Playing: true, Duration: 240, Position: 48, Volume: 0.7, CanBack: true, Page: catalog.Page{Title: "Good evening", Shelves: []catalog.Shelf{{Title: "Listen again", Items: items}, {Title: "Albums for you", Items: albums}}, Items: items}, Lyrics: "It might not be the right time\nI might not be the right one"}
+	m := &UIModel{instantMotion: true, playbackViewSeen: true, Route: "home", Appearance: "dark", Language: "en", Current: items[0], Queue: items, Playing: true, Duration: 240, Position: 48, Volume: 0.7, VideoAvailable: true, CanBack: true, Page: catalog.Page{Title: "Good evening", Shelves: []catalog.Shelf{{Title: "Listen again", Items: items}, {Title: "Albums for you", Items: albums}}, Items: items}, Lyrics: "It might not be the right time\nI might not be the right one"}
 	colors := []color.RGBA{{28, 65, 84, 255}, {90, 50, 94, 255}, {164, 113, 49, 255}, {64, 85, 52, 255}, {117, 47, 63, 255}, {42, 84, 106, 255}, {76, 64, 101, 255}, {85, 94, 82, 255}}
 	art := map[string]ui.ImageSource{}
 	tints := map[string]ui.Color{}

@@ -52,6 +52,8 @@ type desktop struct {
 	player                          *player.Player
 	video                           *player.Video
 	videoID                         string
+	videoAvailableID                string // the track VideoAvailable was learned for
+	fullScreenBefore                bool   // the window was full screen before the video took it
 	videoFrame                      *ui.Bitmap
 	videoFrameNumber                uint64
 	videoActive                     atomic.Bool
@@ -216,6 +218,14 @@ func main() {
 		a.window.OnShow(func() { a.windowVisible = true; a.syncVideo() })
 		a.window.OnMinimize(func() { a.cancelShortcut(); a.windowVisible = false; a.syncVideo() })
 		a.window.OnRestore(func() { a.windowVisible = true; a.syncVideo() })
+		// Leaving full screen any way (the window's button, the system's
+		// shortcut) ends the video's full screen view with it.
+		a.window.OnLeaveFullScreen(func() {
+			if a.model.VideoFullScreen {
+				a.model.VideoFullScreen = false
+				a.invalidate()
+			}
+		})
 		a.window.OnFocus(func() { a.refreshAccount() })
 		a.window.OnBlur(a.cancelShortcut)
 		a.window.OnClose(func(e *mygo.CloseEvent) {
@@ -296,7 +306,7 @@ func (a *desktop) prefetchNextCover(frame *artworkFrame) {
 }
 
 func (a *desktop) actions(artwork func(string, int, artworkPriority) ui.ImageSource) ViewActions {
-	actions := ViewActions{artworkScale: a.artworkScale, artworkPeek: a.art.peek, LyricsClock: a.lyricsClock, BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, SetVideoQuality: a.setVideoQuality, SetLyricsExpanded: a.setLyricsExpanded, RetryPlayback: a.retryPlayback, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: artwork, ArtworkTint: a.art.tint}
+	actions := ViewActions{artworkScale: a.artworkScale, artworkPeek: a.art.peek, LyricsClock: a.lyricsClock, BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, FullScreen: a.setVideoFullScreen, SetVideoQuality: a.setVideoQuality, SetLyricsExpanded: a.setLyricsExpanded, RetryPlayback: a.retryPlayback, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: artwork, ArtworkTint: a.art.tint}
 	if style, _ := mainWindowTitleBar(runtime.GOOS); style == mygo.TitleBarHidden {
 		actions.AppMenu = a.appMenu
 	}
@@ -328,6 +338,7 @@ func (a *desktop) pollPlayback() {
 					return
 				}
 				state := a.player.Snapshot()
+				a.learnVideo(state)
 				a.model.Playing = state.Playing
 				a.model.PlaybackLoading = state.Loading
 				a.model.Position = state.Position.Seconds()

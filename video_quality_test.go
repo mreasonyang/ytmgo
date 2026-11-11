@@ -21,7 +21,8 @@ func TestVideoQualityPreferenceRestartsOnlyVisibleVideo(t *testing.T) {
 			p := &player.Player{}
 			a := &desktop{ctx: context.Background(), player: p, video: v, windowVisible: visible,
 				videoQualityPath: filepath.Join(t.TempDir(), "video-quality"),
-				model: UIModel{Current: catalog.Item{ID: "aaaaaaaaaaa"}, Panel: true, Video: true, VideoQuality: 720,
+				videoAvailableID: "aaaaaaaaaaa",
+				model: UIModel{Current: catalog.Item{ID: "aaaaaaaaaaa"}, Panel: true, Video: true, VideoAvailable: true, VideoQuality: 720,
 					Playing: true, Position: 73.125, Volume: 0.7, Muted: true}}
 			if visible {
 				a.videoID = a.model.Current.ID

@@ -175,10 +175,21 @@ in `native_style.go`, display-title styling in `native_fonts.go` (system font on
   lyrics card, and an explicit exit. Its button is the player bar's; floating
   Now Playing (which covers the player bar) carries one too, docked Now
   Playing doesn't. Entering never closes Now Playing, so leaving returns to it. Navigation exits immersive mode first.
-- Video: an explicit cover/video choice. Frames preserve source aspect ratio;
-  there is no crop. Landscape video keeps the cover's height budget and uses
-  the extra width, in compact and desktop immersive alike. Closing the panel or immersive surface stops video decoding.
-  Audio continues independently. A failed video load shows an error.
+- Video: an explicit cover/video choice, offered only for a track that has a
+  video: the player response (or the catalog entry it was played from) marks
+  it a music or user video. A song (an art track: its cover, still) or a
+  track whose type the service left out shows its cover and no switch; the
+  choice carries over to the next track that has one. Frames preserve source
+  aspect ratio; there is no crop. In Now Playing a video takes the panel's
+  full width at any window height. Landscape video keeps the cover's height
+  budget and uses the extra width in immersive mode, compact and desktop
+  alike. Over the video, under the pointer: fill the play view (a toggle;
+  from Now Playing it enters immersive mode, and returns there) and full
+  screen (the window, with the video alone and the transport over its foot
+  while the pointer moves or playback is paused). Esc steps back one: full
+  screen, then the filled view. Closing the panel or immersive surface stops
+  video decoding. Audio continues independently. A failed video load shows
+  an error.
 - Settings: one sheet (640 wide; full-window at 760 and below, title 20) of
   titled cards — Account, General, Keyboard, About. Each row has an icon
   tile, a name and a one-line explanation, with its control on the right;

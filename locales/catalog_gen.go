@@ -2647,6 +2647,46 @@ func (msgs Messages) NativeArtwork() string {
 	return Catalog.Format(msgs.locale, "nativeArtwork", nil)
 }
 
+// NativeVideoTheater says "Fill the view with the video"
+// in the language the app shows.
+func NativeVideoTheater() string { return In(i18n.Locale()).NativeVideoTheater() }
+
+// NativeVideoTheater says "Fill the view with the video"
+// in the language of msgs.
+func (msgs Messages) NativeVideoTheater() string {
+	return Catalog.Format(msgs.locale, "nativeVideoTheater", nil)
+}
+
+// NativeVideoTheaterExit says "Restore the video's size"
+// in the language the app shows.
+func NativeVideoTheaterExit() string { return In(i18n.Locale()).NativeVideoTheaterExit() }
+
+// NativeVideoTheaterExit says "Restore the video's size"
+// in the language of msgs.
+func (msgs Messages) NativeVideoTheaterExit() string {
+	return Catalog.Format(msgs.locale, "nativeVideoTheaterExit", nil)
+}
+
+// NativeVideoFullScreen says "Full screen"
+// in the language the app shows.
+func NativeVideoFullScreen() string { return In(i18n.Locale()).NativeVideoFullScreen() }
+
+// NativeVideoFullScreen says "Full screen"
+// in the language of msgs.
+func (msgs Messages) NativeVideoFullScreen() string {
+	return Catalog.Format(msgs.locale, "nativeVideoFullScreen", nil)
+}
+
+// NativeVideoExitFullScreen says "Exit full screen"
+// in the language the app shows.
+func NativeVideoExitFullScreen() string { return In(i18n.Locale()).NativeVideoExitFullScreen() }
+
+// NativeVideoExitFullScreen says "Exit full screen"
+// in the language of msgs.
+func (msgs Messages) NativeVideoExitFullScreen() string {
+	return Catalog.Format(msgs.locale, "nativeVideoExitFullScreen", nil)
+}
+
 // NativeVideoUnavailable says "Video is temporarily unavailable."
 // in the language the app shows.
 func NativeVideoUnavailable() string { return In(i18n.Locale()).NativeVideoUnavailable() }

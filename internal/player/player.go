@@ -26,6 +26,9 @@ type State struct {
 	Error              string
 	ErrorDetails       FailureDetails
 	Ended              bool
+	// Video reports that the loaded track has a video worth watching (a
+	// music video, not a song's still cover). False until it has loaded.
+	Video bool
 }
 
 type Player struct {
@@ -347,7 +350,7 @@ func (p *Player) beginLocked(ctx context.Context, at time.Duration, play, clear 
 	if clear {
 		p.media = nil
 		p.seekReloadable = false
-		p.state.Duration = 0
+		p.state.Duration, p.state.Video = 0, false
 	}
 	p.wantPlay = play
 	p.state.Position, p.state.Loading, p.state.Playing = at, true, false
@@ -395,7 +398,7 @@ func (p *Player) installDecoder(ctx context.Context, gen uint64, info media, d *
 	p.media, p.session = &info, &session{out, d, at}
 	p.seekReloadable = false
 	p.accessHealthyFrom = 0
-	p.state.Duration, p.state.Loading = info.Duration, false
+	p.state.Duration, p.state.Loading, p.state.Video = info.Duration, false, info.Video
 	p.state.Playing = p.wantPlay
 	p.suspended, p.sleeping = nil, false
 	if p.wantPlay {

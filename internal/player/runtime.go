@@ -24,6 +24,7 @@ type media struct {
 	Duration  time.Duration
 	UserAgent string
 	Referer   string
+	Video     bool // the track has a video worth watching
 	// A lease belongs to a track, not each of its seek decoders.
 	release func()
 }

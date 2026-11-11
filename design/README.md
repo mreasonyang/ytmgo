@@ -489,7 +489,13 @@ tooltip. The website uses icons only on actions and platform names.
   first, the cover becomes a 56 thumbnail in one row with the title, artist
   and like, the Cover/Video switch beneath, and the lyrics take the rest; a
   video keeps its size. The reader's choice and reading position survive
-  switching.
+  switching. A video takes the panel's full width (16:9) at any height; the
+  switch is there only for a track that has one.
+- **Video controls:** over the video's corner (8 in) under the pointer, 32
+  icon buttons on the stage's `veil`: fill the play view (a toggle, with its
+  dot) and full screen. Full screen is the black stage, the video as large
+  as it fits, and the transport on a `veil` band at its foot while the
+  pointer moves.
 - **Chips** 32, capsule, `hover` fill, inverted when selected. **Pills** 36.
 - **Lyrics:** the current line is `text` and slightly larger, sung lines
   `muted`, upcoming lines `dim`; it follows playback until you scroll, then offers

@@ -461,6 +461,7 @@ func (a *desktop) startTrackAt(it catalog.Item, at time.Duration) {
 			} else if err == nil {
 				a.endedHandled = false
 				state := a.player.Snapshot()
+				a.learnVideo(state)
 				recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 				mygo.NowPlaying.Set(mygo.NowPlayingInfo{Title: it.Title, Artist: it.Artist, Album: it.Album, Duration: state.Duration, Position: state.Position, State: mygo.PlaybackPlaying, Commands: mygo.MediaPlay | mygo.MediaPause | mygo.MediaNext | mygo.MediaPrevious | mygo.MediaSeek})
 				a.prepareNext()

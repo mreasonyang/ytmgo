@@ -59,7 +59,7 @@ func (r *resolver) Resolve(ctx context.Context, id string) (media, error) {
 	if err != nil {
 		return media{}, nativeFailure(err)
 	}
-	return media{source: result.Lease, Duration: result.Duration, release: result.Lease.Close}, nil
+	return media{source: result.Lease, Duration: result.Duration, Video: result.Video, release: result.Lease.Close}, nil
 }
 func (r *resolver) ResolveVideo(ctx context.Context, id string, quality int) (videoMedia, error) {
 	result, err := r.native.ResolveVideo(ctx, id, quality)

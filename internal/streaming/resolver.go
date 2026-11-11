@@ -380,7 +380,19 @@ func (r *Resolver) resolve(ctx context.Context, id, kind string, quality int) (M
 		lease.Close()
 		return Media{}, ctx.Err()
 	}
-	return Media{Lease: lease, Duration: selected.duration, Width: selected.width, Height: selected.height}, nil
+	return Media{Lease: lease, Duration: selected.duration, Width: selected.width, Height: selected.height, Video: movingPictures(response)}, nil
+}
+
+// movingPictures reports whether a player response's track is worth
+// watching: a music video or a user's video. An art track (a song) or an
+// upload is its cover, still. The service sometimes leaves the type out of
+// a response; that says nothing, so it counts as no video.
+func movingPictures(response map[string]any) bool {
+	switch textAt(response, "videoDetails", "musicVideoType") {
+	case "MUSIC_VIDEO_TYPE_OMV", "MUSIC_VIDEO_TYPE_UGC", "MUSIC_VIDEO_TYPE_OFFICIAL_SOURCE_MUSIC":
+		return true
+	}
+	return false
 }
 func (r *Resolver) warmProof(ctx context.Context) error {
 	body, err := r.request(ctx, "GET", "https://www.youtube.com/", nil, http.Header{"Accept": {"text/html"}, "Accept-Language": {"en-US,en;q=0.7"}}, "proof_init", "")

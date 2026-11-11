@@ -38,17 +38,25 @@ type UIModel struct {
 	Volume, Position, Duration                                  float64
 	FocusSearch                                                 bool
 	Video, VideoLoading, PlaybackLoading                        bool
-	VideoFrame                                                  ui.ImageSource
-	PlaybackError                                               string
-	VideoError                                                  string
-	VideoQuality                                                int
-	VideoQualityError                                           string
-	ErrorScope                                                  errorScope
-	AccountRestore                                              string
-	AccountNotice                                               string
-	AccountAvatar                                               string
-	Version                                                     string
-	errorMessage, playbackMessage, videoMessage, lyricsMessage  uiMessage
+	// VideoAvailable: the last track that loaded has a video to watch (a
+	// music video, not a song's still cover). It holds while the next one
+	// loads, so a run of videos keeps its view; Video is only the choice.
+	VideoAvailable bool
+	// VideoTheater: the video fills the play view (immersive mode) rather
+	// than sharing it with the title and the card. VideoFullScreen: the
+	// window is full screen with nothing but the video.
+	VideoTheater, VideoFullScreen                              bool
+	VideoFrame                                                 ui.ImageSource
+	PlaybackError                                              string
+	VideoError                                                 string
+	VideoQuality                                               int
+	VideoQualityError                                          string
+	ErrorScope                                                 errorScope
+	AccountRestore                                             string
+	AccountNotice                                              string
+	AccountAvatar                                              string
+	Version                                                    string
+	errorMessage, playbackMessage, videoMessage, lyricsMessage uiMessage
 
 	// Presentation state for this window.
 	playbackViewSeen                bool // first playback opens Now Playing unless already visited
@@ -68,6 +76,7 @@ type UIModel struct {
 	immersiveAt                             time.Time
 	floating                                nativeFloatState // the floating Now Playing sheet's motion
 	volumeKeyedAt                           time.Time        // a key last changed the volume: show it
+	theaterFromPanel                        bool             // the video filled the view from Now Playing: it goes back there
 }
 
 // Saved-account restoration as the view presents it; account.go owns the
@@ -120,6 +129,7 @@ type ViewActions struct {
 	// ArtworkTint is the colour a loaded cover lends the interface.
 	ArtworkTint                   func(string) (ui.Color, bool)
 	Video                         func(bool)
+	FullScreen                    func(bool) // the window, for the video
 	SetVideoQuality               func(int)
 	SetLyricsExpanded             func(bool)
 	RetryPlayback                 func()
@@ -176,6 +186,11 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 	}
 	before := nativePresentation(m)
 	nativeKeyboard(c, m, a)
+	// The video fills the play view only in immersive mode: leaving it,
+	// however, ends that.
+	if !m.Immersive {
+		m.VideoTheater, m.theaterFromPanel = false, false
+	}
 	// After the keys, which may have toggled it: this frame lays it out.
 	if m.Immersive != m.wasImmersive {
 		m.wasImmersive, m.immersiveAt = m.Immersive, c.Now()
@@ -206,6 +221,10 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 	}
 	c.SetTheme(nativeTheme(dark))
 	p := palette(dark)
+	if m.VideoFullScreen {
+		nativeFullScreenVideo(c, m, a, width, height)
+		return
+	}
 	if width <= 760 {
 		nativeCompactFrame(c, m, a, p, width, height)
 	} else {
@@ -2427,10 +2446,15 @@ func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 			if overlay {
 				artSize = min(artSize, max(nativeCoverMin, windowHeight-600))
 			}
+			// A video is watched, not glanced at: it takes the panel's full
+			// width whatever the window's height, the card the rest.
+			if m.showsVideo() {
+				artSize = width - 32
+			}
 			artSize = nativeGridFloor(artSize)
 			// Lyrics first: the cover becomes a thumbnail beside the title and
 			// the lyrics take the rest. A video keeps its size.
-			lyricsFirst := m.LyricsExpanded && m.selectedPanelTab() == "lyrics" && !m.Video
+			lyricsFirst := m.LyricsExpanded && m.selectedPanelTab() == "lyrics" && !m.showsVideo()
 			lyricsExtra := float32(0)
 			// The title, the media switch and the card persist across the two
 			// layouts and move between them; the cover shrinks into the
@@ -2455,8 +2479,11 @@ func nativeNowPlayingBody(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 					}
 				})
 			}
+			// Only a track with a video has the choice.
 			mediaSwitch := func() {
-				nativeMediaSwitch(c.Key("now-playing-switch"), m, a, p).Transition(nativeMoves)
+				if m.VideoAvailable {
+					nativeMediaSwitch(c.Key("now-playing-switch"), m, a, p).Transition(nativeMoves)
+				}
 			}
 			if lyricsFirst {
 				lyricsExtra = max(0, artSize-nativeCoverThumb)
@@ -2533,7 +2560,7 @@ func nativePanelTabs(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 				m.PanelTab = tab.id
 			}
 		}
-		if !m.Immersive && !m.Video && m.selectedPanelTab() == "lyrics" {
+		if !m.Immersive && !m.showsVideo() && m.selectedPanelTab() == "lyrics" {
 			ui.Spacer(c)
 			// The lyrics card grows over the cover, or gives the space back.
 			// Its glyph says which, so it needs no active dot; it sits in the
@@ -2606,6 +2633,25 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 	if header {
 		headerHeight = nativeImmersiveHeader(c, m, a, p, width)
 	}
+	if m.VideoTheater {
+		// The video fills the stage: as large as it fits under the header,
+		// within the gutters, and nothing else.
+		padX, padY := float32(nativeImmersiveGutter), float32(24)
+		stageW := width - 2*tokenProductFrameGap - 2*padX
+		if compact {
+			padX, padY = 16, 16
+			stageW = width - 2*padX
+		}
+		stageH := max(1, height-headerHeight-2*padY)
+		size := min(stageW, stageH)
+		if m.showsVideo() {
+			size = min(stageW, stageH*16/9)
+		}
+		ui.Row(c).Grow(1).MinHeight(0).Padding(padY, padX).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
+			nativeMedia(c.Key("immersive-media"), m, a, p, nativeGridFloor(max(4, size))).Shadow(tokenShadowArt.args(p)).Transition(nativeLong(nativeMatch(nativeImmersiveCover(c, m, width))))
+		})
+		return
+	}
 	if compact {
 		scroll := ui.Scroll(c).Grow(1).Padding(16).Gap(24)
 		a = nativeArtworkViewport(c, a, scroll)
@@ -2614,13 +2660,15 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 			nativePlaybackNotice(c, m, a, p)
 			mediaHeight := max(float32(180), height-390)
 			artSize := min(width-64, mediaHeight)
-			if m.Video {
+			if m.showsVideo() {
 				// As on desktop, landscape video keeps the cover's height
 				// budget and uses the extra width instead of shrinking to it.
 				artSize = min(width-64, mediaHeight*16/9)
 			}
 			nativeMedia(c, m, a, p, artSize).AlignSelf(ui.Center)
-			nativeMediaSwitch(c, m, a, p)
+			if m.VideoAvailable {
+				nativeMediaSwitch(c, m, a, p)
+			}
 			nativeImmersiveTitle(c, m, a, p, true)
 			nativePanelCard(c, m, a, p).Height(280)
 		})
@@ -2652,7 +2700,7 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 				// under the player. It keeps a pixel so its box keeps bounds.
 				mediaHeight := max(1, contentHeight-textHeight)
 				artSize := min(mediaWidth, mediaHeight)
-				if m.Video {
+				if m.showsVideo() {
 					// A landscape video can use the same vertical budget as the
 					// square cover while filling more of the available column.
 					artSize = min(mediaWidth, mediaHeight*16/9)
@@ -2660,7 +2708,9 @@ func nativeImmersive(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 				// It grows from the cover that was showing, and shrinks back into
 				// the one that will; cover or video, it changes shape in place.
 				nativeMedia(c.Key("immersive-media"), m, a, p, artSize).Shadow(tokenShadowArt.args(p)).Transition(nativeLong(nativeMatch(nativeImmersiveCover(c, m, width))))
-				nativeMediaSwitch(c, m, a, p).Transition(nativeFadeLong)
+				if m.VideoAvailable {
+					nativeMediaSwitch(c, m, a, p).Transition(nativeFadeLong)
+				}
 				nativeImmersiveTitle(c, m, a, p, false)
 				nativePlaybackNotice(c, m, a, p)
 			})
@@ -2743,7 +2793,7 @@ func nativeSongShelf(items []catalog.Item) bool {
 // Request the next frame explicitly so it becomes visible without another input.
 type nativePresentationKey struct {
 	texts                              [16]string
-	flags                              [21]bool
+	flags                              [24]bool
 	values                             [4]float64
 	repeat, queueLength, libraryLength int
 	errorScope                         errorScope
@@ -2756,7 +2806,7 @@ type nativePresentationKey struct {
 func nativePresentation(m *UIModel) nativePresentationKey {
 	return nativePresentationKey{
 		texts:  [16]string{m.Route, m.Query, m.PanelTab, m.Appearance, m.Language, m.Current.ID, m.Current.Title, m.Page.Title, m.Error, m.Lyrics, m.Current.Artwork, m.VideoError, m.PlaybackError, m.AccountRestore, m.LibraryErrorKey, m.AccountNotice},
-		flags:  [21]bool{m.Loading, m.Playing, m.Muted, m.Liked, m.Shuffle, m.Panel, m.Immersive, m.Settings, m.Shortcuts, m.SidebarCollapsed, m.SignedIn, m.CanBack, m.CanForward, m.FocusSearch, m.Video, m.VideoLoading, m.PlaybackLoading, m.MusicPremium, m.LibraryCached, m.LibraryRefreshing, m.LyricsExpanded},
+		flags:  [24]bool{m.Loading, m.Playing, m.Muted, m.Liked, m.Shuffle, m.Panel, m.Immersive, m.Settings, m.Shortcuts, m.SidebarCollapsed, m.SignedIn, m.CanBack, m.CanForward, m.FocusSearch, m.Video, m.VideoLoading, m.PlaybackLoading, m.MusicPremium, m.LibraryCached, m.LibraryRefreshing, m.LyricsExpanded, m.VideoAvailable, m.VideoTheater, m.VideoFullScreen},
 		values: [4]float64{m.Volume, m.Position, m.Duration, 0}, repeat: m.Repeat, queueLength: len(m.Queue), libraryLength: len(m.LibraryItems),
 		errorScope: m.ErrorScope, libraryLoaded: m.LibraryLoaded, shortcutRecording: m.ShortcutRecording, shortcut: m.GlobalShortcut, shortcutError: m.ShortcutError,
 		videoQuality: m.VideoQuality, videoQualityError: m.VideoQualityError,
@@ -3240,10 +3290,14 @@ func nativeKeyboard(c *ui.Context, m *UIModel, a ViewActions) {
 		a.Navigate("library")
 	}
 	if c.Shortcut(0, ui.KeyEscape) {
-		if m.Shortcuts {
+		if m.VideoFullScreen {
+			nativeSetFullScreen(m, a, false)
+		} else if m.Shortcuts {
 			m.Shortcuts = false
 		} else if m.Settings {
 			m.Settings = false
+		} else if m.VideoTheater {
+			nativeSetTheater(m, false)
 		} else if m.Immersive {
 			m.Immersive = false
 		} else if m.Panel {
@@ -3263,37 +3317,181 @@ func nativeMediaSwitch(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 				a.Video(option.video)
 			}
 		}
-		if m.Video {
+		if m.showsVideo() {
 			nativeVideoQualityControl(c, m, a, p, 108, 32)
 		}
 	})
 }
 
+// showsVideo reports whether the media frame shows the video: chosen, and
+// the track has one. Otherwise it is the cover, whatever the choice.
+func (m *UIModel) showsVideo() bool { return m.Video && m.VideoAvailable }
+
 func nativeMedia(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, size float32) ui.Element {
-	if !m.Video {
-		return nativePlayerArtwork(c, m.Current.Artwork, size, tokenRadiusControl, a, p)
+	if !m.showsVideo() {
+		if !m.VideoTheater {
+			return nativePlayerArtwork(c, m.Current.Artwork, size, tokenRadiusControl, a, p)
+		}
+		// A song after a video, in the video's view: the way back stays.
+		frame := ui.Box(c).Shrink(0)
+		return frame.Children(func() {
+			nativePlayerArtwork(c, m.Current.Artwork, size, tokenRadiusControl, a, p)
+			nativeVideoControls(c, frame, m, a)
+		})
 	}
 	// Video plays on a black stage in either appearance, so the stage takes
 	// the dark palette.
 	stage := palette(true)
-	return ui.Box(c).Size(size, size*9/16).Shrink(0).Radius(tokenRadiusControl).Background(stage.base).Clip().Center().Label(a.Tr("nativeVideo")).Children(func() {
-		if m.VideoError != "" {
-			ui.Column(c).WidthPercent(100).Padding(8).Gap(8).AlignItems(ui.Center).Children(func() {
-				ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-					ui.Icon(c, nativeIcons["alert"]).Size(16, 16).Shrink(0).TextColor(stage.attention)
-					ui.Text(c, m.VideoError).TextAlign(ui.Center).TextColor(stage.text).FontSize(tokenSizeMeta).MaxLines(2).Ellipsis("…")
-				})
-				if nativePill(c, a.Tr("buttonRetry"), stage, false).Disabled(a.Video == nil || m.Current.ID == "").Clicked() {
-					a.Video(true)
-				}
+	frame := ui.Box(c).Size(size, size*9/16).Shrink(0).Radius(tokenRadiusControl).Background(stage.base).Clip().Center().Label(a.Tr("nativeVideo"))
+	return frame.Children(func() {
+		nativeVideoPicture(c, m, a, size, size*9/16)
+		nativeVideoControls(c, frame, m, a)
+	})
+}
+
+// nativeVideoPicture is what the video stage shows in w × h: the frame, or
+// its loading, failure or absence.
+func nativeVideoPicture(c *ui.Context, m *UIModel, a ViewActions, w, h float32) {
+	stage := palette(true)
+	if m.VideoError != "" {
+		ui.Column(c).WidthPercent(100).Padding(8).Gap(8).AlignItems(ui.Center).Children(func() {
+			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+				ui.Icon(c, nativeIcons["alert"]).Size(16, 16).Shrink(0).TextColor(stage.attention)
+				ui.Text(c, m.VideoError).TextAlign(ui.Center).TextColor(stage.text).FontSize(tokenSizeMeta).MaxLines(2).Ellipsis("…")
 			})
-		} else if m.VideoLoading {
-			ui.Spinner(c).Size(28, 28).Label(a.Tr("shellLoading"))
-		} else if m.VideoFrame != nil {
-			ui.Image(c, m.VideoFrame).Size(size, size*9/16).Fit(ui.Contain)
-		} else {
-			ui.Text(c, a.Tr("nativeVideoUnavailable")).Padding(16).TextAlign(ui.Center).TextColor(stage.secondary).FontSize(tokenSizeMeta)
+			if nativePill(c, a.Tr("buttonRetry"), stage, false).Disabled(a.Video == nil || m.Current.ID == "").Clicked() {
+				a.Video(true)
+			}
+		})
+	} else if m.VideoLoading {
+		ui.Spinner(c).Size(28, 28).Label(a.Tr("shellLoading"))
+	} else if m.VideoFrame != nil {
+		ui.Image(c, m.VideoFrame).Size(w, h).Fit(ui.Contain)
+	} else {
+		ui.Text(c, a.Tr("nativeVideoUnavailable")).Padding(16).TextAlign(ui.Center).TextColor(stage.secondary).FontSize(tokenSizeMeta)
+	}
+}
+
+// nativeVideoControls sit in the media frame's corner: fill the play view
+// with the video (a toggle, so active with a dot) and full screen. They
+// show while the pointer is over the frame or the focus in it, and are
+// always there to Tab to. Over a picture they wear the stage's veil to
+// stay legible.
+func nativeVideoControls(c *ui.Context, frame ui.Element, m *UIModel, a ViewActions) {
+	stage := palette(true)
+	row := ui.Row(c).Absolute().Right(8).Bottom(8).Gap(4)
+	if !frame.Hovered() && !frame.FocusWithin() {
+		row.Opacity(0)
+	}
+	row.Children(func() {
+		label := "nativeVideoTheater"
+		if m.VideoTheater {
+			label = "nativeVideoTheaterExit"
 		}
+		theater := nativeToggleIcon(c, "theater", a.Tr(label), stage, m.VideoTheater, 32, stage.text)
+		if !theater.Hovered() {
+			theater.Background(stage.veil)
+		}
+		if theater.Clicked() {
+			nativeSetTheater(m, !m.VideoTheater)
+		}
+		full := nativeToggleIcon(c, "fullscreen", a.Tr("nativeVideoFullScreen"), stage, false, 32, stage.text)
+		if !full.Hovered() {
+			full.Background(stage.veil)
+		}
+		if full.Clicked() {
+			nativeSetFullScreen(m, a, true)
+		}
+	})
+}
+
+// nativeSetTheater fills the play view with the video, entering immersive
+// mode to do it, or gives the view back: to the panel if that is where
+// the video was.
+func nativeSetTheater(m *UIModel, on bool) {
+	if on {
+		m.theaterFromPanel = !m.Immersive
+		m.Immersive, m.VideoTheater = true, true
+		return
+	}
+	if m.theaterFromPanel {
+		m.Immersive = false
+	}
+	m.VideoTheater, m.theaterFromPanel = false, false
+}
+
+func nativeSetFullScreen(m *UIModel, a ViewActions, on bool) {
+	if m.VideoFullScreen == on {
+		return
+	}
+	m.VideoFullScreen = on
+	if a.FullScreen != nil {
+		a.FullScreen(on)
+	}
+}
+
+// nativeFullScreenIdle is how long the full screen view keeps its controls
+// (and the pointer) after the pointer last moved, while playing.
+const nativeFullScreenIdle = 2500 * time.Millisecond
+
+type nativeFullScreenState struct {
+	x, y   float32
+	active time.Time
+}
+
+// nativeFullScreenVideo is the window in full screen: the video, as large
+// as it fits, on the black stage, and the transport over its foot while
+// the pointer moves (or playback is paused).
+func nativeFullScreenVideo(c *ui.Context, m *UIModel, a ViewActions, width, height float32) {
+	stage := palette(true)
+	root := ui.Box(c.Key("full-screen")).Fill().Background(stage.base).TextColor(stage.text).Center().Label(a.Tr("nativeVideo"))
+	nativePlaybackShortcut(c, root, m, a)
+	s := ui.Local(root, "pointer", func() nativeFullScreenState { return nativeFullScreenState{active: c.Now()} })
+	now := c.Now()
+	if x, y, over := root.PointerPosition(); over && (x != s.x || y != s.y) {
+		s.x, s.y, s.active = x, y, now
+	}
+	show := !m.Playing || root.FocusWithin()
+	if idle := now.Sub(s.active); idle < nativeFullScreenIdle {
+		show = true
+		c.After(nativeFullScreenIdle - idle)
+	}
+	if !show {
+		root.Cursor(ui.CursorNone)
+	}
+	root.Children(func() {
+		if m.showsVideo() {
+			w := min(width, height*16/9)
+			ui.Box(c).Size(w, w*9/16).Center().Children(func() { nativeVideoPicture(c, m, a, w, w*9/16) })
+		} else {
+			nativePlayerArtwork(c, m.Current.Artwork, nativeGridFloor(min(width, height)*0.7), tokenRadiusControl, a, stage)
+		}
+		if !show {
+			return
+		}
+		bar := ui.Column(c).Absolute().Left(0).Right(0).Bottom(0).Padding(16, 24).Gap(8).Background(stage.veil)
+		bar.Children(func() {
+			nativeSeek(c, m, a, stage)
+			ui.Row(c).Gap(16).AlignItems(ui.Center).Children(func() {
+				ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(4).Children(func() {
+					ui.Text(c, m.Current.Title).FontSize(tokenSizeBody).FontWeight(600).MaxLines(1).Ellipsis("…")
+					ui.Text(c, m.Current.Artist).FontSize(tokenSizeSmall).TextColor(stage.secondary).MaxLines(1).Ellipsis("…")
+				})
+				if nativeIconButton(c, "previous", a.Tr("shellPrevious"), stage, false, 44).Disabled(m.Current.ID == "").Clicked() {
+					a.Previous()
+				}
+				nativePlayButton(c, m, a, stage, 48)
+				if nativeIconButton(c, "next", a.Tr("shellNext"), stage, false, 44).Disabled(m.Current.ID == "").Clicked() {
+					a.Next()
+				}
+				ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(4).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+					nativeVolume(c, m, a, stage, true, true)
+					if nativeIconButton(c, "fullscreen-exit", a.Tr("nativeVideoExitFullScreen"), stage, false, 32).Clicked() {
+						nativeSetFullScreen(m, a, false)
+					}
+				})
+			})
+		})
 	})
 }
 

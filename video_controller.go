@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/egoist/mygo/ui"
+	"ytmgo/internal/player"
 	"ytmgo/internal/videoquality"
 )
 
@@ -32,6 +33,23 @@ func (a *desktop) changeVideoQuality(quality int) bool {
 	return a.syncVideoSession(true)
 }
 
+// setVideoFullScreen puts the window in full screen for the video, or takes
+// it back out unless it was full screen before. The view has already
+// changed VideoFullScreen; the window follows after this frame.
+func (a *desktop) setVideoFullScreen(on bool) {
+	a.post(func() {
+		if a.window == nil {
+			return
+		}
+		if on {
+			a.fullScreenBefore = a.window.IsFullScreen()
+			a.window.SetFullScreen(true)
+		} else if !a.fullScreenBefore {
+			a.window.SetFullScreen(false)
+		}
+	})
+}
+
 func (a *desktop) setVideo(value bool) {
 	retry := value && a.model.VideoError != ""
 	a.model.Video = value
@@ -51,11 +69,28 @@ func (a *desktop) syncVideoState(retry bool) {
 	}
 }
 
+// watchingVideo reports whether a view shows the current track's video: it
+// was chosen, this track is known to have one, and Now Playing, immersive
+// mode or full screen is up.
+func (a *desktop) watchingVideo() bool {
+	m := &a.model
+	return m.Video && m.VideoAvailable && a.videoAvailableID == m.Current.ID && m.Current.ID != "" && (m.Panel || m.Immersive || m.VideoFullScreen)
+}
+
+// learnVideo records whether the loaded track has a video to watch: its
+// player response says so, or the catalog entry it was played from did.
+func (a *desktop) learnVideo(state player.State) {
+	if state.Loading || state.Error != "" || state.Duration <= 0 {
+		return
+	}
+	a.model.VideoAvailable, a.videoAvailableID = state.Video || a.model.Current.Kind == "video", a.model.Current.ID
+}
+
 // syncVideoSession changes only video ownership and presentation state. It
 // reports startup rejection for the UI to localize, without touching audio.
 func (a *desktop) syncVideoSession(retry bool) bool {
 	wanted := ""
-	if !a.powerPlaybackSuspended && a.windowVisible && a.player != nil && a.model.Video && (a.model.Panel || a.model.Immersive) {
+	if !a.powerPlaybackSuspended && a.windowVisible && a.player != nil && a.watchingVideo() {
 		wanted = a.model.Current.ID
 	}
 	if wanted == a.videoID && !(retry && wanted != "") {

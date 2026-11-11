@@ -29,15 +29,42 @@ func TestPhrasesJoinWithinMarksOnly(t *testing.T) {
 func TestPhrasesBreakAtMarksInLayout(t *testing.T) {
 	marked := phrases("你的音乐|值得|不止一个|浏览器标签页")
 	font := ui.Font{Size: 32, Weight: 800, Lang: "zh-Hans"}
-	lines := shapedLines(ui.ShapeText(marked, font, 260), marked)
-	want := []string{"你的音乐值得", "不止一个", "浏览器标签页"}
-	if strings.Join(lines, "/") != strings.Join(want, "/") {
-		t.Fatalf("lines %q, want %q", lines, want)
-	}
 	plain := "你的音乐值得不止一个浏览器标签页"
-	if got := shapedLines(ui.ShapeText(plain, font, 260), plain); strings.Join(got, "/") == strings.Join(want, "/") {
-		t.Fatal("the same text breaks at the phrases without joiners, so this test proves nothing")
+	// Font metrics vary across systems. Find a width where the unmarked text
+	// breaks inside a phrase, and verify that joiners prevent that break.
+	boundaries := map[int]bool{len([]rune("你的音乐")): true, len([]rune("你的音乐值得")): true, len([]rune("你的音乐值得不止一个")): true}
+	breaksInsidePhrase := func(lines []string) bool {
+		offset := 0
+		for _, line := range lines[:len(lines)-1] {
+			offset += len([]rune(line))
+			if !boundaries[offset] {
+				return true
+			}
+		}
+		return false
 	}
+	for width := float32(120); width <= 360; width += 4 {
+		fits := true
+		for _, phrase := range []string{"你的音乐", "值得", "不止一个", "浏览器标签页"} {
+			if len(shapedLines(ui.ShapeText(phrase, font, width), phrase)) != 1 {
+				fits = false
+				break
+			}
+		}
+		if !fits {
+			continue
+		}
+		plainLines := shapedLines(ui.ShapeText(plain, font, width), plain)
+		markedLines := shapedLines(ui.ShapeText(marked, font, width), marked)
+		if !breaksInsidePhrase(plainLines) {
+			continue
+		}
+		if breaksInsidePhrase(markedLines) {
+			t.Fatalf("marked text broke inside a phrase at width %.0f: %q", width, markedLines)
+		}
+		return
+	}
+	t.Fatal("could not find a width where unmarked text breaks inside a phrase")
 }
 
 // shapedLines rebuilds the lines of a layout, without the joiners.

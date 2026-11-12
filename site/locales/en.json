@@ -45,10 +45,10 @@
 
   "immersive.kicker": "Immersive mode and video",
   "immersive.title": "Let the music take the whole screen",
-  "immersive.body": "Immersive mode puts the cover, the lyrics and the queue across the whole window. Switch from the cover to the music video at any time: it stays in step with the audio, and the moment you hide it, the decoder stops while the music plays on.",
+  "immersive.body": "Immersive mode puts the cover, the lyrics and the queue across the whole window. When a track has a music video, switch to it at any time: it stays in step with the audio, and the moment you hide it, the decoder stops while the music plays on.",
   "immersive.tick1": "Video from 144p up to 1080p, 720p by default",
   "immersive.tick2": "Your chosen quality is kept across tracks and restarts",
-  "immersive.tick3": "Hiding the video releases its decoder instantly",
+  "immersive.tick3": "Let the video fill the window, or go full screen",
   "shot.immersive": "Immersive mode: a large cover beside synchronized lyrics with the current line highlighted.",
 
   "layout.kicker": "Any window, any light",

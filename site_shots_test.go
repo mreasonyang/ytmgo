@@ -171,7 +171,9 @@ func TestSiteScreenshots(t *testing.T) {
 		setup         func(m *UIModel)
 	}{
 		{"home", 1440, 900, true, func(m *UIModel) {}},
-		{"immersive", 1440, 900, true, func(m *UIModel) { m.Immersive = true }},
+		// The section is about video too: its track has one, so the
+		// Cover/Video switch shows (the app offers it only then).
+		{"immersive", 1440, 900, true, func(m *UIModel) { m.Immersive, m.VideoAvailable = true, true }},
 		{"album", 1440, 900, true, func(m *UIModel) {
 			m.Route = "browse:site-album-0"
 			m.Page = catalog.Page{Title: "Low Light Hours", Creator: "Lumen Drift", Subtitle: siteCopy[m.Language]["album"] + " • Lumen Drift • 2026", Artwork: "cover-low-light-hours", Items: siteAlbumTracks()}

@@ -294,6 +294,12 @@ design guard and the website's lint fail on an off-grid value.
 | Now Playing | 360 docked | 380 floating | sheet |
 | Player | 80, three zones | 80 | 60 mini player + 64 tab bar |
 
+One middle column runs from top to bottom: the global bar's search field
+is the player's transport column (38 % of the window, at most 720), centred
+over it in the window, Home hanging to its left; the window controls'
+insets go to the side groups, never the middle. Short of room beside the
+controls, the field narrows, still centred.
+
 Panels sit 8 apart on the black frame. Targets are at least 32 with a
 pointer and 44 for touch.
 

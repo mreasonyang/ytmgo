@@ -562,6 +562,12 @@ func nativeIconFace(c *ui.Context, b ui.Element, name, label string, p nativePal
 
 // nativeGrid rounds a computed dimension to the 4 px grid (design/README.md
 // §6): every spatial value is a multiple of 4.
+// nativeCenterColumn is the width of the window's middle column: the player
+// bar's transport and, above it, the search field, so the two line up.
+func nativeCenterColumn(width float32) float32 {
+	return nativeGridFloor(min(720, width*0.38))
+}
+
 func nativeGrid(v float32) float32 {
 	return max(4, float32(math.Round(float64(v)/4))*4)
 }
@@ -641,8 +647,25 @@ func nativeChip(c *ui.Context, label string, p nativePalette, selected bool) ui.
 func nativeTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) {
 	bar := c.TitleBar()
 	left, right := nativeTitleBarInsets(bar, 16)
-	nativeTitleBarRow(c, bar).Height(max(nativeTopbarHeight, bar.Height)).Padding(0, right, 0, left).Gap(16).AlignItems(ui.Center).Transition(nativeFadeLong).Children(func() {
-		ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
+	// The window controls' insets go inside the side groups, which take
+	// equal widths, so the middle stays centred in the window.
+	// Each side must hold its buttons beside the window controls: back and
+	// forward (and the app menu) on the left, settings and the account on
+	// the right. Short of room, the field narrows, still centred.
+	account := float32(48) // the avatar
+	if !m.SignedIn {
+		account = 120 // the Sign in pill, in the longest language
+	} else if m.MusicPremium && width > 1180 {
+		account += 56 // its Premium badge
+	}
+	leftNeed, rightNeed := left+32+8+32, right+32+8+account
+	if a.AppMenu != nil {
+		leftNeed += 32 + 8
+	}
+	column := max(240, min(nativeCenterColumn(width), nativeGridFloor(width-2*max(leftNeed, rightNeed)-2*(48+8)-2*16)))
+	side := max(0, (width-(column+2*(48+8))-2*16)/2)
+	nativeTitleBarRow(c, bar).Height(max(nativeTopbarHeight, bar.Height)).Gap(16).AlignItems(ui.Center).Transition(nativeFadeLong).Children(func() {
+		ui.Row(c).Width(side).Shrink(0).MinWidth(0).Clip().PaddingStart(left).Gap(8).AlignItems(ui.Center).Children(func() {
 			nativeAppMenuButton(c, a, p, 32)
 			if nativeCircleButton(c, "back", a.Tr("shellBack"), p, 32, false).Disabled(!m.CanBack).Clicked() {
 				a.Back()
@@ -651,7 +674,9 @@ func nativeTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wid
 				a.Forward()
 			}
 		})
-		ui.Row(c).Width(min(560, width*0.46)).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
+		// The search field spans the player's transport column, centred over
+		// it in the window; Home hangs to its left, balanced on the right.
+		ui.Row(c).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
 			home := m.Route == "home"
 			icon := "home"
 			if home {
@@ -660,9 +685,10 @@ func nativeTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wid
 			if nativeCircleButton(c, icon, a.Tr("shellNavHome"), p, 48, home).Clicked() {
 				a.Navigate("home")
 			}
-			nativeSearchField(c, m, a, p, 48, true).Grow(1)
+			nativeSearchField(c, m, a, p, 48, true).Width(column).Shrink(0)
+			ui.Box(c).Width(48).Shrink(0)
 		})
-		ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(8).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+		ui.Row(c).Width(side).Shrink(0).MinWidth(0).PaddingEnd(right).Gap(8).AlignItems(ui.Center).Justify(ui.End).Children(func() {
 			if nativeIconButton(c, "settings", a.Tr("shellSettings"), p, m.Settings, 32).Clicked() {
 				m.Settings = !m.Settings
 			}
@@ -2145,7 +2171,7 @@ func nativePlayerBarContent(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 				a.Like()
 			}
 		})
-		ui.Column(c).Width(min(722, width*0.38)).Shrink(0).Gap(4).AlignItems(ui.Stretch).Children(func() {
+		ui.Column(c).Width(nativeCenterColumn(width)).Shrink(0).Gap(4).AlignItems(ui.Stretch).Children(func() {
 			ui.Row(c).Height(40).Gap(16).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
 				if nativeModeButton(c, "shuffle", a.Tr("shellShuffle"), p, m.Shuffle, 32).Disabled(len(m.Queue) < 2).Clicked() {
 					a.Shuffle()

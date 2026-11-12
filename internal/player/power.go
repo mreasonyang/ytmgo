@@ -89,7 +89,7 @@ func (p *Player) ResumeFromSuspend(ctx context.Context) error {
 			return ctx.Err()
 		}
 	}
-	if err := p.lockAccount(ctx); err != nil {
+	if err := p.lockForAudio(ctx, token.track.id); err != nil {
 		return err
 	}
 	if p.suspended != token || p.sleeping {

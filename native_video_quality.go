@@ -11,16 +11,7 @@ func nativeAudioQualitySetting(c *ui.Context, m *UIModel, a ViewActions, p nativ
 	if m.AudioQualityNotice != "" {
 		detail = a.Tr(m.AudioQualityNotice)
 	}
-	label := func(q audioquality.Quality) string {
-		switch q {
-		case audioquality.Saver:
-			return a.Tr("nativeAudioQualitySaver")
-		case audioquality.Standard:
-			return a.Tr("nativeAudioQualityStandard")
-		default:
-			return a.Tr("nativeAudioQualityBest")
-		}
-	}
+	label := func(q audioquality.Quality) string { return a.audioQualityLabel(q) }
 	title := a.Tr("nativeAudioQuality")
 	hint := nativeSettingRow(c, p, narrow, "headphones", title, detail, func() {
 		trigger := nativeQualityControl(c, m, p, title, m.AudioQuality.Normalize(), []audioquality.Quality{audioquality.Saver, audioquality.Standard, audioquality.Best}, label, a.SetAudioQuality, 200, 36)
@@ -31,6 +22,17 @@ func nativeAudioQualitySetting(c *ui.Context, m *UIModel, a ViewActions, p nativ
 		hint.Role(ui.RoleAlert).TextColor(p.attention)
 	case "nativeAudioQualitySaved":
 		hint.Role(ui.RoleStatus)
+	}
+}
+
+func (a ViewActions) audioQualityLabel(q audioquality.Quality) string {
+	switch q {
+	case audioquality.Saver:
+		return a.Tr("nativeAudioQualitySaver")
+	case audioquality.Standard:
+		return a.Tr("nativeAudioQualityStandard")
+	default:
+		return a.Tr("nativeAudioQualityBest")
 	}
 }
 

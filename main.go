@@ -16,6 +16,7 @@ import (
 	"ytmgo/internal/accountsession"
 	"ytmgo/internal/audioquality"
 	"ytmgo/internal/catalog"
+	"ytmgo/internal/downloads"
 	"ytmgo/internal/language"
 	"ytmgo/internal/player"
 	"ytmgo/internal/videoquality"
@@ -52,6 +53,10 @@ type desktop struct {
 	model                           UIModel
 	catalog                         *catalog.Client
 	player                          *player.Player
+	downloads                       *downloads.Manager
+	collectionCtx                   context.Context
+	cancelCollections               context.CancelFunc
+	pendingCollections              int
 	video                           *player.Video
 	videoID                         string
 	videoAvailableID                string // the track VideoAvailable was learned for
@@ -165,6 +170,9 @@ func main() {
 		// Its bounded kill timer cannot run after this process has exited.
 		a.accountState.loginWait.Wait()
 		a.libraryWrites.Wait()
+		if a.downloads != nil {
+			a.downloads.Close()
+		}
 		mygo.GlobalShortcut.UnregisterAll()
 		mygo.NowPlaying.Clear()
 		if a.video != nil {
@@ -213,6 +221,7 @@ func main() {
 		if dir, err := mygo.App.Path(mygo.PathCache); err == nil {
 			a.art.disk = &artworkDisk{dir: filepath.Join(dir, "artwork-v1")}
 		}
+		a.initDownloads(dataDir)
 		titleBar, titleBarHeight := mainWindowTitleBar(runtime.GOOS)
 		a.window = mygo.NewWindow(mygo.WindowOptions{Title: locales.AppName(), Width: 1440, Height: 940, MinWidth: 380, MinHeight: 640, StateKey: "native-main", TitleBarStyle: titleBar, TitleBarHeight: titleBarHeight, BackgroundColor: "light-dark(#e7e7ea, #050506)", Content: ui.View(a.view)})
 		a.updateArtworkScale()
@@ -313,6 +322,12 @@ func (a *desktop) prefetchNextCover(frame *artworkFrame) {
 
 func (a *desktop) actions(artwork func(string, int, artworkPriority) ui.ImageSource) ViewActions {
 	actions := ViewActions{artworkScale: a.artworkScale, artworkPeek: a.art.peek, LyricsClock: a.lyricsClock, BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, FullScreen: a.setVideoFullScreen, SetAudioQuality: a.setAudioQuality, SetVideoQuality: a.setVideoQuality, SetLyricsExpanded: a.setLyricsExpanded, RetryPlayback: a.retryPlayback, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: artwork, ArtworkTint: a.art.tint}
+	if a.downloads != nil {
+		actions.Download = a.downloadItem
+		actions.DownloadCollection = a.downloadPage
+		actions.DownloadPause = a.pauseDownload
+		actions.DownloadRemove = a.removeDownload
+	}
 	if style, _ := mainWindowTitleBar(runtime.GOOS); style == mygo.TitleBarHidden {
 		actions.AppMenu = a.appMenu
 	}
@@ -330,6 +345,13 @@ func (a *desktop) pollPlayback() {
 		case <-a.ctx.Done():
 			return
 		case <-t.C:
+			if a.downloads != nil {
+				select {
+				case <-a.downloads.Changes():
+					a.post(a.refreshDownloads)
+				default:
+				}
+			}
 			if a.player == nil {
 				continue
 			}

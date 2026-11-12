@@ -257,6 +257,7 @@ func (a *desktop) restoreAccount(interaction accountsession.Interaction) {
 			s.restored = true
 			if err == nil {
 				s.session = &session
+				a.selectDownloads(scope, false)
 				a.libraryScope, a.libraryPage = scope, saved
 				a.restoreCachedLibrary()
 			} else {
@@ -327,7 +328,7 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 		var replay accountReplay
 		next := player.AccountSession{LoggedIn: status.LoggedIn, MusicPremium: status.MusicPremium, Cookie: credentials.Cookie, AccountIndex: credentials.AccountIndex, OnBehalfOfUser: credentials.OnBehalfOfUser, Revision: revision}
 		if err == nil {
-			replay, err = a.beforeAccountConfigure(ctx, generation, next, newIdentity)
+			replay, err = a.beforeAccountConfigure(ctx, generation, next, newIdentity, s.store.CacheScope())
 			if err == nil {
 				err = a.configurePlayer(ctx, next)
 			}
@@ -356,6 +357,12 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 				s.checkedAt = time.Now()
 				s.session, s.revision, s.restored, s.ready = session, revision, true, configured
 				if configured {
+					if status.LoggedIn {
+						a.selectDownloads(libraryScope, newIdentity)
+					}
+					// Expired credentials pause remote transfers. Explicit sign-out and
+					// account replacement own removal of the selected offline library.
+					a.downloadsOnline(status.LoggedIn, libraryScope)
 					s.configured = next
 					s.fallback = false
 				}
@@ -380,6 +387,9 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 						a.accountGeneration++
 					}
 					a.clearAccountContent()
+					if a.model.Route == "downloads" {
+						a.refreshDownloads()
+					}
 					if newIdentity || !status.LoggedIn {
 						a.forgetLibrarySnapshot()
 						a.libraryScope = libraryScope
@@ -422,7 +432,7 @@ func (a *desktop) updateAccount(session *accountsession.Session, newIdentity boo
 			if newIdentity {
 				a.openRoute("library")
 				a.show()
-			} else if identityChanged {
+			} else if identityChanged && a.model.Route != "downloads" {
 				if a.model.Route == "library" {
 					a.openRoute("library")
 				} else {
@@ -514,7 +524,7 @@ func (a *desktop) useAnonymousPlayback() {
 		defer cancel()
 		// Not under s.work: a stalled store read can hold it. The player orders
 		// this against later account changes by revision.
-		replay, err := a.beforeAccountConfigure(ctx, generation, next, false)
+		replay, err := a.beforeAccountConfigure(ctx, generation, next, false, "")
 		if err == nil {
 			err = a.configurePlayer(ctx, next)
 		}
@@ -523,6 +533,7 @@ func (a *desktop) useAnonymousPlayback() {
 				return
 			}
 			s.ready, s.configured = true, next
+			a.downloadsOnline(false, "")
 			if replay.pending && replay.generation == a.playGeneration {
 				a.startTrackAt(replay.item, replay.position)
 			}
@@ -549,11 +560,15 @@ type accountReplay struct {
 
 // Coordinate a resolver change with the UI before SetAccount cancels an
 // in-progress Load. Already decoded audio survives membership-only changes.
-func (a *desktop) beforeAccountConfigure(ctx context.Context, generation uint64, next player.AccountSession, newIdentity bool) (accountReplay, error) {
+func (a *desktop) beforeAccountConfigure(ctx context.Context, generation uint64, next player.AccountSession, newIdentity bool, savedScope string) (accountReplay, error) {
 	result := make(chan accountReplay, 1)
 	a.post(func() {
 		if ctx.Err() != nil || generation != a.accountGeneration {
 			return
+		}
+		if newIdentity {
+			// Revoke the old local source before switching the online resolver.
+			a.selectDownloads(savedScope, true)
 		}
 		result <- a.prepareAccountPlayback(next, newIdentity)
 	})
@@ -568,7 +583,11 @@ func (a *desktop) beforeAccountConfigure(ctx context.Context, generation uint64,
 func (a *desktop) prepareAccountPlayback(next player.AccountSession, newIdentity bool) accountReplay {
 	// Reconnecting the same saved account must retain its paused restart
 	// bookmark. Explicit sign-in and sign-out still clear the old queue.
-	identityChanged := newIdentity || (a.model.SignedIn && !next.LoggedIn) || (a.accountState.fallback && next.LoggedIn && !a.restoredTrack)
+	localPlayback := a.downloads.Has(a.model.Current.ID)
+	identityChanged := newIdentity || (!localPlayback && (a.model.SignedIn && !next.LoggedIn || a.accountState.fallback && next.LoggedIn && !a.restoredTrack))
+	if (newIdentity || (a.model.SignedIn && !next.LoggedIn)) && a.downloads != nil {
+		a.downloads.Online(false)
+	}
 	changed := accountConfigurationChanged(a.accountState.configured, next, a.accountState.ready)
 	replay := accountReplay{}
 	if changed {
@@ -576,7 +595,7 @@ func (a *desktop) prepareAccountPlayback(next player.AccountSession, newIdentity
 			a.prepareCancel()
 		}
 		a.preparedID = ""
-		if a.loadPending || identityChanged {
+		if (a.loadPending && !localPlayback) || identityChanged {
 			if a.loadPending && !identityChanged {
 				replay.item = a.model.Current
 				replay.position = time.Duration(a.model.Position * float64(time.Second))
@@ -813,6 +832,7 @@ func (a *desktop) signOut() {
 			a.catalog.ClearSession()
 			a.model.SignedIn = false
 			a.model.MusicPremium = false
+			a.selectDownloads("guest", true)
 			a.forgetLibrarySnapshot()
 			a.clearAccountContent()
 			a.clearAccountPlayback()
@@ -832,6 +852,7 @@ func (a *desktop) signOut() {
 					a.accountBusy = false
 					s.ready = configureErr == nil && flowErr == nil
 					if s.ready {
+						a.downloadsOnline(false, "")
 						s.configured = player.AccountSession{Revision: revision}
 					}
 					if storageErr != nil {

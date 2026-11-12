@@ -384,7 +384,14 @@ func (r *Resolver) resolve(ctx context.Context, id, kind string, preference form
 		lease.Close()
 		return Media{}, ctx.Err()
 	}
-	return Media{Lease: lease, Duration: selected.duration, Width: selected.width, Height: selected.height, Video: movingPictures(response)}, nil
+	version := textAt(selected.raw, "lastModified")
+	if version == "" {
+		version = remote.Query().Get("lmt")
+	}
+	if len(version) > 32 || strings.Trim(version, "0123456789") != "" {
+		version = ""
+	}
+	return Media{Lease: lease, ITag: int(number(selected.raw["itag"])), LastModified: version, ContentType: selected.contentType, Length: selected.length, Duration: selected.duration, Width: selected.width, Height: selected.height, Video: movingPictures(response)}, nil
 }
 
 // movingPictures reports whether a player response's track is worth

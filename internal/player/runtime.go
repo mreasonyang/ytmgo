@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"math"
+	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
@@ -14,12 +15,15 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"ytmgo/internal/streaming"
 )
 
 type runtimePaths struct{ helper, ffmpeg string }
 type media struct {
-	source    *streaming.Lease
+	source interface {
+		http.Handler
+		Err() error
+	}
+	local     bool
 	URL       string
 	Duration  time.Duration
 	UserAgent string

@@ -91,6 +91,13 @@ func (a *desktop) loadPage(route, q string, record bool) {
 	a.model.ErrorScope = ""
 	a.model.AccountNotice = ""
 	a.model.Page = catalog.Page{}
+	if route == "downloads" {
+		a.model.Loading = false
+		a.refreshDownloads()
+		a.pushHistory(record)
+		a.invalidate()
+		return
+	}
 	if route == "library" {
 		if a.model.LibraryLoaded && a.libraryPage != nil {
 			a.model.LibraryCached = true
@@ -319,6 +326,9 @@ func (a *desktop) travel(delta int) {
 	a.model.Immersive = false
 	a.model.CanBack = i > 0
 	a.model.CanForward = i+1 < len(a.history)
+	if e.route == "downloads" {
+		a.refreshDownloads()
+	}
 	if e.needsReload {
 		a.loadPage(e.route, e.query, false)
 		return
@@ -358,7 +368,7 @@ func (a *desktop) playItem(it catalog.Item) {
 	a.startTrack(it)
 	a.queueGeneration++
 	queueGeneration := a.queueGeneration
-	if index < 0 {
+	if index < 0 && !a.downloads.Has(it.ID) {
 		generation := a.playGeneration
 		go func() {
 			ctx, cancel := context.WithTimeout(a.ctx, 25*time.Second)
@@ -473,7 +483,7 @@ func (a *desktop) startTrackAt(it catalog.Item, at time.Duration) {
 		})
 	}()
 	go func() {
-		lyrics, err := a.catalog.LyricsWithTiming(ctx, it.ID)
+		lyrics, err := a.trackLyrics(ctx, it.ID)
 		a.post(func() {
 			if generation != a.playGeneration || ctx.Err() != nil {
 				return

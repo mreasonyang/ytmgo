@@ -104,7 +104,7 @@ func (it Item) LibraryMetadata() Item {
 	return it
 }
 
-// PlaylistSection identifies the stream a Liked Music shelf came from.
+// PlaylistSection distinguishes a collection's own tracks from related shelves.
 type PlaylistSection uint8
 
 const (
@@ -279,17 +279,22 @@ func (c *Client) Browse(ctx context.Context, id string) (Page, error) {
 }
 
 func (c *Client) BrowseWithParams(ctx context.Context, id, params string) (Page, error) {
-	if !browseIDPattern.MatchString(id) {
-		return Page{}, ErrInvalidID
+	payload, err := browsePayload(id, params)
+	if err != nil {
+		return Page{}, err
 	}
-	if len(params) > 8192 || !browseParamsPattern.MatchString(params) {
-		return Page{}, ErrInvalidID
+	return c.page(ctx, "browse", payload, "")
+}
+
+func browsePayload(id, params string) (map[string]any, error) {
+	if !browseIDPattern.MatchString(id) || len(params) > 8192 || !browseParamsPattern.MatchString(params) {
+		return nil, ErrInvalidID
 	}
 	payload := map[string]any{"browseId": id}
 	if params != "" {
 		payload["params"] = params
 	}
-	return c.page(ctx, "browse", payload, "")
+	return payload, nil
 }
 
 func (c *Client) Library(ctx context.Context) (Page, error) {
@@ -318,7 +323,7 @@ func (c *Client) Continue(ctx context.Context, handle string) (Page, error) {
 	if !entry.cursor.query {
 		payload = map[string]any{"continuation": entry.cursor.token}
 	}
-	return c.loadPage(ctx, entry.endpoint, payload, entry.title, entry.cursor, entry.visitorData, entry.album, entry.deferred)
+	return c.loadPage(ctx, entry.endpoint, payload, entry.title, entry.cursor, entry.visitorData, entry.album, entry.deferred, false)
 }
 
 func (c *Client) page(ctx context.Context, endpoint string, payload map[string]any, title string) (Page, error) {
@@ -328,7 +333,7 @@ func (c *Client) page(ctx context.Context, endpoint string, payload map[string]a
 	}
 	key, _ := json.Marshal(payload)
 	page, err := memoized(c, ctx, &c.pages, endpoint+":"+string(key), 2*time.Minute, 8<<20, pageBytes, func(work context.Context) (Page, error) {
-		return c.loadPage(work, endpoint, payload, title, pageCursor{}, "", album, nil)
+		return c.loadPage(work, endpoint, payload, title, pageCursor{}, "", album, nil, textAt(payload, "browseId") == "VLLM")
 	})
 	if err == nil && page.Continuation != "" {
 		c.mu.RLock()
@@ -341,7 +346,7 @@ func (c *Client) page(ctx context.Context, endpoint string, payload map[string]a
 	return clonePage(page), err
 }
 
-func (c *Client) loadPage(ctx context.Context, endpoint string, payload map[string]any, title string, cursor pageCursor, visitorData string, album *albumMetadata, deferred *continuation) (Page, error) {
+func (c *Client) loadPage(ctx context.Context, endpoint string, payload map[string]any, title string, cursor pageCursor, visitorData string, album *albumMetadata, deferred *continuation, collectionRoot bool) (Page, error) {
 	ctx, scope, err := c.operation(ctx)
 	if err != nil {
 		return Page{}, err
@@ -354,8 +359,7 @@ func (c *Client) loadPage(ctx context.Context, endpoint string, payload map[stri
 	if err != nil {
 		return Page{}, err
 	}
-	likedMusicRoot := cursor.token == "" && textAt(payload, "browseId") == "VLLM"
-	page, token, err := parsePageForStream(response, likedMusicRoot, cursor.section)
+	page, token, err := parsePageForStream(response, collectionRoot, cursor.section)
 	if err != nil {
 		return Page{}, err
 	}
@@ -369,6 +373,9 @@ func (c *Client) loadPage(ctx context.Context, endpoint string, payload map[stri
 		// Never mutate a context already shared by a remembered cursor.
 		completed := completeAlbumTracks(&page, *album)
 		album = &completed
+		if collectionRoot && token.trackShelf && token.section == PlaylistSectionUnknown {
+			token.section = PlaylistSectionTracks
+		}
 	}
 	if token.token != "" {
 		// Continuations are bound to the visitor that produced the page. Keep

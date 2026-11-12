@@ -10,12 +10,17 @@ import (
 	"github.com/egoist/mygo/ui"
 	"ytmgo/internal/audioquality"
 	"ytmgo/internal/catalog"
+	"ytmgo/internal/downloads"
 	"ytmgo/locales"
 )
 
 // UIModel is owned by the UI thread. Network and player completions are applied
 // by the controller before a frame; the view changes only local presentation.
 type UIModel struct {
+	Downloads                                                   []downloads.Entry
+	downloadStates                                              map[string]downloads.State
+	DownloadNotice                                              string
+	DownloadWaiting                                             bool
 	Page                                                        catalog.Page
 	Current                                                     catalog.Item
 	LibraryItems                                                []catalog.Item
@@ -115,6 +120,10 @@ func nativeRestoreActions(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 
 // ViewActions keeps native controls independent from the catalogue and player.
 type ViewActions struct {
+	Download                                            func(catalog.Item)
+	DownloadCollection                                  func()
+	DownloadPause                                       func(string, bool)
+	DownloadRemove                                      func(string)
 	Tr                                                  func(string) string
 	TrArgs                                              func(string, map[string]any) string
 	Navigate                                            func(string)
@@ -1065,6 +1074,17 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 				}
 			})
 		}
+		if a.Download != nil {
+			var link ui.Element
+			if full {
+				link = nativePill(c, a.Tr("nativeDownloads"), p, false).MarginX(12).AlignSelf(ui.Start)
+			} else {
+				link = nativeIconButton(c, "download", a.Tr("nativeDownloads"), p, m.Route == "downloads", 40).AlignSelf(ui.Center)
+			}
+			if link.Clicked() {
+				a.Navigate("downloads")
+			}
+		}
 		var items []catalog.Item
 		if m.SignedIn || m.LibraryCached {
 			items = m.LibraryItems
@@ -1387,6 +1407,15 @@ func nativeContinuationExpired(m *UIModel) bool {
 }
 
 func nativePageBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool, contentWidth float32) {
+	if m.Route == "downloads" {
+		nativeDownloads(c, m, a, p)
+		return
+	}
+	if m.Route == "library" && (a.Download != nil || m.DownloadNotice != "") {
+		if nativePill(c, a.Tr("nativeDownloads"), p, false).AlignSelf(ui.Start).Clicked() {
+			a.Navigate("downloads")
+		}
+	}
 	if m.AccountNotice != "" {
 		ui.Text(c, a.Tr(m.AccountNotice)).TextColor(p.secondary)
 	}
@@ -1639,7 +1668,7 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 	if short {
 		buttonSize, buttonTop = tokenProductTargetTouch, 12
 	}
-	ui.Row(c).Padding(buttonTop, inset, 0).Gap(24).AlignItems(ui.Center).Children(func() {
+	ui.Row(c).Padding(buttonTop, inset, 0).Gap(16).AlignItems(ui.Center).Children(func() {
 		icon, key := "play", "shellPlay"
 		if inPage && m.Playing {
 			icon, key = "pause", "shellPause"
@@ -1654,6 +1683,10 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 			} else {
 				a.Play(items[0])
 			}
+		}
+		collection := strings.HasPrefix(m.Route, "browse:MPRE") || strings.HasPrefix(m.Route, "browse:VL")
+		if a.DownloadCollection != nil && collection && nativePill(c, a.Tr("nativeDownloadCollection"), p, false).Clicked() {
+			a.DownloadCollection()
 		}
 	})
 }
@@ -2063,6 +2096,9 @@ func nativePlayerBarContent(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 				}
 				nativeTrackCaption(c, m, a, p)
 			})
+			if a.Download != nil && m.Current.ID != "" {
+				info.ContextMenu(nativeTrackMenu(m.Current, m, a))
+			}
 			if info.Clicked() {
 				m.Panel = !showing
 			}
@@ -2073,6 +2109,7 @@ func nativePlayerBarContent(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 			} else if m.PlaybackError == "" && nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 32).Disabled(m.Current.ID == "").Clicked() {
 				a.Like()
 			}
+			nativeCurrentDownload(c, m, a, p, 32)
 		})
 		ui.Column(c).Width(min(722, width*0.38)).Shrink(0).Gap(4).AlignItems(ui.Stretch).Children(func() {
 			ui.Row(c).Height(40).Gap(16).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
@@ -2189,6 +2226,7 @@ func nativeMiniPlayer(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 				} else if m.PlaybackError == "" && nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 40).Disabled(m.Current.ID == "").Clicked() {
 					a.Like()
 				}
+				nativeCurrentDownload(c, m, a, p, 40)
 				nativePlayButton(c, m, a, p, 40)
 			})
 			nativeProgressLine(c, m, p)
@@ -3316,6 +3354,15 @@ func nativeTrackMenu(item catalog.Item, m *UIModel, a ViewActions) func(*ui.Menu
 			if menu.Item(a.Tr("nativeAddToQueue")).Disabled(a.QueueAppend == nil).Chosen() {
 				a.QueueAppend(item)
 			}
+			if a.Download != nil {
+				if m.downloadStates[item.ID] != "" {
+					if menu.Item(a.Tr("nativeDownloads")).Chosen() {
+						a.Navigate("downloads")
+					}
+				} else if menu.Item(a.Tr("nativeDownloadTrack")).Chosen() {
+					a.Download(item)
+				}
+			}
 		} else if menu.Item(item.Title).Chosen() {
 			a.openCollection(m, item)
 		}
@@ -3682,5 +3729,5 @@ func nativePlaybackNotice(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 
 // nativeAwaitingAccount reports a track load held until restoration settles.
 func nativeAwaitingAccount(m *UIModel) bool {
-	return m.PlaybackLoading && m.PlaybackError == "" && nativeRestoring(m)
+	return m.PlaybackLoading && m.PlaybackError == "" && nativeRestoring(m) && m.downloadStates[m.Current.ID] != downloads.Complete
 }

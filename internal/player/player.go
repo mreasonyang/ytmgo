@@ -13,6 +13,7 @@ import (
 	"github.com/egoist/mygo/audio"
 
 	"ytmgo/internal/audioquality"
+	"ytmgo/internal/downloads"
 )
 
 var (
@@ -40,6 +41,7 @@ type Player struct {
 	refresh             func(context.Context) error
 	open                func(context.Context, media, time.Duration) (*pcmDecoder, error)
 	outputError         func() error // nil uses the native audio device's error
+	downloads           *downloads.Manager
 	resolver            *resolver
 	shutdown            func()
 	gen                 uint64
@@ -146,7 +148,7 @@ func (p *Player) LoadAt(ctx context.Context, videoID string, at time.Duration) e
 	if !videoIDPattern.MatchString(videoID) {
 		return errors.New("invalid_video_id")
 	}
-	if err := p.lockAccount(ctx); err != nil {
+	if err := p.lockForAudio(ctx, videoID); err != nil {
 		return err
 	}
 	oldMedia := p.media
@@ -178,7 +180,7 @@ func (p *Player) LoadAt(ctx context.Context, videoID string, at time.Duration) e
 	defer p.ops.Done()
 	previous.close()
 	releaseMedia(oldMedia)
-	if refresh && p.refresh != nil {
+	if refresh && p.refresh != nil && !p.downloads.Has(videoID) {
 		if err := p.refresh(ctx); err != nil {
 			return p.fail(gen, err)
 		}
@@ -233,7 +235,7 @@ func (p *Player) Prepare(ctx context.Context, videoID string) error {
 	if !videoIDPattern.MatchString(videoID) {
 		return errors.New("invalid_video_id")
 	}
-	if err := p.lockAccount(ctx); err != nil {
+	if err := p.lockForAudio(ctx, videoID); err != nil {
 		return err
 	}
 	if p.closed || ctx.Err() != nil {
@@ -468,7 +470,7 @@ func (p *Player) Play() error {
 // PlayContext keeps an ended-track restart in the same transaction as reading
 // its media. A queued resume can be canceled before it touches a newer track.
 func (p *Player) PlayContext(ctx context.Context) error {
-	if err := p.lockAccount(ctx); err != nil {
+	if err := p.lockForAudio(ctx, ""); err != nil {
 		return err
 	}
 	if p.closed {
@@ -573,7 +575,7 @@ func (p *Player) Seek(at time.Duration) error {
 // SeekContext lets the UI cancel a seek before its worker is scheduled, so a
 // delayed gesture cannot seek a different track selected in the meantime.
 func (p *Player) SeekContext(ctx context.Context, at time.Duration) error {
-	if err := p.lockAccount(ctx); err != nil {
+	if err := p.lockForAudio(ctx, ""); err != nil {
 		return err
 	}
 	if p.closed {
@@ -726,7 +728,7 @@ func safeError(err error) string {
 		err = failure.err
 	}
 	switch err.Error() {
-	case "login_required", "stream_resolution_failed", "invalid_media_response", "audio_stream_failed", "audio_decoder_unavailable", "runtime_missing",
+	case "download_key_unavailable", "download_media_invalid", "login_required", "stream_resolution_failed", "invalid_media_response", "audio_stream_failed", "audio_decoder_unavailable", "runtime_missing",
 		"audio_access_denied", "audio_rate_limited", "audio_server_error", "audio_network_timeout", "audio_connection_failed",
 		"audio_range_mismatch", "audio_stream_truncated",
 		"proof_failed", "proof_expired", "proof_request_rejected", "region_unavailable", "bootstrap_cache_miss",

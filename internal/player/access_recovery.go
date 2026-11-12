@@ -57,7 +57,7 @@ func (p *Player) resolveFresh(ctx context.Context, gen uint64, track audioTrack,
 }
 
 func (p *Player) resolveFreshAttempts(ctx context.Context, gen uint64, track audioTrack, at time.Duration, attempts int) error {
-	if p.refresh != nil {
+	if p.refresh != nil && !p.downloads.Has(track.id) {
 		if err := p.refresh(ctx); err != nil {
 			return p.fail(gen, err)
 		}

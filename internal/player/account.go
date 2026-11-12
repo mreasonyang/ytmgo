@@ -76,7 +76,8 @@ func (p *Player) SetAccount(ctx context.Context, next AccountSession) error {
 	// may finish installing while the next-resolution engine is replaced.
 	// Load clears media before opening and must still be canceled; a changed
 	// identity always revokes the lease and invalidates any pending decoder.
-	keepLeaseOpen := !identityChanged && p.state.Loading && p.media != nil
+	keepLocal := p.downloads.Has(p.currentTrack.id) && ((p.media != nil && p.media.local && p.media.source.Err() == nil) || (p.media == nil && p.state.Loading))
+	keepLeaseOpen := keepLocal || (!identityChanged && p.state.Loading && p.media != nil)
 	ready := make(chan struct{})
 	p.accountReady = ready
 	life, cancel := context.WithCancel(ctx)
@@ -95,7 +96,7 @@ func (p *Player) SetAccount(ctx context.Context, next AccountSession) error {
 	p.clearPreparedLocked()
 	var old *session
 	var oldMedia *media
-	if identityChanged {
+	if identityChanged && !keepLocal {
 		old, oldMedia = p.session, p.media
 		p.session, p.media, p.wantPlay = nil, nil, false
 		p.suspended, p.sleeping = nil, false
@@ -127,7 +128,13 @@ func (p *Player) SetAccount(ctx context.Context, next AccountSession) error {
 
 // lockAccount returns with mu locked only on success. Loading cannot race the
 // initial credential restore or publish a decoder during a mode switch.
-func (p *Player) lockAccount(ctx context.Context) error {
+func (p *Player) lockAccount(ctx context.Context) error { return p.lockSource(ctx, "", false) }
+
+func (p *Player) lockForAudio(ctx context.Context, id string) error {
+	return p.lockSource(ctx, id, true)
+}
+
+func (p *Player) lockSource(ctx context.Context, id string, local bool) error {
 	for {
 		p.mu.Lock()
 		if p.closed {
@@ -137,6 +144,15 @@ func (p *Player) lockAccount(ctx context.Context) error {
 		if err := ctx.Err(); err != nil {
 			p.mu.Unlock()
 			return err
+		}
+		if local {
+			track := id
+			if track == "" {
+				track = p.currentTrack.id
+			}
+			if p.downloads.Has(track) {
+				return nil
+			}
 		}
 		ready := p.accountReady
 		if ready == nil {

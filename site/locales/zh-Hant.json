@@ -41,6 +41,7 @@
   "library.tick1": "首頁、|探索、|搜尋與音樂庫，|內容直接來自 YouTube\u00a0Music",
   "library.tick2": "往下捲動，|下一頁|已在載入",
   "library.tick3": "上一頁與下一頁，|頁面|原樣還原",
+  "library.tick4": "下載歌曲、|專輯與播放清單，|離線也能播放",
   "shot.album": "ytmGO 的專輯頁面：大幅封面、播放按鈕與編號曲目清單。",
 
   "immersive.kicker": "沉浸模式與影片",
@@ -82,6 +83,8 @@
   "more.accounts.body": "不登入、使用免費帳號或 YouTube Music Premium 都能聆聽。會員狀態以 YouTube 回傳的結果為準，絕不猜測。",
   "more.proxy.title": "尊重|你的網路設定",
   "more.proxy.body": "HTTP_PROXY、HTTPS_PROXY 與 NO_PROXY 對所有要求生效；在 macOS 上也會遵循系統代理伺服器設定。",
+  "more.quality.title": "音質|由你選擇",
+  "more.quality.body": "最高可用、標準或節省流量，串流播放與下載皆適用。新的選擇從下一首歌開始生效。",
 
   "privacy.kicker": "隱私與安全",
   "privacy.title": "你的帳號，|只屬於你",
@@ -89,11 +92,11 @@
   "privacy.signin.title": "在 Google 官方頁面|登入",
   "privacy.signin.body": "登入在獨立視窗中的 Google 官方頁面完成，結束後視窗自動關閉。不需要瀏覽器擴充功能，也沒有本機登入伺服器。",
   "privacy.encrypt.title": "在本機|加密保存",
-  "privacy.encrypt.body": "工作階段以 AES-256-GCM 加密。鑰匙圈、認證管理員或 Secret Service 中只保存一把 32 位元組的金鑰。",
+  "privacy.encrypt.body": "工作階段與下載的音訊都以 AES-256-GCM 加密。鑰匙圈、認證管理員或 Secret Service 中只保存它們的 32 位元組金鑰。",
   "privacy.diag.title": "診斷資訊|只留在本機",
   "privacy.diag.body": "診斷檔案只記錄固定的狀態代碼，不含網址、Cookie、帳號識別碼或記錄檔，也不會上傳任何內容。",
   "privacy.signout.title": "登出，|就徹底清除",
-  "privacy.signout.body": "「登出並清除本機資料」會刪除加密的工作階段及其金鑰，其他瀏覽器中的 Google 登入狀態不受影響。",
+  "privacy.signout.body": "「登出並清除本機資料」會刪除加密的工作階段、其金鑰以及該帳戶下載的歌曲，其他瀏覽器中的 Google 登入狀態不受影響。",
 
   "download.kicker": "下載",
   "download.lead": "macOS、Windows 與 Linux 版皆免費，安裝檔直接來自專案的 GitHub 發行頁面。",
@@ -131,7 +134,7 @@
   "faq.updates.q": "如何更新？",
   "faq.updates.a": "ytmGO 會在啟動後不久檢查一次更新，之後每天檢查一次，每個更新都可以選擇安裝、稍後或略過。使用 Homebrew 也可以執行 brew upgrade --cask --greedy。Linux 的 .deb 安裝需用 apt 安裝新版 .deb 來更新。",
   "faq.data.q": "ytmGO 會在|我的電腦上|保存什麼？",
-  "faq.data.a": "只保存從上次位置繼續所需的內容：加密的工作階段、音樂庫快照、播放佇列中的位置與你的偏好設定。YouTube 標示為公開的封面最多快取一天，你的大頭貼從不快取。",
+  "faq.data.a": "只保存從上次位置繼續所需的內容：加密的工作階段、音樂庫快照、播放佇列中的位置與你的偏好設定。你下載的歌曲也會保留，音訊加密保存，並附帶歌詞與封面。其他 YouTube 標示為公開的封面最多快取一天，你的大頭貼從不快取。",
 
   "closing.title": "按下播放",
 

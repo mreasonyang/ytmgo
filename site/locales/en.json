@@ -41,6 +41,7 @@
   "library.tick1": "Home, Explore, Search and Library, straight from YouTube\u00a0Music",
   "library.tick2": "Keep scrolling and the next page is already loading",
   "library.tick3": "Back and Forward return to pages exactly as you left them",
+  "library.tick4": "Download songs, albums and playlists to play them offline",
   "shot.album": "An album page in ytmGO with a large cover, a play button and a numbered track list.",
 
   "immersive.kicker": "Immersive mode and video",
@@ -82,6 +83,8 @@
   "more.accounts.body": "Listen signed out, with a free account or with YouTube Music Premium. Your membership is read from YouTube's own answer, never guessed.",
   "more.proxy.title": "Respects your network",
   "more.proxy.body": "HTTP_PROXY, HTTPS_PROXY and NO_PROXY apply to every request, and on macOS ytmGO follows the system proxy settings too.",
+  "more.quality.title": "Choose your sound",
+  "more.quality.body": "Highest available, Standard or Data saver, for streaming and downloads alike. A new choice applies from the next song.",
 
   "privacy.kicker": "Privacy and security",
   "privacy.title": "Your account stays yours",
@@ -89,11 +92,11 @@
   "privacy.signin.title": "Sign in on Google's own page",
   "privacy.signin.body": "Sign-in happens on Google's real page in a separate window that closes when you're done. There's no browser extension and no local login server.",
   "privacy.encrypt.title": "Encrypted on your device",
-  "privacy.encrypt.body": "Your session is sealed with AES-256-GCM. The only thing kept in your Keychain, Credential Manager or Secret Service is its 32-byte key.",
+  "privacy.encrypt.body": "Your session and your downloaded audio are sealed with AES-256-GCM. The only things kept in your Keychain, Credential Manager or Secret Service are their 32-byte keys.",
   "privacy.diag.title": "Diagnostics stay local",
   "privacy.diag.body": "Diagnostic files record only fixed status codes: no addresses, cookies, account IDs or logs, and nothing is uploaded.",
   "privacy.signout.title": "Signing out means gone",
-  "privacy.signout.body": "“Sign out and clear local data” deletes the encrypted session and its key. Your Google session in other browsers stays untouched.",
+  "privacy.signout.body": "“Sign out and clear local data” deletes the encrypted session, its key and the songs that account downloaded. Your Google session in other browsers stays untouched.",
 
   "download.kicker": "Download",
   "download.lead": "Free for macOS, Windows and Linux. Each download comes straight from the project's GitHub releases.",
@@ -131,7 +134,7 @@
   "faq.updates.q": "How do updates work?",
   "faq.updates.a": "ytmGO checks shortly after it starts and then once a day, and lets you install, postpone or skip each update. With Homebrew you can also run brew upgrade --cask --greedy. A Linux .deb install updates when you install the newer .deb with apt.",
   "faq.data.q": "What does ytmGO keep on my computer?",
-  "faq.data.a": "Only what it needs to start where you left off: the encrypted session, a snapshot of your library, your place in the queue and your preferences. Covers that YouTube marks as public are cached for up to a day; your avatar never is.",
+  "faq.data.a": "Only what it needs to start where you left off: the encrypted session, a snapshot of your library, your place in the queue and your preferences. Songs you download stay too, their audio encrypted, with their lyrics and covers. Other covers that YouTube marks as public are cached for up to a day; your avatar never is.",
 
   "closing.title": "Press play",
 

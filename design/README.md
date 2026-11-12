@@ -364,7 +364,8 @@ from the same set, redrawn to the same stroke, or are drawn to match it;
 never from another app's interface. **One glyph, one meaning:** the
 diagonal expand arrows always mean immersive mode; a panel that grows or
 shrinks in place uses vertical chevrons, and a control whose glyph changes
-with its state needs no active dot. Filled variants mark the active
+with its state needs no active dot. Pausing a download is the circled
+pause, never the transport's bars. Filled variants mark the active
 destination and the primary transport glyphs. **Optical, not geometric, centring:** a
 glyph is centred by where the eye puts its weight, between its bounding
 box and its ink's centroid. Asymmetric glyphs carry their correction in
@@ -480,12 +481,23 @@ tooltip. The website uses icons only on actions and platform names.
   on hover and an equalizer while playing; the title turns coral.
 - **Library row:** 64 high, 48 art (round for artists), title over
   "kind · owner". The open collection is washed and its title is `text`
-  (navigation state isn't coral).
+  (navigation state isn't coral). **Downloads** leads the library, above
+  its filters, once anything is downloaded: a library row with the
+  download glyph on a `highlight` tile, its subtitle what's under way or the
+  space it takes; a compact Library page leads with it.
+- **Downloads page:** track rows. The download's state takes the Album
+  column (an error beside the attention glyph); its control (pause, resume,
+  retry) and remove end the row. A finished download has no control: its
+  row plays it.
 - **Quick-access tile:** 64 high, art filling its height, radius `control`.
 - **Card:** 164 art (140 compact), title, two-line subtitle; the play button
   rises on hover.
 - **Collection header:** 232 art (192 medium) beside the collection title,
-  then the 56 coral play button.
+  then the 56 coral play button. An album or playlist follows it with
+  Download: a pill while any of its songs isn't downloaded, then
+  "Downloading" or "Downloaded" in words beside their glyph. Downloading
+  never leaves the page it was asked from; the player bar leaves it to its
+  More menu.
 - **Player bar:** 80 high, three zones: now playing (56 art), transport
   (white round play/pause, icon buttons, progress with mono times),
   and output (lyrics, queue, volume, more, expand); washed with the playing

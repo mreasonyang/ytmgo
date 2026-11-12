@@ -2020,10 +2020,25 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 				if mode == nativeTrackRow {
 					subtitle = nativeResultSubtitle(item, m, a)
 				}
-				artist := ui.Text(c, subtitle).FontSize(tokenSizeMeta).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
-				if hovered {
-					artist.TextColor(p.text)
+				line := func() {
+					artist := ui.Text(c, subtitle).FontSize(tokenSizeMeta).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+					if hovered {
+						artist.TextColor(p.text)
+					}
 				}
+				if m.downloadStates[item.ID] != downloads.Complete {
+					line()
+					return
+				}
+				// A downloaded song says so before its artist, in the
+				// glyph the collection's toggle fills with.
+				ui.Row(c).MinWidth(0).Gap(4).AlignItems(ui.Center).Children(func() {
+					mark := ui.Icon(c, nativeIcons["download-fill"]).Size(12, 12).Shrink(0).TextColor(p.secondary)
+					if hovered {
+						mark.TextColor(p.text)
+					}
+					line()
+				})
 			})
 		})
 		if album {
@@ -2106,9 +2121,6 @@ func nativePlayerBarContent(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 				}
 			} else if m.PlaybackError == "" && nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 32).Disabled(m.Current.ID == "").Clicked() {
 				a.Like()
-			}
-			if m.PlaybackError == "" {
-				nativeCurrentDownload(c, m, a, p, 32)
 			}
 		})
 		ui.Column(c).Width(min(722, width*0.38)).Shrink(0).Gap(4).AlignItems(ui.Stretch).Children(func() {
@@ -2225,9 +2237,6 @@ func nativeMiniPlayer(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 					}
 				} else if m.PlaybackError == "" && nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 40).Disabled(m.Current.ID == "").Clicked() {
 					a.Like()
-				}
-				if m.PlaybackError == "" {
-					nativeCurrentDownload(c, m, a, p, 40)
 				}
 				nativePlayButton(c, m, a, p, 40)
 			})

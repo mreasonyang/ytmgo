@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/egoist/mygo/ui"
@@ -19,33 +20,6 @@ func downloadSize(n int64) string {
 		return fmt.Sprintf("%.0f KiB", float64(n)/(1<<10))
 	default:
 		return fmt.Sprintf("%d B", n)
-	}
-}
-
-// nativeCurrentDownload sits beside Like and works as Like does: the
-// glyph fills and the dot shows once the playing song is downloaded (the dot
-// alone while it downloads). It downloads in place; once asked for, it leads
-// to Downloads.
-func nativeCurrentDownload(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, size float32) {
-	if a.Download == nil || m.Current.ID == "" {
-		return
-	}
-	state := m.downloadStates[m.Current.ID]
-	icon, key := "download", "nativeDownloadTrack"
-	switch state {
-	case "":
-	case downloads.Complete:
-		icon, key = "download-fill", "nativeDownloaded"
-	default:
-		key = "nativeDownloading"
-	}
-	label := a.Tr(key) + " · " + m.Current.Title
-	if nativeIconButton(c, icon, label, p, state != "", size).Clicked() {
-		if state == "" {
-			a.Download(m.Current)
-		} else {
-			a.Navigate("downloads")
-		}
 	}
 }
 
@@ -99,41 +73,79 @@ func nativeDownloadsSummary(m *UIModel, a ViewActions) string {
 	return downloadSize(total)
 }
 
-// nativeCollectionDownload sits beside a collection's play button: a pill
-// while some of its songs aren't downloaded, then the progress in words.
+// nativeCollectionDownload is the collection's download toggle, beside its
+// play button: an arrow while some of its songs aren't downloaded, a ring
+// filling as they download, then the filled glyph. Under way or done, it
+// leads to Downloads.
 func nativeCollectionDownload(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, items []catalog.Item) {
-	if a.DownloadCollection == nil || !(strings.HasPrefix(m.Route, "browse:MPRE") || strings.HasPrefix(m.Route, "browse:VL")) {
+	if a.DownloadCollection == nil || !(strings.HasPrefix(m.Route, "browse:MPRE") || strings.HasPrefix(m.Route, "browse:VL")) || len(items) == 0 {
 		return
 	}
 	note := m.collectionDownloads[m.Route]
-	missing, active := false, note == "nativeDownloadPreparing"
+	entries := make(map[string]downloads.Entry, len(m.Downloads))
+	for _, j := range m.Downloads {
+		entries[j.Item.ID] = j
+	}
+	missing, active, done := false, note == "nativeDownloadPreparing", float32(0)
 	for _, it := range items {
 		switch m.downloadStates[it.ID] {
 		case downloads.Complete:
+			done++
 		case downloads.Queued, downloads.Downloading:
 			active = true
-		default: // not asked for, paused or failed: the pill (re)starts them
+			if j := entries[it.ID]; j.Total > 0 {
+				done += float32(j.Bytes) / float32(j.Total)
+			}
+		default: // not asked for, paused or failed: the arrow (re)starts them
 			missing = true
 		}
 	}
-	status := func(icon, key string) {
-		ui.Row(c).Gap(8).AlignItems(ui.Center).Role(ui.RoleStatus).TextColor(p.secondary).Children(func() {
-			ui.Icon(c, nativeIcons[icon]).Size(16, 16).Shrink(0)
-			ui.Text(c, a.Tr(key)).FontSize(tokenSizeMeta)
+	icon, key := "download-circle", "nativeDownloadCollection"
+	ring := note == "nativeDownloadPreparing" || (active && !missing)
+	switch {
+	case ring:
+		icon, key = "download-arrow", "nativeDownloading"
+	case !missing:
+		icon, key = "download-fill", "nativeDownloaded"
+	}
+	label := a.Tr(key)
+	if key != "nativeDownloadCollection" {
+		label += " · " + a.Tr("nativeShowDownloads")
+	}
+	const hit, glyph = 48, 32
+	b := ui.ButtonBase(c.Key("collection-download")).Size(hit, hit).Shrink(0).Radius(hit / 2).Label(label + " · " + m.Page.Title).TextColor(p.secondary)
+	nativeTip(c, b, label, p)
+	if !missing || b.Hovered() {
+		b.TextColor(p.text)
+	}
+	nativePress(b)
+	if ring {
+		fraction := max(0, min(1, done/float32(len(items))))
+		track, fill := p.track, p.text
+		b.Draw(func(painter *ui.Painter, r ui.Rect) {
+			cx, cy, radius := r.X+r.W/2, r.Y+r.H/2, float32(glyph)*9/24
+			painter.StrokePath(new(ui.Path).Circle(cx, cy, radius), 2, track)
+			if fraction > 0 {
+				// From twelve o'clock, clockwise.
+				arc := new(ui.Path).MoveTo(cx, cy-radius)
+				for k := 1; k <= 64; k++ {
+					t := float64(k) / 64 * 2 * math.Pi
+					arc.LineTo(cx+radius*float32(math.Sin(t)), cy-radius*float32(math.Cos(t)))
+				}
+				painter.StrokePath(arc.Cap(ui.RoundCap).Trim(0, fraction), 2, fill)
+			}
 		})
 	}
-	switch {
-	case note == "nativeDownloadPreparing" || (active && !missing):
-		status("download", "nativeDownloading")
-	case missing:
-		if nativePill(c, a.Tr("nativeDownloadCollection"), p, false).Shrink(0).Clicked() {
+	b.Children(func() { ui.Icon(c, nativeIcons[icon]).Size(glyph, glyph) })
+	if b.Clicked() {
+		if missing && !ring {
 			a.DownloadCollection()
+		} else {
+			a.Navigate("downloads")
 		}
-		if note != "" {
-			nativeDownloadAlert(c, a.Tr(note), p).Shrink(1).MinWidth(0)
-		}
-	default:
-		status("check", "nativeDownloaded")
+	}
+	if note == "nativeDownloadCollectionError" {
+		nativeDownloadAlert(c, a.Tr(note), p).Shrink(1).MinWidth(0)
 	}
 }
 

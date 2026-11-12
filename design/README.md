@@ -478,7 +478,8 @@ tooltip. The website uses icons only on actions and platform names.
   title over artist, album, duration in mono. The playing indicator has its
   own slot, so columns line up whether a row plays or not, and a list whose
   rows all come from one album (an album's own page) drops the Album column. The number becomes a play glyph
-  on hover and an equalizer while playing; the title turns coral.
+  on hover and an equalizer while playing; the title turns coral. A
+  downloaded song carries the filled download glyph, 12, before its artist.
 - **Library row:** 64 high, 48 art (round for artists), title over
   "kind · owner". The open collection is washed and its title is `text`
   (navigation state isn't coral). **Downloads** leads the library, above
@@ -493,13 +494,13 @@ tooltip. The website uses icons only on actions and platform names.
 - **Card:** 164 art (140 compact), title, two-line subtitle; the play button
   rises on hover.
 - **Collection header:** 232 art (192 medium) beside the collection title,
-  then the 56 coral play button. An album or playlist follows it with
-  Download: a pill while any of its songs isn't downloaded, then
-  "Downloading" or "Downloaded" in words beside their glyph. Downloading
+  then the 56 coral play button. An album or playlist follows it with its
+  download toggle, a 48 icon button with a 32 glyph: a circled arrow while
+  any of its songs isn't downloaded, a ring filling as they download, then
+  the filled glyph; under way or done it leads to Downloads. Downloading
   never leaves the page it was asked from.
-- **Player bar:** 80 high, three zones: now playing (56 art, then like
-  and download, which works as like does: the glyph fills and the dot shows
-  once the song is downloaded, the dot alone while it downloads), transport
+- **Player bar:** 80 high, three zones: now playing (56 art, then like;
+  downloading the playing song is in its More menu), transport
   (white round play/pause, icon buttons, progress with mono times),
   and output (lyrics, queue, volume, more, expand); washed with the playing
   cover's colour behind the track (§4.4).

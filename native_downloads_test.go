@@ -99,7 +99,14 @@ func TestNativeDownloadManagement(t *testing.T) {
 			if removed != items[3].ID {
 				t.Fatal("a downloaded song's menu does not remove it")
 			}
-			click(a.Tr("nativeDownloadCollection"))
+			toggle := func(key string) string {
+				label := a.Tr(key)
+				if key != "nativeDownloadCollection" {
+					label += " · " + a.Tr("nativeShowDownloads")
+				}
+				return label + " · Collection"
+			}
+			click(toggle("nativeDownloadCollection"))
 			if collections != 1 || m.Route != "browse:VLsynthetic" {
 				t.Fatal("collection did not enqueue in place")
 			}
@@ -107,55 +114,61 @@ func TestNativeDownloadManagement(t *testing.T) {
 				m.downloadStates[it.ID] = downloads.Queued
 			}
 			tt.Frame()
-			if tt.HasText(a.Tr("nativeDownloadCollection")) || !tt.HasText(a.Tr("nativeDownloading")) {
-				t.Fatal("a collection under way still offers the download")
+			click(toggle("nativeDownloading"))
+			if collections != 1 || m.Route != "downloads" {
+				t.Fatal("a collection under way does not lead to Downloads")
 			}
+			m.Route = "browse:VLsynthetic"
+			m.Page = catalog.Page{Title: "Collection", Items: m.Queue[:5]}
 			for _, it := range m.Page.Items {
 				m.downloadStates[it.ID] = downloads.Complete
 			}
 			tt.Frame()
-			if tt.HasText(a.Tr("nativeDownloadCollection")) || !tt.HasText(a.Tr("nativeDownloaded")) {
+			if _, ok := tt.Find(toggle("nativeDownloaded")); !ok {
 				t.Fatal("a downloaded collection does not say so")
 			}
 		})
 	}
 }
 
-// Beside Like, in the player bar and the mini player: it downloads the
-// playing song in place, then leads to Downloads, its glyph and dot showing
-// the state as Like's do.
-func TestPlayingSongDownloadButton(t *testing.T) {
-	for _, width := range []int{420, 1440} {
-		t.Run(fmt.Sprint(width), func(t *testing.T) {
-			m, a := nativeViewFixture()
-			m.downloadStates = map[string]downloads.State{}
-			a.Download = func(item catalog.Item) { m.downloadStates[item.ID] = downloads.Queued }
-			a.DownloadPause, a.DownloadRemove = func(string, bool) {}, func(string) {}
-			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, 900)
-			tt.Frame()
-			click := func(key string) {
-				t.Helper()
-				label := a.Tr(key) + " · " + m.Current.Title
-				nativeAssertVisible(t, tt, label, width, 900)
-				if err := tt.Click(label); err != nil {
-					t.Fatal(err)
-				}
-			}
-			click("nativeDownloadTrack")
-			if m.downloadStates[m.Current.ID] != downloads.Queued || m.Route != "home" {
-				t.Fatalf("download state %q, route %q", m.downloadStates[m.Current.ID], m.Route)
-			}
-			click("nativeDownloading")
-			if m.Route != "downloads" {
-				t.Fatal("a download under way does not lead to Downloads")
-			}
-			m.Route = "home"
-			m.downloadStates[m.Current.ID] = downloads.Complete
-			tt.Frame()
-			click("nativeDownloaded")
-			if m.Route != "downloads" {
-				t.Fatal("a downloaded song does not lead to Downloads")
-			}
-		})
+// The player bar keeps to its zones (§11): downloading the playing song is
+// in its More menu, as in other players, not a button beside Like.
+func TestPlayerBarLeavesDownloadToItsMenu(t *testing.T) {
+	m, a := nativeViewFixture()
+	var added string
+	a.Download = func(item catalog.Item) { added = item.ID }
+	a.DownloadPause, a.DownloadRemove = func(string, bool) {}, func(string) {}
+	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
+	tt.Frame()
+	for _, key := range []string{"nativeDownloadTrack", "nativeDownloading", "nativeDownloaded"} {
+		if _, ok := tt.Find(a.Tr(key) + " · " + m.Current.Title); ok {
+			t.Fatal("the player bar grew a download button")
+		}
 	}
+	if err := tt.Click(a.Tr("shellMore")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem(a.Tr("nativeDownloadTrack")); err != nil {
+		t.Fatal(err)
+	}
+	if added != m.Current.ID || m.Route != "home" {
+		t.Fatalf("More › Download song added %q, route %q", added, m.Route)
+	}
+}
+
+// A downloaded song is marked in any track list, before its artist.
+func TestTrackRowsMarkDownloadedSongs(t *testing.T) {
+	m, a := nativeViewFixture()
+	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
+	tt.Frame()
+	before := len(tt.Texts())
+	song := m.Page.Items[2]
+	artist := rect(t, tt, song.Title)
+	m.downloadStates = map[string]downloads.State{song.ID: downloads.Complete}
+	tt.Frame()
+	if after := rect(t, tt, song.Title); after.X != artist.X || len(tt.Texts()) != before {
+		t.Fatal("the mark moved the title or changed the text")
+	}
+	m.downloadStates[song.ID] = downloads.Queued
+	tt.Frame()
 }

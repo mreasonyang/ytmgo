@@ -249,7 +249,7 @@ func nativeDownloadRow(c *ui.Context, j downloads.Entry, m *UIModel, a ViewActio
 				ui.Text(c, duration).Width(48).Shrink(0).FontSize(tokenSizeMeta).TextColor(p.secondary).TextAlign(ui.End)
 			}
 		})
-		b.ContextMenu(nativeTrackMenu(item, m, a))
+		nativeTrackMenu(c, b, item, m, a, p)
 		if b.Clicked() {
 			a.Play(item)
 		}

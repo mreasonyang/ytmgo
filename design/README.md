@@ -482,8 +482,9 @@ tooltip. The website uses icons only on actions and platform names.
   downloaded song carries the filled download glyph, 12, before its artist.
 - **Library row:** 64 high, 48 art (round for artists), title over
   "kind · owner". The open collection is washed and its title is `text`
-  (navigation state isn't coral). **Downloads** leads the library, above
-  its filters, once anything is downloaded: a library row with the
+  (navigation state isn't coral). **Downloads** is the list's first row
+  once anything is downloaded, while no filter narrows it (it is none of
+  their kinds): a library row with the
   download glyph on a `highlight` tile, its subtitle what's under way or the
   space it takes; a compact Library page leads with it.
 - **Downloads page:** track rows. The download's state takes the Album
@@ -533,6 +534,13 @@ tooltip. The website uses icons only on actions and platform names.
 - **Dialogs and sheets:** radius `sheet`, `raised`, one inverted primary
   action; their groups `panel`, rows in a group flat or `control`, icon
   tiles `art`.
+- **Menus:** a song's menu (right-click, More) and the account's are the
+  app's own, drawn in the window as its other popovers: `raised`, a
+  hairline, the `popover` elevation, radius `control`, 4 in; items 36 high,
+  radius `art`, washed under the pointer or the keys; a hairline between
+  groups. Only the application menu and text editing keep the system's.
+- **Track tables:** a long list's pages are one table, under one header,
+  numbered straight on.
 - **Tooltips:** inverted, `micro` text, radius `art`, the `tooltip`
   elevation, 8 from their anchor. A slider's value (time, volume) is one,
   anchored on the thumb rather than the taller hit area: shown under the

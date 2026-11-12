@@ -21,6 +21,7 @@ type UIModel struct {
 	downloadStates                                              map[string]downloads.State
 	DownloadNotice                                              string
 	DownloadWaiting                                             bool
+	barMenu, sheetMenu, accountMenu                             bool              // which app menu shows
 	collectionDownloads                                         map[string]string // route → its download notice while preparing or failed
 	Page                                                        catalog.Page
 	Current                                                     catalog.Item
@@ -534,7 +535,12 @@ func nativeModeButton(c *ui.Context, name, label string, p nativePalette, on boo
 }
 
 func nativeToggleIcon(c *ui.Context, name, label string, p nativePalette, active bool, hit float32, on ui.Color) ui.Element {
-	b := ui.ButtonBase(c).Size(hit, hit).Shrink(0).Radius(hit / 2).Label(label).TextColor(p.secondary)
+	return nativeIconFace(c, ui.ButtonBase(c), name, label, p, active, hit, on)
+}
+
+// nativeIconFace gives b an icon button's look: a menu's trigger takes it too.
+func nativeIconFace(c *ui.Context, b ui.Element, name, label string, p nativePalette, active bool, hit float32, on ui.Color) ui.Element {
+	b.Size(hit, hit).Shrink(0).Radius(hit / 2).Label(label).TextColor(p.secondary)
 	nativeTip(c, b, label, p)
 	if active {
 		b.Selected(true).Background(ui.Transparent).TextColor(on)
@@ -796,7 +802,8 @@ func nativeAccount(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, ba
 		return
 	}
 	status := nativeAccountStatus(m, a)
-	b := ui.ButtonBase(c.Key("account")).Height(48).MinWidth(48).Shrink(0).Padding(8).Gap(8).Radius(tokenRadiusPill).Background(p.raised).Label(a.Tr("menuAccount") + " · " + status)
+	parts := ui.MenuBase(c.Key("account"), &m.accountMenu)
+	b := parts.Trigger.Height(48).MinWidth(48).Shrink(0).Padding(8).Gap(8).Radius(tokenRadiusPill).Background(p.raised).Label(a.Tr("menuAccount") + " · " + status)
 	nativeTip(c, b, status, p)
 	if b.Hovered() {
 		b.Background(p.highlight)
@@ -807,20 +814,9 @@ func nativeAccount(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, ba
 		}
 		nativeAvatar(c, m, a, p, 32)
 	})
-	b.Menu(func(menu *ui.Menu) {
-		menu.Item(status).Disabled(true)
-		menu.Separator()
-		if menu.Item(a.Tr("shellAccountManage")).Chosen() {
-			a.Account()
-		}
-		if menu.Item(a.Tr("shellSettings")).Chosen() {
-			m.Settings = true
-		}
-		menu.Separator()
-		if menu.Item(a.Tr("shellSignOut")).Chosen() {
-			a.SignOut()
-		}
-	})
+	if parts.Open() {
+		nativeMenuPanel(c, parts, nativeAccountItems(m, a, status), m, p)
+	}
 }
 
 // Library filters, in Spotify's order. Songs include music videos.
@@ -1075,15 +1071,6 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 				}
 			})
 		}
-		if nativeDownloadsShown(m, a) {
-			// Downloads is the library's own collection, kept above the
-			// filters (it is none of their kinds) in the list's columns.
-			pad := float32(8)
-			if !full {
-				pad = 4
-			}
-			ui.Column(c).Shrink(0).Padding(0, pad, 8).Children(func() { nativeDownloadsEntry(c, m, a, p, full) })
-		}
 		var items []catalog.Item
 		if m.SignedIn || m.LibraryCached {
 			items = m.LibraryItems
@@ -1092,6 +1079,15 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 			nativeLibraryCacheStatus(c, m, a, p)
 		}
 		if len(items) == 0 {
+			// Downloads still leads an empty library: signed out, its songs
+			// are all there is.
+			if nativeDownloadsShown(m, a) {
+				pad := float32(8)
+				if !full {
+					pad = 4
+				}
+				ui.Column(c).Shrink(0).Padding(0, pad, 8).Children(func() { nativeDownloadsEntry(c, m, a, p, full) })
+			}
 			switch {
 			case m.SignedIn && !m.LibraryLoaded && m.LibraryErrorKey == "":
 				nativeLibrarySkeleton(c, a, p, full)
@@ -1148,6 +1144,12 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 		clipped := nativeArtworkViewport(c, a, scroll)
 		nativeScrollEdges(c, scroll, clipped.viewportScroll, p, p.surface)
 		scroll.Children(func() {
+			// Downloads is the library's own collection: first in the list,
+			// as Liked Music leads YouTube's, while no filter narrows it
+			// (it is none of their kinds).
+			if *filter == "" && nativeDownloadsShown(m, a) {
+				nativeDownloadsEntry(c, m, a, p, full)
+			}
 			occurrences := make(map[string]int, len(items))
 			for _, item := range items {
 				if *filter != "" && nativeLibraryKind(item) != *filter {
@@ -1273,7 +1275,7 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 	if m.LibraryCached && !m.SignedIn {
 		b.Disabled(true)
 	}
-	b.ContextMenu(nativeTrackMenu(item, m, a))
+	nativeTrackMenu(c, b, item, m, a, p)
 	if b.Clicked() {
 		if item.ID != "" {
 			a.Play(item)
@@ -1531,23 +1533,26 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 	if contentWidth == 0 {
 		inner = 960
 	}
-	trackOffset := 0
-	for i, shelf := range m.Page.Shelves {
-		offset := trackOffset
+	shelves := m.Page.Shelves
+	for i := 0; i < len(shelves); i++ {
+		shelf := shelves[i]
 		if shelf.Title == "" {
-			// Continuations append untitled shelves to the same track list.
-			trackOffset += len(shelf.Items)
-		} else {
-			offset, trackOffset = 0, 0
+			// Continuations append untitled shelves to the same track list:
+			// a run of them is one table, numbered on, under one header.
+			parts := [][]catalog.Item{shelf.Items}
+			for i+1 < len(shelves) && shelves[i+1].Title == "" {
+				i++
+				parts = append(parts, shelves[i].Items)
+			}
+			nativeTrackTable(c.Key(fmt.Sprintf("shelf-%d", i+1-len(parts))), parts, m, a, p, compact, browse, 0)
+			continue
 		}
 		ui.Column(c.Key(fmt.Sprintf("shelf-%d", i))).Gap(12).Children(func() {
-			if shelf.Title != "" {
-				size := float32(tokenSizeH3)
-				nativeDisplay(ui.Text(c, shelf.Title).FontSize(size).MaxLines(1).Ellipsis("…").Role(ui.RoleHeading), shelf.Title, size)
-			}
+			size := float32(tokenSizeH3)
+			nativeDisplay(ui.Text(c, shelf.Title).FontSize(size).MaxLines(1).Ellipsis("…").Role(ui.RoleHeading), shelf.Title, size)
 			switch {
-			case shelf.Title == "" || (m.Route == "search" && nativeSongShelf(shelf.Items)):
-				nativeTrackList(c, shelf.Items, m, a, p, compact, browse, offset)
+			case m.Route == "search" && nativeSongShelf(shelf.Items):
+				nativeTrackList(c, shelf.Items, m, a, p, compact, browse, 0)
 			case nativeSongShelf(shelf.Items):
 				columnWidth := float32(340)
 				if compact {
@@ -1729,7 +1734,7 @@ func nativeShortcutTile(c *ui.Context, item catalog.Item, m *UIModel, a ViewActi
 			ui.Box(c).Size(32, 32).Shrink(0).Radius(tokenRadiusPill).Background(p.accent).TextColor(p.onAccent).Center().PassThrough().Children(func() { ui.Icon(c, nativeIcons["play"]).Size(16, 16) })
 		}
 	})
-	b.ContextMenu(nativeTrackMenu(item, m, a))
+	nativeTrackMenu(c, b, item, m, a, p)
 	if b.Clicked() {
 		if item.ID != "" {
 			a.Play(item)
@@ -1910,7 +1915,7 @@ func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p n
 		}
 		ui.Text(c, subtitle).FontSize(tokenSizeMeta).LineHeight(1.4).TextColor(p.secondary).MaxLines(2).Ellipsis("…")
 	})
-	b.ContextMenu(nativeTrackMenu(item, m, a))
+	nativeTrackMenu(c, b, item, m, a, p)
 	if b.Clicked() {
 		if item.ID != "" {
 			a.Play(item)
@@ -1929,11 +1934,17 @@ const (
 )
 
 func nativeTrackList(c *ui.Context, items []catalog.Item, m *UIModel, a ViewActions, p nativePalette, compact, numbered bool, offset int) {
+	nativeTrackTable(c, [][]catalog.Item{items}, m, a, p, compact, numbered, offset)
+}
+
+// nativeTrackTable draws parts as one table, under one header: a long
+// playlist's pages arrive as shelves of their own, but are one list.
+func nativeTrackTable(c *ui.Context, parts [][]catalog.Item, m *UIModel, a ViewActions, p nativePalette, compact, numbered bool, offset int) {
 	mode := nativeTrackRow
 	if numbered {
 		mode = nativeTrackNumbered
 	}
-	album := !compact && !nativeOneAlbum(items)
+	album := !compact && !nativeOneAlbum(parts...)
 	ui.Column(c).Children(func() {
 		if numbered && !compact {
 			ui.Row(c).Height(36).PaddingX(16).Gap(16).AlignItems(ui.Center).TextColor(p.secondary).Children(func() {
@@ -1948,24 +1959,33 @@ func nativeTrackList(c *ui.Context, items []catalog.Item, m *UIModel, a ViewActi
 			})
 			ui.Box(c).Height(1).Margin(0, 0, 8).Background(p.line)
 		}
-		for j, item := range items {
-			nativeTrack(c.Key(fmt.Sprintf("list-%d", j)), item, offset+j, m, a, p, mode, compact, album)
+		j := 0
+		for _, items := range parts {
+			for _, item := range items {
+				nativeTrack(c.Key(fmt.Sprintf("list-%d", j)), item, offset+j, m, a, p, mode, compact, album)
+				j++
+			}
 		}
 	})
 }
 
 // nativeOneAlbum reports whether every row comes from the same album, as on
 // an album's own page, where an Album column would repeat its title.
-func nativeOneAlbum(items []catalog.Item) bool {
-	if len(items) == 0 || items[0].Album == "" {
-		return false
-	}
-	for _, item := range items[1:] {
-		if item.Album != items[0].Album {
-			return false
+func nativeOneAlbum(parts ...[]catalog.Item) bool {
+	var first string
+	for _, items := range parts {
+		for _, item := range items {
+			if first == "" {
+				if first = item.Album; first == "" {
+					return false
+				}
+			}
+			if item.Album != first {
+				return false
+			}
 		}
 	}
-	return true
+	return first != ""
 }
 
 func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a ViewActions, p nativePalette, mode nativeTrackMode, compact, album bool) {
@@ -2061,7 +2081,7 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 			ui.Text(c, duration).Width(48).Shrink(0).FontSize(tokenSizeMeta).TextColor(p.secondary).TextAlign(ui.End)
 		}
 	})
-	b.ContextMenu(nativeTrackMenu(item, m, a))
+	nativeTrackMenu(c, b, item, m, a, p)
 	if b.Clicked() {
 		if mode == nativeTrackQueue {
 			a.PlayQueue(index)
@@ -2110,7 +2130,7 @@ func nativePlayerBarContent(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 				nativeTrackCaption(c, m, a, p)
 			})
 			if a.Download != nil && m.Current.ID != "" {
-				info.ContextMenu(nativeTrackMenu(m.Current, m, a))
+				nativeTrackMenu(c, info, m.Current, m, a, p)
 			}
 			if info.Clicked() {
 				m.Panel = !showing
@@ -2153,7 +2173,7 @@ func nativePlayerBarContent(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 			}
 			nativeVolume(c, m, a, p, width > 1000, !nativeFloatingWanted(m, width))
 			if width > 1000 {
-				nativeIconButton(c, "more", a.Tr("shellMore"), p, false, 32).Disabled(m.Current.ID == "").Menu(nativeTrackMenu(m.Current, m, a))
+				nativeMenuButton(c, &m.barMenu, "more", a.Tr("shellMore"), p, 32, m, m.Current.ID == "", func() []nativeMenuItem { return nativeTrackItems(m.Current, m, a) })
 			}
 			if nativeIconButton(c, "expand", a.Tr("shellImmersive"), p, m.Immersive, 32).Clicked() {
 				m.Immersive = !m.Immersive
@@ -3356,34 +3376,41 @@ func (backdropLayer) PaintEffect(p *ui.Painter, box ui.Rect, content *ui.Bitmap,
 	}, ui.ImageOptions{})
 }
 
-func nativeTrackMenu(item catalog.Item, m *UIModel, a ViewActions) func(*ui.Menu) {
-	return func(menu *ui.Menu) {
-		if item.ID != "" {
-			if menu.Item(a.Tr("shellPlay")).Chosen() {
-				a.Play(item)
-			}
-			if menu.Item(a.Tr("nativeAddToQueue")).Disabled(a.QueueAppend == nil).Chosen() {
-				a.QueueAppend(item)
-			}
-			if a.Download != nil {
-				switch m.downloadStates[item.ID] {
-				case "":
-					if menu.Item(a.Tr("nativeDownloadTrack")).Chosen() {
-						a.Download(item)
-					}
-				case downloads.Complete:
-					if menu.Item(a.Tr("nativeDownloadRemove")).Chosen() {
-						a.DownloadRemove(item.ID)
-					}
-				default:
-					if menu.Item(a.Tr("nativeShowDownloads")).Chosen() {
-						a.Navigate("downloads")
-					}
-				}
-			}
-		} else if menu.Item(item.Title).Chosen() {
-			a.openCollection(m, item)
+// nativeTrackMenu gives target an item's menu: a song's actions, or the way
+// into a collection.
+func nativeTrackMenu(c *ui.Context, target ui.Element, item catalog.Item, m *UIModel, a ViewActions, p nativePalette) {
+	nativeContextMenu(c, target, m, p, func() []nativeMenuItem { return nativeTrackItems(item, m, a) })
+}
+
+func nativeTrackItems(item catalog.Item, m *UIModel, a ViewActions) []nativeMenuItem {
+	if item.ID == "" {
+		return []nativeMenuItem{{label: item.Title, run: func() { a.openCollection(m, item) }}}
+	}
+	items := []nativeMenuItem{
+		{label: a.Tr("shellPlay"), run: func() { a.Play(item) }},
+		{label: a.Tr("nativeAddToQueue"), disabled: a.QueueAppend == nil, run: func() { a.QueueAppend(item) }},
+	}
+	if a.Download != nil {
+		switch m.downloadStates[item.ID] {
+		case "":
+			items = append(items, nativeMenuItem{label: a.Tr("nativeDownloadTrack"), run: func() { a.Download(item) }})
+		case downloads.Complete:
+			items = append(items, nativeMenuItem{label: a.Tr("nativeDownloadRemove"), run: func() { a.DownloadRemove(item.ID) }})
+		default:
+			items = append(items, nativeMenuItem{label: a.Tr("nativeShowDownloads"), run: func() { a.Navigate("downloads") }})
 		}
+	}
+	return items
+}
+
+// nativeAccountItems is the account button's menu: who is signed in, then
+// the account's places, then signing out.
+func nativeAccountItems(m *UIModel, a ViewActions, status string) []nativeMenuItem {
+	return []nativeMenuItem{
+		{label: status, disabled: true},
+		{label: a.Tr("shellAccountManage"), divider: true, run: a.Account},
+		{label: a.Tr("shellSettings"), run: func() { m.Settings = true }},
+		{label: a.Tr("shellSignOut"), divider: true, run: a.SignOut},
 	}
 }
 
@@ -3715,7 +3742,7 @@ func nativeExpandedTransport(c *ui.Context, m *UIModel, a ViewActions, p nativeP
 				a.Like()
 			}
 			nativeVolume(c, m, a, p, true, true)
-			nativeIconButton(c, "more", a.Tr("shellMore"), p, false, 32).Disabled(m.Current.ID == "").Menu(nativeTrackMenu(m.Current, m, a))
+			nativeMenuButton(c, &m.sheetMenu, "more", a.Tr("shellMore"), p, 32, m, m.Current.ID == "", func() []nativeMenuItem { return nativeTrackItems(m.Current, m, a) })
 		})
 	})
 }

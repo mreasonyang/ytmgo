@@ -83,7 +83,7 @@ func TestNativeDownloadManagement(t *testing.T) {
 			if err := tt.RightClick(nativeItemLabel(m.Queue[4])); err != nil {
 				t.Fatal(err)
 			}
-			if err := tt.ChooseMenuItem(a.Tr("nativeDownloadTrack")); err != nil {
+			if err := chooseAppMenuItem(tt, a.Tr("nativeDownloadTrack")); err != nil {
 				t.Fatal(err)
 			}
 			if added != m.Queue[4].ID || m.Route != "browse:VLsynthetic" {
@@ -93,7 +93,7 @@ func TestNativeDownloadManagement(t *testing.T) {
 			if err := tt.RightClick(nativeItemLabel(items[3])); err != nil {
 				t.Fatal(err)
 			}
-			if err := tt.ChooseMenuItem(a.Tr("nativeDownloadRemove")); err != nil {
+			if err := chooseAppMenuItem(tt, a.Tr("nativeDownloadRemove")); err != nil {
 				t.Fatal(err)
 			}
 			if removed != items[3].ID {
@@ -148,7 +148,7 @@ func TestPlayerBarLeavesDownloadToItsMenu(t *testing.T) {
 	if err := tt.Click(a.Tr("shellMore")); err != nil {
 		t.Fatal(err)
 	}
-	if err := tt.ChooseMenuItem(a.Tr("nativeDownloadTrack")); err != nil {
+	if err := chooseAppMenuItem(tt, a.Tr("nativeDownloadTrack")); err != nil {
 		t.Fatal(err)
 	}
 	if added != m.Current.ID || m.Route != "home" {

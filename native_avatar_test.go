@@ -57,7 +57,7 @@ func TestNativeAccountAvatarImageAndMenu(t *testing.T) {
 				if err := tt.Click(label); err != nil {
 					t.Fatal(err)
 				}
-				if err := tt.ChooseMenuItem(a.Tr("shellSignOut")); err != nil || signOuts != 1 {
+				if err := chooseAppMenuItem(tt, a.Tr("shellSignOut")); err != nil || signOuts != 1 {
 					t.Fatal("avatar prevented account menu interaction")
 				}
 			})

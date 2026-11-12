@@ -3049,12 +3049,12 @@ func nativeReleaseScrollGrabs(ev ui.InputEvent) {
 }
 
 type nativeScrollbarState struct {
-	x, y           float32
-	over, gliding  bool
+	x, y          float32
+	over, gliding bool
 	// grabbed holds from a press on the bar's strip until its release:
 	// the thumb stays in its grabbed colour wherever the drag takes the
 	// pointer, as a held thumb does.
-	grabbed bool
+	grabbed        bool
 	active, hidden time.Time
 	// keyTo is where the keys sent the scroller, while keyGlide holds: a
 	// key held down heads on from there, not from where the glide is.

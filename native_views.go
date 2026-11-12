@@ -235,6 +235,7 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 		dark = false
 	}
 	c.SetTheme(nativeTheme(dark))
+	c.Root().ObserveInput(nativeReleaseScrollGrabs)
 	p := palette(dark)
 	if m.VideoFullScreen {
 		nativeFullScreenVideo(c, m, a, width, height)
@@ -3033,9 +3034,27 @@ const nativeFadeBelowSize = 40
 // scroll, or after the pointer comes over it, before fading.
 const nativeScrollbarIdle = time.Second
 
+// nativeScrollGrabs are the scrollbars held down; any release lets them go.
+var nativeScrollGrabs []*nativeScrollbarState
+
+// nativeReleaseScrollGrabs is the window root's watch for a release, which
+// ends a scrollbar drag wherever the pointer went.
+func nativeReleaseScrollGrabs(ev ui.InputEvent) {
+	if ev.Kind == ui.InputPointerUp && ev.Button == 0 {
+		for _, s := range nativeScrollGrabs {
+			s.grabbed = false
+		}
+		nativeScrollGrabs = nativeScrollGrabs[:0]
+	}
+}
+
 type nativeScrollbarState struct {
 	x, y           float32
 	over, gliding  bool
+	// grabbed holds from a press on the bar's strip until its release:
+	// the thumb stays in its grabbed colour wherever the drag takes the
+	// pointer, as a held thumb does.
+	grabbed bool
 	active, hidden time.Time
 	// keyTo is where the keys sent the scroller, while keyGlide holds: a
 	// key held down heads on from there, not from where the glide is.
@@ -3172,9 +3191,25 @@ func nativeScrollbar(c *ui.Context, scroll ui.Element, st *ui.ScrollState, p nat
 		}})
 	}
 	strip := float32(nativeScrollbarWidth + 6) // MyGo's grab strip
-	onBar := over && (st.MaxY > 0 && (c.Direction() == ui.RightToLeft && px <= strip || c.Direction() != ui.RightToLeft && px >= box.W-strip) ||
-		st.MaxX > 0 && py >= box.H-strip)
-	show := onBar
+	onStrip := func(x, y float32) bool {
+		return x >= 0 && y >= 0 && x <= box.W && y <= box.H &&
+			(st.MaxY > 0 && (c.Direction() == ui.RightToLeft && x <= strip || c.Direction() != ui.RightToLeft && x >= box.W-strip) ||
+				st.MaxX > 0 && y >= box.H-strip)
+	}
+	onBar := over && onStrip(px, py)
+	// MyGo's bar takes the press, so the scroller isn't Pressed: watch for
+	// a press on the strip, and for its release anywhere in the window
+	// (nativeView's root lets every grab go).
+	scroll.ObserveInput(func(ev ui.InputEvent) {
+		if ev.Kind == ui.InputPointerDown && ev.Button == 0 && onStrip(ev.X, ev.Y) {
+			s.grabbed = true
+			nativeScrollGrabs = append(nativeScrollGrabs, s)
+		}
+	})
+	if s.grabbed {
+		s.active = now
+	}
+	show := onBar || s.grabbed
 	if idle := now.Sub(s.active); !onBar && idle < nativeScrollbarIdle {
 		show = true
 		c.After(nativeScrollbarIdle - idle)
@@ -3197,7 +3232,7 @@ func nativeScrollbar(c *ui.Context, scroll ui.Element, st *ui.ScrollState, p nat
 		}
 	}
 	thumb := p.track
-	if onBar {
+	if onBar || s.grabbed {
 		thumb = p.muted
 	}
 	rtl := c.Direction() == ui.RightToLeft

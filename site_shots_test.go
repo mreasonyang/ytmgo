@@ -12,7 +12,9 @@ import (
 
 	"github.com/egoist/mygo/ui"
 
+	"ytmgo/internal/audioquality"
 	"ytmgo/internal/catalog"
+	"ytmgo/internal/downloads"
 	"ytmgo/locales"
 )
 
@@ -110,7 +112,7 @@ func siteFixture(locale string, dark bool) (*UIModel, ViewActions) {
 	}
 	var albums []catalog.Item
 	for i, al := range siteAlbums {
-		albums = append(albums, catalog.Item{Title: al.title, Artist: al.artist, Kind: "album", BrowseID: fmt.Sprintf("site-album-%d", i), Artwork: siteAlbumCovers[al.title]})
+		albums = append(albums, catalog.Item{Title: al.title, Artist: al.artist, Kind: "album", BrowseID: fmt.Sprintf("MPREsite-album-%d", i), Artwork: siteAlbumCovers[al.title]})
 	}
 	mixes := []catalog.Item{
 		{Title: copy["mix"], Kind: "playlist", BrowseID: "site-mix", Artwork: "cover-night-drive"},
@@ -144,6 +146,16 @@ func siteFixture(locale string, dark bool) (*UIModel, ViewActions) {
 		PanelTab:         "lyrics", LyricLines: lines, LyricsAvailable: true, Lyrics: siteLyrics[0],
 	}
 	a.LyricsClock = func() (float64, bool) { return m.Position, true }
+	// A few songs are downloaded: the library shows its Downloads entry, and
+	// an album not yet downloaded offers to be.
+	a.Download, a.DownloadCollection = func(catalog.Item) {}, func() {}
+	a.DownloadPause, a.DownloadRemove = func(string, bool) {}, func(string) {}
+	m.downloadStates = map[string]downloads.State{}
+	for i, n := range []int{1, 4, 5} {
+		size := int64(4_200_000 + i*900_000)
+		m.Downloads = append(m.Downloads, downloads.Entry{Item: songs[n], State: downloads.Complete, Quality: audioquality.Best, Bytes: size, Total: size})
+		m.downloadStates[songs[n].ID] = downloads.Complete
+	}
 	return m, a
 }
 
@@ -175,7 +187,7 @@ func TestSiteScreenshots(t *testing.T) {
 		// Cover/Video switch shows (the app offers it only then).
 		{"immersive", 1440, 900, true, func(m *UIModel) { m.Immersive, m.VideoAvailable = true, true }},
 		{"album", 1440, 900, true, func(m *UIModel) {
-			m.Route = "browse:site-album-0"
+			m.Route = "browse:MPREsite-album-0"
 			m.Page = catalog.Page{Title: "Low Light Hours", Creator: "Lumen Drift", Subtitle: siteCopy[m.Language]["album"] + " • Lumen Drift • 2026", Artwork: "cover-low-light-hours", Items: siteAlbumTracks()}
 		}},
 		{"light", 1440, 900, false, func(m *UIModel) {}},

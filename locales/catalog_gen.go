@@ -3299,6 +3299,26 @@ func (msgs Messages) NativeDownloadRemove() string {
 	return Catalog.Format(msgs.locale, "nativeDownloadRemove", nil)
 }
 
+// NativeDownloadPause says "Pause download"
+// in the language the app shows.
+func NativeDownloadPause() string { return In(i18n.Locale()).NativeDownloadPause() }
+
+// NativeDownloadPause says "Pause download"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadPause() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadPause", nil)
+}
+
+// NativeShowDownloads says "Go to Downloads"
+// in the language the app shows.
+func NativeShowDownloads() string { return In(i18n.Locale()).NativeShowDownloads() }
+
+// NativeShowDownloads says "Go to Downloads"
+// in the language of msgs.
+func (msgs Messages) NativeShowDownloads() string {
+	return Catalog.Format(msgs.locale, "nativeShowDownloads", nil)
+}
+
 // NativeDownloadResume says "Resume download"
 // in the language the app shows.
 func NativeDownloadResume() string { return In(i18n.Locale()).NativeDownloadResume() }

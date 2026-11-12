@@ -21,6 +21,7 @@ type UIModel struct {
 	downloadStates                                              map[string]downloads.State
 	DownloadNotice                                              string
 	DownloadWaiting                                             bool
+	collectionDownloads                                         map[string]string // route → its download notice while preparing or failed
 	Page                                                        catalog.Page
 	Current                                                     catalog.Item
 	LibraryItems                                                []catalog.Item
@@ -1074,16 +1075,14 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 				}
 			})
 		}
-		if a.Download != nil {
-			var link ui.Element
-			if full {
-				link = nativePill(c, a.Tr("nativeDownloads"), p, false).MarginX(12).AlignSelf(ui.Start)
-			} else {
-				link = nativeIconButton(c, "download", a.Tr("nativeDownloads"), p, m.Route == "downloads", 40).AlignSelf(ui.Center)
+		if nativeDownloadsShown(m, a) {
+			// Downloads is the library's own collection, kept above the
+			// filters (it is none of their kinds) in the list's columns.
+			pad := float32(8)
+			if !full {
+				pad = 4
 			}
-			if link.Clicked() {
-				a.Navigate("downloads")
-			}
+			ui.Column(c).Shrink(0).Padding(0, pad, 8).Children(func() { nativeDownloadsEntry(c, m, a, p, full) })
 		}
 		var items []catalog.Item
 		if m.SignedIn || m.LibraryCached {
@@ -1116,7 +1115,9 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 		}
 		// Chips appear only when they separate at least two kinds of item.
 		if full && kinds > 1 {
-			ui.Row(c).Shrink(0).Padding(0, 16, 8).Gap(8).AlignItems(ui.Center).Children(func() {
+			// Wrapped: a language with longer names (アーティスト) takes a
+			// second line rather than cutting a chip at the panel's edge.
+			ui.Row(c).Shrink(0).Padding(0, 16, 8).Gap(8).Wrap().AlignItems(ui.Center).Children(func() {
 				if *filter != "" {
 					clear := nativeIconButton(c, "close", a.Tr("shellFilterClear"), p, false, 32).Background(p.hover)
 					if clear.Clicked() {
@@ -1408,13 +1409,13 @@ func nativeContinuationExpired(m *UIModel) bool {
 
 func nativePageBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool, contentWidth float32) {
 	if m.Route == "downloads" {
-		nativeDownloads(c, m, a, p)
+		nativeDownloads(c, m, a, p, compact)
 		return
 	}
-	if m.Route == "library" && (a.Download != nil || m.DownloadNotice != "") {
-		if nativePill(c, a.Tr("nativeDownloads"), p, false).AlignSelf(ui.Start).Clicked() {
-			a.Navigate("downloads")
-		}
+	// A compact window has no library panel: its Library page leads with
+	// the entry the panel would show.
+	if m.Route == "library" && compact && nativeDownloadsShown(m, a) {
+		nativeDownloadsEntry(c, m, a, p, true)
 	}
 	if m.AccountNotice != "" {
 		ui.Text(c, a.Tr(m.AccountNotice)).TextColor(p.secondary)
@@ -1684,10 +1685,7 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 				a.Play(items[0])
 			}
 		}
-		collection := strings.HasPrefix(m.Route, "browse:MPRE") || strings.HasPrefix(m.Route, "browse:VL")
-		if a.DownloadCollection != nil && collection && nativePill(c, a.Tr("nativeDownloadCollection"), p, false).Clicked() {
-			a.DownloadCollection()
-		}
+		nativeCollectionDownload(c, m, a, p, items)
 	})
 }
 
@@ -2109,7 +2107,6 @@ func nativePlayerBarContent(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 			} else if m.PlaybackError == "" && nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 32).Disabled(m.Current.ID == "").Clicked() {
 				a.Like()
 			}
-			nativeCurrentDownload(c, m, a, p, 32)
 		})
 		ui.Column(c).Width(min(722, width*0.38)).Shrink(0).Gap(4).AlignItems(ui.Stretch).Children(func() {
 			ui.Row(c).Height(40).Gap(16).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
@@ -2226,7 +2223,6 @@ func nativeMiniPlayer(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 				} else if m.PlaybackError == "" && nativeIconButton(c, nativeHeart(m.Liked), a.Tr(nativeLikeKey(m.Liked)), p, m.Liked, 40).Disabled(m.Current.ID == "").Clicked() {
 					a.Like()
 				}
-				nativeCurrentDownload(c, m, a, p, 40)
 				nativePlayButton(c, m, a, p, 40)
 			})
 			nativeProgressLine(c, m, p)
@@ -3355,12 +3351,19 @@ func nativeTrackMenu(item catalog.Item, m *UIModel, a ViewActions) func(*ui.Menu
 				a.QueueAppend(item)
 			}
 			if a.Download != nil {
-				if m.downloadStates[item.ID] != "" {
-					if menu.Item(a.Tr("nativeDownloads")).Chosen() {
+				switch m.downloadStates[item.ID] {
+				case "":
+					if menu.Item(a.Tr("nativeDownloadTrack")).Chosen() {
+						a.Download(item)
+					}
+				case downloads.Complete:
+					if menu.Item(a.Tr("nativeDownloadRemove")).Chosen() {
+						a.DownloadRemove(item.ID)
+					}
+				default:
+					if menu.Item(a.Tr("nativeShowDownloads")).Chosen() {
 						a.Navigate("downloads")
 					}
-				} else if menu.Item(a.Tr("nativeDownloadTrack")).Chosen() {
-					a.Download(item)
 				}
 			}
 		} else if menu.Item(item.Title).Chosen() {

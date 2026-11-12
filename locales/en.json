@@ -808,6 +808,8 @@
   "nativeDownloading": "Downloading",
   "nativeDownloaded": "Downloaded",
   "nativeDownloadRemove": "Remove download",
+  "nativeDownloadPause": "Pause download",
+  "nativeShowDownloads": "Go to Downloads",
   "nativeDownloadResume": "Resume download",
   "nativeDownloadNetworkError": "Couldn’t download the audio. Retry when connected.",
   "nativeDownloadMediaError": "The downloaded audio is incomplete or damaged.",

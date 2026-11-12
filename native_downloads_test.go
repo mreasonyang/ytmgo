@@ -20,8 +20,10 @@ func TestNativeDownloadManagement(t *testing.T) {
 			m.Route = "library"
 			items := m.Queue[:4]
 			states := []downloads.State{downloads.Queued, downloads.Paused, downloads.Failed, downloads.Complete}
+			m.downloadStates = map[string]downloads.State{}
 			for i, state := range states {
 				m.Downloads = append(m.Downloads, downloads.Entry{Item: items[i], State: state, Quality: audioquality.Standard, Bytes: 512, Total: 1024})
+				m.downloadStates[items[i].ID] = state
 			}
 			var added, paused, resumed, removed, played string
 			a.Download = func(item catalog.Item) { added = item.ID }
@@ -44,36 +46,100 @@ func TestNativeDownloadManagement(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			click(a.Tr("nativeDownloadTrack") + " · " + m.Current.Title)
-			if added != m.Current.ID {
-				t.Fatal("current song download action missing")
-			}
+			// The library leads to them: its panel, or a compact Library page.
 			click(a.Tr("nativeDownloads"))
 			if m.Route != "downloads" || m.Page.Title != app.tr("nativeDownloads") || len(m.Page.Items) != 1 || m.Page.Items[0].ID != items[3].ID {
 				t.Fatal("download manager did not open")
 			}
-			click(a.Tr("shellPause") + " · " + items[0].Title)
+			click(a.Tr("nativeDownloadPause") + " · " + items[0].Title)
 			click(a.Tr("nativeDownloadResume") + " · " + items[1].Title)
 			if paused != items[0].ID || resumed != items[1].ID {
 				t.Fatal("pause or resume targeted the wrong track")
 			}
 			click(a.Tr("buttonRetry") + " · " + items[2].Title)
-			click(a.Tr("shellPlay") + " · " + items[3].Title)
+			// A finished download is a track row: it plays, and has no
+			// download control of its own.
+			click(nativeItemLabel(items[3]))
+			if _, ok := tt.Find(a.Tr("shellPlay") + " · " + items[3].Title); ok {
+				t.Fatal("a finished download keeps a separate play button")
+			}
 			click(a.Tr("nativeDownloadRemove") + " · " + items[3].Title)
 			if resumed != items[2].ID || played != items[3].ID || removed != items[3].ID {
 				t.Fatal("retry, offline play or removal targeted the wrong track")
 			}
-			if !tt.HasText(downloadStatus(m.Downloads[3], a)) {
-				t.Fatal("completed audio size is missing")
+			if !tt.HasText(downloadStatus(m.Downloads[2], a)) {
+				t.Fatal("the failure is not shown")
+			}
+			if width == 1440 && !tt.HasText(downloadStatus(m.Downloads[3], a)) {
+				t.Fatal("the downloaded quality and size are missing")
 			}
 			nativeSnapshot(t, tt, fmt.Sprintf("downloads-%d", width))
+
+			// A collection offers its songs while some aren't downloaded;
+			// asking for one stays on the page.
 			m.Route = "browse:VLsynthetic"
-			m.Page = catalog.Page{Title: "Collection", Items: items}
+			m.Page = catalog.Page{Title: "Collection", Items: m.Queue[:5]}
 			tt.Frame()
+			if err := tt.RightClick(nativeItemLabel(m.Queue[4])); err != nil {
+				t.Fatal(err)
+			}
+			if err := tt.ChooseMenuItem(a.Tr("nativeDownloadTrack")); err != nil {
+				t.Fatal(err)
+			}
+			if added != m.Queue[4].ID || m.Route != "browse:VLsynthetic" {
+				t.Fatalf("download song added %q and moved to %q", added, m.Route)
+			}
+			removed = ""
+			if err := tt.RightClick(nativeItemLabel(items[3])); err != nil {
+				t.Fatal(err)
+			}
+			if err := tt.ChooseMenuItem(a.Tr("nativeDownloadRemove")); err != nil {
+				t.Fatal(err)
+			}
+			if removed != items[3].ID {
+				t.Fatal("a downloaded song's menu does not remove it")
+			}
 			click(a.Tr("nativeDownloadCollection"))
-			if collections != 1 {
-				t.Fatal("collection did not enqueue")
+			if collections != 1 || m.Route != "browse:VLsynthetic" {
+				t.Fatal("collection did not enqueue in place")
+			}
+			for _, it := range m.Page.Items {
+				m.downloadStates[it.ID] = downloads.Queued
+			}
+			tt.Frame()
+			if tt.HasText(a.Tr("nativeDownloadCollection")) || !tt.HasText(a.Tr("nativeDownloading")) {
+				t.Fatal("a collection under way still offers the download")
+			}
+			for _, it := range m.Page.Items {
+				m.downloadStates[it.ID] = downloads.Complete
+			}
+			tt.Frame()
+			if tt.HasText(a.Tr("nativeDownloadCollection")) || !tt.HasText(a.Tr("nativeDownloaded")) {
+				t.Fatal("a downloaded collection does not say so")
 			}
 		})
+	}
+}
+
+// The player bar keeps to its zones (§11): downloading the playing song is
+// in its More menu, not another button beside Like.
+func TestPlayerBarLeavesDownloadToItsMenu(t *testing.T) {
+	m, a := nativeViewFixture()
+	var added string
+	a.Download = func(item catalog.Item) { added = item.ID }
+	a.DownloadPause, a.DownloadRemove = func(string, bool) {}, func(string) {}
+	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
+	tt.Frame()
+	if _, ok := tt.Find(a.Tr("nativeDownloadTrack") + " · " + m.Current.Title); ok {
+		t.Fatal("the player bar grew a download button")
+	}
+	if err := tt.Click(a.Tr("shellMore")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem(a.Tr("nativeDownloadTrack")); err != nil {
+		t.Fatal(err)
+	}
+	if added != m.Current.ID || m.Route != "home" {
+		t.Fatalf("More › Download song added %q, route %q", added, m.Route)
 	}
 }

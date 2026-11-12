@@ -30,6 +30,9 @@ func TestResolveAudioSourceForQuality(t *testing.T) {
 		{"highest available below target", []rates{{"", "48000"}, {"96000", ""}}, audioquality.Standard, 1},
 		{"all unknown retain first compatible", unknown, audioquality.Saver, 0},
 		{"ties retain service order", []rates{{"", "96000"}, {"96000", ""}}, audioquality.Standard, 0},
+		// YouTube's own sources: opus 251 and 250, AAC 140, opus 249.
+		{"standard takes the 128 kbps class as served", []rates{{"152108", "160755"}, {"70411", "78324"}, {"129515", "130897"}, {"52394", "60117"}}, audioquality.Standard, 2},
+		{"saver takes the lowest as served", []rates{{"152108", "160755"}, {"70411", "78324"}, {"129515", "130897"}, {"52394", "60117"}}, audioquality.Saver, 3},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			var formats []any

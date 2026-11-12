@@ -255,6 +255,8 @@
   "nativeDownloading": "下載中",
   "nativeDownloaded": "已下載",
   "nativeDownloadRemove": "移除下載",
+  "nativeDownloadPause": "暫停下載",
+  "nativeShowDownloads": "前往下載管理",
   "nativeDownloadResume": "繼續下載",
   "nativeDownloadNetworkError": "音訊下載失敗，可在連線後重試。",
   "nativeDownloadMediaError": "下載的音訊不完整或已損毀。",

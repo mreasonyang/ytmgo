@@ -368,7 +368,7 @@ func (a *desktop) playItem(it catalog.Item) {
 	a.startTrack(it)
 	a.queueGeneration++
 	queueGeneration := a.queueGeneration
-	if index < 0 && !a.downloads.Has(it.ID) {
+	if index < 0 {
 		generation := a.playGeneration
 		go func() {
 			ctx, cancel := context.WithTimeout(a.ctx, 25*time.Second)

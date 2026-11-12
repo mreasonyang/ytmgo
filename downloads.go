@@ -31,7 +31,7 @@ func (a *desktop) selectDownloads(scope string, forget bool) {
 	if scope != a.downloads.Scope() && a.cancelCollections != nil {
 		a.cancelCollections()
 		a.collectionCtx, a.cancelCollections, a.pendingCollections = nil, nil, 0
-		a.model.DownloadNotice = ""
+		a.model.DownloadNotice, a.model.collectionDownloads = "", nil
 	}
 	if err := a.downloads.Switch(scope, forget); err != nil {
 		a.model.DownloadNotice = "nativeDownloadStorageError"
@@ -73,6 +73,8 @@ func (a *desktop) refreshDownloads() {
 	a.model.Page = page
 }
 
+// Downloading stays where it was asked for: the control that asked shows
+// the progress, and the library gains its Downloads entry.
 func (a *desktop) enqueueDownloads(items []catalog.Item) {
 	list := make([]catalog.Item, 0, len(items))
 	for _, it := range items {
@@ -80,10 +82,27 @@ func (a *desktop) enqueueDownloads(items []catalog.Item) {
 		list = append(list, it)
 	}
 	a.model.DownloadNotice = ""
-	if err := a.downloads.Enqueue(a.downloads.Scope(), list, a.model.AudioQuality); err != nil {
+	err := a.downloads.Enqueue(a.downloads.Scope(), list, a.model.AudioQuality)
+	if err == nil {
+		err = a.resumeDownloads(list)
+	}
+	if err != nil {
 		a.model.DownloadNotice = "nativeDownloadStorageError"
 	}
-	a.navigate("downloads")
+	a.refreshDownloads()
+}
+
+// resumeDownloads restarts the paused and failed among items: asking to
+// download them again means now.
+func (a *desktop) resumeDownloads(items []catalog.Item) error {
+	for _, it := range items {
+		if state := a.model.downloadStates[it.ID]; state == downloads.Paused || state == downloads.Failed {
+			if err := a.downloads.SetPaused(it.ID, false); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (a *desktop) downloadItem(it catalog.Item) { a.enqueueDownloads([]catalog.Item{it}) }
@@ -95,8 +114,12 @@ func (a *desktop) downloadPage() {
 	ctx := a.collectionCtx
 	a.pendingCollections++
 	location, scope, q := a.currentPageLocation(), a.downloads.Scope(), a.model.AudioQuality
+	route := a.model.Route
 	a.model.DownloadNotice = "nativeDownloadPreparing"
-	a.navigate("downloads")
+	if a.model.collectionDownloads == nil {
+		a.model.collectionDownloads = map[string]string{}
+	}
+	a.model.collectionDownloads[route] = "nativeDownloadPreparing"
 	go func() {
 		items, err := a.catalog.CollectionTracks(ctx, strings.TrimPrefix(location.route, "browse:"), location.params)
 		if ctx.Err() != nil {
@@ -116,8 +139,15 @@ func (a *desktop) downloadPage() {
 			if a.pendingCollections == 0 && a.model.DownloadNotice == "nativeDownloadPreparing" {
 				a.model.DownloadNotice = ""
 			}
-			if err != nil {
+			delete(a.model.collectionDownloads, route)
+			if err == nil {
+				a.refreshDownloads()
+				if err = a.resumeDownloads(items); err != nil {
+					a.model.DownloadNotice = "nativeDownloadStorageError"
+				}
+			} else {
 				a.model.DownloadNotice = "nativeDownloadCollectionError"
+				a.model.collectionDownloads[route] = "nativeDownloadCollectionError"
 			}
 			a.refreshDownloads()
 		})

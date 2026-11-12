@@ -255,6 +255,8 @@
   "nativeDownloading": "ダウンロード中",
   "nativeDownloaded": "ダウンロード済み",
   "nativeDownloadRemove": "ダウンロードを削除",
+  "nativeDownloadPause": "ダウンロードを一時停止",
+  "nativeShowDownloads": "ダウンロード管理を開く",
   "nativeDownloadResume": "ダウンロードを再開",
   "nativeDownloadNetworkError": "音声を取得できませんでした。接続後に再試行してください。",
   "nativeDownloadMediaError": "音声が不完全か破損しています。",

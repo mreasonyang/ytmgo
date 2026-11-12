@@ -59,11 +59,15 @@ func audioBitrate(f map[string]any) float64 {
 	return 0
 }
 
+// standardLimit is the 128 kbps class. Its sources report a little over
+// their nominal rate (AAC itag 140 measures about 129–131 kbps), so an exact
+// 128 000 cut would drop Standard to the ~70 kbps source.
+const standardLimit = 128_000 * 11 / 10 // bits per second
+
 func preferAudioBitrate(a, b float64, quality audioquality.Quality) bool {
 	if a == 0 || b == 0 {
 		return a > b
 	}
-	const standardLimit = 128_000 // bits per second
 	if quality == audioquality.Saver || (quality == audioquality.Standard && (a > standardLimit || b > standardLimit)) {
 		// In standard mode any rate within the limit beats a higher one.
 		// When both are above the limit, choose the smaller overage.

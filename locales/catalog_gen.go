@@ -3299,6 +3299,48 @@ func (msgs Messages) NativeDownloadRemove() string {
 	return Catalog.Format(msgs.locale, "nativeDownloadRemove", nil)
 }
 
+// NativeDownloadRemoveAll says "Remove all downloads…"
+// in the language the app shows.
+func NativeDownloadRemoveAll() string { return In(i18n.Locale()).NativeDownloadRemoveAll() }
+
+// NativeDownloadRemoveAll says "Remove all downloads…"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadRemoveAll() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadRemoveAll", nil)
+}
+
+// NativeDownloadRemoveAllTitle says "Remove all downloads"
+// in the language the app shows.
+func NativeDownloadRemoveAllTitle() string { return In(i18n.Locale()).NativeDownloadRemoveAllTitle() }
+
+// NativeDownloadRemoveAllTitle says "Remove all downloads"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadRemoveAllTitle() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadRemoveAllTitle", nil)
+}
+
+// NativeDownloadRemoveAllConfirm says "Remove every downloaded and queued song from this device? This frees {size}. You can download them again at any time."
+// in the language the app shows.
+func NativeDownloadRemoveAllConfirm(size string) string {
+	return In(i18n.Locale()).NativeDownloadRemoveAllConfirm(size)
+}
+
+// NativeDownloadRemoveAllConfirm says "Remove every downloaded and queued song from this device? This frees {size}. You can download them again at any time."
+// in the language of msgs.
+func (msgs Messages) NativeDownloadRemoveAllConfirm(size string) string {
+	return Catalog.Format(msgs.locale, "nativeDownloadRemoveAllConfirm", map[string]any{"size": size})
+}
+
+// NativeDownloadRemoveAllButton says "Remove all"
+// in the language the app shows.
+func NativeDownloadRemoveAllButton() string { return In(i18n.Locale()).NativeDownloadRemoveAllButton() }
+
+// NativeDownloadRemoveAllButton says "Remove all"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadRemoveAllButton() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadRemoveAllButton", nil)
+}
+
 // NativeDownloadPause says "Pause download"
 // in the language the app shows.
 func NativeDownloadPause() string { return In(i18n.Locale()).NativeDownloadPause() }

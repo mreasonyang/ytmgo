@@ -57,6 +57,7 @@ type desktop struct {
 	collectionCtx                   context.Context
 	cancelCollections               context.CancelFunc
 	pendingCollections              int
+	downloadsConfirming             bool // the Remove all dialog shows
 	video                           *player.Video
 	videoID                         string
 	videoAvailableID                string // the track VideoAvailable was learned for
@@ -327,6 +328,7 @@ func (a *desktop) actions(artwork func(string, int, artworkPriority) ui.ImageSou
 		actions.DownloadCollection = a.downloadPage
 		actions.DownloadPause = a.pauseDownload
 		actions.DownloadRemove = a.removeDownload
+		actions.DownloadRemoveAll = a.confirmRemoveAllDownloads
 	}
 	if style, _ := mainWindowTitleBar(runtime.GOOS); style == mygo.TitleBarHidden {
 		actions.AppMenu = a.appMenu

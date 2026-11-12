@@ -176,7 +176,13 @@ func nativeDownloads(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, 
 	for _, j := range m.Downloads {
 		total += j.StoredBytes()
 	}
-	ui.Text(c, a.Tr("nativeDownloadStorage")+" · "+downloadSize(total)).FontSize(tokenSizeMeta).TextColor(p.secondary)
+	// Removing everything is a neutral action (§10), and asks first.
+	ui.Row(c).Gap(16).AlignItems(ui.Center).Children(func() {
+		ui.Text(c, a.Tr("nativeDownloadStorage")+" · "+downloadSize(total)).Grow(1).MinWidth(0).FontSize(tokenSizeMeta).TextColor(p.secondary)
+		if a.DownloadRemoveAll != nil && nativePill(c, a.Tr("nativeDownloadRemoveAll"), p, false).Shrink(0).Clicked() {
+			a.DownloadRemoveAll()
+		}
+	})
 	ui.Column(c).Children(func() {
 		for _, j := range m.Downloads {
 			nativeDownloadRow(c.Key(j.Item.ID), j, m, a, p, compact)

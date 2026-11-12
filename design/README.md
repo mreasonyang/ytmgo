@@ -490,7 +490,8 @@ tooltip. The website uses icons only on actions and platform names.
 - **Downloads page:** track rows. The download's state takes the Album
   column (an error beside the attention glyph); its control (pause, resume,
   retry) and remove end the row. A finished download has no control: its
-  row plays it.
+  row plays it. Above them, the space they take and a neutral "Remove all
+  downloads…", which asks first, naming what goes and the space it frees.
 - **Quick-access tile:** 64 high, art filling its height, radius `control`.
 - **Card:** 164 art (140 compact), title, two-line subtitle; the play button
   rises on hover.

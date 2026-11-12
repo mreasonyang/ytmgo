@@ -172,3 +172,28 @@ func TestTrackRowsMarkDownloadedSongs(t *testing.T) {
 	m.downloadStates[song.ID] = downloads.Queued
 	tt.Frame()
 }
+
+// The Downloads page offers to remove them all, neutrally; the app asks
+// before it does.
+func TestDownloadsPageOffersRemoveAll(t *testing.T) {
+	m, a := nativeViewFixture()
+	m.Route = "downloads"
+	m.Page = catalog.Page{Title: "Downloads"}
+	m.Downloads = []downloads.Entry{{Item: m.Queue[1], State: downloads.Complete, Quality: audioquality.Best, Bytes: 4 << 20, Total: 4 << 20}}
+	asked := 0
+	a.Download, a.DownloadPause, a.DownloadRemove = func(catalog.Item) {}, func(string, bool) {}, func(string) {}
+	a.DownloadRemoveAll = func() { asked++ }
+	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
+	tt.Frame()
+	if err := tt.Click(a.Tr("nativeDownloadRemoveAll")); err != nil {
+		t.Fatal(err)
+	}
+	if asked != 1 {
+		t.Fatal("Remove all did not ask")
+	}
+	m.Downloads = nil
+	tt.Frame()
+	if tt.HasText(a.Tr("nativeDownloadRemoveAll")) {
+		t.Fatal("Remove all shows with nothing to remove")
+	}
+}

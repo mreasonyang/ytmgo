@@ -126,6 +126,7 @@ type ViewActions struct {
 	DownloadCollection                                  func()
 	DownloadPause                                       func(string, bool)
 	DownloadRemove                                      func(string)
+	DownloadRemoveAll                                   func() // asks first
 	Tr                                                  func(string) string
 	TrArgs                                              func(string, map[string]any) string
 	Navigate                                            func(string)

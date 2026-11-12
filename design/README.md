@@ -496,9 +496,10 @@ tooltip. The website uses icons only on actions and platform names.
   then the 56 coral play button. An album or playlist follows it with
   Download: a pill while any of its songs isn't downloaded, then
   "Downloading" or "Downloaded" in words beside their glyph. Downloading
-  never leaves the page it was asked from; the player bar leaves it to its
-  More menu.
-- **Player bar:** 80 high, three zones: now playing (56 art), transport
+  never leaves the page it was asked from.
+- **Player bar:** 80 high, three zones: now playing (56 art, then like
+  and download, which works as like does: the glyph fills and the dot shows
+  once the song is downloaded, the dot alone while it downloads), transport
   (white round play/pause, icon buttons, progress with mono times),
   and output (lyrics, queue, volume, more, expand); washed with the playing
   cover's colour behind the track (§4.4).

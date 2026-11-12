@@ -121,25 +121,41 @@ func TestNativeDownloadManagement(t *testing.T) {
 	}
 }
 
-// The player bar keeps to its zones (§11): downloading the playing song is
-// in its More menu, not another button beside Like.
-func TestPlayerBarLeavesDownloadToItsMenu(t *testing.T) {
-	m, a := nativeViewFixture()
-	var added string
-	a.Download = func(item catalog.Item) { added = item.ID }
-	a.DownloadPause, a.DownloadRemove = func(string, bool) {}, func(string) {}
-	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
-	tt.Frame()
-	if _, ok := tt.Find(a.Tr("nativeDownloadTrack") + " · " + m.Current.Title); ok {
-		t.Fatal("the player bar grew a download button")
-	}
-	if err := tt.Click(a.Tr("shellMore")); err != nil {
-		t.Fatal(err)
-	}
-	if err := tt.ChooseMenuItem(a.Tr("nativeDownloadTrack")); err != nil {
-		t.Fatal(err)
-	}
-	if added != m.Current.ID || m.Route != "home" {
-		t.Fatalf("More › Download song added %q, route %q", added, m.Route)
+// Beside Like, in the player bar and the mini player: it downloads the
+// playing song in place, then leads to Downloads, its glyph and dot showing
+// the state as Like's do.
+func TestPlayingSongDownloadButton(t *testing.T) {
+	for _, width := range []int{420, 1440} {
+		t.Run(fmt.Sprint(width), func(t *testing.T) {
+			m, a := nativeViewFixture()
+			m.downloadStates = map[string]downloads.State{}
+			a.Download = func(item catalog.Item) { m.downloadStates[item.ID] = downloads.Queued }
+			a.DownloadPause, a.DownloadRemove = func(string, bool) {}, func(string) {}
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, 900)
+			tt.Frame()
+			click := func(key string) {
+				t.Helper()
+				label := a.Tr(key) + " · " + m.Current.Title
+				nativeAssertVisible(t, tt, label, width, 900)
+				if err := tt.Click(label); err != nil {
+					t.Fatal(err)
+				}
+			}
+			click("nativeDownloadTrack")
+			if m.downloadStates[m.Current.ID] != downloads.Queued || m.Route != "home" {
+				t.Fatalf("download state %q, route %q", m.downloadStates[m.Current.ID], m.Route)
+			}
+			click("nativeDownloading")
+			if m.Route != "downloads" {
+				t.Fatal("a download under way does not lead to Downloads")
+			}
+			m.Route = "home"
+			m.downloadStates[m.Current.ID] = downloads.Complete
+			tt.Frame()
+			click("nativeDownloaded")
+			if m.Route != "downloads" {
+				t.Fatal("a downloaded song does not lead to Downloads")
+			}
+		})
 	}
 }

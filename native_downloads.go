@@ -22,6 +22,33 @@ func downloadSize(n int64) string {
 	}
 }
 
+// nativeCurrentDownload sits beside Like and works as Like does: the
+// glyph fills and the dot shows once the playing song is downloaded (the dot
+// alone while it downloads). It downloads in place; once asked for, it leads
+// to Downloads.
+func nativeCurrentDownload(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, size float32) {
+	if a.Download == nil || m.Current.ID == "" {
+		return
+	}
+	state := m.downloadStates[m.Current.ID]
+	icon, key := "download", "nativeDownloadTrack"
+	switch state {
+	case "":
+	case downloads.Complete:
+		icon, key = "download-fill", "nativeDownloaded"
+	default:
+		key = "nativeDownloading"
+	}
+	label := a.Tr(key) + " · " + m.Current.Title
+	if nativeIconButton(c, icon, label, p, state != "", size).Clicked() {
+		if state == "" {
+			a.Download(m.Current)
+		} else {
+			a.Navigate("downloads")
+		}
+	}
+}
+
 // nativeDownloadsShown reports whether the library offers its Downloads
 // entry: once something is downloaded or asked for, not before.
 func nativeDownloadsShown(m *UIModel, a ViewActions) bool {

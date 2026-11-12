@@ -54,8 +54,8 @@ func (r *resolver) Configure(ctx context.Context, s AccountSession) error {
 	}
 	return nativeFailure(r.native.Configure(ctx, streaming.Session(s)))
 }
-func (r *resolver) Resolve(ctx context.Context, id string) (media, error) {
-	result, err := r.native.Resolve(ctx, id, "audio")
+func (r *resolver) Resolve(ctx context.Context, track audioTrack) (media, error) {
+	result, err := r.native.ResolveAudio(ctx, track.id, track.quality)
 	if err != nil {
 		return media{}, nativeFailure(err)
 	}

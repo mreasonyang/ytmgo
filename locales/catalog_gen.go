@@ -3179,6 +3179,76 @@ func (msgs Messages) NativeShortcutUnavailable() string {
 	return Catalog.Format(msgs.locale, "nativeShortcutUnavailable", nil)
 }
 
+// NativeAudioQuality says "Audio quality"
+// in the language the app shows.
+func NativeAudioQuality() string { return In(i18n.Locale()).NativeAudioQuality() }
+
+// NativeAudioQuality says "Audio quality"
+// in the language of msgs.
+func (msgs Messages) NativeAudioQuality() string {
+	return Catalog.Format(msgs.locale, "nativeAudioQuality", nil)
+}
+
+// NativeAudioQualityHint says "Applies the next time you load a song."
+// in the language the app shows.
+func NativeAudioQualityHint() string { return In(i18n.Locale()).NativeAudioQualityHint() }
+
+// NativeAudioQualityHint says "Applies the next time you load a song."
+// in the language of msgs.
+func (msgs Messages) NativeAudioQualityHint() string {
+	return Catalog.Format(msgs.locale, "nativeAudioQualityHint", nil)
+}
+
+// NativeAudioQualitySaver says "Data saver"
+// in the language the app shows.
+func NativeAudioQualitySaver() string { return In(i18n.Locale()).NativeAudioQualitySaver() }
+
+// NativeAudioQualitySaver says "Data saver"
+// in the language of msgs.
+func (msgs Messages) NativeAudioQualitySaver() string {
+	return Catalog.Format(msgs.locale, "nativeAudioQualitySaver", nil)
+}
+
+// NativeAudioQualityStandard says "Standard"
+// in the language the app shows.
+func NativeAudioQualityStandard() string { return In(i18n.Locale()).NativeAudioQualityStandard() }
+
+// NativeAudioQualityStandard says "Standard"
+// in the language of msgs.
+func (msgs Messages) NativeAudioQualityStandard() string {
+	return Catalog.Format(msgs.locale, "nativeAudioQualityStandard", nil)
+}
+
+// NativeAudioQualityBest says "Highest available"
+// in the language the app shows.
+func NativeAudioQualityBest() string { return In(i18n.Locale()).NativeAudioQualityBest() }
+
+// NativeAudioQualityBest says "Highest available"
+// in the language of msgs.
+func (msgs Messages) NativeAudioQualityBest() string {
+	return Catalog.Format(msgs.locale, "nativeAudioQualityBest", nil)
+}
+
+// NativeAudioQualitySaved says "Saved. Applies the next time you load a song."
+// in the language the app shows.
+func NativeAudioQualitySaved() string { return In(i18n.Locale()).NativeAudioQualitySaved() }
+
+// NativeAudioQualitySaved says "Saved. Applies the next time you load a song."
+// in the language of msgs.
+func (msgs Messages) NativeAudioQualitySaved() string {
+	return Catalog.Format(msgs.locale, "nativeAudioQualitySaved", nil)
+}
+
+// NativeAudioQualitySaveError says "Couldn’t save. Your previous quality is still selected. Try again."
+// in the language the app shows.
+func NativeAudioQualitySaveError() string { return In(i18n.Locale()).NativeAudioQualitySaveError() }
+
+// NativeAudioQualitySaveError says "Couldn’t save. Your previous quality is still selected. Try again."
+// in the language of msgs.
+func (msgs Messages) NativeAudioQualitySaveError() string {
+	return Catalog.Format(msgs.locale, "nativeAudioQualitySaveError", nil)
+}
+
 // NativeVideoQuality says "Video quality"
 // in the language the app shows.
 func NativeVideoQuality() string { return In(i18n.Locale()).NativeVideoQuality() }

@@ -135,19 +135,19 @@ func TestFormatSelectionAndURLBoundaries(t *testing.T) {
 	drm := item(`audio/webm; codecs="opus"`, 512)
 	drm["drmFamilies"] = []any{"x"}
 	data := map[string]any{"streamingData": map[string]any{"adaptiveFormats": []any{a, drm, b}}}
-	f, err := chooseFormat(data, "audio", 720)
+	f, err := chooseFormat(data, "audio", formatPreference{})
 	if err != nil || f.contentType != "audio/webm" || f.duration != 3*time.Second {
 		t.Fatal("audio selection changed")
 	}
 	v := item(`video/mp4; codecs="avc1.4d401e"`, 100)
 	v["width"], v["height"] = float64(854), float64(480)
 	data["streamingData"].(map[string]any)["adaptiveFormats"] = []any{v}
-	f, err = chooseFormat(data, "video", 720)
+	f, err = chooseFormat(data, "video", formatPreference{videoHeight: 720})
 	if err != nil || f.height != 480 {
 		t.Fatal("video selection changed")
 	}
 	v["height"] = float64(8193)
-	if _, err = chooseFormat(data, "video", 720); err == nil {
+	if _, err = chooseFormat(data, "video", formatPreference{videoHeight: 720}); err == nil {
 		t.Fatal("video size limit lost")
 	}
 	for _, raw := range []string{"https://googlevideo.com/x", "https://r.googlevideo.com:443/x", "https://x@r.googlevideo.com/x", "https://r.googlevideo.com/x#x", "https://r.googlevideo.com/x?n=enhanced_except_x", "https://r.googlevideo.com/x?sabr=1", "https://r.googlevideo.com/x'"} {

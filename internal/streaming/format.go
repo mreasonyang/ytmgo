@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"ytmgo/internal/audioquality"
 	"ytmgo/internal/videoquality"
 )
 
@@ -41,8 +42,38 @@ func number(v any) float64 {
 func integer(n float64) bool {
 	return !math.IsNaN(n) && !math.IsInf(n, 0) && n == math.Trunc(n) && math.Abs(n) <= 9007199254740991
 }
-func chooseFormat(data map[string]any, kind string, quality int) (format, error) {
-	quality = videoquality.Normalize(quality)
+
+type formatPreference struct {
+	videoHeight  int
+	audioQuality audioquality.Quality
+}
+
+// A missing bitrate ranks behind any known rate, even in data saver mode.
+// A stable sort leaves sources in service order if their rates are tied or unknown.
+func audioBitrate(f map[string]any) float64 {
+	for _, key := range [...]string{"averageBitrate", "bitrate"} {
+		if n := number(f[key]); n > 0 && integer(n) {
+			return n
+		}
+	}
+	return 0
+}
+
+func preferAudioBitrate(a, b float64, quality audioquality.Quality) bool {
+	if a == 0 || b == 0 {
+		return a > b
+	}
+	const standardLimit = 128_000 // bits per second
+	if quality == audioquality.Saver || (quality == audioquality.Standard && (a > standardLimit || b > standardLimit)) {
+		// In standard mode any rate within the limit beats a higher one.
+		// When both are above the limit, choose the smaller overage.
+		return a < b
+	}
+	return a > b
+}
+
+func chooseFormat(data map[string]any, kind string, preference formatPreference) (format, error) {
+	height := videoquality.Normalize(preference.videoHeight)
 	list, _ := valueAt(data, "streamingData", "adaptiveFormats").([]any)
 	supported := []map[string]any{}
 	candidates, clear := 0, 0
@@ -83,21 +114,37 @@ func chooseFormat(data map[string]any, kind string, quality int) (format, error)
 	}
 	sort.SliceStable(supported, func(i, j int) bool {
 		a, b := supported[i], supported[j]
-		if kind == "video" && number(a["height"]) != number(b["height"]) {
+		if kind == "audio" {
+			return preferAudioBitrate(audioBitrate(a), audioBitrate(b), preference.audioQuality)
+		}
+		if number(a["height"]) != number(b["height"]) {
 			ah, bh := number(a["height"]), number(b["height"])
 			// Prefer the best source at or below the user's choice. If every
 			// source is larger, decode the smallest and scale it to the choice.
-			if (ah <= float64(quality)) != (bh <= float64(quality)) {
-				return ah <= float64(quality)
+			if (ah <= float64(height)) != (bh <= float64(height)) {
+				return ah <= float64(height)
 			}
-			if ah > float64(quality) {
+			if ah > float64(height) {
 				return ah < bh
 			}
 			return ah > bh
 		}
 		return bitrate(a) > bitrate(b)
 	})
-	f := supported[0]
+	selected, err := parseFormat(data, supported[0], kind)
+	if err != nil && kind == "audio" {
+		// A lower bitrate variant may omit length or duration. Try the next
+		// ranked source, preserving the original error if none is playable.
+		for _, candidate := range supported[1:] {
+			if fallback, fallbackErr := parseFormat(data, candidate, kind); fallbackErr == nil {
+				return fallback, nil
+			}
+		}
+	}
+	return selected, err
+}
+
+func parseFormat(data, f map[string]any, kind string) (format, error) {
 	seconds := number(f["approxDurationMs"]) / 1000
 	if seconds == 0 {
 		seconds = number(valueAt(data, "videoDetails", "lengthSeconds"))

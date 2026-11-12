@@ -82,7 +82,7 @@ func TestMutedVolumeSurvivesNaturalEndAndPreparedNext(t *testing.T) {
 	defer p.Close()
 	// A finite, silent PCM source reaches the real output's natural EOF;
 	// no Ended flag or decoder EOF flag is injected by the test.
-	p.resolve = func(context.Context, string) (media, error) {
+	p.resolve = func(context.Context, audioTrack) (media, error) {
 		return media{Duration: 100 * time.Millisecond}, nil
 	}
 	p.open = func(context.Context, media, time.Duration) (*pcmDecoder, error) {

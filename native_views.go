@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/egoist/mygo/ui"
+	"ytmgo/internal/audioquality"
 	"ytmgo/internal/catalog"
 	"ytmgo/locales"
 )
@@ -49,6 +50,8 @@ type UIModel struct {
 	VideoFrame                                                 ui.ImageSource
 	PlaybackError                                              string
 	VideoError                                                 string
+	AudioQuality                                               audioquality.Quality
+	AudioQualityNotice                                         string
 	VideoQuality                                               int
 	VideoQualityError                                          string
 	ErrorScope                                                 errorScope
@@ -130,6 +133,7 @@ type ViewActions struct {
 	ArtworkTint                   func(string) (ui.Color, bool)
 	Video                         func(bool)
 	FullScreen                    func(bool) // the window, for the video
+	SetAudioQuality               func(audioquality.Quality)
 	SetVideoQuality               func(int)
 	SetLyricsExpanded             func(bool)
 	RetryPlayback                 func()

@@ -17,6 +17,8 @@ import (
 	"time"
 
 	"github.com/egoist/mygo/audio"
+
+	"ytmgo/internal/audioquality"
 )
 
 func TestMediaURLBoundary(t *testing.T) {
@@ -97,7 +99,7 @@ func testPlayer() *Player {
 	// Keep the real PCM/output lifecycle, including its paced null device on
 	// headless runners, without making state-machine tests depend on a sound card.
 	p := &Player{state: State{Volume: 0}, outputError: func() error { return nil }}
-	p.resolve = func(context.Context, string) (media, error) { return media{Duration: 60 * time.Second}, nil }
+	p.resolve = func(context.Context, audioTrack) (media, error) { return media{Duration: 60 * time.Second}, nil }
 	p.open = func(context.Context, media, time.Duration) (*pcmDecoder, error) {
 		d, _ := zeroDecoder(60)
 		return d, nil
@@ -139,15 +141,15 @@ func TestPreparedTrackTransfersDecoderAndLease(t *testing.T) {
 	var resolves, opens, releasedA, releasedB atomic.Int64
 	var preparedDecoder *pcmDecoder
 	var preparedStream *zeroStream
-	p.resolve = func(_ context.Context, id string) (media, error) {
-		if id == "bbbbbbbbbbb" {
+	p.resolve = func(_ context.Context, track audioTrack) (media, error) {
+		if track.id == "bbbbbbbbbbb" {
 			resolves.Add(1)
 		}
 		release := func() { releasedA.Add(1) }
-		if id == "bbbbbbbbbbb" {
+		if track.id == "bbbbbbbbbbb" {
 			release = func() { releasedB.Add(1) }
 		}
-		return media{URL: id, Duration: 60 * time.Second, release: release}, nil
+		return media{URL: track.id, Duration: 60 * time.Second, release: release}, nil
 	}
 	p.open = func(_ context.Context, info media, _ time.Duration) (*pcmDecoder, error) {
 		d, stream := zeroDecoder(60)
@@ -214,7 +216,7 @@ func TestLoadJoinsPendingPreparation(t *testing.T) {
 	defer p.Close()
 	entered, gate := make(chan struct{}), make(chan struct{})
 	var resolves atomic.Int64
-	p.resolve = func(_ context.Context, id string) (media, error) {
+	p.resolve = func(_ context.Context, track audioTrack) (media, error) {
 		resolves.Add(1)
 		return media{Duration: 60 * time.Second}, nil
 	}
@@ -233,6 +235,7 @@ func TestLoadJoinsPendingPreparation(t *testing.T) {
 	<-entered
 	go func() { loaded <- p.Load(context.Background(), "bbbbbbbbbbb") }()
 	waitPlayerCondition(t, func() bool { p.mu.Lock(); defer p.mu.Unlock(); return p.prepared == nil })
+	p.SetAudioQuality(audioquality.Saver) // The foreground load already owns this work.
 	close(gate)
 	if err := <-prepared; err != nil {
 		t.Fatal(err)
@@ -250,8 +253,8 @@ func TestPreparedReplacementReleasesBeforeOpeningNext(t *testing.T) {
 	defer p.Close()
 	var released atomic.Int64
 	var first *zeroStream
-	p.resolve = func(_ context.Context, id string) (media, error) {
-		return media{URL: id, Duration: 60 * time.Second, release: func() { released.Add(1) }}, nil
+	p.resolve = func(_ context.Context, track audioTrack) (media, error) {
+		return media{URL: track.id, Duration: 60 * time.Second, release: func() { released.Add(1) }}, nil
 	}
 	p.open = func(_ context.Context, info media, _ time.Duration) (*pcmDecoder, error) {
 		if info.URL == "ccccccccccc" && (!first.closed.Load() || released.Load() != 1) {
@@ -281,7 +284,7 @@ func TestPreparedContextCancellationReleasesReadyDecoder(t *testing.T) {
 	defer p.Close()
 	var released atomic.Int64
 	var stream *zeroStream
-	p.resolve = func(context.Context, string) (media, error) {
+	p.resolve = func(context.Context, audioTrack) (media, error) {
 		return media{Duration: 60 * time.Second, release: func() { released.Add(1) }}, nil
 	}
 	p.open = func(context.Context, media, time.Duration) (*pcmDecoder, error) {
@@ -306,9 +309,9 @@ func TestSupersededClaimedPreparationCannotReplaceCurrentTrack(t *testing.T) {
 	entered, gate := make(chan struct{}), make(chan struct{})
 	var released atomic.Int64
 	var stale *zeroStream
-	p.resolve = func(_ context.Context, id string) (media, error) {
-		info := media{URL: id, Duration: 20 * time.Second}
-		if id == "bbbbbbbbbbb" {
+	p.resolve = func(_ context.Context, track audioTrack) (media, error) {
+		info := media{URL: track.id, Duration: 20 * time.Second}
+		if track.id == "bbbbbbbbbbb" {
 			info.Duration = 10 * time.Second
 			info.release = func() { released.Add(1) }
 		}
@@ -357,7 +360,9 @@ func TestPrepareFailureDoesNotChangePlaybackState(t *testing.T) {
 	}
 	p.Pause()
 	current := p.session
-	p.resolve = func(context.Context, string) (media, error) { return media{}, errors.New("stream_resolution_failed") }
+	p.resolve = func(context.Context, audioTrack) (media, error) {
+		return media{}, errors.New("stream_resolution_failed")
+	}
 	if err := p.Prepare(context.Background(), "bbbbbbbbbbb"); err == nil {
 		t.Fatal("failed preparation accepted")
 	}
@@ -376,7 +381,7 @@ func TestSeekStopAndCloseClearPreparedResources(t *testing.T) {
 				t.Fatal(err)
 			}
 			var released atomic.Int64
-			p.resolve = func(context.Context, string) (media, error) {
+			p.resolve = func(context.Context, audioTrack) (media, error) {
 				return media{Duration: 60 * time.Second, release: func() { released.Add(1) }}, nil
 			}
 			if err := p.Prepare(context.Background(), "bbbbbbbbbbb"); err != nil {
@@ -400,7 +405,7 @@ func TestSeekStopAndCloseClearPreparedResources(t *testing.T) {
 func TestCloseCancelsInflightPreparation(t *testing.T) {
 	p := testPlayer()
 	started := make(chan struct{})
-	p.resolve = func(ctx context.Context, _ string) (media, error) {
+	p.resolve = func(ctx context.Context, _ audioTrack) (media, error) {
 		close(started)
 		<-ctx.Done()
 		return media{}, ctx.Err()
@@ -418,8 +423,8 @@ func TestLateLoadCannotReplaceCurrentTrack(t *testing.T) {
 	p := testPlayer()
 	defer p.Close()
 	started, release := make(chan struct{}), make(chan struct{})
-	p.resolve = func(ctx context.Context, id string) (media, error) {
-		if id == "aaaaaaaaaaa" {
+	p.resolve = func(ctx context.Context, track audioTrack) (media, error) {
+		if track.id == "aaaaaaaaaaa" {
 			close(started)
 			<-release
 			return media{Duration: 10 * time.Second}, nil
@@ -518,8 +523,8 @@ func TestCanceledQueuedResumeCannotChangeCurrentPlayback(t *testing.T) {
 func TestEndedRestartKeepsCapturedMediaAndLosesToNewLoad(t *testing.T) {
 	p := testPlayer()
 	defer p.Close()
-	p.resolve = func(_ context.Context, id string) (media, error) {
-		return media{URL: id, Duration: 60 * time.Second}, nil
+	p.resolve = func(_ context.Context, track audioTrack) (media, error) {
+		return media{URL: track.id, Duration: 60 * time.Second}, nil
 	}
 	if err := p.Load(context.Background(), "aaaaaaaaaaa"); err != nil {
 		t.Fatal(err)
@@ -568,7 +573,7 @@ func TestEndedRestartReusesMediaAndRespectsPause(t *testing.T) {
 	p := testPlayer()
 	defer p.Close()
 	var resolves atomic.Int64
-	p.resolve = func(context.Context, string) (media, error) {
+	p.resolve = func(context.Context, audioTrack) (media, error) {
 		resolves.Add(1)
 		return media{Duration: 60 * time.Second}, nil
 	}
@@ -646,7 +651,7 @@ func TestLatePreparationDoesNotDuplicateForegroundLoad(t *testing.T) {
 	defer p.Close()
 	entered, gate := make(chan struct{}), make(chan struct{})
 	var resolves atomic.Int64
-	p.resolve = func(ctx context.Context, _ string) (media, error) {
+	p.resolve = func(ctx context.Context, _ audioTrack) (media, error) {
 		resolves.Add(1)
 		close(entered)
 		select {
@@ -810,7 +815,7 @@ func TestPausedStreamHasBoundedReadAhead(t *testing.T) {
 func TestCloseCancelsInflightResolution(t *testing.T) {
 	p := testPlayer()
 	started := make(chan struct{})
-	p.resolve = func(ctx context.Context, _ string) (media, error) {
+	p.resolve = func(ctx context.Context, _ audioTrack) (media, error) {
 		close(started)
 		<-ctx.Done()
 		return media{}, ctx.Err()
@@ -937,7 +942,7 @@ func TestFFmpegEndedRestartLocal(t *testing.T) {
 	p := testPlayer()
 	defer p.Close()
 	var resolves atomic.Int64
-	p.resolve = func(context.Context, string) (media, error) {
+	p.resolve = func(context.Context, audioTrack) (media, error) {
 		resolves.Add(1)
 		return media{URL: server.URL + "/" + strings.Repeat("a", 64), Duration: 4 * time.Second, UserAgent: "fixture"}, nil
 	}
@@ -1057,9 +1062,9 @@ func TestNativePlaybackAcceptanceLive(t *testing.T) {
 	p.SetVolume(.05)
 	resolve, open := p.resolve, p.open
 	var cycle int
-	p.resolve = func(ctx context.Context, id string) (media, error) {
+	p.resolve = func(ctx context.Context, track audioTrack) (media, error) {
 		at := time.Now()
-		info, err := resolve(ctx, id)
+		info, err := resolve(ctx, track)
 		t.Logf("attempt=%d phase=resolve seconds=%.2f success=%t", cycle, time.Since(at).Seconds(), err == nil)
 		return info, err
 	}
@@ -1137,9 +1142,9 @@ func TestNativeEndedRestartLive(t *testing.T) {
 	p.SetVolume(.02)
 	var resolves atomic.Int64
 	resolve := p.resolve
-	p.resolve = func(ctx context.Context, id string) (media, error) {
+	p.resolve = func(ctx context.Context, track audioTrack) (media, error) {
 		resolves.Add(1)
-		return resolve(ctx, id)
+		return resolve(ctx, track)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
 	defer cancel()
@@ -1190,9 +1195,9 @@ func TestNativePlaybackLive(t *testing.T) {
 	initializeAnonymousLive(t, p)
 	p.SetVolume(.1)
 	resolve, open := p.resolve, p.open
-	p.resolve = func(ctx context.Context, id string) (media, error) {
+	p.resolve = func(ctx context.Context, track audioTrack) (media, error) {
 		start := time.Now()
-		info, err := resolve(ctx, id)
+		info, err := resolve(ctx, track)
 		t.Logf("resolver phase %.2fs, success=%t", time.Since(start).Seconds(), err == nil)
 		return info, err
 	}

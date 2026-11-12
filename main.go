@@ -14,6 +14,7 @@ import (
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 	"ytmgo/internal/accountsession"
+	"ytmgo/internal/audioquality"
 	"ytmgo/internal/catalog"
 	"ytmgo/internal/language"
 	"ytmgo/internal/player"
@@ -42,6 +43,7 @@ type desktop struct {
 	shortcut                        *shortcutBinding
 	languagePath                    string
 	lyricsLayoutPath                string
+	audioQualityPath                string
 	videoQualityPath                string
 	playbackPath                    string
 	restoredTrack                   bool // shown paused until the first explicit play
@@ -69,6 +71,7 @@ type desktop struct {
 	seekCancel                      context.CancelFunc
 	resumeCancel                    context.CancelFunc
 	preparedID                      string
+	preparedQuality                 audioquality.Quality
 	likeCancel                      context.CancelFunc
 	likedChanges                    likedMusicChanges // edits since the current Liked Music page was requested
 	libraryRequest                  *libraryRequest
@@ -131,6 +134,8 @@ func main() {
 	a.model = UIModel{Route: "home", Appearance: a.prefs.Appearance(), Language: language.Load(a.languagePath), Volume: 0.7, Version: applicationBuildLabel()}
 	a.lyricsLayoutPath = filepath.Join(dataDir, "lyrics-layout")
 	a.model.LyricsExpanded = loadLyricsExpanded(a.lyricsLayoutPath)
+	a.audioQualityPath = filepath.Join(dataDir, "audio-quality")
+	a.model.AudioQuality = audioquality.Load(a.audioQualityPath)
 	a.videoQualityPath = filepath.Join(dataDir, "video-quality")
 	a.model.VideoQuality = videoquality.Load(a.videoQualityPath)
 	a.playbackPath = filepath.Join(dataDir, "playback-session.json")
@@ -176,6 +181,7 @@ func main() {
 			a.setError("nativeRuntimeMissing")
 		}
 		if a.player != nil {
+			a.player.SetAudioQuality(a.model.AudioQuality)
 			a.player.SetVolume(a.model.Volume)
 			if a.restoredTrack {
 				a.publishPausedTrack()
@@ -306,7 +312,7 @@ func (a *desktop) prefetchNextCover(frame *artworkFrame) {
 }
 
 func (a *desktop) actions(artwork func(string, int, artworkPriority) ui.ImageSource) ViewActions {
-	actions := ViewActions{artworkScale: a.artworkScale, artworkPeek: a.art.peek, LyricsClock: a.lyricsClock, BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, FullScreen: a.setVideoFullScreen, SetVideoQuality: a.setVideoQuality, SetLyricsExpanded: a.setLyricsExpanded, RetryPlayback: a.retryPlayback, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: artwork, ArtworkTint: a.art.tint}
+	actions := ViewActions{artworkScale: a.artworkScale, artworkPeek: a.art.peek, LyricsClock: a.lyricsClock, BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, FullScreen: a.setVideoFullScreen, SetAudioQuality: a.setAudioQuality, SetVideoQuality: a.setVideoQuality, SetLyricsExpanded: a.setLyricsExpanded, RetryPlayback: a.retryPlayback, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: artwork, ArtworkTint: a.art.tint}
 	if style, _ := mainWindowTitleBar(runtime.GOOS); style == mygo.TitleBarHidden {
 		actions.AppMenu = a.appMenu
 	}

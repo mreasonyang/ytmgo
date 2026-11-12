@@ -72,7 +72,10 @@ func TestNativePreparedPlaybackLive(t *testing.T) {
 	readers := map[*pcmDecoder]*livePCM{}
 	var resolveCount, openCount atomic.Int64
 	resolve, open := p.resolve, p.open
-	p.resolve = func(ctx context.Context, id string) (media, error) { resolveCount.Add(1); return resolve(ctx, id) }
+	p.resolve = func(ctx context.Context, track audioTrack) (media, error) {
+		resolveCount.Add(1)
+		return resolve(ctx, track)
+	}
 	p.open = func(ctx context.Context, info media, at time.Duration) (*pcmDecoder, error) {
 		openCount.Add(1)
 		d, err := open(ctx, info, at)

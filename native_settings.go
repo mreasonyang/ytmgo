@@ -52,6 +52,7 @@ type nativeSheetPage struct {
 // Close, Escape and a click outside close it. Each page opens at its top.
 func nativeSheets(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {
 	if !m.Settings {
+		m.AudioQualityNotice = ""
 		m.settingsScroll.Y = 0
 	}
 	if !m.Shortcuts {
@@ -184,14 +185,15 @@ func nativeSettingTile(c *ui.Context, icon string, bg, fg ui.Color) {
 
 // nativeSettingRow lays out one setting. A narrow row puts the control under
 // the text, across the row.
-func nativeSettingRow(c *ui.Context, p nativePalette, narrow bool, icon, title, detail string, control func()) {
+func nativeSettingRow(c *ui.Context, p nativePalette, narrow bool, icon, title, detail string, control func()) ui.Element {
+	var hint ui.Element
 	text := func() ui.Element {
 		return ui.Row(c).MinWidth(0).Gap(16).AlignItems(ui.Center).Children(func() {
 			nativeSettingTile(c, icon, p.highlight, p.text)
 			ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
 				ui.Text(c, title).FontWeight(600)
 				if detail != "" {
-					ui.Text(c, detail).FontSize(tokenSizeMeta).LineHeight(1.4).TextColor(p.secondary)
+					hint = ui.Text(c, detail).FontSize(tokenSizeMeta).LineHeight(1.4).TextColor(p.secondary)
 				}
 			})
 		})
@@ -201,12 +203,13 @@ func nativeSettingRow(c *ui.Context, p nativePalette, narrow bool, icon, title, 
 			text()
 			ui.Row(c).Gap(8).Wrap().AlignItems(ui.Center).Children(control)
 		})
-		return
+		return hint
 	}
 	ui.Row(c).Padding(12, 16).Gap(16).AlignItems(ui.Center).Children(func() {
 		text().Grow(1).Basis(0)
 		ui.Row(c).Shrink(0).Gap(8).AlignItems(ui.Center).Children(control)
 	})
+	return hint
 }
 
 // nativeKeycaps draws a chord as key caps; "/" separates alternatives.
@@ -251,6 +254,7 @@ func nativeSettingsPage(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 			func() {
 				nativeSettingRow(c, p, narrow, "globe", a.Tr("shellLanguage"), a.Tr("nativeSettingsLanguageHint"), func() { nativeLanguageControl(c, m, a, p, narrow) })
 			},
+			func() { nativeAudioQualitySetting(c, m, a, p, narrow) },
 			func() {
 				detail := a.Tr("nativeVideoQualityHint")
 				if m.VideoQualityError != "" {

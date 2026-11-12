@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/egoist/mygo/audio"
+
+	"ytmgo/internal/audioquality"
 )
 
 var (
@@ -34,7 +36,7 @@ type State struct {
 type Player struct {
 	mu                  sync.Mutex
 	ops                 sync.WaitGroup
-	resolve             func(context.Context, string) (media, error)
+	resolve             func(context.Context, audioTrack) (media, error)
 	refresh             func(context.Context) error
 	open                func(context.Context, media, time.Duration) (*pcmDecoder, error)
 	outputError         func() error // nil uses the native audio device's error
@@ -47,7 +49,9 @@ type Player struct {
 	media               *media
 	session             *session
 	prepared            *preparedTrack
-	videoID             string
+	currentTrack        audioTrack
+	audioQuality        audioquality.Quality
+	preparedRetired     <-chan struct{}
 	seekReloadable      bool // Retired lease; a canceled seek can still resolve this track.
 	accessRecoveries    int
 	accessHealthyFrom   time.Duration
@@ -65,14 +69,20 @@ type Player struct {
 	accountInitialized  chan struct{}
 }
 
+// Each new foreground load snapshots the preference. Reopening that track
+// after a seek, access failure, or system sleep reuses the snapshot.
+type audioTrack struct {
+	id      string
+	quality audioquality.Quality
+}
+
 // A prepared track owns one decoder and one resolver lease. Its decoder is not
 // attached to an audio output, so the bounded PCM pipe supplies backpressure.
 type preparedTrack struct {
-	id      string
+	track   audioTrack
 	ctx     context.Context
 	cancel  context.CancelFunc
 	done    chan struct{}
-	retired chan struct{}
 	info    *media
 	decoder *pcmDecoder
 	err     error
@@ -110,6 +120,19 @@ func New() (*Player, error) {
 	return p, nil
 }
 
+// SetAudioQuality affects future loads and retires any unclaimed prefetch.
+// A foreground load that has already claimed its decoder continues normally.
+func (p *Player) SetAudioQuality(quality audioquality.Quality) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	quality = quality.Normalize()
+	if p.closed || quality == p.audioQuality.Normalize() {
+		return
+	}
+	p.audioQuality = quality
+	p.clearPreparedLocked()
+}
+
 // Load resolves and starts a track. Call from a worker, never the UI thread.
 // A newer Load/Seek/Stop/Close cancels this operation and its child processes.
 // ctx bounds loading only; successful playback has its own lifetime.
@@ -134,10 +157,11 @@ func (p *Player) LoadAt(ctx context.Context, videoID string, at time.Duration) e
 		return err
 	}
 	p.suspended, p.sleeping = nil, false
-	p.videoID = videoID
+	track := audioTrack{id: videoID, quality: p.audioQuality.Normalize()}
+	p.currentTrack = track
 	p.accessRecoveries = 0
 	prepared := p.prepared
-	if !refresh && at == 0 && prepared != nil && prepared.id == videoID && prepared.ctx.Err() == nil {
+	if !refresh && at == 0 && prepared != nil && prepared.track == track && prepared.ctx.Err() == nil {
 		p.prepared = nil // Transfer ownership to this Load, including a pending open.
 		loadCancel := p.cancel
 		p.cancel = func() {
@@ -178,13 +202,13 @@ func (p *Player) LoadAt(ctx context.Context, videoID string, at time.Duration) e
 		prepared.cancel()
 		if prepareErr != nil {
 			if safeError(prepareErr) == "audio_access_denied" {
-				return p.resolveFreshAttempts(ctx, gen, videoID, at, 1)
+				return p.resolveFreshAttempts(ctx, gen, track, at, 1)
 			}
 			return p.fail(gen, prepareErr)
 		}
 		return p.installDecoder(ctx, gen, *info, decoder, 0, true)
 	}
-	info, err := p.resolve(ctx, videoID)
+	info, err := p.resolve(ctx, track)
 	if err != nil {
 		return p.fail(gen, err)
 	}
@@ -196,7 +220,7 @@ func (p *Player) LoadAt(ctx context.Context, videoID string, at time.Duration) e
 	if err != nil {
 		releaseMedia(&info)
 		if safeError(err) == "audio_access_denied" {
-			return p.resolveFreshAttempts(ctx, gen, videoID, at, 1)
+			return p.resolveFreshAttempts(ctx, gen, track, at, 1)
 		}
 		return p.fail(gen, err)
 	}
@@ -221,11 +245,12 @@ func (p *Player) Prepare(ctx context.Context, videoID string) error {
 	}
 	// A queued preparation worker may start after the user has already chosen
 	// that track. The foreground load owns its resolution in that case.
-	if p.sleeping || p.suspended != nil || p.state.Loading && p.videoID == videoID {
+	if p.sleeping || p.suspended != nil || p.state.Loading && p.currentTrack.id == videoID {
 		p.mu.Unlock()
 		return nil
 	}
-	if existing := p.prepared; existing != nil && existing.id == videoID && existing.ctx.Err() == nil {
+	track := audioTrack{id: videoID, quality: p.audioQuality.Normalize()}
+	if existing := p.prepared; existing != nil && existing.track == track && existing.ctx.Err() == nil {
 		p.mu.Unlock()
 		select {
 		case <-ctx.Done():
@@ -234,10 +259,10 @@ func (p *Player) Prepare(ctx context.Context, videoID string) error {
 			return existing.err
 		}
 	}
-	previous := p.prepared
 	p.clearPreparedLocked()
+	previous := p.preparedRetired
 	life, cancel := context.WithCancel(ctx)
-	prepared := &preparedTrack{id: videoID, ctx: life, cancel: cancel, done: make(chan struct{}), retired: make(chan struct{})}
+	prepared := &preparedTrack{track: track, ctx: life, cancel: cancel, done: make(chan struct{})}
 	p.prepared = prepared
 	p.ops.Add(1)
 	p.mu.Unlock()
@@ -255,13 +280,13 @@ func (p *Player) Prepare(ctx context.Context, videoID string) error {
 	var err error
 	if previous != nil {
 		select {
-		case <-previous.retired:
+		case <-previous:
 		case <-loading.Done():
 			err = loading.Err()
 		}
 	}
 	if err == nil {
-		info, err = p.resolve(loading, videoID)
+		info, err = p.resolve(loading, track)
 	}
 	var decoder *pcmDecoder
 	if err == nil {
@@ -309,10 +334,13 @@ func (p *Player) clearPreparedLocked() {
 
 func (p *Player) disposePreparedLocked(old *preparedTrack) {
 	old.cancel()
+	previous := p.preparedRetired
+	retired := make(chan struct{})
+	p.preparedRetired = retired
 	p.ops.Add(1)
 	go func() {
 		defer p.ops.Done()
-		defer close(old.retired)
+		defer close(retired)
 		<-old.done
 		p.mu.Lock()
 		d, info := old.decoder, old.info
@@ -322,6 +350,11 @@ func (p *Player) disposePreparedLocked(old *preparedTrack) {
 			d.Close()
 		}
 		releaseMedia(info)
+		// A replacement prefetch waits for all earlier decoders and leases,
+		// even when the setting changes repeatedly before cleanup finishes.
+		if previous != nil {
+			<-previous
+		}
 	}()
 }
 
@@ -363,14 +396,14 @@ func (p *Player) install(ctx context.Context, gen uint64, info media, at time.Du
 	if err != nil {
 		if safeError(err) == "audio_access_denied" {
 			p.mu.Lock()
-			if !p.closed && gen == p.gen && ctx.Err() == nil && p.accessRecoveries == 0 && p.videoID != "" {
+			if !p.closed && gen == p.gen && ctx.Err() == nil && p.accessRecoveries == 0 && p.currentTrack.id != "" {
 				p.accessRecoveries++
-				id := p.videoID
+				track := p.currentTrack
 				p.media = nil
 				p.seekReloadable = true
 				p.mu.Unlock()
 				releaseMedia(&info)
-				return p.resolveFresh(ctx, gen, id, at)
+				return p.resolveFresh(ctx, gen, track, at)
 			}
 			p.mu.Unlock()
 		}
@@ -557,7 +590,7 @@ func (p *Player) SeekContext(ctx context.Context, at time.Duration) error {
 		return p.ResumeFromSuspend(ctx)
 	}
 	if p.media == nil {
-		if (p.state.Loading || p.seekReloadable) && p.videoID != "" {
+		if (p.state.Loading || p.seekReloadable) && p.currentTrack.id != "" {
 			// Replace resolution with the latest seek target. This also works
 			// after the UI cancels a denied seek and its worker clears Loading:
 			// cancellation retires the operation, not the selected track.
@@ -565,7 +598,7 @@ func (p *Player) SeekContext(ctx context.Context, at time.Duration) error {
 			if p.state.Duration > 0 {
 				at = min(at, max(p.state.Duration-time.Millisecond, 0))
 			}
-			id := p.videoID
+			track := p.currentTrack
 			ctx, gen, old, err := p.beginLocked(ctx, at, p.wantPlay, false)
 			if err == nil {
 				p.seekReloadable = true
@@ -577,7 +610,7 @@ func (p *Player) SeekContext(ctx context.Context, at time.Duration) error {
 			}
 			defer p.ops.Done()
 			old.close()
-			return p.resolveFresh(ctx, gen, id, at)
+			return p.resolveFresh(ctx, gen, track, at)
 		}
 		p.mu.Unlock()
 		return ErrNoTrack
@@ -629,7 +662,7 @@ func (p *Player) Snapshot() State {
 			p.state.Ended = !s.decoder.failed.Load()
 			if s.decoder.failed.Load() {
 				p.state.Error, p.state.ErrorDetails = s.decoder.errorCategory(), s.decoder.errorDetails()
-				if p.state.Error == "audio_access_denied" && p.accessRecoveries == 0 && p.videoID != "" {
+				if p.state.Error == "audio_access_denied" && p.accessRecoveries == 0 && p.currentTrack.id != "" {
 					p.recoverAccessLocked()
 					return p.state
 				}

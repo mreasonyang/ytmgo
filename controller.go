@@ -10,6 +10,7 @@ import (
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
+	"ytmgo/internal/audioquality"
 	"ytmgo/internal/catalog"
 )
 
@@ -412,6 +413,9 @@ func (a *desktop) startTrackAt(it catalog.Item, at time.Duration) {
 	a.playCancel = cancel
 	a.restoredTrack = false
 	a.model.Current = it
+	if a.model.AudioQualityNotice == "nativeAudioQualitySaved" {
+		a.model.AudioQualityNotice = ""
+	}
 	a.model.Position = at.Seconds()
 	a.model.Duration = it.Duration.Seconds()
 	a.model.Playing = false
@@ -544,6 +548,23 @@ func nextPreparedTrack(queue []catalog.Item, index, repeat int) catalog.Item {
 	return queue[next]
 }
 
+func (a *desktop) setAudioQuality(quality audioquality.Quality) {
+	if !quality.Valid() || quality == a.model.AudioQuality.Normalize() {
+		return
+	}
+	if err := audioquality.Save(a.audioQualityPath, quality); err != nil {
+		a.model.AudioQualityNotice = "nativeAudioQualitySaveError"
+	} else {
+		a.model.AudioQuality = quality
+		a.model.AudioQualityNotice = "nativeAudioQualitySaved"
+		if a.player != nil {
+			a.player.SetAudioQuality(quality)
+			a.prepareNext()
+		}
+	}
+	a.invalidate()
+}
+
 func (a *desktop) prepareNext() {
 	if a.player == nil {
 		return
@@ -552,13 +573,14 @@ func (a *desktop) prepareNext() {
 	if !a.restoredTrack && !a.powerPlaybackSuspended && !a.loadPending && a.model.Current.ID != "" && a.model.PlaybackError == "" {
 		id = nextPreparedTrack(a.model.Queue, a.queueIndex, a.model.Repeat).ID
 	}
-	if id == a.preparedID {
+	quality := a.model.AudioQuality.Normalize()
+	if id == a.preparedID && (id == "" || quality == a.preparedQuality.Normalize()) {
 		return
 	}
 	if a.prepareCancel != nil {
 		a.prepareCancel()
 	}
-	a.preparedID = id
+	a.preparedID, a.preparedQuality = id, quality
 	a.player.ClearPrepared()
 	if id == "" {
 		return

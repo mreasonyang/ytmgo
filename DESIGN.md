@@ -76,6 +76,12 @@ in `native_style.go`, display-title styling in `native_fonts.go` (system font on
 - **Shadows** are the tokens' elevations: `Shadow(tokenShadowArt.args())`.
   Dialogs dim the window with `p.scrim`. Video plays on a black stage in
   both appearances, so the stage uses the dark palette.
+- **No rubber band past a scroller's ends.** MyGo reports a touchpad's
+  momentum as a flag only, not when the fingers touch or lift, so a
+  stretch has to guess the release from a pause in the events: holding
+  still at the end springs it back and the next move catches it (the page
+  shakes), and a fling's momentum keeps stretching it. Tried and removed
+  (a74aa1c, reverted); add it once MyGo gives scroll events their phases.
 - **Scroll bars** are `nativeScrollbar`'s (guidebook §10): the theme hides
   MyGo's, which show whenever the pointer is over a scroller, and leaves
   them to be grabbed. `TestScrollersDrawTheirBars` fails on a scroller

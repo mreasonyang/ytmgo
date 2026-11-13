@@ -413,13 +413,6 @@ tooltip. The website uses icons only on actions and platform names.
   wheel, a drag, the website player's seek) follows them at once, and
   grabbing a glide stops it. A view that appears or relays out arrives at
   its place without gliding there.
-- **Past the ends, the page stretches** under a touchpad, as Safari's does:
-  it follows the fingers less and less (the iOS rubber band, `0.55` of the
-  view), a fling reaching the end overshoots by a third of its travel, and
-  either springs back, critically damped, once the touchpad lets go. A
-  wheel stops at the end, as Safari's does; reduced motion stops there too.
-  The page and the library stretch; a scroller inside another scrolling
-  one (the queue in the Now Playing sheet) hands the scroll to it.
 - **Continuity: what persists moves; it never vanishes and reappears.**
   When a state changes, the elements both states share carry the eye from
   one to the other:

@@ -507,9 +507,10 @@ tooltip. The website uses icons only on actions and platform names.
   "kind · owner". The open collection is washed and its title is `text`
   (navigation state isn't coral). **Downloads** is the list's first row
   once anything is downloaded, while no filter narrows it (it is none of
-  their kinds): a library row with the
-  download glyph on a `highlight` tile, its subtitle what's under way or the
-  space it takes; a compact Library page leads with it.
+  their kinds): a library row with a cover of its own, as Liked Music has,
+  a diagonal from the teal to the slate tint under the filled download
+  glyph in white (the glyph that marks downloaded songs), its page washed
+  in teal; its subtitle what's under way or the space it takes; a compact Library page leads with it.
 - **Downloads page:** track rows. The download's state takes the Album
   column (an error beside the attention glyph); its control (pause, resume,
   retry) and remove end the row. A finished download has no control: its

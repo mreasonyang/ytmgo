@@ -44,9 +44,7 @@ func nativeDownloadsEntry(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 		b.Background(p.hover)
 	}
 	b.Children(func() {
-		ui.Box(c).Size(48, 48).Shrink(0).Radius(tokenRadiusArt).Background(p.highlight).TextColor(p.text).Center().Children(func() {
-			ui.Icon(c, nativeIcons["download"]).Size(24, 24)
-		})
+		nativeDownloadsCover(c, 48)
 		if !full {
 			return
 		}
@@ -58,6 +56,19 @@ func nativeDownloadsEntry(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 	if b.Clicked() {
 		a.Navigate("downloads")
 	}
+}
+
+// nativeDownloadsCover is Downloads' own cover, as Liked Music has one: a
+// diagonal from teal to slate (two of the header tints) under the filled
+// download glyph, the one that marks downloaded songs, in white as on any
+// cover, whatever the appearance (the dark palette's text, as on the
+// video's stage).
+func nativeDownloadsCover(c *ui.Context, size float32) ui.Element {
+	return ui.Box(c).Size(size, size).Shrink(0).Radius(tokenRadiusArt).
+		LinearGradient(ui.LinearGradient{From: nativeDownloadsTint, To: nativeDownloadsTintTo, Angle: 135, Oklab: true}).
+		TextColor(palette(true).text).Center().Children(func() {
+		ui.Icon(c, nativeIcons["download-fill"]).Size(nativeGrid(size*0.6), nativeGrid(size*0.6)) // as large as Liked Music's heart
+	})
 }
 
 // nativeDownloadsSummary is the entry's subtitle: what is under way, else

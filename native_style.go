@@ -62,7 +62,15 @@ func palette(dark bool) nativePalette {
 // header gradients do. Each route keeps one stable tint.
 var nativeHeaderTints = tokenTints
 
+// nativeDownloadsTint is Downloads' colour: its cover runs from teal to
+// slate, and its page washes in teal, as a playlist's page washes in its
+// cover's colour. Neither coral (play) nor Liked Music's violet and pink.
+var nativeDownloadsTint, nativeDownloadsTintTo = tokenTints[2], tokenTints[6]
+
 func nativeHeaderTint(key string) ui.Color {
+	if key == "downloads" {
+		return nativeDownloadsTint
+	}
 	h := uint32(2166136261)
 	for i := 0; i < len(key); i++ {
 		h = (h ^ uint32(key[i])) * 16777619

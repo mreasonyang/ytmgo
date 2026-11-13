@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 
-	"github.com/egoist/mygo"
 	"path/filepath"
 	"strings"
 
@@ -195,25 +194,20 @@ func (a *desktop) removeDownload(id string) {
 // confirmRemoveAllDownloads asks, naming what goes and the space it frees,
 // then removes every download of this library.
 func (a *desktop) confirmRemoveAllDownloads() {
-	if a.downloads == nil || len(a.model.Downloads) == 0 || a.downloadsConfirming {
+	if a.downloads == nil || len(a.model.Downloads) == 0 || a.model.confirm != nil {
 		return
 	}
 	var total int64
 	for _, j := range a.model.Downloads {
 		total += j.StoredBytes()
 	}
-	a.downloadsConfirming = true
-	message := a.trArgs("nativeDownloadRemoveAllConfirm", map[string]any{"size": downloadSize(total)})
-	title, cancel, remove := a.tr("nativeDownloadRemoveAllTitle"), a.tr("buttonCancel"), a.tr("nativeDownloadRemoveAllButton")
-	go func() {
-		answer, err := mygo.Dialog.Message(mygo.MessageOptions{Parent: a.window, Title: title, Message: message, Buttons: []string{cancel, remove}, CancelButton: 0})
-		a.post(func() {
-			a.downloadsConfirming = false
-			if err == nil && answer.Button == 1 {
-				a.removeAllDownloads()
-			}
-		})
-	}()
+	a.model.confirm = &nativeConfirmation{
+		title:  a.tr("nativeDownloadRemoveAllTitle"),
+		body:   a.trArgs("nativeDownloadRemoveAllConfirm", map[string]any{"size": downloadSize(total)}),
+		action: a.tr("nativeDownloadRemoveAllButton"),
+		run:    a.removeAllDownloads,
+	}
+	a.invalidate()
 }
 
 // removeAllDownloads removes each one as its own remove button would, so

@@ -738,6 +738,8 @@
   "nativeAccountError": "Could not complete the account request. Please try again later.",
   "nativeAccountSessionError": "Your account session is no longer valid. Please reconnect your account.",
   "nativeSignOutConfirm": "Sign out of ytmGO and remove this account’s saved session and downloaded songs from this device?",
+  "nativeSignOutTitle": "Sign out of ytmGO",
+  "nativeSignOutButton": "Sign out",
   "nativeAbout": "Native MyGo interface and audio playback. Music catalogue provided by YouTube Music.",
   "nativeEmptyResults": "No music found. Try another search.",
   "nativeAddToQueue": "Add to queue",

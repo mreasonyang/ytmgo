@@ -795,80 +795,85 @@ func (a *desktop) signOut() {
 		return
 	}
 	a.stopAccountLogin()
+	// Busy while it asks, so a second sign-out can't ask again.
 	a.accountBusy = true
+	a.model.confirm = &nativeConfirmation{
+		title:  a.tr("nativeSignOutTitle"),
+		body:   a.tr("nativeSignOutConfirm"),
+		action: a.tr("nativeSignOutButton"),
+		run:    a.signOutConfirmed,
+		cancel: func() { a.accountBusy = false },
+	}
+	a.invalidate()
+}
+
+// signOutConfirmed signs out once the listener has said so.
+func (a *desktop) signOutConfirmed() {
+	a.accountBusy = false
+	a.stopAccountLogin()
+	a.accountState.flow.cancelPending()
+	a.accountGeneration++
+	generation := a.accountGeneration
+	s := &a.accountState
+	s.revision++
+	revision := s.revision
+	s.session = nil
+	s.restored = true
+	s.ready = false
+	a.model.AccountRestore = ""
+	a.accountBusy = true
+	if a.playCancel != nil {
+		a.playCancel()
+	}
+	if a.prepareCancel != nil {
+		a.prepareCancel()
+	}
+	if a.seekCancel != nil {
+		a.seekCancel()
+	}
+	a.cancelResume()
+	a.preparedID = ""
+	a.playGeneration++
+	a.loadPending = false
+	a.model.PlaybackLoading = false
+	a.catalog.ClearSession()
+	a.model.SignedIn = false
+	a.model.MusicPremium = false
+	a.selectDownloads("guest", true)
+	a.forgetLibrarySnapshot()
+	a.clearAccountContent()
+	a.clearAccountPlayback()
+	mygo.App.SetMenu(a.menu())
+	ctx := s.flow.begin(a.ctx, generation)
 	go func() {
-		answer, err := mygo.Dialog.Message(mygo.MessageOptions{Parent: a.window, Title: locales.MenuSignOut(), Message: a.tr("nativeSignOutConfirm"), Buttons: []string{a.tr("shellClose"), a.tr("shellSignOut")}, CancelButton: 0})
+		s.work.Lock()
+		storageErr := s.store.Delete(accountsession.AllowPrompt)
+		librarysnapshot.Remove(a.librarySnapshotPath)
+		configureErr := a.configurePlayer(ctx, player.AccountSession{Revision: revision})
+		s.work.Unlock()
 		a.post(func() {
-			a.accountBusy = false
-			if err != nil || answer.Button != 1 {
+			accepted, flowErr := s.flow.finish(ctx, generation, a.accountGeneration, nil, func() error { return nil })
+			if !accepted {
 				return
 			}
-			a.stopAccountLogin()
-			a.accountState.flow.cancelPending()
-			a.accountGeneration++
-			generation := a.accountGeneration
-			s := &a.accountState
-			s.revision++
-			revision := s.revision
-			s.session = nil
-			s.restored = true
-			s.ready = false
-			a.model.AccountRestore = ""
-			a.accountBusy = true
-			if a.playCancel != nil {
-				a.playCancel()
+			a.accountBusy = false
+			s.ready = configureErr == nil && flowErr == nil
+			if s.ready {
+				a.downloadsOnline(false, "")
+				s.configured = player.AccountSession{Revision: revision}
 			}
-			if a.prepareCancel != nil {
-				a.prepareCancel()
+			if storageErr != nil {
+				// Keep the clear-local-data action available for a retry.
+				a.model.AccountRestore = accountRestoreDeferred
+				s.restored = false
+				a.accountMessage("nativeAccountStorageError")
+			} else if configureErr != nil || flowErr != nil {
+				a.accountMessage("nativeAccountError")
+			} else {
+				recordAccountDiagnostic(a.diagnosticPath, "signed_out")
+				a.model.Error = ""
+				a.openRoute("home")
 			}
-			if a.seekCancel != nil {
-				a.seekCancel()
-			}
-			a.cancelResume()
-			a.preparedID = ""
-			a.playGeneration++
-			a.loadPending = false
-			a.model.PlaybackLoading = false
-			a.catalog.ClearSession()
-			a.model.SignedIn = false
-			a.model.MusicPremium = false
-			a.selectDownloads("guest", true)
-			a.forgetLibrarySnapshot()
-			a.clearAccountContent()
-			a.clearAccountPlayback()
-			mygo.App.SetMenu(a.menu())
-			ctx := s.flow.begin(a.ctx, generation)
-			go func() {
-				s.work.Lock()
-				storageErr := s.store.Delete(accountsession.AllowPrompt)
-				librarysnapshot.Remove(a.librarySnapshotPath)
-				configureErr := a.configurePlayer(ctx, player.AccountSession{Revision: revision})
-				s.work.Unlock()
-				a.post(func() {
-					accepted, flowErr := s.flow.finish(ctx, generation, a.accountGeneration, nil, func() error { return nil })
-					if !accepted {
-						return
-					}
-					a.accountBusy = false
-					s.ready = configureErr == nil && flowErr == nil
-					if s.ready {
-						a.downloadsOnline(false, "")
-						s.configured = player.AccountSession{Revision: revision}
-					}
-					if storageErr != nil {
-						// Keep the clear-local-data action available for a retry.
-						a.model.AccountRestore = accountRestoreDeferred
-						s.restored = false
-						a.accountMessage("nativeAccountStorageError")
-					} else if configureErr != nil || flowErr != nil {
-						a.accountMessage("nativeAccountError")
-					} else {
-						recordAccountDiagnostic(a.diagnosticPath, "signed_out")
-						a.model.Error = ""
-						a.openRoute("home")
-					}
-				})
-			}()
 		})
 	}()
 }

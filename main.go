@@ -57,7 +57,6 @@ type desktop struct {
 	collectionCtx                   context.Context
 	cancelCollections               context.CancelFunc
 	pendingCollections              int
-	downloadsConfirming             bool // the Remove all dialog shows
 	video                           *player.Video
 	videoID                         string
 	videoAvailableID                string // the track VideoAvailable was learned for

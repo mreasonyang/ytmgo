@@ -24,7 +24,8 @@ type UIModel struct {
 	barMenu, sheetMenu, accountMenu                             bool            // which app menu shows
 	selection                                                   nativeSelection // songs chosen on this page
 	selectDrag                                                  nativeSelectDrag
-	collectionDownloads                                         map[string]string // route → its download notice while preparing or failed
+	confirm                                                     *nativeConfirmation // a question asked before an action that can't be undone
+	collectionDownloads                                         map[string]string   // route → its download notice while preparing or failed
 	Page                                                        catalog.Page
 	Current                                                     catalog.Item
 	LibraryItems                                                []catalog.Item
@@ -285,6 +286,7 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 		}
 	}
 	nativeSheets(c, m, a, p, width, height)
+	nativeConfirm(c, m, a, p, width)
 	if m.ShortcutRecording && !m.Settings && a.CancelShortcut != nil {
 		a.CancelShortcut()
 	}

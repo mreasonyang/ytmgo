@@ -185,6 +185,8 @@
   "nativeAccountError": "未能完成账号请求，请稍后重试。",
   "nativeAccountSessionError": "账号会话已失效，请重新连接账号。",
   "nativeSignOutConfirm": "退出 ytmGO，并从这台设备移除该账号的登录信息和已下载歌曲？",
+  "nativeSignOutTitle": "退出 ytmGO 登录",
+  "nativeSignOutButton": "退出登录",
   "nativeAbout": "MyGo 原生界面与音频播放，曲库由 YouTube Music 提供。",
   "nativeEmptyResults": "没有找到音乐，|换个关键词|试试。",
   "nativeAddToQueue": "添加到队列",

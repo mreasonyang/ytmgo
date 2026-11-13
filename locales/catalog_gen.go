@@ -2597,6 +2597,26 @@ func (msgs Messages) NativeSignOutConfirm() string {
 	return Catalog.Format(msgs.locale, "nativeSignOutConfirm", nil)
 }
 
+// NativeSignOutTitle says "Sign out of ytmGO"
+// in the language the app shows.
+func NativeSignOutTitle() string { return In(i18n.Locale()).NativeSignOutTitle() }
+
+// NativeSignOutTitle says "Sign out of ytmGO"
+// in the language of msgs.
+func (msgs Messages) NativeSignOutTitle() string {
+	return Catalog.Format(msgs.locale, "nativeSignOutTitle", nil)
+}
+
+// NativeSignOutButton says "Sign out"
+// in the language the app shows.
+func NativeSignOutButton() string { return In(i18n.Locale()).NativeSignOutButton() }
+
+// NativeSignOutButton says "Sign out"
+// in the language of msgs.
+func (msgs Messages) NativeSignOutButton() string {
+	return Catalog.Format(msgs.locale, "nativeSignOutButton", nil)
+}
+
 // NativeAbout says "Native MyGo interface and audio playback. Music catalogue provided by YouTube Music."
 // in the language the app shows.
 func NativeAbout() string { return In(i18n.Locale()).NativeAbout() }

@@ -65,3 +65,17 @@ func TestRemoveAllDownloads(t *testing.T) {
 		t.Fatalf("%d downloads left, notice %q", n, app.model.DownloadNotice)
 	}
 }
+
+// newTestDownloads is an offline library in a temporary directory.
+func newTestDownloads(t *testing.T) *downloads.Manager {
+	t.Helper()
+	offline := func(context.Context, string, audioquality.Quality) (downloads.Remote, error) {
+		return downloads.Remote{}, context.Canceled
+	}
+	library, err := downloads.New(t.Context(), t.TempDir(), nil, offline, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(library.Close)
+	return library
+}

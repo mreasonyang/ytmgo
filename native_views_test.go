@@ -473,9 +473,12 @@ func TestNativeKeyboardAndContextMenu(t *testing.T) {
 	if m.Panel {
 		t.Fatal("Escape did not close panel")
 	}
+	// Wide, Cmd-L shows the library panel (unfolded), not the page.
+	m.SidebarCollapsed = true
+	route := m.Route
 	tt.Key(ui.Cmd, ui.KeyL)
-	if m.Route != "library" {
-		t.Fatal("Cmd-L did not navigate to library")
+	if m.SidebarCollapsed || m.Route != route {
+		t.Fatalf("Cmd-L: folded %v, route %q; want the panel shown, the page kept", m.SidebarCollapsed, m.Route)
 	}
 	tt.Key(ui.Cmd|ui.Shift, ui.KeyH)
 	if m.Route != "home" {

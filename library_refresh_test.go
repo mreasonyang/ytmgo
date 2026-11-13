@@ -77,11 +77,12 @@ func TestLibraryRefreshKeepsExtentAndFilter(t *testing.T) {
 	a := &desktop{ctx: context.Background(), historyIndex: -1, model: *m, libraryPage: &old, libraryRequest: request}
 	actions.LoadMore, actions.Navigate = nil, a.navigate
 	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, &a.model, actions) }, 1280, 820)
-	for _, key := range []string{"shellFilterAlbums", "shellNavLibrary"} {
-		if err := tt.Click(actions.Tr(key)); err != nil {
-			t.Fatal(err)
-		}
+	if err := tt.Click(actions.Tr("shellFilterAlbums")); err != nil {
+		t.Fatal(err)
 	}
+	// Wide, the panel is the library; the page is reached by route.
+	a.navigate("library")
+	tt.Frame()
 	source := recoverySource{
 		first: func(context.Context, pageLocation) (catalog.Page, error) {
 			return catalog.Page{Items: items[:25], Shelves: old.Shelves[:1], Continuation: "second"}, nil

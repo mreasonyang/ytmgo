@@ -26,6 +26,7 @@ type UIModel struct {
 	selectDrag                                                  nativeSelectDrag
 	confirm                                                     *nativeConfirmation // a question asked before an action that can't be undone
 	About                                                       bool                // About ytmGO shows
+	showLibrary                                                 bool                // View › Library asked to show the library (nativeShowLibrary)
 	collectionDownloads                                         map[string]string   // route → its download notice while preparing or failed
 	Page                                                        catalog.Page
 	Current                                                     catalog.Item
@@ -245,6 +246,10 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 	}
 	c.SetTheme(nativeTheme(dark))
 	c.Root().ObserveInput(nativeReleaseScrollGrabs)
+	if m.showLibrary {
+		m.showLibrary = false
+		nativeShowLibrary(c, m, a)
+	}
 	// A choice of songs belongs to its page: leaving it lets them go.
 	if m.selection.route != "" && m.selection.route != nativeQueueScope && m.selection.route != m.Route {
 		m.selection.clear()
@@ -1104,10 +1109,13 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 				libraryIcon = "library-fill"
 			}
 			if full {
+				// The panel is the library: its heading folds it to the rail,
+				// as Spotify's does, rather than opening the same list again
+				// as a page beside it.
 				ui.Row(c).Height(56).Shrink(0).Padding(8, 12).Gap(8).AlignItems(ui.Center).Children(func() {
-					b := ui.ButtonBase(c.Key("library-title")).Grow(1).MinWidth(0).Height(40).PaddingX(8).Gap(12).Justify(ui.Start).Radius(tokenRadiusControl).Label(a.Tr("shellNavLibrary")).TextColor(p.secondary)
-					nativeTip(c, b, a.Tr("shellNavLibrary"), p)
-					if m.Route == "library" || b.Hovered() {
+					b := ui.ButtonBase(c.Key("library-title")).MinWidth(0).Shrink(1).Height(40).PaddingX(8).Gap(12).Justify(ui.Start).Radius(tokenRadiusControl).Label(a.Tr("shellSidebarCollapse")).TextColor(p.secondary)
+					nativeTip(c, b, a.Tr("shellSidebarCollapse"), p)
+					if b.Hovered() {
 						b.TextColor(p.text)
 					}
 					b.Children(func() {
@@ -1115,30 +1123,32 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 						ui.Text(c, a.Tr("shellLibraryTitle")).FontSize(tokenSizeBody).FontWeight(700).MaxLines(1).Ellipsis("…")
 					})
 					if b.Clicked() {
-						a.Navigate("library")
-					}
-					if nativeIconButton(c, "sidebar", a.Tr("shellSidebarCollapse"), p, false, 32).Clicked() {
 						m.SidebarCollapsed = true
 					}
 				})
 			} else {
 				rail := ui.Column(c).Shrink(0).Padding(12, 0, 4).Gap(4).AlignItems(ui.Center)
 				if width > 1180 {
-					// Both buttons, in the full header's height: 8 + 40 + 4 + 40.
-					rail.Height(headerHeight).Padding(8, 0, 4)
+					rail.Height(headerHeight) // the full header's, so the rows hold still
 				}
 				rail.Children(func() {
+					// Folded, the library icon unfolds the panel; where the
+					// window has no room for it (the rail alone), it opens the
+					// Library page, the only view of the library with names.
+					label := a.Tr("shellNavLibrary")
 					if width > 1180 {
-						if nativeIconButton(c, "sidebar", a.Tr("shellSidebarExpand"), p, false, 40).Clicked() {
-							m.SidebarCollapsed = false
-						}
+						label = a.Tr("shellSidebarExpand")
 					}
-					b := nativeIconButton(c, libraryIcon, a.Tr("shellNavLibrary"), p, false, 40)
+					b := nativeIconButton(c, libraryIcon, label, p, false, 40)
 					if m.Route == "library" {
 						b.Selected(true).Background(ui.Transparent).TextColor(p.text)
 					}
 					if b.Clicked() {
-						a.Navigate("library")
+						if width > 1180 {
+							m.SidebarCollapsed = false
+						} else {
+							a.Navigate("library")
+						}
 					}
 				})
 			}
@@ -3543,6 +3553,18 @@ func (m *UIModel) focusSearch() {
 	m.floating = nativeFloatState{}
 }
 
+// nativeShowLibrary is Cmd+L and View › Library: where the window has room
+// for the library panel, it shows the panel, unfolded; elsewhere it opens
+// the Library page, the only full view of the library there.
+func nativeShowLibrary(c *ui.Context, m *UIModel, a ViewActions) {
+	m.Immersive = false
+	if width, _ := c.Size(); width > 1180 {
+		m.SidebarCollapsed = false
+		return
+	}
+	a.Navigate("library")
+}
+
 func nativeKeyboard(c *ui.Context, m *UIModel, a ViewActions) {
 	if m.ShortcutRecording {
 		return
@@ -3581,8 +3603,7 @@ func nativeKeyboard(c *ui.Context, m *UIModel, a ViewActions) {
 		a.Navigate("home")
 	}
 	if c.Shortcut(ui.Cmd, ui.KeyL) {
-		m.Immersive = false
-		a.Navigate("library")
+		nativeShowLibrary(c, m, a)
 	}
 	if c.Shortcut(0, ui.KeyEscape) {
 		if m.VideoFullScreen {

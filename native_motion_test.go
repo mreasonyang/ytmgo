@@ -736,3 +736,41 @@ func TestLibraryRowsHoldStillToTheRailAndBack(t *testing.T) {
 		}
 	}
 }
+
+// Wide, the library panel is the library: its heading folds it to the rail
+// and the rail's icon unfolds it, rather than opening the same list as a
+// page. Where the window has only the rail, the icon and Cmd-L open the
+// Library page, the only view of it with names.
+func TestLibraryHeadingFoldsThePanel(t *testing.T) {
+	m, a := nativeViewFixture()
+	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
+	tt.Frame()
+	route := m.Route
+	if err := tt.Click(a.Tr("shellSidebarCollapse")); err != nil {
+		t.Fatal(err)
+	}
+	if !m.SidebarCollapsed || m.Route != route {
+		t.Fatalf("the heading: folded %v, route %q", m.SidebarCollapsed, m.Route)
+	}
+	if err := tt.Click(a.Tr("shellSidebarExpand")); err != nil {
+		t.Fatal(err)
+	}
+	if m.SidebarCollapsed || m.Route != route {
+		t.Fatalf("the rail's icon: folded %v, route %q", m.SidebarCollapsed, m.Route)
+	}
+	if _, ok := tt.Find(a.Tr("shellNavLibrary")); ok {
+		t.Fatal("a wide window still offers the Library page from the panel")
+	}
+
+	m, a = nativeViewFixture()
+	tt = ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1000, 900)
+	tt.Frame()
+	if err := tt.Click(a.Tr("shellNavLibrary")); err != nil || m.Route != "library" {
+		t.Fatalf("the rail alone: its icon opened %q (%v), want the Library page", m.Route, err)
+	}
+	m.Route = "home"
+	tt.Key(ui.Cmd, ui.KeyL)
+	if m.Route != "library" {
+		t.Fatalf("the rail alone: Cmd-L opened %q, want the Library page", m.Route)
+	}
+}

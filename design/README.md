@@ -503,6 +503,12 @@ tooltip. The website uses icons only on actions and platform names.
   rows all come from one album (an album's own page) drops the Album column. The number becomes a play glyph
   on hover and an equalizer while playing; the title turns coral. A
   downloaded song carries the filled download glyph, 12, before its artist.
+- **Library panel:** the library itself, where the window has room for it:
+  its heading ("Your Library") folds it to the rail and the rail's icon
+  unfolds it, as Spotify's do, and Cmd+L shows it; none of them opens the
+  same list again as a page beside it. The Library page is for windows
+  without the full panel: the rail alone (its icon opens it) and compact
+  (the Library tab).
 - **Library row:** 64 high, 48 art (round for artists), title over
   "kind · owner". The open collection is washed and its title is `text`
   (navigation state isn't coral). **Downloads** is the list's first row

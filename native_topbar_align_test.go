@@ -22,8 +22,11 @@ func TestSearchFieldLinesUpWithTheTransport(t *testing.T) {
 				}
 				tt.Frame()
 				home, explore := rect(t, tt, a.Tr("shellNavHome")), rect(t, tt, a.Tr("shellNavExplore"))
-				// The field ends 8 of padding and 2 of border past Explore.
-				left, right := home.X+home.W+8, explore.X+explore.W+8+2
+				left, right := home.X+home.W+8, explore.X-8
+				// Home and Explore stand either side: the group balances too.
+				if mid := (home.X + explore.X + explore.W) / 2; math.Abs(float64(mid-(left+right)/2)) > 0.5 {
+					t.Fatalf("Home %v and Explore %v aren't balanced about the field %.1f–%.1f", home, explore, left, right)
+				}
 				column := rect(t, tt, a.Tr("shellPlayerControls"))
 				play := rect(t, tt, a.Tr("shellPause"))
 				if math.Abs(float64((left+right)/2-(play.X+play.W/2))) > 0.5 || math.Abs(float64(right-left-nativeCenterColumn(float32(w)))) > 0.5 {
@@ -43,7 +46,7 @@ func TestSearchFieldNarrowsBesideWindowControls(t *testing.T) {
 	tt.SetTitleBar(ui.TitleBar{Height: nativeTopbarHeight, Right: 138})
 	tt.Frame()
 	home, explore := rect(t, tt, a.Tr("shellNavHome")), rect(t, tt, a.Tr("shellNavExplore"))
-	left, right := home.X+home.W+8, explore.X+explore.W+8+2
+	left, right := home.X+home.W+8, explore.X-8
 	play := rect(t, tt, a.Tr("shellPause"))
 	if math.Abs(float64((left+right)/2-(play.X+play.W/2))) > 0.5 {
 		t.Fatalf("search %.1f–%.1f is off the play button's centre %.1f", left, right, play.X+play.W/2)

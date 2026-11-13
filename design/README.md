@@ -296,7 +296,8 @@ design guard and the website's lint fail on an off-grid value.
 
 One middle column runs from top to bottom: the global bar's search field
 is the player's transport column (38 % of the window, at most 720), centred
-over it in the window, Home hanging to its left; the window controls'
+over it in the window, Home and Explore (48 round buttons) either side,
+so the group balances on the play button; the window controls'
 insets go to the side groups, never the middle. Short of room beside the
 controls, the field narrows, still centred.
 

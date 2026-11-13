@@ -674,19 +674,23 @@ func nativeTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wid
 				a.Forward()
 			}
 		})
-		// The search field spans the player's transport column, centred over
-		// it in the window; Home hangs to its left, balanced on the right.
+		// The three destinations, centred over the player: the search field
+		// spans its transport column, Home and Explore stand either side of
+		// it, so the group balances on the play button.
 		ui.Row(c).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
-			home := m.Route == "home"
-			icon := "home"
-			if home {
-				icon = "home-fill"
+			for _, d := range []struct{ route, icon, key string }{{"home", "home", "shellNavHome"}, {"", "", ""}, {"explore", "explore", "shellNavExplore"}} {
+				if d.route == "" {
+					nativeSearchField(c, m, a, p, 48).Width(column).Shrink(0)
+					continue
+				}
+				here, icon := m.Route == d.route, d.icon
+				if here {
+					icon += "-fill"
+				}
+				if nativeCircleButton(c, icon, a.Tr(d.key), p, 48, here).Clicked() {
+					a.Navigate(d.route)
+				}
 			}
-			if nativeCircleButton(c, icon, a.Tr("shellNavHome"), p, 48, home).Clicked() {
-				a.Navigate("home")
-			}
-			nativeSearchField(c, m, a, p, 48, true).Width(column).Shrink(0)
-			ui.Box(c).Width(48).Shrink(0)
 		})
 		ui.Row(c).Width(side).Shrink(0).MinWidth(0).PaddingEnd(right).Gap(8).AlignItems(ui.Center).Justify(ui.End).Children(func() {
 			if nativeIconButton(c, "settings", a.Tr("shellSettings"), p, m.Settings, 32).Clicked() {
@@ -718,7 +722,7 @@ func nativeCompactTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalet
 		if stacked {
 			ui.Spacer(c)
 		} else {
-			nativeSearchField(c, m, a, p, 44, false).Grow(1)
+			nativeSearchField(c, m, a, p, 44).Grow(1)
 		}
 		if nativeIconButton(c, "settings", a.Tr("shellSettings"), p, m.Settings, 44).Clicked() {
 			m.Settings = !m.Settings
@@ -729,14 +733,14 @@ func nativeCompactTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalet
 	})
 	if stacked {
 		ui.Row(c).Shrink(0).Padding(0, 8, 8).Children(func() {
-			nativeSearchField(c, m, a, p, 44, false).Grow(1)
+			nativeSearchField(c, m, a, p, 44).Grow(1)
 		})
 	}
 }
 
-// nativeSearchField is the persistent search pill. On desktop it ends with the
-// Explore button, where Spotify places Browse.
-func nativeSearchField(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, h float32, explore bool) ui.Element {
+// nativeSearchField is the persistent search pill. On desktop, Explore stands
+// beside it, as Home does on its other side (nativeTopbar).
+func nativeSearchField(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, h float32) ui.Element {
 	field := ui.Row(c).MinWidth(0).Height(h).PaddingStart(12).PaddingEnd(8).Gap(8).Radius(h/2).Background(p.raised).Border(2, ui.Transparent).AlignItems(ui.Center)
 	if field.FocusWithin() {
 		field.BorderColor(p.text)
@@ -752,21 +756,6 @@ func nativeSearchField(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 		}
 		if input.Submitted() && strings.TrimSpace(m.Query) != "" {
 			a.Search(m.Query)
-		}
-		if explore {
-			ui.Box(c).Size(1, 24).Shrink(0).Background(p.line)
-			active := m.Route == "explore"
-			icon := "explore"
-			if active {
-				icon = "explore-fill"
-			}
-			b := nativeIconButton(c, icon, a.Tr("shellNavExplore"), p, false, 36)
-			if active {
-				b.Selected(true).Background(ui.Transparent).TextColor(p.text)
-			}
-			if b.Clicked() {
-				a.Navigate("explore")
-			}
 		}
 	})
 }

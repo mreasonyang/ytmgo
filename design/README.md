@@ -568,7 +568,9 @@ tooltip. The website uses icons only on actions and platform names.
   one inverted button; Cancel, Esc and a click outside keep everything. About ytmGO
   is the same dialog (Help menu and macOS's app menu alike): the icon, the
   wordmark with its coral "GO", the build, what the app is, one inverted OK.
-  The update window is MyGo's updater, which keeps its own look.
+  The update window (MyGo's updater, a copy in `internal/updater`) takes
+  the same look: `surface`, the release notes on `raised` with a hairline,
+  pill buttons with Install inverted, spacing on the grid.
 - **Menus:** a song's menu (right-click, More) and the account's are the
   app's own, drawn in the window as its other popovers: `raised`, a
   hairline, the `popover` elevation, radius `control`, 4 in; items 36 high,

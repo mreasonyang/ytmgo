@@ -11,8 +11,9 @@ import (
 	"time"
 
 	"github.com/egoist/mygo"
-	"github.com/egoist/mygo/plugins/updater"
-	updatenative "github.com/egoist/mygo/plugins/updater/native"
+	"github.com/egoist/mygo/ui"
+	"ytmgo/internal/updater"
+	updatenative "ytmgo/internal/updater/native"
 	"ytmgo/locales"
 )
 
@@ -22,7 +23,25 @@ func setupUpdater() {
 	if buildKind != "release" {
 		return
 	}
-	updaterSetup.Do(func() { mygo.Use(updatenative.Plugin) })
+	updaterSetup.Do(func() {
+		updatenative.Style = updateWindowLook
+		mygo.Use(updatenative.Plugin)
+	})
+}
+
+// updateWindowLook is the app's look for the update window (guidebook §11,
+// dialogs): its theme, surface, the release notes on raised, pill buttons
+// with the default one inverted.
+func updateWindowLook(dark bool) updatenative.Look {
+	p := palette(dark)
+	return updatenative.Look{
+		Theme: nativeTheme(dark), Background: p.surface, Panel: p.raised, Line: p.line,
+		Primary: p.text, PrimaryText: p.base, PrimaryOver: p.inverseHover,
+		Button: p.input, ButtonOver: p.highlight,
+		Title: tokenSizeBody, Small: tokenSizeMeta,
+		PillHeight: tokenProductPill, PillRadius: tokenRadiusPill, NotesRadius: tokenRadiusControl,
+		Press: func(e ui.Element) { nativePress(e) },
+	}
 }
 
 func applicationVersion() string {

@@ -1176,6 +1176,7 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 		scroll := ui.Scroll(c.Key("library-scroll")).Grow(1).MinHeight(0).Padding(0, pad, 8).Label(a.Tr("shellLibraryRegion"))
 		clipped := nativeArtworkViewport(c, a, scroll)
 		nativeScrollEdges(c, scroll, clipped.viewportScroll, p, p.surface)
+		nativeRubberband(c, scroll, clipped.viewportScroll)
 		scroll.Children(func() {
 			// Downloads is the library's own collection: first in the list,
 			// as Liked Music leads YouTube's, while no filter narrows it
@@ -1374,6 +1375,7 @@ func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, co
 	// The page has no fixed header (its own scrolls away), so its top is
 	// the panel's edge; its foot fades, as the library's beside it does.
 	nativeScrollbar(c, scroll, scrolled, p, nativeFadeBelow(scrolled, p.surface))
+	nativeRubberband(c, scroll, scrolled)
 	nativeLoadNearEnd(c, scroll, m, a)
 	scroll.Children(func() {
 		if strings.HasPrefix(m.Route, "browse:") && m.Page.Title != "" {

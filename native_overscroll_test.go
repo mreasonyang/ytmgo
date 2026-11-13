@@ -59,3 +59,27 @@ func TestStretchGivesWayToScrollingBack(t *testing.T) {
 		t.Fatalf("after the stretch, scrolling back scrolled the page to %.1f, want 60", y)
 	}
 }
+
+// Stretched at the end while the next page loads, the pull goes on into
+// the songs that came in, rather than stretching further.
+func TestStretchGivesWayToContentThatArrives(t *testing.T) {
+	m, a := nativeViewFixture()
+	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 640)
+	tt.Frame()
+	tt.Scroll(800, 300, 0, 1e6)
+	tt.Frame()
+	end := m.pageScroll.MaxY
+	tt.Scroll(800, 300, 0, 80) // past the end: a stretch
+	tt.Frame()
+	m.Page.Shelves = append(m.Page.Shelves, m.Page.Shelves...)
+	tt.Frame()
+	tt.Frame()
+	if m.pageScroll.MaxY <= end {
+		t.Fatal("the page did not grow")
+	}
+	tt.Scroll(800, 300, 0, 100)
+	tt.Frame()
+	if y := m.pageScroll.Y; math.Abs(float64(y-(end+100))) > 0.5 {
+		t.Fatalf("after more came in, the pull scrolled the page to %.1f, want %.1f", y, end+100)
+	}
+}

@@ -81,6 +81,11 @@ func nativeRubberband(c *ui.Context, scroll ui.Element, st *ui.ScrollState) {
 			return false
 		}
 		dy := ev.DY
+		if o.raw > 0 && st.Y < st.MaxY-0.5 || o.raw < 0 && st.Y > 0.5 {
+			// The content grew under a stretch (the next page came in
+			// below): there is room again, and the scroll goes on into it.
+			*o = nativeOverscroll{}
+		}
 		if o.raw == 0 && !(dy < 0 && st.Y <= 0 || dy > 0 && st.Y >= st.MaxY) {
 			return false // within the content: the container scrolls
 		}

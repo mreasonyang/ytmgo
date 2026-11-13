@@ -36,7 +36,7 @@ func nativeDownloadsEntry(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 	b := ui.ButtonBase(c.Key("downloads-entry")).Height(tokenProductLibraryRow).Padding(8).Gap(12).Radius(tokenRadiusControl).Justify(ui.Start).Label(label)
 	nativeTip(c, b, label, p)
 	if !full {
-		b.Padding(4).Justify(ui.Center)
+		b.Padding(8, 4).Justify(ui.Center) // a full row's height
 	}
 	if m.Route == "downloads" {
 		b.Selected(true).Background(p.press).TextColor(p.text)

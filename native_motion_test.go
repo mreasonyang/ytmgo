@@ -708,3 +708,31 @@ func immersiveJourney(t *testing.T, panel bool) {
 	journey("into immersive mode")
 	journey("out of immersive mode")
 }
+
+// To the rail and back, the library's rows hold still: the rail's rows and
+// header keep the full ones' heights, and the panel's edge passes over its
+// contents rather than its layout switching (or its chips wrapping) part way.
+func TestLibraryRowsHoldStillToTheRailAndBack(t *testing.T) {
+	m, a := nativeViewFixture()
+	m.SignedIn, m.LibraryLoaded = true, true
+	m.LibraryItems = []catalog.Item{
+		{Title: "Liked music", Kind: "playlist", BrowseID: "VLLM"},
+		{Title: "Discovery", Artist: "Daft Punk", Kind: "album", BrowseID: "album-1"},
+		{Title: "Daft Punk", Kind: "artist", BrowseID: "artist-1"},
+	}
+	tt := motionTester(m, a, 1440, 900)
+	tt.Frame()
+	row := func() float32 { return rect(t, tt, nativeItemLabel(m.LibraryItems[1])).Y }
+	rest := row()
+	for _, collapse := range []bool{true, false} {
+		m.SidebarCollapsed = collapse
+		tt.Frame()
+		for i := 0; i < 6; i++ {
+			if y := row(); math.Abs(float64(y-rest)) > 0.5 {
+				t.Fatalf("collapse %v, frame %d: the row is at %.1f, was %.1f", collapse, i, y, rest)
+			}
+			tt.Advance(tokenMotionBase / 4)
+			tt.Frame()
+		}
+	}
+}

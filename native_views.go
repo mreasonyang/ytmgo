@@ -949,6 +949,13 @@ func nativeResultLabel(item catalog.Item, m *UIModel, a ViewActions) string {
 	return nativeItemLabel(item)
 }
 
+// nativeLibraryResize is when the library's layout last changed between
+// full and the rail, for the time it resizes.
+type nativeLibraryResize struct {
+	full  bool
+	since time.Time
+}
+
 // nativeLibraryPanelWidth is the library's width in a window width wide:
 // the full panel, or the rail on narrower windows and when collapsed.
 func nativeLibraryPanelWidth(m *UIModel, width float32) float32 {
@@ -1046,138 +1053,180 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 	}
 	panel := ui.Column(c).Width(panelWidth).Shrink(0).MinHeight(0).Background(p.surface).Radius(tokenRadiusPanel).Clip().Transition(library)
 	filter := ui.Local(panel, "library-filter", func() string { return "" })
+	// While it narrows to the rail or widens back, its rows hold still:
+	// narrowing keeps the full layout until it has gone, clipped by the
+	// panel (rather than turning to the rail at once in a wide panel), and
+	// either way the chips stay on one line rather than wrapping as the
+	// width passes through narrow ones and pushing the list down.
+	resize := ui.Local(panel, "library-resize", func() nativeLibraryResize { return nativeLibraryResize{full: full} })
+	now := c.Now()
+	if resize.full != full {
+		resize.full, resize.since = full, now
+	}
+	resizing := false
+	if left := library.Duration - now.Sub(resize.since); !resize.since.IsZero() && left > 0 && !m.instantMotion {
+		resizing = true
+		c.After(left)
+	}
+	if resizing && !full && width > 1180 {
+		full = true
+	}
+	var items []catalog.Item
+	if m.SignedIn || m.LibraryCached {
+		items = m.LibraryItems
+	}
+	present := map[string]bool{}
+	for _, item := range items {
+		present[nativeLibraryKind(item)] = true
+	}
+	kinds := 0
+	for _, f := range nativeLibraryFilters {
+		if present[f.kind] {
+			kinds++
+		}
+	}
+	// The rail's header is as tall as the full one with its chips, so the
+	// rows stay where they are as it changes.
+	headerHeight := float32(56)
+	if kinds > 1 && len(items) > 0 {
+		headerHeight += tokenProductChip + 8
+	}
 	panel.Children(func() {
-		libraryIcon := "library"
-		if m.Route == "library" {
-			libraryIcon = "library-fill"
+		// Resizing, the contents keep the full width and the panel's edge
+		// passes over them, rather than their text shrinking to ellipses.
+		body := ui.Column(c).Grow(1).MinHeight(0)
+		if resizing && full {
+			body.Width(nativeLibraryWidth).Shrink(0)
 		}
-		if full {
-			ui.Row(c).Height(56).Shrink(0).Padding(8, 12).Gap(8).AlignItems(ui.Center).Children(func() {
-				b := ui.ButtonBase(c.Key("library-title")).Grow(1).MinWidth(0).Height(40).PaddingX(8).Gap(12).Justify(ui.Start).Radius(tokenRadiusControl).Label(a.Tr("shellNavLibrary")).TextColor(p.secondary)
-				nativeTip(c, b, a.Tr("shellNavLibrary"), p)
-				if m.Route == "library" || b.Hovered() {
-					b.TextColor(p.text)
-				}
-				b.Children(func() {
-					ui.Icon(c, nativeIcons[libraryIcon]).Size(24, 24)
-					ui.Text(c, a.Tr("shellLibraryTitle")).FontSize(tokenSizeBody).FontWeight(700).MaxLines(1).Ellipsis("…")
+		body.Children(func() {
+			libraryIcon := "library"
+			if m.Route == "library" {
+				libraryIcon = "library-fill"
+			}
+			if full {
+				ui.Row(c).Height(56).Shrink(0).Padding(8, 12).Gap(8).AlignItems(ui.Center).Children(func() {
+					b := ui.ButtonBase(c.Key("library-title")).Grow(1).MinWidth(0).Height(40).PaddingX(8).Gap(12).Justify(ui.Start).Radius(tokenRadiusControl).Label(a.Tr("shellNavLibrary")).TextColor(p.secondary)
+					nativeTip(c, b, a.Tr("shellNavLibrary"), p)
+					if m.Route == "library" || b.Hovered() {
+						b.TextColor(p.text)
+					}
+					b.Children(func() {
+						ui.Icon(c, nativeIcons[libraryIcon]).Size(24, 24)
+						ui.Text(c, a.Tr("shellLibraryTitle")).FontSize(tokenSizeBody).FontWeight(700).MaxLines(1).Ellipsis("…")
+					})
+					if b.Clicked() {
+						a.Navigate("library")
+					}
+					if nativeIconButton(c, "sidebar", a.Tr("shellSidebarCollapse"), p, false, 32).Clicked() {
+						m.SidebarCollapsed = true
+					}
 				})
-				if b.Clicked() {
-					a.Navigate("library")
-				}
-				if nativeIconButton(c, "sidebar", a.Tr("shellSidebarCollapse"), p, false, 32).Clicked() {
-					m.SidebarCollapsed = true
-				}
-			})
-		} else {
-			ui.Column(c).Shrink(0).Padding(12, 0, 4).Gap(4).AlignItems(ui.Center).Children(func() {
+			} else {
+				rail := ui.Column(c).Shrink(0).Padding(12, 0, 4).Gap(4).AlignItems(ui.Center)
 				if width > 1180 {
-					if nativeIconButton(c, "sidebar", a.Tr("shellSidebarExpand"), p, false, 40).Clicked() {
-						m.SidebarCollapsed = false
-					}
+					// Both buttons, in the full header's height: 8 + 40 + 4 + 40.
+					rail.Height(headerHeight).Padding(8, 0, 4)
 				}
-				b := nativeIconButton(c, libraryIcon, a.Tr("shellNavLibrary"), p, false, 40)
-				if m.Route == "library" {
-					b.Selected(true).Background(ui.Transparent).TextColor(p.text)
-				}
-				if b.Clicked() {
-					a.Navigate("library")
-				}
-			})
-		}
-		var items []catalog.Item
-		if m.SignedIn || m.LibraryCached {
-			items = m.LibraryItems
-		}
-		if full && m.Route != "library" {
-			nativeLibraryCacheStatus(c, m, a, p)
-		}
-		if len(items) == 0 {
-			// Downloads still leads an empty library: signed out, its songs
-			// are all there is.
-			if nativeDownloadsShown(m, a) {
-				pad := float32(8)
-				if !full {
-					pad = 4
-				}
-				ui.Column(c).Shrink(0).Padding(0, pad, 8).Children(func() { nativeDownloadsEntry(c, m, a, p, full) })
-			}
-			switch {
-			case m.SignedIn && !m.LibraryLoaded && m.LibraryErrorKey == "":
-				nativeLibrarySkeleton(c, a, p, full)
-			case full:
-				nativeLibraryPrompt(c, m, a, p)
-			}
-			return
-		}
-		present := map[string]bool{}
-		for _, item := range items {
-			present[nativeLibraryKind(item)] = true
-		}
-		if !present[*filter] {
-			*filter = ""
-		}
-		kinds := 0
-		for _, f := range nativeLibraryFilters {
-			if present[f.kind] {
-				kinds++
-			}
-		}
-		// Chips appear only when they separate at least two kinds of item.
-		if full && kinds > 1 {
-			// Wrapped: a language with longer names (アーティスト) takes a
-			// second line rather than cutting a chip at the panel's edge.
-			ui.Row(c).Shrink(0).Padding(0, 16, 8).Gap(8).Wrap().AlignItems(ui.Center).Children(func() {
-				if *filter != "" {
-					clear := nativeIconButton(c, "close", a.Tr("shellFilterClear"), p, false, 32).Background(p.hover)
-					if clear.Clicked() {
-						*filter = ""
-					}
-				}
-				for _, f := range nativeLibraryFilters {
-					if !present[f.kind] || (*filter != "" && *filter != f.kind) {
-						continue
-					}
-					if nativeChip(c, a.Tr(f.key), p, *filter == f.kind).Clicked() {
-						if *filter == f.kind {
-							*filter = ""
-						} else {
-							*filter = f.kind
+				rail.Children(func() {
+					if width > 1180 {
+						if nativeIconButton(c, "sidebar", a.Tr("shellSidebarExpand"), p, false, 40).Clicked() {
+							m.SidebarCollapsed = false
 						}
 					}
+					b := nativeIconButton(c, libraryIcon, a.Tr("shellNavLibrary"), p, false, 40)
+					if m.Route == "library" {
+						b.Selected(true).Background(ui.Transparent).TextColor(p.text)
+					}
+					if b.Clicked() {
+						a.Navigate("library")
+					}
+				})
+			}
+			if full && m.Route != "library" {
+				nativeLibraryCacheStatus(c, m, a, p)
+			}
+			if len(items) == 0 {
+				// Downloads still leads an empty library: signed out, its songs
+				// are all there is.
+				if nativeDownloadsShown(m, a) {
+					pad := float32(8)
+					if !full {
+						pad = 4
+					}
+					ui.Column(c).Shrink(0).Padding(0, pad, 8).Children(func() { nativeDownloadsEntry(c, m, a, p, full) })
+				}
+				switch {
+				case m.SignedIn && !m.LibraryLoaded && m.LibraryErrorKey == "":
+					nativeLibrarySkeleton(c, a, p, full)
+				case full:
+					nativeLibraryPrompt(c, m, a, p)
+				}
+				return
+			}
+			if !present[*filter] {
+				*filter = ""
+			}
+			// Chips appear only when they separate at least two kinds of item.
+			if full && kinds > 1 {
+				// Wrapped: a language with longer names (アーティスト) takes a
+				// second line rather than cutting a chip at the panel's edge;
+				// not while the panel resizes, which would push the list down.
+				chips := ui.Row(c).Shrink(0).Padding(0, 16, 8).Gap(8).AlignItems(ui.Center)
+				if !resizing {
+					chips.Wrap()
+				}
+				chips.Children(func() {
+					if *filter != "" {
+						clear := nativeIconButton(c, "close", a.Tr("shellFilterClear"), p, false, 32).Background(p.hover)
+						if clear.Clicked() {
+							*filter = ""
+						}
+					}
+					for _, f := range nativeLibraryFilters {
+						if !present[f.kind] || (*filter != "" && *filter != f.kind) {
+							continue
+						}
+						if nativeChip(c, a.Tr(f.key), p, *filter == f.kind).Clicked() {
+							if *filter == f.kind {
+								*filter = ""
+							} else {
+								*filter = f.kind
+							}
+						}
+					}
+				})
+			}
+			pad := float32(8)
+			if !full {
+				pad = 4
+			}
+			// Filters and status rows disappear in rail mode. Keep the list's
+			// identity so its thumbnails stay in their rows during the resize.
+			scroll := ui.Scroll(c.Key("library-scroll")).Grow(1).MinHeight(0).Padding(0, pad, 8).Label(a.Tr("shellLibraryRegion"))
+			clipped := nativeArtworkViewport(c, a, scroll)
+			nativeScrollEdges(c, scroll, clipped.viewportScroll, p, p.surface)
+			scroll.Children(func() {
+				// Downloads is the library's own collection: first in the list,
+				// as Liked Music leads YouTube's, while no filter narrows it
+				// (it is none of their kinds).
+				if *filter == "" && nativeDownloadsShown(m, a) {
+					nativeDownloadsEntry(c, m, a, p, full)
+				}
+				occurrences := make(map[string]int, len(items))
+				for _, item := range items {
+					if *filter != "" && nativeLibraryKind(item) != *filter {
+						continue
+					}
+					key := item.Key()
+					rowKey := key
+					if n := occurrences[key]; n > 0 {
+						// A continuation can overlap a previous page.
+						rowKey = fmt.Sprintf("%s#%d", key, n)
+					}
+					occurrences[key]++
+					nativeLibraryRow(c.Key(rowKey), item, m, clipped, p, full)
 				}
 			})
-		}
-		pad := float32(8)
-		if !full {
-			pad = 4
-		}
-		// Filters and status rows disappear in rail mode. Keep the list's
-		// identity so its thumbnails stay in their rows during the resize.
-		scroll := ui.Scroll(c.Key("library-scroll")).Grow(1).MinHeight(0).Padding(0, pad, 8).Label(a.Tr("shellLibraryRegion"))
-		clipped := nativeArtworkViewport(c, a, scroll)
-		nativeScrollEdges(c, scroll, clipped.viewportScroll, p, p.surface)
-		scroll.Children(func() {
-			// Downloads is the library's own collection: first in the list,
-			// as Liked Music leads YouTube's, while no filter narrows it
-			// (it is none of their kinds).
-			if *filter == "" && nativeDownloadsShown(m, a) {
-				nativeDownloadsEntry(c, m, a, p, full)
-			}
-			occurrences := make(map[string]int, len(items))
-			for _, item := range items {
-				if *filter != "" && nativeLibraryKind(item) != *filter {
-					continue
-				}
-				key := item.Key()
-				rowKey := key
-				if n := occurrences[key]; n > 0 {
-					// A continuation can overlap a previous page.
-					rowKey = fmt.Sprintf("%s#%d", key, n)
-				}
-				occurrences[key]++
-				nativeLibraryRow(c.Key(rowKey), item, m, clipped, p, full)
-			}
 		})
 	})
 }
@@ -1298,7 +1347,8 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 		}
 	}
 	if !full {
-		b.Padding(4).Justify(ui.Center)
+		// As tall as a full row, so the rail's rows sit where those did.
+		b.Padding(8, 4).Justify(ui.Center)
 	}
 	if open {
 		// Selected keeps the row's text colour; MyGo's selected text is the

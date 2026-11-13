@@ -423,7 +423,11 @@ tooltip. The website uses icons only on actions and platform names.
     controls that open it are, and slides back out, and the page gives it
     room or takes it back in the same motion (`base`), at once, never
     after: a page catching up once the panel had gone read as a bug. The
-    library goes to the rail and back over `base` too. Floating, it rises
+    library goes to the rail and back over `base` too, its rows holding
+    still: the rail's rows and header keep the full ones' heights, and the
+    panel's edge passes over its contents as it narrows or widens (they
+    keep the full width, their chips on one line), the rail's layout
+    taking over once it has narrowed. Floating, it rises
     from the bottom and sinks back.
   - Immersive mode: the cover grows from the one that was showing (the
     panel's or the player bar's) and shrinks back into the one that will;

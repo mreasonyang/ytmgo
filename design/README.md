@@ -127,7 +127,7 @@ dark only.
 | `line` | 10 % white | 10 % black | Hairlines, dividers, rings around images |
 | `hover` / `press` | 7 % / 12 % white | 5 % / 9 % black | Quiet fills at rest / hovered; hovered rows |
 | `track` | 30 % white | 21 % black | Unfilled progress and sliders, outline buttons |
-| `selection` | 20 % white | 20 % `text` | Selected text |
+| `selection` | 20 % white | 20 % `text` | Selected text; chosen rows |
 | `inverseHover` | `#dbdbdb` | `#303030` | A hovered inverted button |
 | `scrim` | 60 % black | 40 % black | Dims the window behind a dialog |
 | `veil` | 70 % `base` | 70 % `base` | A surface over moving content: the sticky nav (with blur), the video's controls. 70 % keeps `secondary` links at 5:1 over white content |
@@ -471,6 +471,13 @@ tooltip. The website uses icons only on actions and platform names.
   names what will be lost.
 - **Selection is inversion:** a selected chip, tab or segment is `text` on
   `base`. A playing item is coral.
+- **Choosing songs:** in an album's or playlist's table, Cmd-click (Ctrl on
+  Linux and Windows) adds a song or takes it out and Shift-click chooses
+  from the last one clicked; a plain click still plays, and lets the choice
+  go, as do Esc and leaving the page. Chosen rows take `selection`, a run of
+  them one block (square corners between). A chosen song's menu acts on
+  them all, headed by their number; outside the choice, a right-click
+  chooses that song alone.
 - **Focus** is a 2 px `text` ring, 3 px out, on every focusable element.
 - **The website player** is the app's player bar: it shows the section
   you're in, its clock runs from 0:00 at the top to the total at the bottom,

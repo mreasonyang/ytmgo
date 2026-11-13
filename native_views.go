@@ -22,6 +22,7 @@ type UIModel struct {
 	DownloadNotice                                              string
 	DownloadWaiting                                             bool
 	barMenu, sheetMenu, accountMenu                             bool              // which app menu shows
+	selection                                                   nativeSelection   // songs chosen on this page
 	collectionDownloads                                         map[string]string // route → its download notice while preparing or failed
 	Page                                                        catalog.Page
 	Current                                                     catalog.Item
@@ -127,6 +128,7 @@ type ViewActions struct {
 	DownloadPause                                       func(string, bool)
 	DownloadRemove                                      func(string)
 	DownloadRemoveAll                                   func() // asks first
+	DownloadMany                                        func([]catalog.Item)
 	Tr                                                  func(string) string
 	TrArgs                                              func(string, map[string]any) string
 	Navigate                                            func(string)
@@ -158,6 +160,7 @@ type ViewActions struct {
 	artViewport          ui.Rect
 	viewportScroll       *ui.ScrollState
 	secondaryArtwork     bool
+	table                *nativeTable // the track table a row is in, for choosing several
 	collection           nativeCollectionMatch
 	artworkScale         float64
 	artworkDX, artworkDY float32
@@ -237,6 +240,10 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 	}
 	c.SetTheme(nativeTheme(dark))
 	c.Root().ObserveInput(nativeReleaseScrollGrabs)
+	// A choice of songs belongs to its page: leaving it lets them go.
+	if m.selection.route != "" && m.selection.route != m.Route {
+		m.selection.clear()
+	}
 	p := palette(dark)
 	if m.VideoFullScreen {
 		nativeFullScreenVideo(c, m, a, width, height)
@@ -1962,6 +1969,9 @@ func nativeTrackTable(c *ui.Context, parts [][]catalog.Item, m *UIModel, a ViewA
 		mode = nativeTrackNumbered
 	}
 	album := !compact && !nativeOneAlbum(parts...)
+	if numbered {
+		a.table = &nativeTable{parts: parts}
+	}
 	ui.Column(c).Children(func() {
 		if numbered && !compact {
 			ui.Row(c).Height(36).PaddingX(16).Gap(16).AlignItems(ui.Center).TextColor(p.secondary).Children(func() {
@@ -2098,7 +2108,13 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 			ui.Text(c, duration).Width(48).Shrink(0).FontSize(tokenSizeMeta).TextColor(p.secondary).TextAlign(ui.End)
 		}
 	})
-	nativeTrackMenu(c, b, item, m, a, p)
+	if a.table != nil && mode == nativeTrackNumbered && item.ID != "" {
+		if nativeSelectableTrack(c, b, item, index, m, a, p, b.Clicked()) {
+			return
+		}
+	} else {
+		nativeTrackMenu(c, b, item, m, a, p)
+	}
 	if b.Clicked() {
 		if mode == nativeTrackQueue {
 			a.PlayQueue(index)
@@ -3539,6 +3555,8 @@ func nativeKeyboard(c *ui.Context, m *UIModel, a ViewActions) {
 			m.Immersive = false
 		} else if m.Panel {
 			m.Panel = false
+		} else if m.selection.count(m.Route) > 0 {
+			m.selection.clear()
 		}
 	}
 }

@@ -85,6 +85,8 @@
   "more.proxy.body": "HTTP_PROXY・HTTPS_PROXY・NO_PROXY はすべての通信に適用され、macOS ではシステムのプロキシ設定にも従います。",
   "more.quality.title": "音質を|選べる",
   "more.quality.body": "利用可能な最高音質・標準・データ節約から選べ、ストリーミングにもダウンロードにも適用されます。変更は次の曲から反映されます。",
+  "more.select.title": "まとめて|選べる",
+  "more.select.body": "アルバムやプレイリストで ⌘ または Ctrl を押しながら曲をクリック、Shift クリックで範囲を選び、まとめてキューに追加・ダウンロード・削除できます。",
 
   "privacy.kicker": "プライバシーと|セキュリティ",
   "privacy.title": "あなたの|アカウントは、|あなたの|もの",

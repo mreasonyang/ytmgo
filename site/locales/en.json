@@ -85,6 +85,8 @@
   "more.proxy.body": "HTTP_PROXY, HTTPS_PROXY and NO_PROXY apply to every request, and on macOS ytmGO follows the system proxy settings too.",
   "more.quality.title": "Choose your sound",
   "more.quality.body": "Highest available, Standard or Data saver, for streaming and downloads alike. A new choice applies from the next song.",
+  "more.select.title": "Pick several at once",
+  "more.select.body": "In an album or playlist, ⌘-click or Ctrl-click songs, or Shift-click a run of them, then queue, download or remove them together.",
 
   "privacy.kicker": "Privacy and security",
   "privacy.title": "Your account stays yours",

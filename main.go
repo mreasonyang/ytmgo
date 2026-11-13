@@ -329,6 +329,7 @@ func (a *desktop) actions(artwork func(string, int, artworkPriority) ui.ImageSou
 		actions.DownloadPause = a.pauseDownload
 		actions.DownloadRemove = a.removeDownload
 		actions.DownloadRemoveAll = a.confirmRemoveAllDownloads
+		actions.DownloadMany = a.enqueueDownloads
 	}
 	if style, _ := mainWindowTitleBar(runtime.GOOS); style == mygo.TitleBarHidden {
 		actions.AppMenu = a.appMenu

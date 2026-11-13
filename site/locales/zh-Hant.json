@@ -85,6 +85,8 @@
   "more.proxy.body": "HTTP_PROXY、HTTPS_PROXY 與 NO_PROXY 對所有要求生效；在 macOS 上也會遵循系統代理伺服器設定。",
   "more.quality.title": "音質|由你選擇",
   "more.quality.body": "最高可用、標準或節省流量，串流播放與下載皆適用。新的選擇從下一首歌開始生效。",
+  "more.select.title": "一次|選擇多首",
+  "more.select.body": "在專輯或播放清單中按住 ⌘ 或 Ctrl 點按歌曲，或按住 Shift 點按選取一段，再一併加入佇列、下載或移除。",
 
   "privacy.kicker": "隱私與安全",
   "privacy.title": "你的帳號，|只屬於你",

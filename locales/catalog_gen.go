@@ -3299,6 +3299,36 @@ func (msgs Messages) NativeDownloadRemove() string {
 	return Catalog.Format(msgs.locale, "nativeDownloadRemove", nil)
 }
 
+// NativeSelectedCount says "{count} selected"
+// in the language the app shows.
+func NativeSelectedCount(count string) string { return In(i18n.Locale()).NativeSelectedCount(count) }
+
+// NativeSelectedCount says "{count} selected"
+// in the language of msgs.
+func (msgs Messages) NativeSelectedCount(count string) string {
+	return Catalog.Format(msgs.locale, "nativeSelectedCount", map[string]any{"count": count})
+}
+
+// NativeDownloadSongs says "Download songs"
+// in the language the app shows.
+func NativeDownloadSongs() string { return In(i18n.Locale()).NativeDownloadSongs() }
+
+// NativeDownloadSongs says "Download songs"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadSongs() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadSongs", nil)
+}
+
+// NativeDownloadRemoveSongs says "Remove downloads"
+// in the language the app shows.
+func NativeDownloadRemoveSongs() string { return In(i18n.Locale()).NativeDownloadRemoveSongs() }
+
+// NativeDownloadRemoveSongs says "Remove downloads"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadRemoveSongs() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadRemoveSongs", nil)
+}
+
 // NativeDownloadRemoveAll says "Remove all downloads…"
 // in the language the app shows.
 func NativeDownloadRemoveAll() string { return In(i18n.Locale()).NativeDownloadRemoveAll() }

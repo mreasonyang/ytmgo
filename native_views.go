@@ -314,21 +314,18 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 		// Panels sit a frame gap from every edge, the player bar's too: flush
 		// against it their bottom corners would sit on the bar's colour.
 		row := ui.Row(c).Grow(1).MinHeight(0).AlignItems(ui.Stretch).Gap(tokenProductFrameGap).Padding(top, tokenProductFrameGap, tokenProductFrameGap)
-		docked, leaving := nativeDock(c, row, m, width)
+		docked := nativeDockedNowPlaying(m, width)
 		m.docked = docked
 		pageWidth := nativePageWidth(m, width)
-		if leaving {
-			pageWidth -= nativePanelWidth + tokenProductFrameGap
-		}
 		row.Children(func() {
 			if !m.Immersive {
 				nativeLibrary(c, m, a, p, width)
 			}
-			// The page panel moves in step with what changes beside it: it grows
-			// over the library's and the global bar's room as immersive mode
-			// fades them, and follows the library to the rail and back and Now
-			// Playing's room as it goes, rather than jumping.
-			pagePanel := ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Radius(tokenRadiusPanel).Background(p.surface).Clip().Transition(nativeLong(nativeMoves))
+			// The page panel moves in step with what changes beside it, at
+			// once and at its pace: with Now Playing coming or going and the
+			// library to the rail and back over the base motion, and over
+			// immersive mode's morph as it fades the library and the bar.
+			pagePanel := ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Radius(tokenRadiusPanel).Background(p.surface).Clip().Transition(nativePanelMoves(c, m))
 			pagePanel.Children(func() {
 				nativeBackdrop(c, m, a, p)
 				var scrolled *ui.ScrollState
@@ -342,9 +339,8 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 				})
 			})
 			// Now Playing slides in from the window's right edge, where the
-			// controls that open it are, and back out there. As it goes, its
-			// room stays until it has gone, so the page fills it once, after.
-			// Back from immersive mode, it is where the cover and the card
+			// controls that open it are, and back out there, the page giving
+			// it room or taking it back as it goes. Back from immersive mode, it is where the cover and the card
 			// fly to: it fades in in place, as they land, rather than
 			// sliding under them.
 			if docked {
@@ -353,8 +349,6 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 					dock = nativeFadeLong
 				}
 				nativeNowPlaying(c.Key("now-playing-docked"), m, a, p, nativePanelWidth, false, false).Width(nativePanelWidth).Shrink(0).Transition(dock)
-			} else if leaving {
-				ui.Box(c.Key("now-playing-room")).Width(nativePanelWidth).Shrink(0)
 			}
 		})
 		nativePlayerBar(c, m, a, p, width).Height(nativePlayerHeight).Shrink(0)
@@ -404,6 +398,16 @@ var nativeMorph = ui.ElementTransition{Duration: tokenMotionBase, Ease: tokenMot
 // nativeMoves is nativeMorph for where an element is and how large: the
 // pieces of a layout that rearranges around it.
 var nativeMoves = ui.ElementTransition{Duration: tokenMotionBase, Ease: tokenMotionEase, Position: true, Size: true}
+
+// nativePanelMoves is how the frame's panels resize: over the base motion,
+// with docked Now Playing's slide and each other, and over the morph while
+// immersive mode comes or goes, with everything else in it.
+func nativePanelMoves(c *ui.Context, m *UIModel) ui.ElementTransition {
+	if nativeImmersing(c, m) {
+		return nativeLong(nativeMoves)
+	}
+	return nativeMoves
+}
 
 // nativeCrossfade fades content that replaces content in place: the next
 // cover over the last, over the base motion.
@@ -1013,38 +1017,6 @@ func nativeFloating(c *ui.Context, m *UIModel, width float32) (bool, float32) {
 // width from the window's right edge, fading, over the base motion.
 var nativeDockSlide = ui.ElementTransition{Duration: tokenMotionBase, Ease: tokenMotionEase, Enter: &ui.Motion{X: nativePanelWidth}, Exit: &ui.Motion{X: nativePanelWidth}}
 
-type nativeDockState struct {
-	shown   bool
-	leaving time.Time
-}
-
-// nativeDock reports whether Now Playing is docked in row, and whether it
-// is leaving: closed, still sliding out, its room kept until it has gone.
-// It goes at once without motion, or into immersive mode, or as the window
-// narrows past docking.
-func nativeDock(c *ui.Context, row ui.Element, m *UIModel, width float32) (docked, leaving bool) {
-	s := ui.Local(row, "now-playing-dock", func() nativeDockState { return nativeDockState{} })
-	docked = nativeDockedNowPlaying(m, width)
-	now := c.Now()
-	animate := !m.Immersive && width > 1180 && !m.instantMotion && !c.Preferences().ReduceMotion
-	switch {
-	case docked:
-		s.shown, s.leaving = true, time.Time{}
-	case s.shown && s.leaving.IsZero() && animate:
-		s.leaving = now
-	}
-	if !docked && animate && !s.leaving.IsZero() {
-		if left := tokenMotionBase - now.Sub(s.leaving); left > 0 {
-			c.After(left)
-			return false, true
-		}
-	}
-	if !docked {
-		s.shown, s.leaving = false, time.Time{}
-	}
-	return docked, false
-}
-
 // nativePageWidth is the page panel's width in a desktop window width wide:
 // what the frame gaps, the library and a docked Now Playing leave. The page
 // lays out from it in the frame that changes it, as a panel opens or the
@@ -1068,6 +1040,10 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 	// It fades with immersive mode, and narrows to the rail and back.
 	library := nativeFadeLong
 	library.Size = true
+	if !nativeImmersing(c, m) {
+		// To the rail and back, at the page's pace beside it.
+		library.Duration = tokenMotionBase
+	}
 	panel := ui.Column(c).Width(panelWidth).Shrink(0).MinHeight(0).Background(p.surface).Radius(tokenRadiusPanel).Clip().Transition(library)
 	filter := ui.Local(panel, "library-filter", func() string { return "" })
 	panel.Children(func() {

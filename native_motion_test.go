@@ -122,9 +122,9 @@ func TestTrackChangeFadesTheTitleIn(t *testing.T) {
 	}
 }
 
-// Docked Now Playing slides in from the window's right edge, and back out:
-// as it leaves, the page keeps its width until the panel has gone, then
-// fills the room once.
+// Docked Now Playing slides in from the window's right edge, and back out,
+// and the page gives it room and takes it back in step: the same motion,
+// at once, not after (a page catching up after the panel looked broken).
 func TestNowPlayingSlidesInAndOut(t *testing.T) {
 	m, a := nativeViewFixture()
 	m.Panel = false
@@ -136,29 +136,30 @@ func TestNowPlayingSlidesInAndOut(t *testing.T) {
 	tt.Advance(tokenMotionBase / 2)
 	tt.Frame()
 	half := rect(t, tt, a.Tr("shellClosePanel"))
+	halfOpen := rect(t, tt, a.Tr("shellContent")).W
 	motionShot(t, tt, "now-playing-open-half")
-	// The page eases to its new width over the morph motion.
-	tt.Advance(tokenMotionMorph)
+	tt.Advance(tokenMotionBase)
 	tt.Frame()
 	open := rect(t, tt, a.Tr("shellClosePanel"))
+	narrow := rect(t, tt, a.Tr("shellContent")).W
 	if !between(half.X, open.X, open.X+nativePanelWidth) {
 		t.Fatalf("Now Playing cut in: its close button at %.1f half way, %.1f open", half.X, open.X)
 	}
-	narrow := rect(t, tt, a.Tr("shellContent")).W
+	if !(halfOpen < wide-1 && halfOpen > narrow+1) {
+		t.Fatalf("half way in, the page is %.1f wide; want between %.1f and %.1f, in step", halfOpen, narrow, wide)
+	}
 	m.Panel = false
 	tt.Frame()
 	tt.Advance(tokenMotionBase / 2)
 	tt.Frame()
 	motionShot(t, tt, "now-playing-close-half")
-	if w := rect(t, tt, a.Tr("shellContent")).W; w != narrow {
-		t.Fatalf("the page widened under the leaving panel: %.1f, was %.1f", w, narrow)
+	if w := rect(t, tt, a.Tr("shellContent")).W; !(w > narrow+1 && w < wide-1) {
+		t.Fatalf("half way out, the page is %.1f wide; want between %.1f and %.1f, in step", w, narrow, wide)
 	}
 	tt.Advance(tokenMotionBase)
 	tt.Frame()
-	tt.Advance(tokenMotionMorph)
-	tt.Frame()
 	if w := rect(t, tt, a.Tr("shellContent")).W; w != wide {
-		t.Fatalf("the page did not fill the room once the panel had gone: %.1f, want %.1f", w, wide)
+		t.Fatalf("as the panel finished going, the page is %.1f wide, want %.1f", w, wide)
 	}
 }
 

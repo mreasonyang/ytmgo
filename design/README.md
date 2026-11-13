@@ -420,9 +420,11 @@ tooltip. The website uses icons only on actions and platform names.
     while the title, the switch and the card move to their places
     (`base`); restoring runs it back.
   - Now Playing docks by sliding in from the right edge, where the
-    controls that open it are, and slides back out; the page keeps its
-    width until the panel has gone, then eases to fill the room. Floating,
-    it rises from the bottom and sinks back.
+    controls that open it are, and slides back out, and the page gives it
+    room or takes it back in the same motion (`base`), at once, never
+    after: a page catching up once the panel had gone read as a bug. The
+    library goes to the rail and back over `base` too. Floating, it rises
+    from the bottom and sinks back.
   - Immersive mode: the cover grows from the one that was showing (the
     panel's or the player bar's) and shrinks back into the one that will;
     the lyrics card travels with it; the library and the global bar fade as

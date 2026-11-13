@@ -112,8 +112,8 @@ dark only.
 | Role | Dark | Light | Use |
 | --- | --- | --- | --- |
 | `base` | `#000000` | `#e9e9eb` | Window frame, global bar, player bar, page background |
-| `surface` | `#121212` | `#ffffff` | Panels |
-| `raised` | `#1f1f1f` | `#f2f2f3` | Search, round buttons, cards on hover, dialogs, popovers |
+| `surface` | `#121212` | `#ffffff` | Panels, dialogs and sheets |
+| `raised` | `#1f1f1f` | `#f2f2f3` | Search, round buttons, cards on hover, popovers; the groups in a sheet |
 | `input` | `#242424` | `#ececee` | Secondary pills, segmented tracks |
 | `highlight` | `#2a2a2a` | `#e1e1e4` | Hovered round buttons, menus, placeholders |
 | `text` | `#ffffff` | `#121212` | Titles, primary labels, inverted buttons |
@@ -556,9 +556,12 @@ tooltip. The website uses icons only on actions and platform names.
   "Follow playback". Lines scrolled past the view's top or bottom fade out
   over 24 rather than being cut, and an edge fades only while more lies
   beyond it.
-- **Dialogs and sheets:** radius `sheet`, `raised`, one inverted primary
-  action; their groups `panel`, rows in a group flat or `control`, icon
-  tiles `art`. A question before what can't be undone (removing
+- **Dialogs and sheets:** radius `sheet`, `surface`, one inverted primary
+  action; their groups `raised` with radius `panel`, rows in a group flat
+  or `control`, icon tiles `art`. A dialog is set apart by the scrim and its
+  hairline (and, in light, its shadow), not by a lighter fill: `raised` is
+  for what floats over a panel at its own level, as a popover does, and
+  the sheet's groups need it to stand out from the sheet. A question before what can't be undone (removing
   downloads, signing out) is the app's own dialog, never the system's
   alert: 400 wide, padding 24, its title what will happen (an `h3`), its
   body what will be lost, Cancel first and focused, then the action, the

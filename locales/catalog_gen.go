@@ -485,20 +485,6 @@ func (msgs Messages) TrayQuit() string {
 	return Catalog.Format(msgs.locale, "trayQuit", nil)
 }
 
-// AboutMessage says "ytmGO · {version}"
-// in the language the app shows.
-//
-// About dialog headline.
-func AboutMessage(version string) string { return In(i18n.Locale()).AboutMessage(version) }
-
-// AboutMessage says "ytmGO · {version}"
-// in the language of msgs.
-//
-// About dialog headline.
-func (msgs Messages) AboutMessage(version string) string {
-	return Catalog.Format(msgs.locale, "aboutMessage", map[string]any{"version": version})
-}
-
 // AboutDetail says "An independent music client built with MyGo.\nMusic and accounts are provided by YouTube Music.\n\nGlobal play / pause: …"
 // in the language the app shows.
 //
@@ -2617,11 +2603,11 @@ func (msgs Messages) NativeSignOutButton() string {
 	return Catalog.Format(msgs.locale, "nativeSignOutButton", nil)
 }
 
-// NativeAbout says "Native MyGo interface and audio playback. Music catalogue provided by YouTube Music."
+// NativeAbout says "Native MyGo interface and audio playback. Music catalogue provided by YouTube\u00a0Music."
 // in the language the app shows.
 func NativeAbout() string { return In(i18n.Locale()).NativeAbout() }
 
-// NativeAbout says "Native MyGo interface and audio playback. Music catalogue provided by YouTube Music."
+// NativeAbout says "Native MyGo interface and audio playback. Music catalogue provided by YouTube\u00a0Music."
 // in the language of msgs.
 func (msgs Messages) NativeAbout() string {
 	return Catalog.Format(msgs.locale, "nativeAbout", nil)

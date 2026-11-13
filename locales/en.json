@@ -128,16 +128,6 @@
   "@trayQuit": {
     "description": "Tray menu item."
   },
-  "aboutMessage": "ytmGO · {version}",
-  "@aboutMessage": {
-    "description": "About dialog headline.",
-    "placeholders": {
-      "version": {
-        "type": "String",
-        "example": "0.3.0"
-      }
-    }
-  },
   "aboutDetail": "An independent music client built with MyGo.\nMusic and accounts are provided by YouTube Music.\n\nGlobal play / pause: ⌘ / Ctrl + Shift + Space\nClosing the window keeps music playing; press ⌘ / Ctrl + Q to quit.",
   "@aboutDetail": {
     "description": "About dialog body."
@@ -740,7 +730,7 @@
   "nativeSignOutConfirm": "Sign out of ytmGO and remove this account’s saved session and downloaded songs from this device?",
   "nativeSignOutTitle": "Sign out of ytmGO",
   "nativeSignOutButton": "Sign out",
-  "nativeAbout": "Native MyGo interface and audio playback. Music catalogue provided by YouTube Music.",
+  "nativeAbout": "Native MyGo interface and audio playback. Music catalogue provided by YouTube\u00a0Music.",
   "nativeEmptyResults": "No music found. Try another search.",
   "nativeAddToQueue": "Add to queue",
   "nativeQueueRemove": "Remove from queue",

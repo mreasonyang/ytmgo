@@ -25,6 +25,7 @@ type UIModel struct {
 	selection                                                   nativeSelection // songs chosen on this page
 	selectDrag                                                  nativeSelectDrag
 	confirm                                                     *nativeConfirmation // a question asked before an action that can't be undone
+	About                                                       bool                // About ytmGO shows
 	collectionDownloads                                         map[string]string   // route → its download notice while preparing or failed
 	Page                                                        catalog.Page
 	Current                                                     catalog.Item
@@ -163,7 +164,8 @@ type ViewActions struct {
 	artViewport          ui.Rect
 	viewportScroll       *ui.ScrollState
 	secondaryArtwork     bool
-	table                *nativeTable // the track table a row is in, for choosing several
+	table                *nativeTable   // the track table a row is in, for choosing several
+	AppIcon              ui.ImageSource // the app icon, for About
 	collection           nativeCollectionMatch
 	artworkScale         float64
 	artworkDX, artworkDY float32
@@ -286,6 +288,7 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 		}
 	}
 	nativeSheets(c, m, a, p, width, height)
+	nativeAbout(c, m, a, p, width)
 	nativeConfirm(c, m, a, p, width)
 	if m.ShortcutRecording && !m.Settings && a.CancelShortcut != nil {
 		a.CancelShortcut()

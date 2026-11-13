@@ -562,7 +562,10 @@ tooltip. The website uses icons only on actions and platform names.
   downloads, signing out) is the app's own dialog, never the system's
   alert: 400 wide, padding 24, its title what will happen (an `h3`), its
   body what will be lost, Cancel first and focused, then the action, the
-  one inverted button; Cancel, Esc and a click outside keep everything.
+  one inverted button; Cancel, Esc and a click outside keep everything. About ytmGO
+  is the same dialog (Help menu and macOS's app menu alike): the icon, the
+  wordmark with its coral "GO", the build, what the app is, one inverted OK.
+  The update window is MyGo's updater, which keeps its own look.
 - **Menus:** a song's menu (right-click, More) and the account's are the
   app's own, drawn in the window as its other popovers: `raised`, a
   hairline, the `popover` elevation, radius `control`, 4 in; items 36 high,

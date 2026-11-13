@@ -39,32 +39,15 @@ func updateMenuItem() *mygo.MenuItem {
 	return updater.MenuItem()
 }
 
-func applicationMenuWithUpdates(newUpdateItem func() *mygo.MenuItem) *mygo.MenuItem {
-	about := &mygo.MenuItem{Role: mygo.RoleAbout}
-	if buildKind != "release" {
-		about = &mygo.MenuItem{Label: locales.MenuAbout(), Click: func(*mygo.MenuItem, *mygo.Window) {
-			mygo.App.ShowAboutPanel(developmentAboutOptions())
-		}}
-	}
+// applicationMenuWithUpdates is macOS's app menu. Its About opens the app's
+// own About (nativeAbout), as the Help menu's does, not the system panel.
+func applicationMenuWithUpdates(newUpdateItem func() *mygo.MenuItem, showAbout func()) *mygo.MenuItem {
+	about := &mygo.MenuItem{Label: locales.MenuAbout(), Click: func(*mygo.MenuItem, *mygo.Window) { showAbout() }}
 	return &mygo.MenuItem{Role: mygo.RoleAppMenu, Submenu: []*mygo.MenuItem{
 		about, newUpdateItem(), mygo.Separator(),
 		{Role: mygo.RoleServices}, mygo.Separator(), {Role: mygo.RoleHide},
 		{Role: mygo.RoleHideOthers}, {Role: mygo.RoleUnhide}, mygo.Separator(), {Role: mygo.RoleQuit},
 	}}
-}
-
-func developmentAboutOptions() mygo.AboutPanelOptions {
-	b := currentBuildIdentity()
-	label := b.Version + " DEV"
-	if b.Dirty {
-		label += " (dirty)"
-	}
-	commit := b.Commit
-	if len(commit) > 12 {
-		commit = commit[:12]
-	}
-	return mygo.AboutPanelOptions{ApplicationName: "ytmGO Dev", ApplicationVersion: label,
-		Version: commit, Credits: b.Branch}
 }
 
 func helpMenuWithUpdates(items []*mygo.MenuItem, newUpdateItem func() *mygo.MenuItem) *mygo.MenuItem {

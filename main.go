@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"embed"
+	"image/png"
 	"log"
 	"os"
 	"path/filepath"
@@ -57,6 +59,8 @@ type desktop struct {
 	collectionCtx                   context.Context
 	cancelCollections               context.CancelFunc
 	pendingCollections              int
+	appIconOnce                     sync.Once
+	appIconImage                    ui.ImageSource
 	video                           *player.Video
 	videoID                         string
 	videoAvailableID                string // the track VideoAvailable was learned for
@@ -322,6 +326,7 @@ func (a *desktop) prefetchNextCover(frame *artworkFrame) {
 
 func (a *desktop) actions(artwork func(string, int, artworkPriority) ui.ImageSource) ViewActions {
 	actions := ViewActions{artworkScale: a.artworkScale, artworkPeek: a.art.peek, LyricsClock: a.lyricsClock, BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, QueueRemove: a.removeFromQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, FullScreen: a.setVideoFullScreen, SetAudioQuality: a.setAudioQuality, SetVideoQuality: a.setVideoQuality, SetLyricsExpanded: a.setLyricsExpanded, RetryPlayback: a.retryPlayback, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: artwork, ArtworkTint: a.art.tint}
+	actions.AppIcon = a.appIcon()
 	if a.downloads != nil {
 		actions.Download = a.downloadItem
 		actions.DownloadCollection = a.downloadPage
@@ -426,7 +431,7 @@ func (a *desktop) menu() *mygo.Menu {
 
 func (a *desktop) menuWithUpdates(newUpdateItem func() *mygo.MenuItem) *mygo.Menu {
 	return mygo.NewMenu([]*mygo.MenuItem{
-		applicationMenuWithUpdates(newUpdateItem),
+		applicationMenuWithUpdates(newUpdateItem, a.showAbout),
 		{Label: locales.MenuFile(), Submenu: []*mygo.MenuItem{a.menuItem(locales.MenuShowApp(), "CmdOrCtrl+1", a.show), {Role: mygo.RoleClose}, mygo.Separator(), {Role: mygo.RoleQuit}}},
 		{Role: mygo.RoleEditMenu},
 		{Label: locales.MenuPlayback(), Submenu: []*mygo.MenuItem{
@@ -435,12 +440,29 @@ func (a *desktop) menuWithUpdates(newUpdateItem func() *mygo.MenuItem) *mygo.Men
 			a.menuItem(locales.MenuHome(), "CmdOrCtrl+Shift+H", func() { a.navigate("home") }), a.menuItem(locales.MenuExplore(), "", func() { a.navigate("explore") }), a.menuItem(locales.MenuLibrary(), "CmdOrCtrl+L", func() { a.navigate("library") }), mygo.Separator(), a.menuItem(locales.MenuPanel(), "CmdOrCtrl+J", func() { a.model.Panel = !a.model.Panel; a.invalidate() }), a.menuItem(locales.MenuLyrics(), "", func() { a.model.Panel = true; a.model.PanelTab = "lyrics"; a.invalidate() }), a.menuItem(locales.MenuImmersive(), "CmdOrCtrl+Shift+F", func() { a.model.Immersive = !a.model.Immersive; a.invalidate() }), a.menuItem(locales.MenuSidebar(), "CmdOrCtrl+B", func() { a.model.SidebarCollapsed = !a.model.SidebarCollapsed; a.invalidate() }), {Label: locales.MenuLanguage(), Submenu: a.languageMenu()}, {Role: mygo.RoleToggleFullScreen}}},
 		{Role: mygo.RoleWindowMenu},
 		{Label: locales.MenuAccount(), Submenu: a.accountMenuItems()},
-		helpMenuWithUpdates([]*mygo.MenuItem{a.menuItem(locales.MenuShortcuts(), "CmdOrCtrl+/", func() { a.model.Shortcuts = true; a.invalidate() }), a.menuItem(locales.MenuAbout(), "", func() {
-			go func() {
-				_, _ = mygo.Dialog.Message(mygo.MessageOptions{Parent: a.window, Title: locales.MenuAbout(), Message: locales.AboutMessage(applicationBuildLabel()), Detail: a.tr("nativeAbout"), Buttons: []string{locales.ButtonOK()}})
-			}()
-		})}, newUpdateItem),
+		helpMenuWithUpdates([]*mygo.MenuItem{a.menuItem(locales.MenuShortcuts(), "CmdOrCtrl+/", func() { a.model.Shortcuts = true; a.invalidate() }), a.menuItem(locales.MenuAbout(), "", a.showAbout)}, newUpdateItem),
 	})
+}
+
+// appIcon is the app icon, decoded once, for About.
+func (a *desktop) appIcon() ui.ImageSource {
+	a.appIconOnce.Do(func() {
+		data, err := assets.ReadFile("resources/icon.png")
+		if err != nil {
+			return
+		}
+		if img, err := png.Decode(bytes.NewReader(data)); err == nil {
+			a.appIconImage = ui.NewBitmap(img)
+		}
+	})
+	return a.appIconImage
+}
+
+// showAbout opens About ytmGO in the window (nativeAbout).
+func (a *desktop) showAbout() {
+	a.show()
+	a.model.About = true
+	a.invalidate()
 }
 
 func (a *desktop) accountMenuItems() []*mygo.MenuItem {

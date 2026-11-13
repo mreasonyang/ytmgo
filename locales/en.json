@@ -741,6 +741,7 @@
   "nativeAbout": "Native MyGo interface and audio playback. Music catalogue provided by YouTube Music.",
   "nativeEmptyResults": "No music found. Try another search.",
   "nativeAddToQueue": "Add to queue",
+  "nativeQueueRemove": "Remove from queue",
   "nativeVideo": "Video",
   "nativeArtwork": "Cover",
   "nativeVideoTheater": "Fill the view with the video",

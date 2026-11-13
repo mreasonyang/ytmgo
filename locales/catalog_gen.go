@@ -2627,6 +2627,16 @@ func (msgs Messages) NativeAddToQueue() string {
 	return Catalog.Format(msgs.locale, "nativeAddToQueue", nil)
 }
 
+// NativeQueueRemove says "Remove from queue"
+// in the language the app shows.
+func NativeQueueRemove() string { return In(i18n.Locale()).NativeQueueRemove() }
+
+// NativeQueueRemove says "Remove from queue"
+// in the language of msgs.
+func (msgs Messages) NativeQueueRemove() string {
+	return Catalog.Format(msgs.locale, "nativeQueueRemove", nil)
+}
+
 // NativeVideo says "Video"
 // in the language the app shows.
 func NativeVideo() string { return In(i18n.Locale()).NativeVideo() }

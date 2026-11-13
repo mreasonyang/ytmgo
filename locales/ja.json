@@ -188,6 +188,7 @@
   "nativeAbout": "MyGo のネイティブ UI と音声再生。音楽カタログは YouTube Music から提供されます。",
   "nativeEmptyResults": "音楽が|見つかりません。|別の|キーワードを|試してください。",
   "nativeAddToQueue": "キューに追加",
+  "nativeQueueRemove": "キューから削除",
   "nativeVideo": "動画",
   "nativeArtwork": "カバー",
   "nativeVideoTheater": "動画を画面いっぱいに表示",

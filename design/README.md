@@ -471,12 +471,15 @@ tooltip. The website uses icons only on actions and platform names.
   names what will be lost.
 - **Selection is inversion:** a selected chip, tab or segment is `text` on
   `base`. A playing item is coral.
-- **Choosing songs:** in an album's or playlist's table, Cmd-click (Ctrl on
-  Linux and Windows) adds a song or takes it out and Shift-click chooses
-  from the last one clicked; a plain click still plays, and lets the choice
-  go, as do Esc and leaving the page. Chosen rows take `selection`, a run of
-  them one block (square corners between). A chosen song's menu acts on
-  them all, headed by their number; outside the choice, a right-click
+- **Choosing songs:** in a song table (an album's or playlist's, search
+  results, the queue), Cmd-click (Ctrl on Linux and Windows) adds a song or
+  takes it out, Shift-click chooses from the last one clicked, a drag across
+  rows chooses them (adding with Cmd held), and Cmd+A chooses the page's
+  songs; a plain click still plays, and lets the choice go, as do Esc and
+  leaving the page. Chosen rows take `selection`, a run of them one block
+  (square corners between). A chosen song's menu acts on them all, headed
+  by their number: queue, download, remove downloads, and in the queue
+  remove from it, never the playing song. Outside the choice, a right-click
   chooses that song alone.
 - **Focus** is a 2 px `text` ring, 3 px out, on every focusable element.
 - **The website player** is the app's player bar: it shows the section

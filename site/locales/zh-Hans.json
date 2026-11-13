@@ -86,7 +86,7 @@
   "more.quality.title": "音质|由你选择",
   "more.quality.body": "最高可用、标准或省流量，在线播放与下载都适用。新的选择从下一首歌开始生效。",
   "more.select.title": "一次|选择多首",
-  "more.select.body": "在专辑或播放列表中按住 ⌘ 或 Ctrl 点按歌曲，或按住 Shift 点按选择一段，再一并加入队列、下载或移除。",
+  "more.select.body": "在专辑、播放列表、搜索结果或队列中，按住 ⌘ 或 Ctrl 点按歌曲，按住 Shift 点按或拖过一段，或按 ⌘A 或 Ctrl+A 全选，再一并加入队列、下载或移除。",
 
   "privacy.kicker": "隐私与安全",
   "privacy.title": "你的账号，|只属于你",

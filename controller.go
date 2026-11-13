@@ -542,6 +542,32 @@ func (a *desktop) appendQueue(it catalog.Item) {
 	a.invalidate()
 }
 
+// removeFromQueue takes the songs with ids out of the queue, every time they
+// appear, but the playing one stays where it plays.
+func (a *desktop) removeFromQueue(ids []string) {
+	gone := make(map[string]bool, len(ids))
+	for _, id := range ids {
+		gone[id] = true
+	}
+	kept := a.model.Queue[:0:0]
+	index := -1
+	for i, it := range a.model.Queue {
+		if i == a.queueIndex {
+			index = len(kept)
+		} else if gone[it.ID] {
+			continue
+		}
+		kept = append(kept, it)
+	}
+	if len(kept) == len(a.model.Queue) {
+		return
+	}
+	a.model.Queue, a.queueIndex = kept, index
+	a.queueGeneration++
+	a.prepareNext()
+	a.invalidate()
+}
+
 // The queue is already in its current shuffle order. Repeat-one reuses the
 // current track via Seek, so it does not reserve a second media stream.
 func nextPreparedTrack(queue []catalog.Item, index, repeat int) catalog.Item {

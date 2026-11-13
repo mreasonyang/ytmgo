@@ -188,6 +188,7 @@
   "nativeAbout": "MyGo 原生界面与音频播放，曲库由 YouTube Music 提供。",
   "nativeEmptyResults": "没有找到音乐，|换个关键词|试试。",
   "nativeAddToQueue": "添加到队列",
+  "nativeQueueRemove": "从队列中移除",
   "nativeVideo": "视频",
   "nativeArtwork": "封面",
   "nativeVideoTheater": "视频铺满播放视图",

@@ -21,8 +21,9 @@ type UIModel struct {
 	downloadStates                                              map[string]downloads.State
 	DownloadNotice                                              string
 	DownloadWaiting                                             bool
-	barMenu, sheetMenu, accountMenu                             bool              // which app menu shows
-	selection                                                   nativeSelection   // songs chosen on this page
+	barMenu, sheetMenu, accountMenu                             bool            // which app menu shows
+	selection                                                   nativeSelection // songs chosen on this page
+	selectDrag                                                  nativeSelectDrag
 	collectionDownloads                                         map[string]string // route → its download notice while preparing or failed
 	Page                                                        catalog.Page
 	Current                                                     catalog.Item
@@ -129,6 +130,7 @@ type ViewActions struct {
 	DownloadRemove                                      func(string)
 	DownloadRemoveAll                                   func() // asks first
 	DownloadMany                                        func([]catalog.Item)
+	QueueRemove                                         func(ids []string) // takes them out of the queue, keeping the playing one
 	Tr                                                  func(string) string
 	TrArgs                                              func(string, map[string]any) string
 	Navigate                                            func(string)
@@ -241,8 +243,15 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 	c.SetTheme(nativeTheme(dark))
 	c.Root().ObserveInput(nativeReleaseScrollGrabs)
 	// A choice of songs belongs to its page: leaving it lets them go.
-	if m.selection.route != "" && m.selection.route != m.Route {
+	if m.selection.route != "" && m.selection.route != nativeQueueScope && m.selection.route != m.Route {
 		m.selection.clear()
+	}
+	// Cmd+A chooses the page's songs, in the tables the last frame built
+	// (a focused text field keeps it, for its own text).
+	tables := nativeFrameTables
+	nativeFrameTables = nil
+	if len(tables) > 0 && c.Shortcut(ui.Cmd, ui.KeyA) {
+		nativeSelectAll(m, tables)
 	}
 	p := palette(dark)
 	if m.VideoFullScreen {
@@ -1969,8 +1978,9 @@ func nativeTrackTable(c *ui.Context, parts [][]catalog.Item, m *UIModel, a ViewA
 		mode = nativeTrackNumbered
 	}
 	album := !compact && !nativeOneAlbum(parts...)
-	if numbered {
-		a.table = &nativeTable{parts: parts}
+	if numbered || m.Route == "search" {
+		a.table = &nativeTable{scope: m.Route, parts: parts}
+		nativeFrameTables = append(nativeFrameTables, a.table)
 	}
 	ui.Column(c).Children(func() {
 		if numbered && !compact {
@@ -2108,7 +2118,7 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 			ui.Text(c, duration).Width(48).Shrink(0).FontSize(tokenSizeMeta).TextColor(p.secondary).TextAlign(ui.End)
 		}
 	})
-	if a.table != nil && mode == nativeTrackNumbered && item.ID != "" {
+	if a.table != nil && item.ID != "" {
 		if nativeSelectableTrack(c, b, item, index, m, a, p, b.Clicked()) {
 			return
 		}
@@ -2724,6 +2734,7 @@ func nativePanelBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 	// As the lyrics beside it: rows past an edge fade, while more lies beyond.
 	st := a.viewportScroll
 	scroll.Effect(nativeEdgeFade{top: st.Y > 0.5, bottom: st.Y < st.MaxY-0.5})
+	a.table = &nativeTable{scope: nativeQueueScope, parts: [][]catalog.Item{m.Queue}}
 	return scroll.Children(func() {
 		for i, item := range m.Queue {
 			nativeTrack(c.Key(fmt.Sprintf("queue-%d", i)), item, i, m, a, p, nativeTrackQueue, true, false)
@@ -3555,7 +3566,7 @@ func nativeKeyboard(c *ui.Context, m *UIModel, a ViewActions) {
 			m.Immersive = false
 		} else if m.Panel {
 			m.Panel = false
-		} else if m.selection.count(m.Route) > 0 {
+		} else if m.selection.route != "" {
 			m.selection.clear()
 		}
 	}

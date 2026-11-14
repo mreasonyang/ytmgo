@@ -115,6 +115,67 @@ func TestPaginationRecoveryHandlesChangedSessionEmptyPagesAndShorterLists(t *tes
 	}
 }
 
+func TestInvalidContinuationResponseRecoversHomeShelves(t *testing.T) {
+	previous := catalog.Page{Title: "Visible greeting", Items: recoveryItems(0, 4), Shelves: make([]catalog.Shelf, 4), Continuation: "rejected"}
+	var requests []string
+	source := recoverySource{
+		first: func(_ context.Context, location pageLocation) (catalog.Page, error) {
+			if location.route != "home" {
+				t.Fatal("recovery changed the displayed route")
+			}
+			requests = append(requests, "home")
+			return catalog.Page{Title: "Fresh greeting", Items: recoveryItems(0, 2), Shelves: make([]catalog.Shelf, 2), Continuation: "fresh"}, nil
+		},
+		next: func(_ context.Context, handle string) (catalog.Page, error) {
+			requests = append(requests, handle)
+			if handle == "rejected" {
+				return catalog.Page{}, fmt.Errorf("wrapped: %w", catalog.ErrInvalidResponse)
+			}
+			return catalog.Page{Items: recoveryItems(2, 3), Shelves: make([]catalog.Shelf, 3)}, nil
+		},
+	}
+	page, replace, err := continuePage(context.Background(), source, pageLocation{route: "home"}, previous)
+	if err != nil || !replace || page.Title != previous.Title || len(page.Items) != 5 || len(page.Shelves) != 5 || page.Continuation != "" ||
+		!reflect.DeepEqual(requests, []string{"rejected", "home", "fresh"}) {
+		t.Fatal("unusable continuation did not rebuild Home through its loaded extent")
+	}
+}
+
+func TestInvalidContinuationRecoveryStopsOnRepeatedInvalidResponse(t *testing.T) {
+	for _, freshFirstPageFails := range []bool{false, true} {
+		m, _ := nativeViewFixture()
+		m.Page.Continuation = "rejected"
+		previous := m.Page
+		firsts, nexts := 0, 0
+		source := recoverySource{
+			first: func(context.Context, pageLocation) (catalog.Page, error) {
+				firsts++
+				if freshFirstPageFails {
+					return catalog.Page{}, catalog.ErrInvalidResponse
+				}
+				return catalog.Page{Continuation: "fresh"}, nil
+			},
+			next: func(context.Context, string) (catalog.Page, error) {
+				nexts++
+				return catalog.Page{}, catalog.ErrInvalidResponse
+			},
+		}
+		page, replace, err := continuePage(context.Background(), source, pageLocation{route: "home"}, previous)
+		wantNexts := 2
+		if freshFirstPageFails {
+			wantNexts = 1
+		}
+		if !errors.Is(err, catalog.ErrInvalidResponse) || firsts != 1 || nexts != wantNexts {
+			t.Fatal("repeated invalid response was hidden or recovery exceeded one replay")
+		}
+		a := &desktop{model: *m, historyIndex: -1, pageGeneration: 3}
+		a.finishPageContinuation(3, page, replace, err)
+		if !reflect.DeepEqual(a.model.Page, previous) || a.model.Current != m.Current || a.model.Position != m.Position || !a.model.Playing || a.model.Error == "" {
+			t.Fatal("failed replay discarded existing content, playback or its error")
+		}
+	}
+}
+
 func TestPaginationRecoveryFailuresKeepContentAndPlayback(t *testing.T) {
 	m, _ := nativeViewFixture()
 	m.Page.Continuation = "expired"

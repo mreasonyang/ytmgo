@@ -553,6 +553,42 @@ func nativeTip(c *ui.Context, e ui.Element, s string, p nativePalette) ui.Elemen
 	return e
 }
 
+// nativeCut reports whether text set in el at size and weight is cut off
+// (shown with an ellipsis) at el's last laid-out size: wider than one line
+// holds, or for several lines, taller than they hold. Before el has a size
+// it is not.
+func nativeCut(c *ui.Context, el ui.Element, text string, size float32, weight int, lines int) bool {
+	b := el.Bounds()
+	if b.W <= 0 || text == "" {
+		return false
+	}
+	span := ui.Span{Text: text, Size: size, Weight: weight}
+	if lines <= 1 {
+		w, _ := c.MeasureText(0, span)
+		return w > b.W+0.5
+	}
+	_, h := c.MeasureText(b.W, span)
+	return h > b.H+0.5
+}
+
+// nativeSideTip is a sidebar item's tip: to the right of the item, level
+// with it, 8 from it, where it covers neither the item's own text nor the
+// items above or below; on the other side where the window has no room.
+// title and detail are the item's name and what it is.
+func nativeSideTip(c *ui.Context, e ui.Element, title, detail string, p nativePalette) {
+	e.Description(title)
+	ui.TooltipBase(c, e, func(tip ui.Element) {
+		tip.MaxWidth(320).Padding(4, 8).Radius(tokenRadiusArt).Background(p.text).TextColor(p.base).FontSize(tokenSizeMicro).Shadow(tokenShadowTooltip.args(p))
+		tip.Children(func() {
+			ui.Text(c, title).FontWeight(600)
+			if detail != "" {
+				ui.Text(c, detail).Opacity(0.72)
+			}
+		})
+		tip.AttachTo(e, ui.AnchorRight, ui.AnchorLeft).Margin(0, 0, 0, 8)
+	})
+}
+
 // nativeIconButton is a round icon button. An active one (an open panel,
 // a liked track, settings showing) is drawn in text with a dot beneath:
 // coral is for play, so only nativeModeButton uses it.
@@ -1344,7 +1380,6 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 	playing := item.ID != "" && item.ID == m.Current.ID
 	b := ui.ButtonBase(c).Height(tokenProductLibraryRow).Padding(8).Gap(12).Radius(tokenRadiusControl).Justify(ui.Start).Label(nativeItemLabel(item))
 	a.collection = nativeCollectionSource(m, b, item)
-	nativeTip(c, b, item.Title, p)
 	if m.LibraryCached && !m.SignedIn {
 		b.Disabled(true)
 	}
@@ -1367,6 +1402,8 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 	} else if b.Hovered() {
 		b.Background(p.hover)
 	}
+	subtitle := nativeLibrarySubtitle(item, a)
+	cut := !full // the rail shows no names: its tips do
 	b.Children(func() {
 		radius := float32(tokenRadiusArt)
 		if item.Kind == "artist" {
@@ -1381,12 +1418,17 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 			if playing {
 				title.TextColor(p.accentText)
 			}
-			ui.Text(c, nativeLibrarySubtitle(item, a)).FontSize(tokenSizeMeta).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+			line := ui.Text(c, subtitle).FontSize(tokenSizeMeta).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+			// A name shown whole needs no tip repeating it.
+			cut = nativeCut(c, title, item.Title, tokenSizeSmall, 500, 1) || nativeCut(c, line, subtitle, tokenSizeMeta, 400, 1)
 		})
 		if playing {
 			ui.Icon(c, nativeIcons["volume"]).Size(16, 16).TextColor(p.accent)
 		}
 	})
+	if cut {
+		nativeSideTip(c, b, item.Title, subtitle, p)
+	}
 }
 
 func nativeContentInset(compact bool) float32 {
@@ -1790,7 +1832,7 @@ func nativeShortcutTile(c *ui.Context, item catalog.Item, m *UIModel, a ViewActi
 	playing := item.ID != "" && item.ID == m.Current.ID
 	b := ui.ButtonBase(c).Height(tokenProductTile).MinWidth(0).PaddingEnd(12).Gap(12).Radius(tokenRadiusControl).Justify(ui.Start).Background(p.hover).Clip().Label(item.Title)
 	a.collection = nativeCollectionSource(m, b, item)
-	nativeTip(c, b, item.Title, p)
+	cut := false
 	hovered := b.Hovered()
 	if hovered {
 		b.Background(p.press)
@@ -1801,6 +1843,8 @@ func nativeShortcutTile(c *ui.Context, item catalog.Item, m *UIModel, a ViewActi
 		// clip, and the art's own clip would square the tile's off.
 		a.collectionArt(c, item, tokenProductTile, tokenRadiusControl, m, p).Radius(tokenRadiusControl, 0, 0, tokenRadiusControl)
 		t := ui.Text(c, item.Title).Grow(1).MinWidth(0).FontSize(tokenSizeSmall).FontWeight(700).MaxLines(2).Ellipsis("…")
+		// Its name in a tip only where the two lines cut it off.
+		cut = nativeCut(c, t, item.Title, tokenSizeSmall, 700, 2)
 		if playing {
 			t.TextColor(p.accentText)
 			ui.Icon(c, nativeIcons["volume"]).Size(16, 16).TextColor(p.accent)
@@ -1808,6 +1852,9 @@ func nativeShortcutTile(c *ui.Context, item catalog.Item, m *UIModel, a ViewActi
 			ui.Box(c).Size(32, 32).Shrink(0).Radius(tokenRadiusPill).Background(p.accent).TextColor(p.onAccent).Center().PassThrough().Children(func() { ui.Icon(c, nativeIcons["play"]).Size(16, 16) })
 		}
 	})
+	if cut {
+		nativeTip(c, b, item.Title, p)
+	}
 	nativeTrackMenu(c, b, item, m, a, p)
 	if b.Clicked() {
 		if item.ID != "" {

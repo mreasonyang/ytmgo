@@ -34,7 +34,6 @@ func nativeDownloadsShown(m *UIModel, a ViewActions) bool {
 func nativeDownloadsEntry(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, full bool) {
 	label := a.Tr("nativeDownloads")
 	b := ui.ButtonBase(c.Key("downloads-entry")).Height(tokenProductLibraryRow).Padding(8).Gap(12).Radius(tokenRadiusControl).Justify(ui.Start).Label(label)
-	nativeTip(c, b, label, p)
 	if !full {
 		b.Padding(8, 4).Justify(ui.Center) // a full row's height
 	}
@@ -55,6 +54,11 @@ func nativeDownloadsEntry(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 	})
 	if b.Clicked() {
 		a.Navigate("downloads")
+	}
+	// As the library's rows: a tip beside it in the rail, which shows no
+	// name; the full panel shows its name whole.
+	if !full {
+		nativeSideTip(c, b, label, nativeDownloadsSummary(m, a), p)
 	}
 }
 

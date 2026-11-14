@@ -585,7 +585,12 @@ tooltip. The website uses icons only on actions and platform names.
 - **Track tables:** a long list's pages are one table, under one header,
   numbered straight on.
 - **Tooltips:** inverted, `micro` text, radius `art`, the `tooltip`
-  elevation, 8 from their anchor. A slider's value (time, volume) is one,
+  elevation, 8 from their anchor. Above it by default (below where there is
+  no room); a sidebar item's goes beside it, level with it, so it hides
+  neither the item's own text nor its neighbours. A tip says what the
+  element doesn't: an icon button's action, or a name cut off; a name shown
+  whole gets none (the rail, which shows no names, gives its items the
+  name and what they are). A slider's value (time, volume) is one,
   anchored on the thumb rather than the taller hit area: shown under the
   pointer and while dragging, and for a second after a key moves it, the
   volume shortcuts included.

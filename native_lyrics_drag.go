@@ -26,12 +26,23 @@ func (s *nativeLyricsFollow) cancelDrag() {
 	s.drag = nativeLyricsDrag{}
 }
 
+// dragMark is where in the scroller a drag picks its line: the focus line,
+// where the sung line rests, except near the lyrics' top, where it rises
+// with the scroll so the first lines, above the focus line at rest, can be
+// picked too.
+func (s *nativeLyricsFollow) dragMark() float32 {
+	if s.viewportFocus <= 0 {
+		return 0
+	}
+	return s.viewportFocus * min(1, s.scroll.Y/s.viewportFocus)
+}
+
 // Use measured cue centers, including wrapped lines. Their coordinates are
 // relative to the leading spacer, so scrolling never makes this geometry stale.
 func (s *nativeLyricsFollow) selectDraggedLyric(m *UIModel) {
 	s.drag.selected = -1
 	nearest := float32(math.MaxFloat32)
-	center := s.scroll.Y + s.viewportCenter
+	center := s.scroll.Y + s.dragMark()
 	for i, at := range s.cueCenters {
 		if i >= len(m.LyricLines) || at <= 0 {
 			continue
@@ -112,7 +123,7 @@ func nativeLyricsDragPreview(c *ui.Context, scroll ui.Element, s *nativeLyricsFo
 		return
 	}
 	scroll.Draw(func(painter *ui.Painter, r ui.Rect) {
-		painter.Fill(ui.Rect{X: r.X, Y: r.Y + s.viewportCenter, W: r.W, H: 1}, p.accent, 0)
+		painter.Fill(ui.Rect{X: r.X, Y: r.Y + s.dragMark(), W: r.W, H: 1}, p.accent, 0)
 	})
 	ui.Overlay(c, func() {
 		text := nativeTime(m.LyricLines[s.drag.selected].Start.Seconds()) + " · " + a.Tr("nativeLyricsReleaseToSeek")

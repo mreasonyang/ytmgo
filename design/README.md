@@ -559,7 +559,10 @@ tooltip. The website uses icons only on actions and platform names.
 - **Chips** 32, capsule, `hover` fill, inverted when selected. **Pills** 36.
 - **Lyrics:** the current line is `text` and slightly larger, sung lines
   `muted`, upcoming lines `dim`; it follows playback until you scroll, then offers
-  "Follow playback". Lines scrolled past the view's top or bottom fade out
+  "Follow playback". The lyrics start at the top, and the sung line rests a
+  third of the way down once it gets there, so two thirds show what is to
+  come (as Apple Music's and Spotify's do); below the last line there is
+  room only for it to reach that line. A drag to seek picks the line there. Lines scrolled past the view's top or bottom fade out
   over 24 rather than being cut, and an edge fades only while more lies
   beyond it.
 - **Dialogs and sheets:** radius `sheet`, `surface`, one inverted primary

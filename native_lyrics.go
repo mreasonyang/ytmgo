@@ -67,18 +67,18 @@ func nativeLyricRefreshDelay(lines []catalog.LyricLine, seconds float64, active 
 }
 
 type nativeLyricsFollow struct {
-	track          string
-	revision       uint64
-	follow         bool
-	width, height  float32
-	language       string
-	scroll         ui.ScrollState
-	expectedY      float32
-	leadingSpace   float32
-	trailingSpace  float32
-	drag           nativeLyricsDrag
-	cueCenters     []float32
-	viewportCenter float32
+	track         string
+	revision      uint64
+	follow        bool
+	width, height float32
+	language      string
+	scroll        ui.ScrollState
+	expectedY     float32
+	leadingSpace  float32
+	trailingSpace float32
+	drag          nativeLyricsDrag
+	cueCenters    []float32
+	viewportFocus float32 // the focus line's height in the scroller (nativeLyricsFocus of what shows)
 	// glideTo is where a glide to the sung line goes; gliding holds while it
 	// does, so its steps are not taken for the reader scrolling.
 	glideTo float32
@@ -87,9 +87,16 @@ type nativeLyricsFollow struct {
 	placed bool
 }
 
+// nativeLyricsFocus is where the sung line rests: a third of the way down,
+// as Apple Music's and Spotify's do, so two thirds of the lyrics show what
+// is still to come. The lyrics start at the top and stay put until the
+// sung line reaches it, rather than opening on a half-empty card.
+const nativeLyricsFocus = float32(1) / 3
+
 // revealLine glides the sung line, top in the content and h high, to the
-// middle of a viewport viewH high, without moving the outer player panel;
-// an oversized line starts at the top for readability. A new line glides
+// focus line of a viewport viewH high (never above the lyrics' top),
+// without moving the outer player panel; an oversized line starts at the
+// top for readability. A new line glides
 // over the slow motion, as the website's lyrics do; while one glides, it
 // is not asked again. On first layout or resize, place the line immediately
 // if the lyrics are at rest. A glide already in progress follows the new center.
@@ -97,7 +104,7 @@ func (s *nativeLyricsFollow) revealLine(viewH, top, h float32) bool {
 	if viewH <= 0 || h <= 0 {
 		return false
 	}
-	y := max(0, min(top-max(0, (viewH-h)/2), s.scroll.MaxY))
+	y := max(0, min(top-max(0, viewH*nativeLyricsFocus-h/2), s.scroll.MaxY))
 	if !s.placed {
 		s.placed = true
 		if !s.scroll.Scrolling() {
@@ -168,7 +175,7 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 		if a.viewportScroll != nil {
 			visible = nativeIntersection(view, a.artViewport)
 		}
-		state.viewportCenter = visible.Y - view.Y + visible.H/2
+		state.viewportFocus = visible.Y - view.Y + visible.H*nativeLyricsFocus
 		state.releaseDrag(m, a, scroll)
 		if nativeLyricsCanSeek(m, a) {
 			// The grab cursor says it drags; a tip over the lyrics would cover
@@ -194,9 +201,10 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 				}
 				ui.Text(c, lyrics).FontSize(tokenSizeLineMin).FontWeight(700).LineHeight(1.6).TextColor(color)
 			} else {
-				// Leave enough room to center even the first and last cues. Keep
-				// these spaces fixed during manual reading so resizing the panel
-				// does not move the words the reader is inspecting.
+				// The lyrics start at the top; below, leave room for the last cue
+				// to reach the focus line. Keep these spaces fixed during manual
+				// reading so resizing the panel does not move the words the
+				// reader is inspecting.
 				leading := ui.Box(c.Key("lyrics-leading-space")).Height(state.leadingSpace).Shrink(0)
 				state.cueCenters = state.cueCenters[:0]
 				var first, last, current ui.Rect
@@ -226,15 +234,15 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 				if state.follow && !state.drag.pressed {
 					top, bottom := state.leadingSpace, state.trailingSpace
 					if view.H > 0 && first.H > 0 && last.H > 0 {
-						top = max(0, (view.H-first.H)/2-12)
-						bottom = max(0, (view.H-last.H)/2-12)
+						top = 0
+						bottom = max(0, view.H*(1-nativeLyricsFocus)-last.H/2-12)
 					}
 					paddingChanged := top != state.leadingSpace || bottom != state.trailingSpace
 					state.leadingSpace, state.trailingSpace = top, bottom
 					leading.Height(top)
 					trailing.Height(bottom)
 					if resized || paddingChanged {
-						// Center using bounds from the updated layout next frame.
+						// Place using bounds from the updated layout next frame.
 						state.placed = false
 						c.Invalidate()
 					} else if state.revealLine(visible.H, current.Y-leading.LayoutBounds().Y-(visible.Y-view.Y), current.H) {

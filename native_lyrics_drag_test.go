@@ -76,8 +76,9 @@ func dragLyricOntoCenter(t *testing.T, tt *ui.Tester, x, y float32, line int) fl
 		// edge may be cut off: only a row clear of both edges is whole.
 		if ok && r.H > 0 && r.Y > v.Y+1 && r.Y+r.H < v.Y+v.H-1 {
 			// The lyrics follow the pointer one to one: moving it by the
-			// cue's offset centres the cue.
-			y -= r.Y + r.H/2 - (v.Y + v.H/2)
+			// cue's offset puts the cue on the focus line, where a drag
+			// picks its line.
+			y -= r.Y + r.H/2 - (v.Y + v.H*nativeLyricsFocus)
 			tt.Move(x, y)
 			return y
 		}
@@ -86,7 +87,7 @@ func dragLyricOntoCenter(t *testing.T, tt *ui.Tester, x, y float32, line int) fl
 		}
 		// Not yet whole: drag a third of the viewport toward it. A row out
 		// of view clips to the edge it lies beyond.
-		if r.Y+r.H/2 > v.Y+v.H/2 {
+		if r.Y+r.H/2 > v.Y+v.H*nativeLyricsFocus {
 			y -= v.H / 3 // below: lift the lyrics
 		} else {
 			y += v.H / 3 // above: lower them

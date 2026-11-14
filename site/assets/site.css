@@ -235,8 +235,11 @@ figure.shot:not([class*=wrap]) { margin-inline: 0; }
 .lyrics__head { display: flex; gap: 8px; }
 .chip { display: inline-flex; align-items: center; height: var(--chip); padding: 0 12px; border-radius: var(--r-pill); background: var(--hover); font-size: var(--t-small); font-weight: 600; }
 .chip--on { background: var(--text); color: var(--base); }
-.lyrics__view { position: relative; flex: 1; margin: 12px 0; overflow: hidden; -webkit-mask-image: linear-gradient(transparent, var(--base) 24px, var(--base) calc(100% - 24px), transparent); mask-image: linear-gradient(transparent, var(--base) 24px, var(--base) calc(100% - 24px), transparent); }
-.lyrics__lines { position: absolute; left: 0; right: 0; top: 50%; margin: 0; padding: 0; list-style: none; transition: transform var(--d-slow) var(--ease); }
+/* As the app's: the lyrics start at the top, and the sung line rests a third
+   of the way down; the top fades only once lines have scrolled above it. */
+.lyrics__view { position: relative; flex: 1; margin: 12px 0; overflow: hidden; -webkit-mask-image: linear-gradient(var(--base), var(--base) calc(100% - 24px), transparent); mask-image: linear-gradient(var(--base), var(--base) calc(100% - 24px), transparent); }
+.lyrics__view.is-scrolled { -webkit-mask-image: linear-gradient(transparent, var(--base) 24px, var(--base) calc(100% - 24px), transparent); mask-image: linear-gradient(transparent, var(--base) 24px, var(--base) calc(100% - 24px), transparent); }
+.lyrics__lines { position: absolute; left: 0; right: 0; top: 0; margin: 0; padding: 0; list-style: none; transition: transform var(--d-slow) var(--ease); }
 .lyrics__lines li { padding: 8px 0; font-size: var(--t-line); line-height: 1.22; letter-spacing: -0.015em; color: var(--dim); transform-origin: left center; transition: color var(--d-base), scale var(--d-slow) var(--ease); }
 .js .lyrics__lines li { cursor: pointer; }
 .js .lyrics__lines li:hover { color: var(--secondary); }

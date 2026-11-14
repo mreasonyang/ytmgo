@@ -27,7 +27,7 @@
 
   "lyrics.kicker": "Synced lyrics",
   "lyrics.title": "Lyrics that keep time",
-  "lyrics.body": "The current line lights up and stays centred as the song plays. Scroll to read ahead whenever you like; one click on “Follow playback” brings you back to the beat.",
+  "lyrics.body": "The current line lights up and rises to a third of the way down, so most of what you see is what's coming next. Scroll to read ahead whenever you like; one click on “Follow playback” brings you back to the beat.",
   "lyrics.tick1": "Drag through the lyrics and let go to jump to that line",
   "lyrics.tick2": "Opens to the lyrics the first time you press play",
   "lyrics.tick3": "Make room for the words by shrinking the cover",

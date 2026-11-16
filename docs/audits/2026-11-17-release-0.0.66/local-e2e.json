@@ -1,0 +1,301 @@
+{
+  "scope": "Local macOS arm64 development-package acceptance before formal release",
+  "result": "PASS_FOR_TESTED_SCOPE",
+  "build": {
+    "version": "0.0.66",
+    "kind": "development",
+    "commit": "63d4483d942e836a839f02ca2be02c7ee4ab3ae9",
+    "branch": "feat/audio-quality-download",
+    "dirty": false,
+    "updates_enabled": false,
+    "executable_sha256": "94c50e6104a94e18d4fd7864c1079d2714b4fdd0e629d7b65f7b9f2843a86d9b"
+  },
+  "commands": [
+    "make build-app",
+    "make check",
+    "go test -race -json ./...",
+    "YTMGO_LIVE_CATALOG=1 YTMGO_LIVE_LYRICS=1 go test -count=1 -json -run '^(TestLiveCatalog|TestAnonymousTimedLyricsLive)$' ./internal/catalog",
+    "YTMGO_RUNTIME_DIR='<installed Resources/runtime>' YTMGO_LIVE_ACCEPTANCE=1 YTMGO_LIVE_ENDED=1 go test -count=1 -json -run '^(TestNativePlaybackAcceptanceLive|TestNativeEndedRestartLive)$' ./internal/player",
+    "YTMGO_RUNTIME_DIR='<installed Resources/runtime>' YTMGO_LIVE_MV_CONTENT=1 YTMGO_LIVE_VIDEO=1 go test -count=1 -json -timeout 7m -run '^(TestNativeOfficialVideoContentLive|TestNativeVideoDuringAnonymousAudioLive)$' ./internal/player",
+    "YTMGO_RUNTIME_DIR='<installed Resources/runtime>' YTMGO_LIVE_OFFLINE_DOWNLOAD=1 go test -count=1 -json -timeout 5m -run '^TestNativeOfflineDownloadLive$' ."
+  ],
+  "race": {
+    "result": "pass",
+    "test_and_subtest_counts": {
+      "pass": 1788,
+      "skip": 41
+    },
+    "package_results": [
+      {
+        "Package": "ytmgo/build/e2e-network-proxy",
+        "Action": "skip",
+        "Elapsed": 0
+      },
+      {
+        "Package": "ytmgo/cmd/icon",
+        "Action": "skip",
+        "Elapsed": 0
+      },
+      {
+        "Package": "ytmgo/cmd/login-icon",
+        "Action": "skip",
+        "Elapsed": 0
+      },
+      {
+        "Package": "ytmgo/design/gen",
+        "Action": "skip",
+        "Elapsed": 0
+      },
+      {
+        "Package": "ytmgo/internal/designtokens",
+        "Action": "skip",
+        "Elapsed": 0
+      },
+      {
+        "Package": "ytmgo/internal/httpfreshness",
+        "Action": "skip",
+        "Elapsed": 0
+      },
+      {
+        "Package": "ytmgo/internal/language",
+        "Action": "pass",
+        "Elapsed": 1.316
+      },
+      {
+        "Package": "ytmgo/internal/audioquality",
+        "Action": "pass",
+        "Elapsed": 1.32
+      },
+      {
+        "Package": "ytmgo/internal/preference",
+        "Action": "skip",
+        "Elapsed": 0
+      },
+      {
+        "Package": "ytmgo/internal/appearance",
+        "Action": "pass",
+        "Elapsed": 1.33
+      },
+      {
+        "Package": "ytmgo/cmd/sign-desktop-update",
+        "Action": "pass",
+        "Elapsed": 1.334
+      },
+      {
+        "Package": "ytmgo/internal/netproxy",
+        "Action": "pass",
+        "Elapsed": 1.3559999999999999
+      },
+      {
+        "Package": "ytmgo/internal/librarysnapshot",
+        "Action": "pass",
+        "Elapsed": 1.363
+      },
+      {
+        "Package": "ytmgo/internal/updater/internal/wait",
+        "Action": "skip",
+        "Elapsed": 0
+      },
+      {
+        "Package": "ytmgo/cmd/update-package",
+        "Action": "pass",
+        "Elapsed": 1.436
+      },
+      {
+        "Package": "ytmgo/internal/downloads",
+        "Action": "pass",
+        "Elapsed": 1.445
+      },
+      {
+        "Package": "ytmgo/locales",
+        "Action": "skip",
+        "Elapsed": 0
+      },
+      {
+        "Package": "ytmgo/internal/accountsession",
+        "Action": "pass",
+        "Elapsed": 1.542
+      },
+      {
+        "Package": "ytmgo/internal/catalog",
+        "Action": "pass",
+        "Elapsed": 2.2560000000000002
+      },
+      {
+        "Package": "ytmgo/internal/updater/internal/markdown",
+        "Action": "pass",
+        "Elapsed": 1.291
+      },
+      {
+        "Package": "ytmgo/internal/updater/internal/frontend",
+        "Action": "pass",
+        "Elapsed": 1.321
+      },
+      {
+        "Package": "ytmgo/internal/videoquality",
+        "Action": "pass",
+        "Elapsed": 1.289
+      },
+      {
+        "Package": "ytmgo/site/gen",
+        "Action": "pass",
+        "Elapsed": 1.393
+      },
+      {
+        "Package": "ytmgo/internal/updater",
+        "Action": "pass",
+        "Elapsed": 1.544
+      },
+      {
+        "Package": "ytmgo/internal/updater/native",
+        "Action": "pass",
+        "Elapsed": 1.807
+      },
+      {
+        "Package": "ytmgo/internal/player",
+        "Action": "pass",
+        "Elapsed": 17.983
+      },
+      {
+        "Package": "ytmgo/internal/streaming",
+        "Action": "pass",
+        "Elapsed": 29.439
+      },
+      {
+        "Package": "ytmgo/internal/accountlogin",
+        "Action": "pass",
+        "Elapsed": 50.407
+      },
+      {
+        "Package": "ytmgo",
+        "Action": "pass",
+        "Elapsed": 554.291
+      }
+    ]
+  },
+  "live_tests": {
+    "live-catalog": {
+      "package_results": [
+        {
+          "Package": "ytmgo/internal/catalog",
+          "Action": "pass",
+          "Elapsed": 7.63
+        }
+      ],
+      "test_results": [
+        {
+          "Test": "TestLiveCatalog",
+          "Action": "pass",
+          "Elapsed": 3.8
+        },
+        {
+          "Test": "TestAnonymousTimedLyricsLive",
+          "Action": "pass",
+          "Elapsed": 3.57
+        }
+      ]
+    },
+    "live-playback": {
+      "package_results": [
+        {
+          "Package": "ytmgo/internal/player",
+          "Action": "pass",
+          "Elapsed": 59.003
+        }
+      ],
+      "test_results": [
+        {
+          "Test": "TestNativePlaybackAcceptanceLive",
+          "Action": "pass",
+          "Elapsed": 48.06
+        },
+        {
+          "Test": "TestNativeEndedRestartLive",
+          "Action": "pass",
+          "Elapsed": 10.69
+        }
+      ]
+    },
+    "live-video": {
+      "package_results": [
+        {
+          "Package": "ytmgo/internal/player",
+          "Action": "pass",
+          "Elapsed": 38.332
+        }
+      ],
+      "test_results": [
+        {
+          "Test": "TestNativeOfficialVideoContentLive",
+          "Action": "pass",
+          "Elapsed": 17.98
+        },
+        {
+          "Test": "TestNativeVideoDuringAnonymousAudioLive/1m13.125s",
+          "Action": "pass",
+          "Elapsed": 7.65
+        },
+        {
+          "Test": "TestNativeVideoDuringAnonymousAudioLive/1m57.625s",
+          "Action": "pass",
+          "Elapsed": 6.55
+        },
+        {
+          "Test": "TestNativeVideoDuringAnonymousAudioLive",
+          "Action": "pass",
+          "Elapsed": 20.09
+        }
+      ]
+    },
+    "live-offline-download": {
+      "package_results": [
+        {
+          "Package": "ytmgo",
+          "Action": "pass",
+          "Elapsed": 9.693
+        }
+      ],
+      "test_results": [
+        {
+          "Test": "TestNativeOfflineDownloadLive",
+          "Action": "pass",
+          "Elapsed": 9.37
+        }
+      ]
+    }
+  },
+  "official_mv": {
+    "category": "pass",
+    "official_video_matched": true,
+    "startup_ms": 10559,
+    "Samples": 120,
+    "MovingSamples": 119,
+    "frames_advanced": 142,
+    "maximum_pixel_difference": 0.3971609477124183,
+    "ResolutionCategory": "",
+    "ResolutionStage": "",
+    "VideoError": "",
+    "Width": 1280,
+    "Height": 720
+  },
+  "restart": {
+    "queue_count": 12,
+    "index": 1,
+    "position_ns": 12128000000,
+    "volume": 0,
+    "preferences": {
+      "appearance": "dark",
+      "language": "zh-Hans",
+      "audio-quality": "saver"
+    },
+    "ui_paused_position_seconds": 12.128,
+    "same_queue": true,
+    "same_bookmark": true
+  },
+  "limits": [
+    "未登录真实 Google 账号，未验收 Premium、账号切换、私有资料库或服务端点赞修改。",
+    "本轮为 ad-hoc 签名开发包，不代表正式版公证或发布验收。",
+    "仅 macOS arm64；Windows、Linux、Intel、物理媒体键、睡眠唤醒与长时间稳定性未验收。",
+    "播放依据原生音频时钟、解码状态和真实视频帧验证；未做扬声器听感或声学回环测量。"
+  ]
+}

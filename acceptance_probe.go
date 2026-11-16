@@ -46,6 +46,19 @@ func loadAcceptanceProbe(directory string, now time.Time) *acceptanceProbe {
 	return &acceptanceProbe{directory: directory, started: now, until: request.Until}
 }
 
+// Only an explicit, unexpired acceptance request samples an idle player.
+func (a *desktop) samplePlayback() {
+	p := a.acceptanceProbe
+	for now := time.Now(); now.Before(p.until); now = time.Now() {
+		p.observe(now, a.player.Snapshot())
+		select {
+		case <-a.ctx.Done():
+			return
+		case <-time.After(time.Until(p.next)):
+		}
+	}
+}
+
 func (p *acceptanceProbe) observe(now time.Time, state player.State) {
 	if p == nil || !now.Before(p.until) || now.Before(p.next) {
 		return

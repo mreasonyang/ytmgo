@@ -112,8 +112,8 @@ dark only.
 | Role | Dark | Light | Use |
 | --- | --- | --- | --- |
 | `base` | `#000000` | `#e9e9eb` | Window frame, global bar, player bar, page background |
-| `surface` | `#121212` | `#ffffff` | Panels |
-| `raised` | `#1f1f1f` | `#f2f2f3` | Search, round buttons, cards on hover, dialogs, popovers |
+| `surface` | `#121212` | `#ffffff` | Panels, dialogs and sheets |
+| `raised` | `#1f1f1f` | `#f2f2f3` | Search, round buttons, cards on hover, popovers; the groups in a sheet |
 | `input` | `#242424` | `#ececee` | Secondary pills, segmented tracks |
 | `highlight` | `#2a2a2a` | `#e1e1e4` | Hovered round buttons, menus, placeholders |
 | `text` | `#ffffff` | `#121212` | Titles, primary labels, inverted buttons |
@@ -127,7 +127,7 @@ dark only.
 | `line` | 10 % white | 10 % black | Hairlines, dividers, rings around images |
 | `hover` / `press` | 7 % / 12 % white | 5 % / 9 % black | Quiet fills at rest / hovered; hovered rows |
 | `track` | 30 % white | 21 % black | Unfilled progress and sliders, outline buttons |
-| `selection` | 20 % white | 20 % `text` | Selected text |
+| `selection` | 20 % white | 20 % `text` | Selected text; chosen rows |
 | `inverseHover` | `#dbdbdb` | `#303030` | A hovered inverted button |
 | `scrim` | 60 % black | 40 % black | Dims the window behind a dialog |
 | `veil` | 70 % `base` | 70 % `base` | A surface over moving content: the sticky nav (with blur), the video's controls. 70 % keeps `secondary` links at 5:1 over white content |
@@ -294,6 +294,13 @@ design guard and the website's lint fail on an off-grid value.
 | Now Playing | 360 docked | 380 floating | sheet |
 | Player | 80, three zones | 80 | 60 mini player + 64 tab bar |
 
+One middle column runs from top to bottom: the global bar's search field
+is the player's transport column (38 % of the window, at most 720), centred
+over it in the window, Home and Explore (48 round buttons) either side,
+so the group balances on the play button; the window controls'
+insets go to the side groups, never the middle. Short of room beside the
+controls, the field narrows, still centred.
+
 Panels sit 8 apart on the black frame. Targets are at least 32 with a
 pointer and 44 for touch.
 
@@ -364,7 +371,8 @@ from the same set, redrawn to the same stroke, or are drawn to match it;
 never from another app's interface. **One glyph, one meaning:** the
 diagonal expand arrows always mean immersive mode; a panel that grows or
 shrinks in place uses vertical chevrons, and a control whose glyph changes
-with its state needs no active dot. Filled variants mark the active
+with its state needs no active dot. Pausing a download is the circled
+pause, never the transport's bars. Filled variants mark the active
 destination and the primary transport glyphs. **Optical, not geometric, centring:** a
 glyph is centred by where the eye puts its weight, between its bounding
 box and its ink's centroid. Asymmetric glyphs carry their correction in
@@ -412,9 +420,15 @@ tooltip. The website uses icons only on actions and platform names.
     while the title, the switch and the card move to their places
     (`base`); restoring runs it back.
   - Now Playing docks by sliding in from the right edge, where the
-    controls that open it are, and slides back out; the page keeps its
-    width until the panel has gone, then eases to fill the room. Floating,
-    it rises from the bottom and sinks back.
+    controls that open it are, and slides back out, and the page gives it
+    room or takes it back in the same motion (`base`), at once, never
+    after: a page catching up once the panel had gone read as a bug. The
+    library goes to the rail and back over `base` too, its rows holding
+    still: the rail's rows and header keep the full ones' heights, and the
+    panel's edge passes over its contents as it narrows or widens (they
+    keep the full width, their chips on one line), the rail's layout
+    taking over once it has narrowed. Floating, it rises
+    from the bottom and sinks back.
   - Immersive mode: the cover grows from the one that was showing (the
     panel's or the player bar's) and shrinks back into the one that will;
     the lyrics card travels with it; the library and the global bar fade as
@@ -463,6 +477,16 @@ tooltip. The website uses icons only on actions and platform names.
   names what will be lost.
 - **Selection is inversion:** a selected chip, tab or segment is `text` on
   `base`. A playing item is coral.
+- **Choosing songs:** in a song table (an album's or playlist's, search
+  results, the queue), Cmd-click (Ctrl on Linux and Windows) adds a song or
+  takes it out, Shift-click chooses from the last one clicked, a drag across
+  rows chooses them (adding with Cmd held), and Cmd+A chooses the page's
+  songs; a plain click still plays, and lets the choice go, as do Esc and
+  leaving the page. Chosen rows take `selection`, a run of them one block
+  (square corners between). A chosen song's menu acts on them all, headed
+  by their number: queue, download, remove downloads, and in the queue
+  remove from it, never the playing song. Outside the choice, a right-click
+  chooses that song alone.
 - **Focus** is a 2 px `text` ring, 3 px out, on every focusable element.
 - **The website player** is the app's player bar: it shows the section
   you're in, its clock runs from 0:00 at the top to the total at the bottom,
@@ -477,16 +501,38 @@ tooltip. The website uses icons only on actions and platform names.
   title over artist, album, duration in mono. The playing indicator has its
   own slot, so columns line up whether a row plays or not, and a list whose
   rows all come from one album (an album's own page) drops the Album column. The number becomes a play glyph
-  on hover and an equalizer while playing; the title turns coral.
+  on hover and an equalizer while playing; the title turns coral. A
+  downloaded song carries the filled download glyph, 12, before its artist.
+- **Library panel:** the library itself, where the window has room for it:
+  its heading ("Your Library") folds it to the rail and the rail's icon
+  unfolds it, as Spotify's do, and Cmd+L shows it; none of them opens the
+  same list again as a page beside it. The Library page is for windows
+  without the full panel: the rail alone (its icon opens it) and compact
+  (the Library tab).
 - **Library row:** 64 high, 48 art (round for artists), title over
   "kind · owner". The open collection is washed and its title is `text`
-  (navigation state isn't coral).
+  (navigation state isn't coral). **Downloads** is the list's first row
+  once anything is downloaded, while no filter narrows it (it is none of
+  their kinds): a library row with a cover of its own, as Liked Music has,
+  a diagonal from the teal to the slate tint under the filled download
+  glyph in white (the glyph that marks downloaded songs), its page washed
+  in teal; its subtitle what's under way or the space it takes; a compact Library page leads with it.
+- **Downloads page:** track rows. The download's state takes the Album
+  column (an error beside the attention glyph); its control (pause, resume,
+  retry) and remove end the row. A finished download has no control: its
+  row plays it. Above them, the space they take and a neutral "Remove all
+  downloads…", which asks first, naming what goes and the space it frees.
 - **Quick-access tile:** 64 high, art filling its height, radius `control`.
 - **Card:** 164 art (140 compact), title, two-line subtitle; the play button
   rises on hover.
 - **Collection header:** 232 art (192 medium) beside the collection title,
-  then the 56 coral play button.
-- **Player bar:** 80 high, three zones: now playing (56 art), transport
+  then the 56 coral play button. An album or playlist follows it with its
+  download toggle, a 48 icon button with a 32 glyph: a circled arrow while
+  any of its songs isn't downloaded, a ring filling as they download, then
+  the filled glyph; under way or done it leads to Downloads. Downloading
+  never leaves the page it was asked from.
+- **Player bar:** 80 high, three zones: now playing (56 art, then like;
+  downloading the playing song is in its More menu), transport
   (white round play/pause, icon buttons, progress with mono times),
   and output (lyrics, queue, volume, more, expand); washed with the playing
   cover's colour behind the track (§4.4).
@@ -513,14 +559,41 @@ tooltip. The website uses icons only on actions and platform names.
 - **Chips** 32, capsule, `hover` fill, inverted when selected. **Pills** 36.
 - **Lyrics:** the current line is `text` and slightly larger, sung lines
   `muted`, upcoming lines `dim`; it follows playback until you scroll, then offers
-  "Follow playback". Lines scrolled past the view's top or bottom fade out
+  "Follow playback". The lyrics start at the top, and the sung line rests a
+  third of the way down once it gets there, so two thirds show what is to
+  come (as Apple Music's and Spotify's do); below the last line there is
+  room only for it to reach that line. A drag to seek picks the line there. Lines scrolled past the view's top or bottom fade out
   over 24 rather than being cut, and an edge fades only while more lies
   beyond it.
-- **Dialogs and sheets:** radius `sheet`, `raised`, one inverted primary
-  action; their groups `panel`, rows in a group flat or `control`, icon
-  tiles `art`.
+- **Dialogs and sheets:** radius `sheet`, `surface`, one inverted primary
+  action; their groups `raised` with radius `panel`, rows in a group flat
+  or `control`, icon tiles `art`. A dialog is set apart by the scrim and its
+  hairline (and, in light, its shadow), not by a lighter fill: `raised` is
+  for what floats over a panel at its own level, as a popover does, and
+  the sheet's groups need it to stand out from the sheet. A question before what can't be undone (removing
+  downloads, signing out) is the app's own dialog, never the system's
+  alert: 400 wide, padding 24, its title what will happen (an `h3`), its
+  body what will be lost, Cancel first and focused, then the action, the
+  one inverted button; Cancel, Esc and a click outside keep everything. About ytmGO
+  is the same dialog (Help menu and macOS's app menu alike): the icon, the
+  wordmark with its coral "GO", the build, what the app is, one inverted OK.
+  The update window (MyGo's updater, a copy in `internal/updater`) takes
+  the same look: `surface`, the release notes on `raised` with a hairline,
+  pill buttons with Install inverted, spacing on the grid.
+- **Menus:** a song's menu (right-click, More) and the account's are the
+  app's own, drawn in the window as its other popovers: `raised`, a
+  hairline, the `popover` elevation, radius `control`, 4 in; items 36 high,
+  radius `art`, washed under the pointer or the keys; a hairline between
+  groups. Only the application menu and text editing keep the system's.
+- **Track tables:** a long list's pages are one table, under one header,
+  numbered straight on.
 - **Tooltips:** inverted, `micro` text, radius `art`, the `tooltip`
-  elevation, 8 from their anchor. A slider's value (time, volume) is one,
+  elevation, 8 from their anchor. Above it by default (below where there is
+  no room); a sidebar item's goes beside it, level with it, so it hides
+  neither the item's own text nor its neighbours. A tip says what the
+  element doesn't: an icon button's action, or a name cut off; a name shown
+  whole gets none (the rail, which shows no names, gives its items the
+  name and what they are). A slider's value (time, volume) is one,
   anchored on the thumb rather than the taller hit area: shown under the
   pointer and while dragging, and for a second after a key moves it, the
   volume shortcuts included.

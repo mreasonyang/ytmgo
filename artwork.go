@@ -106,6 +106,7 @@ type artworkCache struct {
 	queue                                []artDemand
 	active, secondaryActive, largeActive int
 	disk                                 *artworkDisk
+	pinned                               func(string) []byte
 	decoding                             chan struct{}
 	workers                              sync.WaitGroup
 	redraw                               func()
@@ -494,6 +495,13 @@ type decoded struct {
 func (c *artworkCache) load(ctx context.Context, d artDemand) decoded {
 	if ctx.Err() != nil {
 		return decoded{}
+	}
+	if c.pinned != nil && d.priority != artAvatar {
+		if data := c.pinned(artworkRequest(d.url)); len(data) > 0 {
+			if art := c.decode(ctx, data, d.edge); art.bitmap != nil {
+				return art
+			}
+		}
 	}
 	data, headers := c.download(ctx, d)
 	requested := time.Now()

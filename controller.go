@@ -10,6 +10,7 @@ import (
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
+	"ytmgo/internal/audioquality"
 	"ytmgo/internal/catalog"
 )
 
@@ -90,6 +91,13 @@ func (a *desktop) loadPage(route, q string, record bool) {
 	a.model.ErrorScope = ""
 	a.model.AccountNotice = ""
 	a.model.Page = catalog.Page{}
+	if route == "downloads" {
+		a.model.Loading = false
+		a.refreshDownloads()
+		a.pushHistory(record)
+		a.invalidate()
+		return
+	}
 	if route == "library" {
 		if a.model.LibraryLoaded && a.libraryPage != nil {
 			a.model.LibraryCached = true
@@ -318,6 +326,9 @@ func (a *desktop) travel(delta int) {
 	a.model.Immersive = false
 	a.model.CanBack = i > 0
 	a.model.CanForward = i+1 < len(a.history)
+	if e.route == "downloads" {
+		a.refreshDownloads()
+	}
 	if e.needsReload {
 		a.loadPage(e.route, e.query, false)
 		return
@@ -398,9 +409,7 @@ func (a *desktop) startTrackAt(it catalog.Item, at time.Duration) {
 	if a.playCancel != nil {
 		a.playCancel()
 	}
-	if a.seekCancel != nil {
-		a.seekCancel()
-	}
+	a.cancelSeek()
 	a.playGeneration++
 	a.preparedID = ""
 	generation := a.playGeneration
@@ -412,6 +421,9 @@ func (a *desktop) startTrackAt(it catalog.Item, at time.Duration) {
 	a.playCancel = cancel
 	a.restoredTrack = false
 	a.model.Current = it
+	if a.model.AudioQualityNotice == "nativeAudioQualitySaved" {
+		a.model.AudioQualityNotice = ""
+	}
 	a.model.Position = at.Seconds()
 	a.model.Duration = it.Duration.Seconds()
 	a.model.Playing = false
@@ -448,7 +460,9 @@ func (a *desktop) startTrackAt(it catalog.Item, at time.Duration) {
 			if errors.Is(err, context.Canceled) {
 				// A seek may replace an in-flight load of this same track.
 				// Its newer player generation owns the bookmark and loading UI.
-				a.model.PlaybackLoading = a.player.Snapshot().Loading
+				state := a.player.Snapshot()
+				a.model.PlaybackLoading = state.Loading
+				a.applyPlaybackState(state)
 				return
 			}
 			if err != nil && ctx.Err() == nil {
@@ -461,15 +475,15 @@ func (a *desktop) startTrackAt(it catalog.Item, at time.Duration) {
 			} else if err == nil {
 				a.endedHandled = false
 				state := a.player.Snapshot()
-				a.learnVideo(state)
 				recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 				mygo.NowPlaying.Set(mygo.NowPlayingInfo{Title: it.Title, Artist: it.Artist, Album: it.Album, Duration: state.Duration, Position: state.Position, State: mygo.PlaybackPlaying, Commands: mygo.MediaPlay | mygo.MediaPause | mygo.MediaNext | mygo.MediaPrevious | mygo.MediaSeek})
 				a.prepareNext()
+				a.applyPlaybackState(state)
 			}
 		})
 	}()
 	go func() {
-		lyrics, err := a.catalog.LyricsWithTiming(ctx, it.ID)
+		lyrics, err := a.trackLyrics(ctx, it.ID)
 		a.post(func() {
 			if generation != a.playGeneration || ctx.Err() != nil {
 				return
@@ -528,6 +542,32 @@ func (a *desktop) appendQueue(it catalog.Item) {
 	a.invalidate()
 }
 
+// removeFromQueue takes the songs with ids out of the queue, every time they
+// appear, but the playing one stays where it plays.
+func (a *desktop) removeFromQueue(ids []string) {
+	gone := make(map[string]bool, len(ids))
+	for _, id := range ids {
+		gone[id] = true
+	}
+	kept := a.model.Queue[:0:0]
+	index := -1
+	for i, it := range a.model.Queue {
+		if i == a.queueIndex {
+			index = len(kept)
+		} else if gone[it.ID] {
+			continue
+		}
+		kept = append(kept, it)
+	}
+	if len(kept) == len(a.model.Queue) {
+		return
+	}
+	a.model.Queue, a.queueIndex = kept, index
+	a.queueGeneration++
+	a.prepareNext()
+	a.invalidate()
+}
+
 // The queue is already in its current shuffle order. Repeat-one reuses the
 // current track via Seek, so it does not reserve a second media stream.
 func nextPreparedTrack(queue []catalog.Item, index, repeat int) catalog.Item {
@@ -544,6 +584,23 @@ func nextPreparedTrack(queue []catalog.Item, index, repeat int) catalog.Item {
 	return queue[next]
 }
 
+func (a *desktop) setAudioQuality(quality audioquality.Quality) {
+	if !quality.Valid() || quality == a.model.AudioQuality.Normalize() {
+		return
+	}
+	if err := audioquality.Save(a.audioQualityPath, quality); err != nil {
+		a.model.AudioQualityNotice = "nativeAudioQualitySaveError"
+	} else {
+		a.model.AudioQuality = quality
+		a.model.AudioQualityNotice = "nativeAudioQualitySaved"
+		if a.player != nil {
+			a.player.SetAudioQuality(quality)
+			a.prepareNext()
+		}
+	}
+	a.invalidate()
+}
+
 func (a *desktop) prepareNext() {
 	if a.player == nil {
 		return
@@ -552,13 +609,14 @@ func (a *desktop) prepareNext() {
 	if !a.restoredTrack && !a.powerPlaybackSuspended && !a.loadPending && a.model.Current.ID != "" && a.model.PlaybackError == "" {
 		id = nextPreparedTrack(a.model.Queue, a.queueIndex, a.model.Repeat).ID
 	}
-	if id == a.preparedID {
+	quality := a.model.AudioQuality.Normalize()
+	if id == a.preparedID && (id == "" || quality == a.preparedQuality.Normalize()) {
 		return
 	}
 	if a.prepareCancel != nil {
 		a.prepareCancel()
 	}
-	a.preparedID = id
+	a.preparedID, a.preparedQuality = id, quality
 	a.player.ClearPrepared()
 	if id == "" {
 		return
@@ -574,7 +632,11 @@ func (a *desktop) repeat() {
 	a.invalidate()
 }
 func (a *desktop) previous() {
-	if a.model.Position > 3 {
+	position := a.model.Position
+	if a.player != nil && !a.restoredTrack && !a.loadPending {
+		position = a.player.Snapshot().Position.Seconds()
+	}
+	if position > 3 {
 		a.seek(0)
 		return
 	}
@@ -608,6 +670,13 @@ func (a *desktop) toggle() {
 
 func (a *desktop) retryPlayback() {
 	a.startTrackAt(a.model.Current, time.Duration(a.model.Position*float64(time.Second)))
+}
+
+func (a *desktop) cancelSeek() {
+	if a.seekCancel != nil {
+		a.seekCancel()
+		a.seekCancel = nil
+	}
 }
 
 func (a *desktop) cancelResume() {
@@ -658,6 +727,7 @@ func (a *desktop) resume() {
 				a.model.PlaybackError = ""
 				recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 				a.endedHandled = false
+				a.applyPlaybackState(a.player.Snapshot())
 			}
 		})
 	}()
@@ -733,9 +803,7 @@ func (a *desktop) seek(seconds float64) {
 	a.model.PlaybackError = ""
 	generation := a.playGeneration
 	a.seekGeneration++
-	if a.seekCancel != nil {
-		a.seekCancel()
-	}
+	a.cancelSeek()
 	ctx, cancel := context.WithCancel(a.ctx)
 	a.seekCancel = cancel
 	if a.prepareCancel != nil {
@@ -748,12 +816,14 @@ func (a *desktop) seek(seconds float64) {
 		err := a.player.SeekContext(ctx, time.Duration(seconds*float64(time.Second)))
 		a.post(func() {
 			if generation == a.playGeneration && seekGeneration == a.seekGeneration {
+				a.seekCancel = nil
 				if err != nil && !errors.Is(err, context.Canceled) {
 					a.playbackFailure(a.player.Snapshot())
 				} else if err == nil {
 					a.endedHandled = false
 					recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 					a.prepareNext()
+					a.applyPlaybackState(a.player.Snapshot())
 				}
 			}
 		})

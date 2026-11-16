@@ -7,7 +7,7 @@ import (
 )
 
 type suspendedTrack struct {
-	id                 string
+	track              audioTrack
 	position, duration time.Duration
 	play               bool
 }
@@ -32,8 +32,8 @@ func (p *Player) Suspend() error {
 	if p.state.Duration > 0 {
 		at = min(at, p.state.Duration)
 	}
-	if videoIDPattern.MatchString(p.videoID) {
-		p.suspended = &suspendedTrack{id: p.videoID, position: max(at, 0), duration: p.state.Duration, play: p.wantPlay && p.state.Error == ""}
+	if videoIDPattern.MatchString(p.currentTrack.id) {
+		p.suspended = &suspendedTrack{track: p.currentTrack, position: max(at, 0), duration: p.state.Duration, play: p.wantPlay && p.state.Error == ""}
 	} else {
 		p.suspended = nil
 	}
@@ -50,6 +50,7 @@ func (p *Player) Suspend() error {
 	p.seekReloadable = false
 	p.clearPreparedLocked()
 	p.state.Position, p.state.Playing, p.state.Loading, p.state.Ended = at, false, false, false
+	p.notifyChangedLocked()
 	previous := p.suspendDone
 	done := make(chan struct{})
 	p.suspendDone = done
@@ -89,7 +90,7 @@ func (p *Player) ResumeFromSuspend(ctx context.Context) error {
 			return ctx.Err()
 		}
 	}
-	if err := p.lockAccount(ctx); err != nil {
+	if err := p.lockForAudio(ctx, token.track.id); err != nil {
 		return err
 	}
 	if p.suspended != token || p.sleeping {
@@ -117,7 +118,7 @@ func (p *Player) ResumeFromSuspend(ctx context.Context) error {
 		if err = ctx.Err(); err != nil {
 			return p.fail(gen, err)
 		}
-		info, resolveErr := p.resolve(ctx, bookmark.id)
+		info, resolveErr := p.resolve(ctx, bookmark.track)
 		err = resolveErr
 		var decoder *pcmDecoder
 		if err == nil {

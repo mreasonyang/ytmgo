@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image/color"
 	"testing"
 	"time"
 
@@ -80,6 +81,48 @@ func TestScrollbarFadesWhileThePointerRests(t *testing.T) {
 	settle(100 * time.Millisecond)
 	if st.Y <= before {
 		t.Fatalf("dragging the drawn thumb did not scroll (%g -> %g)", before, st.Y)
+	}
+}
+
+// A grabbed thumb keeps its grabbed colour (muted) for the whole drag,
+// wherever the pointer goes, and returns to the track colour once let go.
+func TestScrollbarThumbHoldsItsColourWhileDragged(t *testing.T) {
+	p := palette(false)
+	var st ui.ScrollState
+	tt := ui.NewTester(func(c *ui.Context) {
+		c.Root().ObserveInput(nativeReleaseScrollGrabs)
+		ui.Column(c).Fill().Background(p.surface).Children(func() {
+			scroll := ui.Scroll(c).Grow(1).MinHeight(0).TrackScroll(&st)
+			nativeScrollbar(c, scroll, &st, p, nil)
+			scroll.Children(func() {
+				for i := range 80 {
+					ui.Text(c, fmt.Sprint("Row ", i)).Height(24)
+				}
+			})
+		})
+	}, 200, 400)
+	tt.SetScale(2)
+	thumb := func() color.RGBA {
+		tt.Frame()
+		bar := nativeScrollbarThumbs(ui.Rect{W: 200, H: 400}, &st, false)[0]
+		return color.RGBAModel.Convert(tt.Image().At(int(2*(bar.X+bar.W/2)), int(2*(bar.Y+bar.H/2)))).(color.RGBA)
+	}
+	tt.Move(194, 40)
+	tt.Frame()
+	bar := nativeScrollbarThumbs(ui.Rect{W: 200, H: 400}, &st, false)[0]
+	grabbed := thumb()
+	tt.Press(bar.X+bar.W/2, bar.Y+bar.H/2)
+	tt.Frame()
+	for _, to := range [][2]float32{{120, 80}, {20, 140}, {-40, 200}} {
+		tt.Move(to[0], to[1])
+		if got := thumb(); got != grabbed {
+			t.Fatalf("dragged to %v the thumb is %v, want its grabbed %v", to, got, grabbed)
+		}
+	}
+	tt.Release(20, 200)
+	tt.Frame()
+	if got := thumb(); got == grabbed {
+		t.Fatal("the thumb kept its grabbed colour after being let go, off its strip")
 	}
 }
 

@@ -407,7 +407,7 @@ func TestEmptySeekPreservesPauseAndReachesNaturalEnd(t *testing.T) {
 	defer server.Close()
 	p := testPlayer()
 	defer p.Close()
-	p.resolve = func(context.Context, string) (media, error) {
+	p.resolve = func(context.Context, audioTrack) (media, error) {
 		return media{URL: server.URL + "/" + strings.Repeat("a", 64), Duration: 4 * time.Second}, nil
 	}
 	p.open = runtimePaths{ffmpeg: filepath.Join(runtimeDir, "ffmpeg")}.open

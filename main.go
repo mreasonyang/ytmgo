@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"embed"
+	"image/png"
 	"log"
 	"os"
 	"path/filepath"
@@ -14,7 +16,9 @@ import (
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 	"ytmgo/internal/accountsession"
+	"ytmgo/internal/audioquality"
 	"ytmgo/internal/catalog"
+	"ytmgo/internal/downloads"
 	"ytmgo/internal/language"
 	"ytmgo/internal/player"
 	"ytmgo/internal/videoquality"
@@ -42,14 +46,24 @@ type desktop struct {
 	shortcut                        *shortcutBinding
 	languagePath                    string
 	lyricsLayoutPath                string
+	audioQualityPath                string
 	videoQualityPath                string
 	playbackPath                    string
 	restoredTrack                   bool // shown paused until the first explicit play
 	diagnosticPath                  string
 	acceptanceProbe                 *acceptanceProbe
+	playbackErrorCategory           string
+	playbackErrorDetails            player.FailureDetails
+	nextProgressFrame               time.Time
 	model                           UIModel
 	catalog                         *catalog.Client
 	player                          *player.Player
+	downloads                       *downloads.Manager
+	collectionCtx                   context.Context
+	cancelCollections               context.CancelFunc
+	pendingCollections              int
+	appIconOnce                     sync.Once
+	appIconImage                    ui.ImageSource
 	video                           *player.Video
 	videoID                         string
 	videoAvailableID                string // the track VideoAvailable was learned for
@@ -69,6 +83,7 @@ type desktop struct {
 	seekCancel                      context.CancelFunc
 	resumeCancel                    context.CancelFunc
 	preparedID                      string
+	preparedQuality                 audioquality.Quality
 	likeCancel                      context.CancelFunc
 	likedChanges                    likedMusicChanges // edits since the current Liked Music page was requested
 	libraryRequest                  *libraryRequest
@@ -131,6 +146,8 @@ func main() {
 	a.model = UIModel{Route: "home", Appearance: a.prefs.Appearance(), Language: language.Load(a.languagePath), Volume: 0.7, Version: applicationBuildLabel()}
 	a.lyricsLayoutPath = filepath.Join(dataDir, "lyrics-layout")
 	a.model.LyricsExpanded = loadLyricsExpanded(a.lyricsLayoutPath)
+	a.audioQualityPath = filepath.Join(dataDir, "audio-quality")
+	a.model.AudioQuality = audioquality.Load(a.audioQualityPath)
 	a.videoQualityPath = filepath.Join(dataDir, "video-quality")
 	a.model.VideoQuality = videoquality.Load(a.videoQualityPath)
 	a.playbackPath = filepath.Join(dataDir, "playback-session.json")
@@ -160,6 +177,9 @@ func main() {
 		// Its bounded kill timer cannot run after this process has exited.
 		a.accountState.loginWait.Wait()
 		a.libraryWrites.Wait()
+		if a.downloads != nil {
+			a.downloads.Close()
+		}
 		mygo.GlobalShortcut.UnregisterAll()
 		mygo.NowPlaying.Clear()
 		if a.video != nil {
@@ -176,6 +196,7 @@ func main() {
 			a.setError("nativeRuntimeMissing")
 		}
 		if a.player != nil {
+			a.player.SetAudioQuality(a.model.AudioQuality)
 			a.player.SetVolume(a.model.Volume)
 			if a.restoredTrack {
 				a.publishPausedTrack()
@@ -207,6 +228,7 @@ func main() {
 		if dir, err := mygo.App.Path(mygo.PathCache); err == nil {
 			a.art.disk = &artworkDisk{dir: filepath.Join(dir, "artwork-v1")}
 		}
+		a.initDownloads(dataDir)
 		titleBar, titleBarHeight := mainWindowTitleBar(runtime.GOOS)
 		a.window = mygo.NewWindow(mygo.WindowOptions{Title: locales.AppName(), Width: 1440, Height: 940, MinWidth: 380, MinHeight: 640, StateKey: "native-main", TitleBarStyle: titleBar, TitleBarHeight: titleBarHeight, BackgroundColor: "light-dark(#e7e7ea, #050506)", Content: ui.View(a.view)})
 		a.updateArtworkScale()
@@ -242,8 +264,16 @@ func main() {
 		a.initGlobalShortcut(filepath.Join(dataDir, "global-shortcut"))
 		a.navigate("home")
 		a.startAccountPolling()
-		go a.pollPlayback()
-		go a.pollVideo()
+		if a.player != nil {
+			go a.watchPlayback()
+			if a.acceptanceProbe != nil {
+				go a.samplePlayback()
+			}
+		}
+		if a.downloads != nil {
+			go a.watchDownloads()
+		}
+		go a.watchVideo()
 	})
 	if err = mygo.App.Run(); err != nil {
 		a.cancel()
@@ -287,6 +317,14 @@ func (a *desktop) updateArtworkScale() {
 }
 
 func (a *desktop) view(c *ui.Context) {
+	if a.windowVisible && a.model.Playing && !a.loadPending && a.player != nil {
+		now := c.Now()
+		if !now.Before(a.nextProgressFrame) {
+			a.model.Position = a.player.Snapshot().Position.Seconds()
+			a.nextProgressFrame = now.Add(350 * time.Millisecond)
+		}
+		c.After(a.nextProgressFrame.Sub(now))
+	}
 	frame := artworkFrame{cache: a.art}
 	nativeView(c, &a.model, a.actions(frame.get))
 	a.prefetchNextCover(&frame)
@@ -306,74 +344,89 @@ func (a *desktop) prefetchNextCover(frame *artworkFrame) {
 }
 
 func (a *desktop) actions(artwork func(string, int, artworkPriority) ui.ImageSource) ViewActions {
-	actions := ViewActions{artworkScale: a.artworkScale, artworkPeek: a.art.peek, LyricsClock: a.lyricsClock, BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, FullScreen: a.setVideoFullScreen, SetVideoQuality: a.setVideoQuality, SetLyricsExpanded: a.setLyricsExpanded, RetryPlayback: a.retryPlayback, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: artwork, ArtworkTint: a.art.tint}
+	actions := ViewActions{artworkScale: a.artworkScale, artworkPeek: a.art.peek, LyricsClock: a.lyricsClock, BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, QueueRemove: a.removeFromQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, FullScreen: a.setVideoFullScreen, SetAudioQuality: a.setAudioQuality, SetVideoQuality: a.setVideoQuality, SetLyricsExpanded: a.setLyricsExpanded, RetryPlayback: a.retryPlayback, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: artwork, ArtworkTint: a.art.tint}
+	actions.AppIcon = a.appIcon()
+	if a.downloads != nil {
+		actions.Download = a.downloadItem
+		actions.DownloadCollection = a.downloadPage
+		actions.DownloadPause = a.pauseDownload
+		actions.DownloadRemove = a.removeDownload
+		actions.DownloadRemoveAll = a.confirmRemoveAllDownloads
+		actions.DownloadMany = a.enqueueDownloads
+	}
 	if style, _ := mainWindowTitleBar(runtime.GOOS); style == mygo.TitleBarHidden {
 		actions.AppMenu = a.appMenu
 	}
 	return actions
 }
 
-func (a *desktop) pollPlayback() {
-	t := time.NewTicker(350 * time.Millisecond)
-	defer t.Stop()
-	var previous player.State
-	diagnosticCategory := "ready"
-	var diagnosticDetails player.FailureDetails
+func (a *desktop) watchPlayback() {
+	watchPlaybackChanges(a.ctx, a.player.Changes(), func() player.State {
+		var state player.State
+		a.post(func() {
+			state = a.player.Snapshot()
+			a.applyPlaybackState(state)
+		})
+		return state
+	})
+}
+
+// The native mixer wakes us at the track boundary. Only an active session
+// needs a watchdog for missed notifications or an audio device failure.
+func watchPlaybackChanges(ctx context.Context, changes <-chan struct{}, refresh func() player.State) {
+	var watchdog <-chan time.Time
 	for {
 		select {
-		case <-a.ctx.Done():
+		case <-ctx.Done():
 			return
-		case <-t.C:
-			if a.player == nil {
-				continue
-			}
-			current := a.player.Snapshot()
-			a.acceptanceProbe.observe(time.Now(), current)
-			if current == previous {
-				continue
-			}
-			previous = current
-			a.post(func() {
-				if a.loadPending || a.restoredTrack {
-					return
-				}
-				state := a.player.Snapshot()
-				a.learnVideo(state)
-				a.model.Playing = state.Playing
-				a.model.PlaybackLoading = state.Loading
-				a.model.Position = state.Position.Seconds()
-				if state.Duration > 0 {
-					a.model.Duration = state.Duration.Seconds()
-				}
-				if state.Error != "" {
-					if diagnosticCategory != state.Error || diagnosticDetails != state.ErrorDetails {
-						recordPlaybackDiagnostic(a.diagnosticPath, "audio", state.Error, state.ErrorDetails)
-						diagnosticCategory = state.Error
-						diagnosticDetails = state.ErrorDetails
-					}
-					a.playbackFailure(state)
-				} else if !state.Loading && state.Playing {
-					a.model.PlaybackError = ""
-					if diagnosticCategory != "ready" {
-						recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
-						diagnosticCategory = "ready"
-						diagnosticDetails = player.FailureDetails{}
-					}
-				}
-				if state.Ended && !a.endedHandled {
-					a.endedHandled = true
-					if a.model.Repeat == 2 {
-						a.resume()
-					} else {
-						a.next()
-					}
-				}
-				playState := mygo.PlaybackPaused
-				if state.Playing {
-					playState = mygo.PlaybackPlaying
-				}
-				mygo.NowPlaying.SetPlayback(playState, state.Position)
-			})
+		case <-changes:
+		case <-watchdog:
+		}
+		state := refresh()
+		watchdog = nil
+		if state.Playing || state.Loading {
+			watchdog = time.After(5 * time.Second)
+		}
+	}
+}
+
+// Run on the UI thread. Native events and the watchdog both read the current
+// session; foreground completions reconcile again after releasing their guard.
+func (a *desktop) applyPlaybackState(state player.State) {
+	if a.loadPending || a.restoredTrack || a.model.Current.ID == "" {
+		return
+	}
+	a.learnVideo(state)
+	a.model.Playing, a.model.PlaybackLoading = state.Playing, state.Loading
+	a.model.Position = state.Position.Seconds()
+	if state.Duration > 0 {
+		a.model.Duration = state.Duration.Seconds()
+	}
+	if state.Error != "" {
+		if a.playbackErrorCategory != state.Error || a.playbackErrorDetails != state.ErrorDetails {
+			recordPlaybackDiagnostic(a.diagnosticPath, "audio", state.Error, state.ErrorDetails)
+			a.playbackErrorCategory, a.playbackErrorDetails = state.Error, state.ErrorDetails
+		}
+		a.playbackFailure(state)
+	} else if state.Playing && !state.Loading {
+		a.model.PlaybackError = ""
+		if a.playbackErrorCategory != "" {
+			recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
+			a.playbackErrorCategory, a.playbackErrorDetails = "", player.FailureDetails{}
+		}
+	}
+	playState := mygo.PlaybackPaused
+	if state.Playing {
+		playState = mygo.PlaybackPlaying
+	}
+	mygo.NowPlaying.SetPlayback(playState, state.Position)
+	if state.Ended && state.Error == "" && !a.endedHandled &&
+		a.seekCancel == nil && a.resumeCancel == nil && !a.powerPlaybackSuspended {
+		a.endedHandled = true
+		if a.model.Repeat == 2 {
+			a.resume()
+		} else {
+			a.next()
 		}
 	}
 }
@@ -396,21 +449,38 @@ func (a *desktop) menu() *mygo.Menu {
 
 func (a *desktop) menuWithUpdates(newUpdateItem func() *mygo.MenuItem) *mygo.Menu {
 	return mygo.NewMenu([]*mygo.MenuItem{
-		applicationMenuWithUpdates(newUpdateItem),
+		applicationMenuWithUpdates(newUpdateItem, a.showAbout),
 		{Label: locales.MenuFile(), Submenu: []*mygo.MenuItem{a.menuItem(locales.MenuShowApp(), "CmdOrCtrl+1", a.show), {Role: mygo.RoleClose}, mygo.Separator(), {Role: mygo.RoleQuit}}},
 		{Role: mygo.RoleEditMenu},
 		{Label: locales.MenuPlayback(), Submenu: []*mygo.MenuItem{
 			a.menuItem(locales.MenuPlayPause(), "CmdOrCtrl+P", a.toggle), a.menuItem(locales.MenuNext(), "CmdOrCtrl+Right", a.next), a.menuItem(locales.MenuPrevious(), "CmdOrCtrl+Left", a.previous), mygo.Separator(), a.menuItem(locales.MenuLike(), "", a.like), a.menuItem(locales.MenuVolumeUp(), "CmdOrCtrl+Up", func() { a.volume(a.model.Volume + 0.05) }), a.menuItem(locales.MenuVolumeDown(), "CmdOrCtrl+Down", func() { a.volume(a.model.Volume - 0.05) }), a.menuItem(locales.MenuMute(), "CmdOrCtrl+Shift+M", a.mute)}},
 		{Label: locales.MenuView(), Submenu: []*mygo.MenuItem{
-			a.menuItem(locales.MenuHome(), "CmdOrCtrl+Shift+H", func() { a.navigate("home") }), a.menuItem(locales.MenuExplore(), "", func() { a.navigate("explore") }), a.menuItem(locales.MenuLibrary(), "CmdOrCtrl+L", func() { a.navigate("library") }), mygo.Separator(), a.menuItem(locales.MenuPanel(), "CmdOrCtrl+J", func() { a.model.Panel = !a.model.Panel; a.invalidate() }), a.menuItem(locales.MenuLyrics(), "", func() { a.model.Panel = true; a.model.PanelTab = "lyrics"; a.invalidate() }), a.menuItem(locales.MenuImmersive(), "CmdOrCtrl+Shift+F", func() { a.model.Immersive = !a.model.Immersive; a.invalidate() }), a.menuItem(locales.MenuSidebar(), "CmdOrCtrl+B", func() { a.model.SidebarCollapsed = !a.model.SidebarCollapsed; a.invalidate() }), {Label: locales.MenuLanguage(), Submenu: a.languageMenu()}, {Role: mygo.RoleToggleFullScreen}}},
+			a.menuItem(locales.MenuHome(), "CmdOrCtrl+Shift+H", func() { a.navigate("home") }), a.menuItem(locales.MenuExplore(), "", func() { a.navigate("explore") }), a.menuItem(locales.MenuLibrary(), "CmdOrCtrl+L", func() { a.model.showLibrary = true; a.show(); a.invalidate() }), mygo.Separator(), a.menuItem(locales.MenuPanel(), "CmdOrCtrl+J", func() { a.model.Panel = !a.model.Panel; a.invalidate() }), a.menuItem(locales.MenuLyrics(), "", func() { a.model.Panel = true; a.model.PanelTab = "lyrics"; a.invalidate() }), a.menuItem(locales.MenuImmersive(), "CmdOrCtrl+Shift+F", func() { a.model.Immersive = !a.model.Immersive; a.invalidate() }), a.menuItem(locales.MenuSidebar(), "CmdOrCtrl+B", func() { a.model.SidebarCollapsed = !a.model.SidebarCollapsed; a.invalidate() }), {Label: locales.MenuLanguage(), Submenu: a.languageMenu()}, {Role: mygo.RoleToggleFullScreen}}},
 		{Role: mygo.RoleWindowMenu},
 		{Label: locales.MenuAccount(), Submenu: a.accountMenuItems()},
-		helpMenuWithUpdates([]*mygo.MenuItem{a.menuItem(locales.MenuShortcuts(), "CmdOrCtrl+/", func() { a.model.Shortcuts = true; a.invalidate() }), a.menuItem(locales.MenuAbout(), "", func() {
-			go func() {
-				_, _ = mygo.Dialog.Message(mygo.MessageOptions{Parent: a.window, Title: locales.MenuAbout(), Message: locales.AboutMessage(applicationBuildLabel()), Detail: a.tr("nativeAbout"), Buttons: []string{locales.ButtonOK()}})
-			}()
-		})}, newUpdateItem),
+		helpMenuWithUpdates([]*mygo.MenuItem{a.menuItem(locales.MenuShortcuts(), "CmdOrCtrl+/", func() { a.model.Shortcuts = true; a.invalidate() }), a.menuItem(locales.MenuAbout(), "", a.showAbout)}, newUpdateItem),
 	})
+}
+
+// appIcon is the app icon, decoded once, for About.
+func (a *desktop) appIcon() ui.ImageSource {
+	a.appIconOnce.Do(func() {
+		data, err := assets.ReadFile("resources/icon.png")
+		if err != nil {
+			return
+		}
+		if img, err := png.Decode(bytes.NewReader(data)); err == nil {
+			a.appIconImage = ui.NewBitmap(img)
+		}
+	})
+	return a.appIconImage
+}
+
+// showAbout opens About ytmGO in the window (nativeAbout).
+func (a *desktop) showAbout() {
+	a.show()
+	a.model.About = true
+	a.invalidate()
 }
 
 func (a *desktop) accountMenuItems() []*mygo.MenuItem {

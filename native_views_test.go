@@ -473,9 +473,12 @@ func TestNativeKeyboardAndContextMenu(t *testing.T) {
 	if m.Panel {
 		t.Fatal("Escape did not close panel")
 	}
+	// Wide, Cmd-L shows the library panel (unfolded), not the page.
+	m.SidebarCollapsed = true
+	route := m.Route
 	tt.Key(ui.Cmd, ui.KeyL)
-	if m.Route != "library" {
-		t.Fatal("Cmd-L did not navigate to library")
+	if m.SidebarCollapsed || m.Route != route {
+		t.Fatalf("Cmd-L: folded %v, route %q; want the panel shown, the page kept", m.SidebarCollapsed, m.Route)
 	}
 	tt.Key(ui.Cmd|ui.Shift, ui.KeyH)
 	if m.Route != "home" {
@@ -485,7 +488,7 @@ func TestNativeKeyboardAndContextMenu(t *testing.T) {
 	if err := tt.RightClick("Instant Crush · Daft Punk"); err != nil {
 		t.Fatal(err)
 	}
-	if err := tt.ChooseMenuItem(a.Tr("nativeAddToQueue")); err != nil {
+	if err := chooseAppMenuItem(tt, a.Tr("nativeAddToQueue")); err != nil {
 		t.Fatal(err)
 	}
 	if len(m.Queue) != before+1 || m.Queue[len(m.Queue)-1].Title != "Instant Crush" {
@@ -562,7 +565,7 @@ func TestNativePlaybackStartsFromQueuedTrack(t *testing.T) {
 			if err := tt.RightClick("Instant Crush · Daft Punk"); err != nil {
 				t.Fatal(err)
 			}
-			if err := tt.ChooseMenuItem(a.Tr("nativeAddToQueue")); err != nil {
+			if err := chooseAppMenuItem(tt, a.Tr("nativeAddToQueue")); err != nil {
 				t.Fatal(err)
 			}
 			if len(m.Queue) != 1 || m.Current.ID != "" {
@@ -992,13 +995,13 @@ func TestNativeAccountStates(t *testing.T) {
 			if err := tt.Click(label); err != nil {
 				t.Fatal(err)
 			}
-			if err := tt.ChooseMenuItem(a.Tr("shellAccountManage")); err != nil {
+			if err := chooseAppMenuItem(tt, a.Tr("shellAccountManage")); err != nil {
 				t.Fatalf("%v: %v", err, tt.Menu())
 			}
 			if err := tt.Click(label); err != nil {
 				t.Fatal(err)
 			}
-			if err := tt.ChooseMenuItem(a.Tr("shellSignOut")); err != nil {
+			if err := chooseAppMenuItem(tt, a.Tr("shellSignOut")); err != nil {
 				t.Fatal(err)
 			}
 			if accounts != 1 || signOuts != 1 {

@@ -41,6 +41,12 @@ func catalogServiceErrorKey(err error) string {
 }
 
 func playbackServiceErrorKey(state player.State) string {
+	switch state.Error {
+	case "download_key_unavailable":
+		return "nativeDownloadKeyError"
+	case "download_media_invalid":
+		return "nativeDownloadMediaError"
+	}
 	if state.Error == "audio_access_denied" {
 		if status := state.ErrorDetails.Sanitized().HTTPStatus; status == 401 || status == 403 {
 			return "nativePlaybackAccessDeniedHTTP"

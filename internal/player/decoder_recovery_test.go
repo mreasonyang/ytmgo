@@ -53,8 +53,7 @@ func TestMidstreamFailureCategoryReachesSnapshot(t *testing.T) {
 			if p.Load(context.Background(), "aaaaaaaaaaa") != nil {
 				t.Fatal("fixture load failed")
 			}
-			waitPlayerCondition(t, func() bool { return p.Snapshot().Error != "" })
-			state := p.Snapshot()
+			state := waitForPlaybackChange(t, p, func(state State) bool { return state.Error != "" })
 			if state.Ended || state.Error != tc.want {
 				t.Fatal("midstream failure lost its fixed category or advanced the queue")
 			}

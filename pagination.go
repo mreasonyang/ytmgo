@@ -50,13 +50,14 @@ func (location pageLocation) load(ctx context.Context, source pageSource) (catal
 	}
 }
 
-// A visible page can outlive its bounded, identity-scoped cursor cache. Replay
-// fresh pages until the old extent and one more page are available. The caller
-// keeps the old content and scroll container throughout; partial/failed replay
-// is never published. Network deadlines and this bound also stop empty loops.
+// A visible page can outlive its bounded, identity-scoped cursor cache, or the
+// service can stop returning usable content for its cursor. Replay fresh pages
+// until the old extent and one more page are available. The caller keeps the old
+// content and scroll container throughout; partial/failed replay is never
+// published. Network deadlines and this bound also stop empty loops.
 func continuePage(ctx context.Context, source pageSource, location pageLocation, previous catalog.Page) (catalog.Page, bool, error) {
 	page, err := source.Continue(ctx, previous.Continuation)
-	if !errors.Is(err, catalog.ErrExpiredContinuation) && !errors.Is(err, catalog.ErrSessionChanged) {
+	if !errors.Is(err, catalog.ErrExpiredContinuation) && !errors.Is(err, catalog.ErrSessionChanged) && !errors.Is(err, catalog.ErrInvalidResponse) {
 		return page, false, err
 	}
 	page, err = location.load(catalog.Refresh(ctx), source)

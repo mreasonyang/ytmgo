@@ -180,8 +180,9 @@
     });
   }
 
-  // Synced lyrics demo: one line at a time, centred, as in the app. Click a
-  // line to jump to it.
+  // Synced lyrics demo, as in the app: the lyrics start at the top, and the
+  // sung line rests a third of the way down once it gets there. Click a line
+  // to jump to it.
   const lyrics = document.querySelector(".lyrics");
   if (lyrics) {
     const list = lyrics.querySelector(".lyrics__lines");
@@ -196,7 +197,10 @@
         li.classList.toggle("is-past", j < at);
       });
       const li = lines[at];
-      list.style.transform = `translateY(${-(li.offsetTop + li.offsetHeight / 2)}px)`;
+      const view = list.parentElement;
+      const y = Math.max(0, li.offsetTop + li.offsetHeight / 2 - view.clientHeight / 3);
+      list.style.transform = `translateY(${-y}px)`;
+      view.classList.toggle("is-scrolled", y > 0.5);
       bar.style.width = `${((at + 1) / lines.length) * 100}%`;
     };
     const run = () => {

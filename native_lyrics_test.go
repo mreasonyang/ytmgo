@@ -142,17 +142,33 @@ func requireLyricVisible(t *testing.T, tt *ui.Tester, line int) ui.Rect {
 	return r
 }
 
+// requireLyricCentered checks the sung line rests where the lyrics keep it:
+// at the focus line (nativeLyricsFocus), or, before it gets there, with the
+// lyrics at rest at the top of the view and the line above the focus line.
 func requireLyricCentered(t *testing.T, tt *ui.Tester, line int) ui.Rect {
 	t.Helper()
 	r := requireLyricVisible(t, tt, line)
 	v, _ := tt.Find("Lyrics · Content")
-	if delta := r.Y + r.H/2 - v.Y - v.H/2; math.Abs(float64(delta)) > 1 {
-		t.Fatalf("current line %d is %.1f pixels away from viewport center", line, delta)
-	}
+	requireAtLyricsFocus(t, tt, fmt.Sprintf("current line %d", line), r, v)
 	return r
 }
 
-func TestNativeLyricsKeepsCurrentLineCentered(t *testing.T) {
+func requireAtLyricsFocus(t *testing.T, tt *ui.Tester, what string, r, v ui.Rect) {
+	t.Helper()
+	focus := v.Y + v.H*nativeLyricsFocus
+	delta := r.Y + r.H/2 - focus
+	if math.Abs(float64(delta)) <= 1 {
+		return
+	}
+	first, ok := tt.Find("Synthetic lyric line 00")
+	atTop := ok && first.Y-v.Y >= -1 && first.Y-v.Y <= 13 // the list's gap after its leading space
+	if delta < 0 && atTop {
+		return
+	}
+	t.Fatalf("%s is %.1f pixels from the focus line, the lyrics' top at rest %v", what, delta, atTop)
+}
+
+func TestNativeLyricsKeepTheSungLineAtTheFocusLine(t *testing.T) {
 	for _, width := range []int{360, 240} {
 		t.Run(fmt.Sprintf("width_%d", width), func(t *testing.T) {
 			m, a := nativeTimedLyricsFixture()
@@ -170,9 +186,10 @@ func TestNativeLyricsKeepsCurrentLineCentered(t *testing.T) {
 			settleLyricGlide(tt)
 			r, ok := tt.Find(m.LyricLines[8].Text)
 			v, vok := tt.Find("Lyrics · Content")
-			if !ok || !vok || r.H <= 32 || math.Abs(float64(r.Y+r.H/2-v.Y-v.H/2)) > 1 {
-				t.Fatalf("wrapped cue is not centered: row=%+v viewport=%+v", r, v)
+			if !ok || !vok || r.H <= 32 {
+				t.Fatalf("wrapped cue missing: row=%+v viewport=%+v", r, v)
 			}
+			requireAtLyricsFocus(t, tt, "wrapped cue", r, v)
 			nativeSnapshot(t, tt, fmt.Sprintf("lyrics-centered-%d", width))
 		})
 	}
@@ -440,13 +457,13 @@ func TestNativeLyricsGlideToTheNextLine(t *testing.T) {
 	lineCenter := func(tt *ui.Tester, line int) float32 {
 		r, _ := tt.Find(fmt.Sprintf("Synthetic lyric line %02d", line))
 		v, _ := tt.Find("Lyrics · Content")
-		return r.Y + r.H/2 - (v.Y + v.H/2)
+		return r.Y + r.H/2 - (v.Y + v.H*nativeLyricsFocus)
 	}
 	m, a := nativeTimedLyricsFixture()
 	m.Position = 41 // line 8
 	tt := ui.NewTester(func(c *ui.Context) { nativePanelCard(c, m, a, palette(true)).Grow(1) }, 360, 340)
 	if d := lineCenter(tt, 8); math.Abs(float64(d)) > 1 {
-		t.Fatalf("lyrics glided into place on appearing: line 8 is %.1f off centre", d)
+		t.Fatalf("lyrics glided into place on appearing: line 8 is %.1f off the focus line", d)
 	}
 	m.Position = 46 // line 9
 	tt.Frame()
@@ -495,4 +512,30 @@ func TestNativeLyricsDragTakesOverFromAGlide(t *testing.T) {
 		t.Fatalf("dragging 80 up moved the lyrics %.1f: the glide fought the pointer", d)
 	}
 	tt.Release(x, y-80)
+}
+
+// A song starts with its lyrics at the top of the view, not half a view
+// down: the first lines show where they are, and the view moves only once
+// the sung line reaches the focus line, a third of the way down.
+func TestNativeLyricsStartAtTheTop(t *testing.T) {
+	m, a := nativeTimedLyricsFixture()
+	m.Position = 0
+	tt := ui.NewTester(func(c *ui.Context) { nativePanelCard(c, m, a, palette(true)).Grow(1) }, 360, 340)
+	tt.Frame()
+	settleLyricGlide(tt)
+	v, _ := tt.Find("Lyrics · Content")
+	first, _ := tt.Find("Synthetic lyric line 00")
+	if d := first.Y - v.Y; d < -1 || d > 13 {
+		t.Fatalf("the first line starts %.1f below the view's top, want at it (the list's 12 gap)", d)
+	}
+	// Two thirds of the view show what is to come.
+	below := 0
+	for i := 1; i < 30; i++ {
+		if r, ok := tt.Find(fmt.Sprintf("Synthetic lyric line %02d", i)); ok && r.Y+r.H <= v.Y+v.H {
+			below++
+		}
+	}
+	if below < 3 {
+		t.Fatalf("only %d upcoming lines show at the start", below)
+	}
 }

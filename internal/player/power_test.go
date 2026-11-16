@@ -14,7 +14,7 @@ func TestSuspendRetiresMediaAndResolvesFreshAtBookmark(t *testing.T) {
 	var resolves, releases atomic.Int32
 	var streams []*zeroStream
 	var opened []time.Duration
-	p.resolve = func(context.Context, string) (media, error) {
+	p.resolve = func(context.Context, audioTrack) (media, error) {
 		resolves.Add(1)
 		return media{Duration: 60 * time.Second, release: func() { releases.Add(1) }}, nil
 	}
@@ -141,7 +141,7 @@ func TestLateWakeLosesToUserActions(t *testing.T) {
 				late = s
 				return d, nil
 			}
-			p.resolve = func(context.Context, string) (media, error) {
+			p.resolve = func(context.Context, audioTrack) (media, error) {
 				return media{Duration: 60 * time.Second, release: func() { released.Add(1) }}, nil
 			}
 			done := make(chan error, 1)
@@ -178,7 +178,7 @@ func TestLateWakeLosesToUserActions(t *testing.T) {
 					t.Fatal("superseded wake published or retained stale media")
 				}
 			}
-			if action == "load" && (p.videoID != "bbbbbbbbbbb" || !p.Snapshot().Playing) {
+			if action == "load" && (p.currentTrack.id != "bbbbbbbbbbb" || !p.Snapshot().Playing) {
 				t.Fatal("late wake replaced the newer track")
 			}
 			if action == "close" {
@@ -196,7 +196,7 @@ func TestWakeRetriesOnlyTransientTransportFailure(t *testing.T) {
 			p.Load(context.Background(), "aaaaaaaaaaa")
 			p.Suspend()
 			calls := 0
-			p.resolve = func(context.Context, string) (media, error) {
+			p.resolve = func(context.Context, audioTrack) (media, error) {
 				calls++
 				if calls == 1 {
 					return media{}, errors.New(category)

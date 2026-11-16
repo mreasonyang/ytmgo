@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"ytmgo/internal/audioquality"
 )
 
 // This evidence type deliberately has no track ID, URL, headers, credentials,
@@ -99,7 +101,7 @@ func decodeFullTrack(parent context.Context, paths runtimePaths, resolver *resol
 	// real duration. The live fixtures include a 6m10s track.
 	ctx, cancel := context.WithTimeout(parent, 7*time.Minute)
 	defer cancel()
-	info, err := resolver.Resolve(ctx, id)
+	info, err := resolver.Resolve(ctx, audioTrack{id: id, quality: audioquality.Best})
 	row.ResolveSeconds = time.Since(started).Seconds()
 	if err != nil {
 		row.Category = safeError(err)

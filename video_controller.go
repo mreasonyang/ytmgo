@@ -123,41 +123,32 @@ func (a *desktop) syncVideoSession(retry bool) bool {
 	return false
 }
 
-func (a *desktop) pollVideo() {
-	t := time.NewTicker(time.Second / 24)
-	defer t.Stop()
-	var previousNumber uint64
-	var previousLoading bool
-	var previousError string
+func (a *desktop) watchVideo() {
+	if a.video == nil {
+		return
+	}
+	changes := a.video.Changes()
 	for {
 		select {
 		case <-a.ctx.Done():
 			return
-		case <-t.C:
-			if a.video == nil || !a.videoActive.Load() {
+		case <-changes:
+			if !a.videoActive.Load() {
 				continue
 			}
 			generation := a.videoGeneration.Load()
-			frame, number := a.video.Frame()
-			loading, errText := a.video.Loading(), a.video.Error()
-			details := a.video.ErrorDetails()
-			if number == previousNumber && loading == previousLoading && errText == previousError {
-				continue
-			}
-			previousNumber, previousLoading, previousError = number, loading, errText
-			// A frame is immutable while held by the UI; Bitmap.Update preserves
-			// one GPU texture instead of allocating a new texture for every frame.
 			a.post(func() {
 				if a.videoID == "" || generation != a.videoGeneration.Load() || !a.videoActive.Load() {
 					return
 				}
+				state := a.video.Snapshot()
 				message := ""
-				if errText != "" {
-					recordPlaybackDiagnostic(a.diagnosticPath, "video", errText, details)
+				if state.Error != "" {
+					recordPlaybackDiagnostic(a.diagnosticPath, "video", state.Error, state.ErrorDetails)
 					message = a.tr("nativeVideoUnavailable")
 				}
-				a.applyVideoFrame(generation, frame, number, loading, message)
-				if errText != "" {
+				a.applyVideoFrame(generation, state.Frame, state.Number, state.Loading, message)
+				if state.Error != "" {
 					a.setVideoError("nativeVideoUnavailable")
 				}
 			})

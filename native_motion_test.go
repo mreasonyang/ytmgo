@@ -122,9 +122,9 @@ func TestTrackChangeFadesTheTitleIn(t *testing.T) {
 	}
 }
 
-// Docked Now Playing slides in from the window's right edge, and back out:
-// as it leaves, the page keeps its width until the panel has gone, then
-// fills the room once.
+// Docked Now Playing slides in from the window's right edge, and back out,
+// and the page gives it room and takes it back in step: the same motion,
+// at once, not after (a page catching up after the panel looked broken).
 func TestNowPlayingSlidesInAndOut(t *testing.T) {
 	m, a := nativeViewFixture()
 	m.Panel = false
@@ -136,29 +136,30 @@ func TestNowPlayingSlidesInAndOut(t *testing.T) {
 	tt.Advance(tokenMotionBase / 2)
 	tt.Frame()
 	half := rect(t, tt, a.Tr("shellClosePanel"))
+	halfOpen := rect(t, tt, a.Tr("shellContent")).W
 	motionShot(t, tt, "now-playing-open-half")
-	// The page eases to its new width over the morph motion.
-	tt.Advance(tokenMotionMorph)
+	tt.Advance(tokenMotionBase)
 	tt.Frame()
 	open := rect(t, tt, a.Tr("shellClosePanel"))
+	narrow := rect(t, tt, a.Tr("shellContent")).W
 	if !between(half.X, open.X, open.X+nativePanelWidth) {
 		t.Fatalf("Now Playing cut in: its close button at %.1f half way, %.1f open", half.X, open.X)
 	}
-	narrow := rect(t, tt, a.Tr("shellContent")).W
+	if !(halfOpen < wide-1 && halfOpen > narrow+1) {
+		t.Fatalf("half way in, the page is %.1f wide; want between %.1f and %.1f, in step", halfOpen, narrow, wide)
+	}
 	m.Panel = false
 	tt.Frame()
 	tt.Advance(tokenMotionBase / 2)
 	tt.Frame()
 	motionShot(t, tt, "now-playing-close-half")
-	if w := rect(t, tt, a.Tr("shellContent")).W; w != narrow {
-		t.Fatalf("the page widened under the leaving panel: %.1f, was %.1f", w, narrow)
+	if w := rect(t, tt, a.Tr("shellContent")).W; !(w > narrow+1 && w < wide-1) {
+		t.Fatalf("half way out, the page is %.1f wide; want between %.1f and %.1f, in step", w, narrow, wide)
 	}
 	tt.Advance(tokenMotionBase)
 	tt.Frame()
-	tt.Advance(tokenMotionMorph)
-	tt.Frame()
 	if w := rect(t, tt, a.Tr("shellContent")).W; w != wide {
-		t.Fatalf("the page did not fill the room once the panel had gone: %.1f, want %.1f", w, wide)
+		t.Fatalf("as the panel finished going, the page is %.1f wide, want %.1f", w, wide)
 	}
 }
 
@@ -706,4 +707,70 @@ func immersiveJourney(t *testing.T, panel bool) {
 	}
 	journey("into immersive mode")
 	journey("out of immersive mode")
+}
+
+// To the rail and back, the library's rows hold still: the rail's rows and
+// header keep the full ones' heights, and the panel's edge passes over its
+// contents rather than its layout switching (or its chips wrapping) part way.
+func TestLibraryRowsHoldStillToTheRailAndBack(t *testing.T) {
+	m, a := nativeViewFixture()
+	m.SignedIn, m.LibraryLoaded = true, true
+	m.LibraryItems = []catalog.Item{
+		{Title: "Liked music", Kind: "playlist", BrowseID: "VLLM"},
+		{Title: "Discovery", Artist: "Daft Punk", Kind: "album", BrowseID: "album-1"},
+		{Title: "Daft Punk", Kind: "artist", BrowseID: "artist-1"},
+	}
+	tt := motionTester(m, a, 1440, 900)
+	tt.Frame()
+	row := func() float32 { return rect(t, tt, nativeItemLabel(m.LibraryItems[1])).Y }
+	rest := row()
+	for _, collapse := range []bool{true, false} {
+		m.SidebarCollapsed = collapse
+		tt.Frame()
+		for i := 0; i < 6; i++ {
+			if y := row(); math.Abs(float64(y-rest)) > 0.5 {
+				t.Fatalf("collapse %v, frame %d: the row is at %.1f, was %.1f", collapse, i, y, rest)
+			}
+			tt.Advance(tokenMotionBase / 4)
+			tt.Frame()
+		}
+	}
+}
+
+// Wide, the library panel is the library: its heading folds it to the rail
+// and the rail's icon unfolds it, rather than opening the same list as a
+// page. Where the window has only the rail, the icon and Cmd-L open the
+// Library page, the only view of it with names.
+func TestLibraryHeadingFoldsThePanel(t *testing.T) {
+	m, a := nativeViewFixture()
+	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
+	tt.Frame()
+	route := m.Route
+	if err := tt.Click(a.Tr("shellSidebarCollapse")); err != nil {
+		t.Fatal(err)
+	}
+	if !m.SidebarCollapsed || m.Route != route {
+		t.Fatalf("the heading: folded %v, route %q", m.SidebarCollapsed, m.Route)
+	}
+	if err := tt.Click(a.Tr("shellSidebarExpand")); err != nil {
+		t.Fatal(err)
+	}
+	if m.SidebarCollapsed || m.Route != route {
+		t.Fatalf("the rail's icon: folded %v, route %q", m.SidebarCollapsed, m.Route)
+	}
+	if _, ok := tt.Find(a.Tr("shellNavLibrary")); ok {
+		t.Fatal("a wide window still offers the Library page from the panel")
+	}
+
+	m, a = nativeViewFixture()
+	tt = ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1000, 900)
+	tt.Frame()
+	if err := tt.Click(a.Tr("shellNavLibrary")); err != nil || m.Route != "library" {
+		t.Fatalf("the rail alone: its icon opened %q (%v), want the Library page", m.Route, err)
+	}
+	m.Route = "home"
+	tt.Key(ui.Cmd, ui.KeyL)
+	if m.Route != "library" {
+		t.Fatalf("the rail alone: Cmd-L opened %q, want the Library page", m.Route)
+	}
 }

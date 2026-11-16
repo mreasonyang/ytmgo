@@ -8,13 +8,26 @@ import (
 	"time"
 
 	"github.com/egoist/mygo/ui"
+	"ytmgo/internal/audioquality"
 	"ytmgo/internal/catalog"
+	"ytmgo/internal/downloads"
 	"ytmgo/locales"
 )
 
 // UIModel is owned by the UI thread. Network and player completions are applied
 // by the controller before a frame; the view changes only local presentation.
 type UIModel struct {
+	Downloads                                                   []downloads.Entry
+	downloadStates                                              map[string]downloads.State
+	DownloadNotice                                              string
+	DownloadWaiting                                             bool
+	barMenu, sheetMenu, accountMenu                             bool            // which app menu shows
+	selection                                                   nativeSelection // songs chosen on this page
+	selectDrag                                                  nativeSelectDrag
+	confirm                                                     *nativeConfirmation // a question asked before an action that can't be undone
+	About                                                       bool                // About ytmGO shows
+	showLibrary                                                 bool                // View › Library asked to show the library (nativeShowLibrary)
+	collectionDownloads                                         map[string]string   // route → its download notice while preparing or failed
 	Page                                                        catalog.Page
 	Current                                                     catalog.Item
 	LibraryItems                                                []catalog.Item
@@ -49,6 +62,8 @@ type UIModel struct {
 	VideoFrame                                                 ui.ImageSource
 	PlaybackError                                              string
 	VideoError                                                 string
+	AudioQuality                                               audioquality.Quality
+	AudioQualityNotice                                         string
 	VideoQuality                                               int
 	VideoQualityError                                          string
 	ErrorScope                                                 errorScope
@@ -112,6 +127,13 @@ func nativeRestoreActions(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 
 // ViewActions keeps native controls independent from the catalogue and player.
 type ViewActions struct {
+	Download                                            func(catalog.Item)
+	DownloadCollection                                  func()
+	DownloadPause                                       func(string, bool)
+	DownloadRemove                                      func(string)
+	DownloadRemoveAll                                   func() // asks first
+	DownloadMany                                        func([]catalog.Item)
+	QueueRemove                                         func(ids []string) // takes them out of the queue, keeping the playing one
 	Tr                                                  func(string) string
 	TrArgs                                              func(string, map[string]any) string
 	Navigate                                            func(string)
@@ -130,6 +152,7 @@ type ViewActions struct {
 	ArtworkTint                   func(string) (ui.Color, bool)
 	Video                         func(bool)
 	FullScreen                    func(bool) // the window, for the video
+	SetAudioQuality               func(audioquality.Quality)
 	SetVideoQuality               func(int)
 	SetLyricsExpanded             func(bool)
 	RetryPlayback                 func()
@@ -142,6 +165,8 @@ type ViewActions struct {
 	artViewport          ui.Rect
 	viewportScroll       *ui.ScrollState
 	secondaryArtwork     bool
+	table                *nativeTable   // the track table a row is in, for choosing several
+	AppIcon              ui.ImageSource // the app icon, for About
 	collection           nativeCollectionMatch
 	artworkScale         float64
 	artworkDX, artworkDY float32
@@ -220,6 +245,22 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 		dark = false
 	}
 	c.SetTheme(nativeTheme(dark))
+	c.Root().ObserveInput(nativeReleaseScrollGrabs)
+	if m.showLibrary {
+		m.showLibrary = false
+		nativeShowLibrary(c, m, a)
+	}
+	// A choice of songs belongs to its page: leaving it lets them go.
+	if m.selection.route != "" && m.selection.route != nativeQueueScope && m.selection.route != m.Route {
+		m.selection.clear()
+	}
+	// Cmd+A chooses the page's songs, in the tables the last frame built
+	// (a focused text field keeps it, for its own text).
+	tables := nativeFrameTables
+	nativeFrameTables = nil
+	if len(tables) > 0 && c.Shortcut(ui.Cmd, ui.KeyA) {
+		nativeSelectAll(m, tables)
+	}
 	p := palette(dark)
 	if m.VideoFullScreen {
 		nativeFullScreenVideo(c, m, a, width, height)
@@ -252,6 +293,8 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 		}
 	}
 	nativeSheets(c, m, a, p, width, height)
+	nativeAbout(c, m, a, p, width)
+	nativeConfirm(c, m, a, p, width)
 	if m.ShortcutRecording && !m.Settings && a.CancelShortcut != nil {
 		a.CancelShortcut()
 	}
@@ -276,21 +319,18 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 		// Panels sit a frame gap from every edge, the player bar's too: flush
 		// against it their bottom corners would sit on the bar's colour.
 		row := ui.Row(c).Grow(1).MinHeight(0).AlignItems(ui.Stretch).Gap(tokenProductFrameGap).Padding(top, tokenProductFrameGap, tokenProductFrameGap)
-		docked, leaving := nativeDock(c, row, m, width)
+		docked := nativeDockedNowPlaying(m, width)
 		m.docked = docked
 		pageWidth := nativePageWidth(m, width)
-		if leaving {
-			pageWidth -= nativePanelWidth + tokenProductFrameGap
-		}
 		row.Children(func() {
 			if !m.Immersive {
 				nativeLibrary(c, m, a, p, width)
 			}
-			// The page panel moves in step with what changes beside it: it grows
-			// over the library's and the global bar's room as immersive mode
-			// fades them, and follows the library to the rail and back and Now
-			// Playing's room as it goes, rather than jumping.
-			pagePanel := ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Radius(tokenRadiusPanel).Background(p.surface).Clip().Transition(nativeLong(nativeMoves))
+			// The page panel moves in step with what changes beside it, at
+			// once and at its pace: with Now Playing coming or going and the
+			// library to the rail and back over the base motion, and over
+			// immersive mode's morph as it fades the library and the bar.
+			pagePanel := ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Radius(tokenRadiusPanel).Background(p.surface).Clip().Transition(nativePanelMoves(c, m))
 			pagePanel.Children(func() {
 				nativeBackdrop(c, m, a, p)
 				var scrolled *ui.ScrollState
@@ -304,9 +344,8 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 				})
 			})
 			// Now Playing slides in from the window's right edge, where the
-			// controls that open it are, and back out there. As it goes, its
-			// room stays until it has gone, so the page fills it once, after.
-			// Back from immersive mode, it is where the cover and the card
+			// controls that open it are, and back out there, the page giving
+			// it room or taking it back as it goes. Back from immersive mode, it is where the cover and the card
 			// fly to: it fades in in place, as they land, rather than
 			// sliding under them.
 			if docked {
@@ -315,8 +354,6 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 					dock = nativeFadeLong
 				}
 				nativeNowPlaying(c.Key("now-playing-docked"), m, a, p, nativePanelWidth, false, false).Width(nativePanelWidth).Shrink(0).Transition(dock)
-			} else if leaving {
-				ui.Box(c.Key("now-playing-room")).Width(nativePanelWidth).Shrink(0)
 			}
 		})
 		nativePlayerBar(c, m, a, p, width).Height(nativePlayerHeight).Shrink(0)
@@ -366,6 +403,16 @@ var nativeMorph = ui.ElementTransition{Duration: tokenMotionBase, Ease: tokenMot
 // nativeMoves is nativeMorph for where an element is and how large: the
 // pieces of a layout that rearranges around it.
 var nativeMoves = ui.ElementTransition{Duration: tokenMotionBase, Ease: tokenMotionEase, Position: true, Size: true}
+
+// nativePanelMoves is how the frame's panels resize: over the base motion,
+// with docked Now Playing's slide and each other, and over the morph while
+// immersive mode comes or goes, with everything else in it.
+func nativePanelMoves(c *ui.Context, m *UIModel) ui.ElementTransition {
+	if nativeImmersing(c, m) {
+		return nativeLong(nativeMoves)
+	}
+	return nativeMoves
+}
 
 // nativeCrossfade fades content that replaces content in place: the next
 // cover over the last, over the base motion.
@@ -506,6 +553,42 @@ func nativeTip(c *ui.Context, e ui.Element, s string, p nativePalette) ui.Elemen
 	return e
 }
 
+// nativeCut reports whether text set in el at size and weight is cut off
+// (shown with an ellipsis) at el's last laid-out size: wider than one line
+// holds, or for several lines, taller than they hold. Before el has a size
+// it is not.
+func nativeCut(c *ui.Context, el ui.Element, text string, size float32, weight int, lines int) bool {
+	b := el.Bounds()
+	if b.W <= 0 || text == "" {
+		return false
+	}
+	span := ui.Span{Text: text, Size: size, Weight: weight}
+	if lines <= 1 {
+		w, _ := c.MeasureText(0, span)
+		return w > b.W+0.5
+	}
+	_, h := c.MeasureText(b.W, span)
+	return h > b.H+0.5
+}
+
+// nativeSideTip is a sidebar item's tip: to the right of the item, level
+// with it, 8 from it, where it covers neither the item's own text nor the
+// items above or below; on the other side where the window has no room.
+// title and detail are the item's name and what it is.
+func nativeSideTip(c *ui.Context, e ui.Element, title, detail string, p nativePalette) {
+	e.Description(title)
+	ui.TooltipBase(c, e, func(tip ui.Element) {
+		tip.MaxWidth(320).Padding(4, 8).Radius(tokenRadiusArt).Background(p.text).TextColor(p.base).FontSize(tokenSizeMicro).Shadow(tokenShadowTooltip.args(p))
+		tip.Children(func() {
+			ui.Text(c, title).FontWeight(600)
+			if detail != "" {
+				ui.Text(c, detail).Opacity(0.72)
+			}
+		})
+		tip.AttachTo(e, ui.AnchorRight, ui.AnchorLeft).Margin(0, 0, 0, 8)
+	})
+}
+
 // nativeIconButton is a round icon button. An active one (an open panel,
 // a liked track, settings showing) is drawn in text with a dot beneath:
 // coral is for play, so only nativeModeButton uses it.
@@ -520,7 +603,12 @@ func nativeModeButton(c *ui.Context, name, label string, p nativePalette, on boo
 }
 
 func nativeToggleIcon(c *ui.Context, name, label string, p nativePalette, active bool, hit float32, on ui.Color) ui.Element {
-	b := ui.ButtonBase(c).Size(hit, hit).Shrink(0).Radius(hit / 2).Label(label).TextColor(p.secondary)
+	return nativeIconFace(c, ui.ButtonBase(c), name, label, p, active, hit, on)
+}
+
+// nativeIconFace gives b an icon button's look: a menu's trigger takes it too.
+func nativeIconFace(c *ui.Context, b ui.Element, name, label string, p nativePalette, active bool, hit float32, on ui.Color) ui.Element {
+	b.Size(hit, hit).Shrink(0).Radius(hit / 2).Label(label).TextColor(p.secondary)
 	nativeTip(c, b, label, p)
 	if active {
 		b.Selected(true).Background(ui.Transparent).TextColor(on)
@@ -540,6 +628,12 @@ func nativeToggleIcon(c *ui.Context, name, label string, p nativePalette, active
 
 // nativeGrid rounds a computed dimension to the 4 px grid (design/README.md
 // §6): every spatial value is a multiple of 4.
+// nativeCenterColumn is the width of the window's middle column: the player
+// bar's transport and, above it, the search field, so the two line up.
+func nativeCenterColumn(width float32) float32 {
+	return nativeGridFloor(min(720, width*0.38))
+}
+
 func nativeGrid(v float32) float32 {
 	return max(4, float32(math.Round(float64(v)/4))*4)
 }
@@ -619,8 +713,25 @@ func nativeChip(c *ui.Context, label string, p nativePalette, selected bool) ui.
 func nativeTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) {
 	bar := c.TitleBar()
 	left, right := nativeTitleBarInsets(bar, 16)
-	nativeTitleBarRow(c, bar).Height(max(nativeTopbarHeight, bar.Height)).Padding(0, right, 0, left).Gap(16).AlignItems(ui.Center).Transition(nativeFadeLong).Children(func() {
-		ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
+	// The window controls' insets go inside the side groups, which take
+	// equal widths, so the middle stays centred in the window.
+	// Each side must hold its buttons beside the window controls: back and
+	// forward (and the app menu) on the left, settings and the account on
+	// the right. Short of room, the field narrows, still centred.
+	account := float32(48) // the avatar
+	if !m.SignedIn {
+		account = 120 // the Sign in pill, in the longest language
+	} else if m.MusicPremium && width > 1180 {
+		account += 56 // its Premium badge
+	}
+	leftNeed, rightNeed := left+32+8+32, right+32+8+account
+	if a.AppMenu != nil {
+		leftNeed += 32 + 8
+	}
+	column := max(240, min(nativeCenterColumn(width), nativeGridFloor(width-2*max(leftNeed, rightNeed)-2*(48+8)-2*16)))
+	side := max(0, (width-(column+2*(48+8))-2*16)/2)
+	nativeTitleBarRow(c, bar).Height(max(nativeTopbarHeight, bar.Height)).Gap(16).AlignItems(ui.Center).Transition(nativeFadeLong).Children(func() {
+		ui.Row(c).Width(side).Shrink(0).MinWidth(0).Clip().PaddingStart(left).Gap(8).AlignItems(ui.Center).Children(func() {
 			nativeAppMenuButton(c, a, p, 32)
 			if nativeCircleButton(c, "back", a.Tr("shellBack"), p, 32, false).Disabled(!m.CanBack).Clicked() {
 				a.Back()
@@ -629,18 +740,25 @@ func nativeTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wid
 				a.Forward()
 			}
 		})
-		ui.Row(c).Width(min(560, width*0.46)).MinWidth(0).Gap(8).AlignItems(ui.Center).Children(func() {
-			home := m.Route == "home"
-			icon := "home"
-			if home {
-				icon = "home-fill"
+		// The three destinations, centred over the player: the search field
+		// spans its transport column, Home and Explore stand either side of
+		// it, so the group balances on the play button.
+		ui.Row(c).Shrink(0).Gap(8).AlignItems(ui.Center).Children(func() {
+			for _, d := range []struct{ route, icon, key string }{{"home", "home", "shellNavHome"}, {"", "", ""}, {"explore", "explore", "shellNavExplore"}} {
+				if d.route == "" {
+					nativeSearchField(c, m, a, p, 48).Width(column).Shrink(0)
+					continue
+				}
+				here, icon := m.Route == d.route, d.icon
+				if here {
+					icon += "-fill"
+				}
+				if nativeCircleButton(c, icon, a.Tr(d.key), p, 48, here).Clicked() {
+					a.Navigate(d.route)
+				}
 			}
-			if nativeCircleButton(c, icon, a.Tr("shellNavHome"), p, 48, home).Clicked() {
-				a.Navigate("home")
-			}
-			nativeSearchField(c, m, a, p, 48, true).Grow(1)
 		})
-		ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(8).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+		ui.Row(c).Width(side).Shrink(0).MinWidth(0).PaddingEnd(right).Gap(8).AlignItems(ui.Center).Justify(ui.End).Children(func() {
 			if nativeIconButton(c, "settings", a.Tr("shellSettings"), p, m.Settings, 32).Clicked() {
 				m.Settings = !m.Settings
 			}
@@ -670,7 +788,7 @@ func nativeCompactTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalet
 		if stacked {
 			ui.Spacer(c)
 		} else {
-			nativeSearchField(c, m, a, p, 44, false).Grow(1)
+			nativeSearchField(c, m, a, p, 44).Grow(1)
 		}
 		if nativeIconButton(c, "settings", a.Tr("shellSettings"), p, m.Settings, 44).Clicked() {
 			m.Settings = !m.Settings
@@ -681,14 +799,14 @@ func nativeCompactTopbar(c *ui.Context, m *UIModel, a ViewActions, p nativePalet
 	})
 	if stacked {
 		ui.Row(c).Shrink(0).Padding(0, 8, 8).Children(func() {
-			nativeSearchField(c, m, a, p, 44, false).Grow(1)
+			nativeSearchField(c, m, a, p, 44).Grow(1)
 		})
 	}
 }
 
-// nativeSearchField is the persistent search pill. On desktop it ends with the
-// Explore button, where Spotify places Browse.
-func nativeSearchField(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, h float32, explore bool) ui.Element {
+// nativeSearchField is the persistent search pill. On desktop, Explore stands
+// beside it, as Home does on its other side (nativeTopbar).
+func nativeSearchField(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, h float32) ui.Element {
 	field := ui.Row(c).MinWidth(0).Height(h).PaddingStart(12).PaddingEnd(8).Gap(8).Radius(h/2).Background(p.raised).Border(2, ui.Transparent).AlignItems(ui.Center)
 	if field.FocusWithin() {
 		field.BorderColor(p.text)
@@ -704,21 +822,6 @@ func nativeSearchField(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 		}
 		if input.Submitted() && strings.TrimSpace(m.Query) != "" {
 			a.Search(m.Query)
-		}
-		if explore {
-			ui.Box(c).Size(1, 24).Shrink(0).Background(p.line)
-			active := m.Route == "explore"
-			icon := "explore"
-			if active {
-				icon = "explore-fill"
-			}
-			b := nativeIconButton(c, icon, a.Tr("shellNavExplore"), p, false, 36)
-			if active {
-				b.Selected(true).Background(ui.Transparent).TextColor(p.text)
-			}
-			if b.Clicked() {
-				a.Navigate("explore")
-			}
 		}
 	})
 }
@@ -782,7 +885,8 @@ func nativeAccount(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, ba
 		return
 	}
 	status := nativeAccountStatus(m, a)
-	b := ui.ButtonBase(c.Key("account")).Height(48).MinWidth(48).Shrink(0).Padding(8).Gap(8).Radius(tokenRadiusPill).Background(p.raised).Label(a.Tr("menuAccount") + " · " + status)
+	parts := ui.MenuBase(c.Key("account"), &m.accountMenu)
+	b := parts.Trigger.Height(48).MinWidth(48).Shrink(0).Padding(8).Gap(8).Radius(tokenRadiusPill).Background(p.raised).Label(a.Tr("menuAccount") + " · " + status)
 	nativeTip(c, b, status, p)
 	if b.Hovered() {
 		b.Background(p.highlight)
@@ -793,20 +897,9 @@ func nativeAccount(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, ba
 		}
 		nativeAvatar(c, m, a, p, 32)
 	})
-	b.Menu(func(menu *ui.Menu) {
-		menu.Item(status).Disabled(true)
-		menu.Separator()
-		if menu.Item(a.Tr("shellAccountManage")).Chosen() {
-			a.Account()
-		}
-		if menu.Item(a.Tr("shellSettings")).Chosen() {
-			m.Settings = true
-		}
-		menu.Separator()
-		if menu.Item(a.Tr("shellSignOut")).Chosen() {
-			a.SignOut()
-		}
-	})
+	if parts.Open() {
+		nativeMenuPanel(c, parts, nativeAccountItems(m, a, status), m, p)
+	}
 }
 
 // Library filters, in Spotify's order. Songs include music videos.
@@ -897,6 +990,13 @@ func nativeResultLabel(item catalog.Item, m *UIModel, a ViewActions) string {
 	return nativeItemLabel(item)
 }
 
+// nativeLibraryResize is when the library's layout last changed between
+// full and the rail, for the time it resizes.
+type nativeLibraryResize struct {
+	full  bool
+	since time.Time
+}
+
 // nativeLibraryPanelWidth is the library's width in a window width wide:
 // the full panel, or the rail on narrower windows and when collapsed.
 func nativeLibraryPanelWidth(m *UIModel, width float32) float32 {
@@ -965,38 +1065,6 @@ func nativeFloating(c *ui.Context, m *UIModel, width float32) (bool, float32) {
 // width from the window's right edge, fading, over the base motion.
 var nativeDockSlide = ui.ElementTransition{Duration: tokenMotionBase, Ease: tokenMotionEase, Enter: &ui.Motion{X: nativePanelWidth}, Exit: &ui.Motion{X: nativePanelWidth}}
 
-type nativeDockState struct {
-	shown   bool
-	leaving time.Time
-}
-
-// nativeDock reports whether Now Playing is docked in row, and whether it
-// is leaving: closed, still sliding out, its room kept until it has gone.
-// It goes at once without motion, or into immersive mode, or as the window
-// narrows past docking.
-func nativeDock(c *ui.Context, row ui.Element, m *UIModel, width float32) (docked, leaving bool) {
-	s := ui.Local(row, "now-playing-dock", func() nativeDockState { return nativeDockState{} })
-	docked = nativeDockedNowPlaying(m, width)
-	now := c.Now()
-	animate := !m.Immersive && width > 1180 && !m.instantMotion && !c.Preferences().ReduceMotion
-	switch {
-	case docked:
-		s.shown, s.leaving = true, time.Time{}
-	case s.shown && s.leaving.IsZero() && animate:
-		s.leaving = now
-	}
-	if !docked && animate && !s.leaving.IsZero() {
-		if left := tokenMotionBase - now.Sub(s.leaving); left > 0 {
-			c.After(left)
-			return false, true
-		}
-	}
-	if !docked {
-		s.shown, s.leaving = false, time.Time{}
-	}
-	return docked, false
-}
-
 // nativePageWidth is the page panel's width in a desktop window width wide:
 // what the frame gaps, the library and a docked Now Playing leave. The page
 // lays out from it in the frame that changes it, as a panel opens or the
@@ -1020,123 +1088,191 @@ func nativeLibrary(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 	// It fades with immersive mode, and narrows to the rail and back.
 	library := nativeFadeLong
 	library.Size = true
+	if !nativeImmersing(c, m) {
+		// To the rail and back, at the page's pace beside it.
+		library.Duration = tokenMotionBase
+	}
 	panel := ui.Column(c).Width(panelWidth).Shrink(0).MinHeight(0).Background(p.surface).Radius(tokenRadiusPanel).Clip().Transition(library)
 	filter := ui.Local(panel, "library-filter", func() string { return "" })
+	// While it narrows to the rail or widens back, its rows hold still:
+	// narrowing keeps the full layout until it has gone, clipped by the
+	// panel (rather than turning to the rail at once in a wide panel), and
+	// either way the chips stay on one line rather than wrapping as the
+	// width passes through narrow ones and pushing the list down.
+	resize := ui.Local(panel, "library-resize", func() nativeLibraryResize { return nativeLibraryResize{full: full} })
+	now := c.Now()
+	if resize.full != full {
+		resize.full, resize.since = full, now
+	}
+	resizing := false
+	if left := library.Duration - now.Sub(resize.since); !resize.since.IsZero() && left > 0 && !m.instantMotion {
+		resizing = true
+		c.After(left)
+	}
+	if resizing && !full && width > 1180 {
+		full = true
+	}
+	var items []catalog.Item
+	if m.SignedIn || m.LibraryCached {
+		items = m.LibraryItems
+	}
+	present := map[string]bool{}
+	for _, item := range items {
+		present[nativeLibraryKind(item)] = true
+	}
+	kinds := 0
+	for _, f := range nativeLibraryFilters {
+		if present[f.kind] {
+			kinds++
+		}
+	}
+	// The rail's header is as tall as the full one with its chips, so the
+	// rows stay where they are as it changes.
+	headerHeight := float32(56)
+	if kinds > 1 && len(items) > 0 {
+		headerHeight += tokenProductChip + 8
+	}
 	panel.Children(func() {
-		libraryIcon := "library"
-		if m.Route == "library" {
-			libraryIcon = "library-fill"
+		// Resizing, the contents keep the full width and the panel's edge
+		// passes over them, rather than their text shrinking to ellipses.
+		body := ui.Column(c).Grow(1).MinHeight(0)
+		if resizing && full {
+			body.Width(nativeLibraryWidth).Shrink(0)
 		}
-		if full {
-			ui.Row(c).Height(56).Shrink(0).Padding(8, 12).Gap(8).AlignItems(ui.Center).Children(func() {
-				b := ui.ButtonBase(c.Key("library-title")).Grow(1).MinWidth(0).Height(40).PaddingX(8).Gap(12).Justify(ui.Start).Radius(tokenRadiusControl).Label(a.Tr("shellNavLibrary")).TextColor(p.secondary)
-				nativeTip(c, b, a.Tr("shellNavLibrary"), p)
-				if m.Route == "library" || b.Hovered() {
-					b.TextColor(p.text)
-				}
-				b.Children(func() {
-					ui.Icon(c, nativeIcons[libraryIcon]).Size(24, 24)
-					ui.Text(c, a.Tr("shellLibraryTitle")).FontSize(tokenSizeBody).FontWeight(700).MaxLines(1).Ellipsis("…")
+		body.Children(func() {
+			libraryIcon := "library"
+			if m.Route == "library" {
+				libraryIcon = "library-fill"
+			}
+			if full {
+				// The panel is the library: its heading folds it to the rail,
+				// as Spotify's does, rather than opening the same list again
+				// as a page beside it.
+				ui.Row(c).Height(56).Shrink(0).Padding(8, 12).Gap(8).AlignItems(ui.Center).Children(func() {
+					b := ui.ButtonBase(c.Key("library-title")).MinWidth(0).Shrink(1).Height(40).PaddingX(8).Gap(12).Justify(ui.Start).Radius(tokenRadiusControl).Label(a.Tr("shellSidebarCollapse")).TextColor(p.secondary)
+					nativeTip(c, b, a.Tr("shellSidebarCollapse"), p)
+					if b.Hovered() {
+						b.TextColor(p.text)
+					}
+					b.Children(func() {
+						ui.Icon(c, nativeIcons[libraryIcon]).Size(24, 24)
+						ui.Text(c, a.Tr("shellLibraryTitle")).FontSize(tokenSizeBody).FontWeight(700).MaxLines(1).Ellipsis("…")
+					})
+					if b.Clicked() {
+						m.SidebarCollapsed = true
+					}
 				})
-				if b.Clicked() {
-					a.Navigate("library")
-				}
-				if nativeIconButton(c, "sidebar", a.Tr("shellSidebarCollapse"), p, false, 32).Clicked() {
-					m.SidebarCollapsed = true
-				}
-			})
-		} else {
-			ui.Column(c).Shrink(0).Padding(12, 0, 4).Gap(4).AlignItems(ui.Center).Children(func() {
+			} else {
+				rail := ui.Column(c).Shrink(0).Padding(12, 0, 4).Gap(4).AlignItems(ui.Center)
 				if width > 1180 {
-					if nativeIconButton(c, "sidebar", a.Tr("shellSidebarExpand"), p, false, 40).Clicked() {
-						m.SidebarCollapsed = false
+					rail.Height(headerHeight) // the full header's, so the rows hold still
+				}
+				rail.Children(func() {
+					// Folded, the library icon unfolds the panel; where the
+					// window has no room for it (the rail alone), it opens the
+					// Library page, the only view of the library with names.
+					label := a.Tr("shellNavLibrary")
+					if width > 1180 {
+						label = a.Tr("shellSidebarExpand")
 					}
-				}
-				b := nativeIconButton(c, libraryIcon, a.Tr("shellNavLibrary"), p, false, 40)
-				if m.Route == "library" {
-					b.Selected(true).Background(ui.Transparent).TextColor(p.text)
-				}
-				if b.Clicked() {
-					a.Navigate("library")
-				}
-			})
-		}
-		var items []catalog.Item
-		if m.SignedIn || m.LibraryCached {
-			items = m.LibraryItems
-		}
-		if full && m.Route != "library" {
-			nativeLibraryCacheStatus(c, m, a, p)
-		}
-		if len(items) == 0 {
-			switch {
-			case m.SignedIn && !m.LibraryLoaded && m.LibraryErrorKey == "":
-				nativeLibrarySkeleton(c, a, p, full)
-			case full:
-				nativeLibraryPrompt(c, m, a, p)
-			}
-			return
-		}
-		present := map[string]bool{}
-		for _, item := range items {
-			present[nativeLibraryKind(item)] = true
-		}
-		if !present[*filter] {
-			*filter = ""
-		}
-		kinds := 0
-		for _, f := range nativeLibraryFilters {
-			if present[f.kind] {
-				kinds++
-			}
-		}
-		// Chips appear only when they separate at least two kinds of item.
-		if full && kinds > 1 {
-			ui.Row(c).Shrink(0).Padding(0, 16, 8).Gap(8).AlignItems(ui.Center).Children(func() {
-				if *filter != "" {
-					clear := nativeIconButton(c, "close", a.Tr("shellFilterClear"), p, false, 32).Background(p.hover)
-					if clear.Clicked() {
-						*filter = ""
+					b := nativeIconButton(c, libraryIcon, label, p, false, 40)
+					if m.Route == "library" {
+						b.Selected(true).Background(ui.Transparent).TextColor(p.text)
 					}
-				}
-				for _, f := range nativeLibraryFilters {
-					if !present[f.kind] || (*filter != "" && *filter != f.kind) {
-						continue
-					}
-					if nativeChip(c, a.Tr(f.key), p, *filter == f.kind).Clicked() {
-						if *filter == f.kind {
-							*filter = ""
+					if b.Clicked() {
+						if width > 1180 {
+							m.SidebarCollapsed = false
 						} else {
-							*filter = f.kind
+							a.Navigate("library")
 						}
 					}
+				})
+			}
+			if full && m.Route != "library" {
+				nativeLibraryCacheStatus(c, m, a, p)
+			}
+			if len(items) == 0 {
+				// Downloads still leads an empty library: signed out, its songs
+				// are all there is.
+				if nativeDownloadsShown(m, a) {
+					pad := float32(8)
+					if !full {
+						pad = 4
+					}
+					ui.Column(c).Shrink(0).Padding(0, pad, 8).Children(func() { nativeDownloadsEntry(c, m, a, p, full) })
+				}
+				switch {
+				case m.SignedIn && !m.LibraryLoaded && m.LibraryErrorKey == "":
+					nativeLibrarySkeleton(c, a, p, full)
+				case full:
+					nativeLibraryPrompt(c, m, a, p)
+				}
+				return
+			}
+			if !present[*filter] {
+				*filter = ""
+			}
+			// Chips appear only when they separate at least two kinds of item.
+			if full && kinds > 1 {
+				// Wrapped: a language with longer names (アーティスト) takes a
+				// second line rather than cutting a chip at the panel's edge;
+				// not while the panel resizes, which would push the list down.
+				chips := ui.Row(c).Shrink(0).Padding(0, 16, 8).Gap(8).AlignItems(ui.Center)
+				if !resizing {
+					chips.Wrap()
+				}
+				chips.Children(func() {
+					if *filter != "" {
+						clear := nativeIconButton(c, "close", a.Tr("shellFilterClear"), p, false, 32).Background(p.hover)
+						if clear.Clicked() {
+							*filter = ""
+						}
+					}
+					for _, f := range nativeLibraryFilters {
+						if !present[f.kind] || (*filter != "" && *filter != f.kind) {
+							continue
+						}
+						if nativeChip(c, a.Tr(f.key), p, *filter == f.kind).Clicked() {
+							if *filter == f.kind {
+								*filter = ""
+							} else {
+								*filter = f.kind
+							}
+						}
+					}
+				})
+			}
+			pad := float32(8)
+			if !full {
+				pad = 4
+			}
+			// Filters and status rows disappear in rail mode. Keep the list's
+			// identity so its thumbnails stay in their rows during the resize.
+			scroll := ui.Scroll(c.Key("library-scroll")).Grow(1).MinHeight(0).Padding(0, pad, 8).Label(a.Tr("shellLibraryRegion"))
+			clipped := nativeArtworkViewport(c, a, scroll)
+			nativeScrollEdges(c, scroll, clipped.viewportScroll, p, p.surface)
+			scroll.Children(func() {
+				// Downloads is the library's own collection: first in the list,
+				// as Liked Music leads YouTube's, while no filter narrows it
+				// (it is none of their kinds).
+				if *filter == "" && nativeDownloadsShown(m, a) {
+					nativeDownloadsEntry(c, m, a, p, full)
+				}
+				occurrences := make(map[string]int, len(items))
+				for _, item := range items {
+					if *filter != "" && nativeLibraryKind(item) != *filter {
+						continue
+					}
+					key := item.Key()
+					rowKey := key
+					if n := occurrences[key]; n > 0 {
+						// A continuation can overlap a previous page.
+						rowKey = fmt.Sprintf("%s#%d", key, n)
+					}
+					occurrences[key]++
+					nativeLibraryRow(c.Key(rowKey), item, m, clipped, p, full)
 				}
 			})
-		}
-		pad := float32(8)
-		if !full {
-			pad = 4
-		}
-		// Filters and status rows disappear in rail mode. Keep the list's
-		// identity so its thumbnails stay in their rows during the resize.
-		scroll := ui.Scroll(c.Key("library-scroll")).Grow(1).MinHeight(0).Padding(0, pad, 8).Label(a.Tr("shellLibraryRegion"))
-		clipped := nativeArtworkViewport(c, a, scroll)
-		nativeScrollEdges(c, scroll, clipped.viewportScroll, p, p.surface)
-		scroll.Children(func() {
-			occurrences := make(map[string]int, len(items))
-			for _, item := range items {
-				if *filter != "" && nativeLibraryKind(item) != *filter {
-					continue
-				}
-				key := item.Key()
-				rowKey := key
-				if n := occurrences[key]; n > 0 {
-					// A continuation can overlap a previous page.
-					rowKey = fmt.Sprintf("%s#%d", key, n)
-				}
-				occurrences[key]++
-				nativeLibraryRow(c.Key(rowKey), item, m, clipped, p, full)
-			}
 		})
 	})
 }
@@ -1244,11 +1380,10 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 	playing := item.ID != "" && item.ID == m.Current.ID
 	b := ui.ButtonBase(c).Height(tokenProductLibraryRow).Padding(8).Gap(12).Radius(tokenRadiusControl).Justify(ui.Start).Label(nativeItemLabel(item))
 	a.collection = nativeCollectionSource(m, b, item)
-	nativeTip(c, b, item.Title, p)
 	if m.LibraryCached && !m.SignedIn {
 		b.Disabled(true)
 	}
-	b.ContextMenu(nativeTrackMenu(item, m, a))
+	nativeTrackMenu(c, b, item, m, a, p)
 	if b.Clicked() {
 		if item.ID != "" {
 			a.Play(item)
@@ -1257,7 +1392,8 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 		}
 	}
 	if !full {
-		b.Padding(4).Justify(ui.Center)
+		// As tall as a full row, so the rail's rows sit where those did.
+		b.Padding(8, 4).Justify(ui.Center)
 	}
 	if open {
 		// Selected keeps the row's text colour; MyGo's selected text is the
@@ -1266,6 +1402,8 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 	} else if b.Hovered() {
 		b.Background(p.hover)
 	}
+	subtitle := nativeLibrarySubtitle(item, a)
+	cut := !full // the rail shows no names: its tips do
 	b.Children(func() {
 		radius := float32(tokenRadiusArt)
 		if item.Kind == "artist" {
@@ -1280,12 +1418,17 @@ func nativeLibraryRow(c *ui.Context, item catalog.Item, m *UIModel, a ViewAction
 			if playing {
 				title.TextColor(p.accentText)
 			}
-			ui.Text(c, nativeLibrarySubtitle(item, a)).FontSize(tokenSizeMeta).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+			line := ui.Text(c, subtitle).FontSize(tokenSizeMeta).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+			// A name shown whole needs no tip repeating it.
+			cut = nativeCut(c, title, item.Title, tokenSizeSmall, 500, 1) || nativeCut(c, line, subtitle, tokenSizeMeta, 400, 1)
 		})
 		if playing {
 			ui.Icon(c, nativeIcons["volume"]).Size(16, 16).TextColor(p.accent)
 		}
 	})
+	if cut {
+		nativeSideTip(c, b, item.Title, subtitle, p)
+	}
 }
 
 func nativeContentInset(compact bool) float32 {
@@ -1383,6 +1526,15 @@ func nativeContinuationExpired(m *UIModel) bool {
 }
 
 func nativePageBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool, contentWidth float32) {
+	if m.Route == "downloads" {
+		nativeDownloads(c, m, a, p, compact)
+		return
+	}
+	// A compact window has no library panel: its Library page leads with
+	// the entry the panel would show.
+	if m.Route == "library" && compact && nativeDownloadsShown(m, a) {
+		nativeDownloadsEntry(c, m, a, p, true)
+	}
 	if m.AccountNotice != "" {
 		ui.Text(c, a.Tr(m.AccountNotice)).TextColor(p.secondary)
 	}
@@ -1497,23 +1649,26 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 	if contentWidth == 0 {
 		inner = 960
 	}
-	trackOffset := 0
-	for i, shelf := range m.Page.Shelves {
-		offset := trackOffset
+	shelves := m.Page.Shelves
+	for i := 0; i < len(shelves); i++ {
+		shelf := shelves[i]
 		if shelf.Title == "" {
-			// Continuations append untitled shelves to the same track list.
-			trackOffset += len(shelf.Items)
-		} else {
-			offset, trackOffset = 0, 0
+			// Continuations append untitled shelves to the same track list:
+			// a run of them is one table, numbered on, under one header.
+			parts := [][]catalog.Item{shelf.Items}
+			for i+1 < len(shelves) && shelves[i+1].Title == "" {
+				i++
+				parts = append(parts, shelves[i].Items)
+			}
+			nativeTrackTable(c.Key(fmt.Sprintf("shelf-%d", i+1-len(parts))), parts, m, a, p, compact, browse, 0)
+			continue
 		}
 		ui.Column(c.Key(fmt.Sprintf("shelf-%d", i))).Gap(12).Children(func() {
-			if shelf.Title != "" {
-				size := float32(tokenSizeH3)
-				nativeDisplay(ui.Text(c, shelf.Title).FontSize(size).MaxLines(1).Ellipsis("…").Role(ui.RoleHeading), shelf.Title, size)
-			}
+			size := float32(tokenSizeH3)
+			nativeDisplay(ui.Text(c, shelf.Title).FontSize(size).MaxLines(1).Ellipsis("…").Role(ui.RoleHeading), shelf.Title, size)
 			switch {
-			case shelf.Title == "" || (m.Route == "search" && nativeSongShelf(shelf.Items)):
-				nativeTrackList(c, shelf.Items, m, a, p, compact, browse, offset)
+			case m.Route == "search" && nativeSongShelf(shelf.Items):
+				nativeTrackList(c, shelf.Items, m, a, p, compact, browse, 0)
 			case nativeSongShelf(shelf.Items):
 				columnWidth := float32(340)
 				if compact {
@@ -1635,7 +1790,7 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 	if short {
 		buttonSize, buttonTop = tokenProductTargetTouch, 12
 	}
-	ui.Row(c).Padding(buttonTop, inset, 0).Gap(24).AlignItems(ui.Center).Children(func() {
+	ui.Row(c).Padding(buttonTop, inset, 0).Gap(16).AlignItems(ui.Center).Children(func() {
 		icon, key := "play", "shellPlay"
 		if inPage && m.Playing {
 			icon, key = "pause", "shellPause"
@@ -1651,6 +1806,7 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 				a.Play(items[0])
 			}
 		}
+		nativeCollectionDownload(c, m, a, p, items)
 	})
 }
 
@@ -1676,7 +1832,7 @@ func nativeShortcutTile(c *ui.Context, item catalog.Item, m *UIModel, a ViewActi
 	playing := item.ID != "" && item.ID == m.Current.ID
 	b := ui.ButtonBase(c).Height(tokenProductTile).MinWidth(0).PaddingEnd(12).Gap(12).Radius(tokenRadiusControl).Justify(ui.Start).Background(p.hover).Clip().Label(item.Title)
 	a.collection = nativeCollectionSource(m, b, item)
-	nativeTip(c, b, item.Title, p)
+	cut := false
 	hovered := b.Hovered()
 	if hovered {
 		b.Background(p.press)
@@ -1687,6 +1843,8 @@ func nativeShortcutTile(c *ui.Context, item catalog.Item, m *UIModel, a ViewActi
 		// clip, and the art's own clip would square the tile's off.
 		a.collectionArt(c, item, tokenProductTile, tokenRadiusControl, m, p).Radius(tokenRadiusControl, 0, 0, tokenRadiusControl)
 		t := ui.Text(c, item.Title).Grow(1).MinWidth(0).FontSize(tokenSizeSmall).FontWeight(700).MaxLines(2).Ellipsis("…")
+		// Its name in a tip only where the two lines cut it off.
+		cut = nativeCut(c, t, item.Title, tokenSizeSmall, 700, 2)
 		if playing {
 			t.TextColor(p.accentText)
 			ui.Icon(c, nativeIcons["volume"]).Size(16, 16).TextColor(p.accent)
@@ -1694,7 +1852,10 @@ func nativeShortcutTile(c *ui.Context, item catalog.Item, m *UIModel, a ViewActi
 			ui.Box(c).Size(32, 32).Shrink(0).Radius(tokenRadiusPill).Background(p.accent).TextColor(p.onAccent).Center().PassThrough().Children(func() { ui.Icon(c, nativeIcons["play"]).Size(16, 16) })
 		}
 	})
-	b.ContextMenu(nativeTrackMenu(item, m, a))
+	if cut {
+		nativeTip(c, b, item.Title, p)
+	}
+	nativeTrackMenu(c, b, item, m, a, p)
 	if b.Clicked() {
 		if item.ID != "" {
 			a.Play(item)
@@ -1875,7 +2036,7 @@ func nativeCard(c *ui.Context, item catalog.Item, m *UIModel, a ViewActions, p n
 		}
 		ui.Text(c, subtitle).FontSize(tokenSizeMeta).LineHeight(1.4).TextColor(p.secondary).MaxLines(2).Ellipsis("…")
 	})
-	b.ContextMenu(nativeTrackMenu(item, m, a))
+	nativeTrackMenu(c, b, item, m, a, p)
 	if b.Clicked() {
 		if item.ID != "" {
 			a.Play(item)
@@ -1894,11 +2055,21 @@ const (
 )
 
 func nativeTrackList(c *ui.Context, items []catalog.Item, m *UIModel, a ViewActions, p nativePalette, compact, numbered bool, offset int) {
+	nativeTrackTable(c, [][]catalog.Item{items}, m, a, p, compact, numbered, offset)
+}
+
+// nativeTrackTable draws parts as one table, under one header: a long
+// playlist's pages arrive as shelves of their own, but are one list.
+func nativeTrackTable(c *ui.Context, parts [][]catalog.Item, m *UIModel, a ViewActions, p nativePalette, compact, numbered bool, offset int) {
 	mode := nativeTrackRow
 	if numbered {
 		mode = nativeTrackNumbered
 	}
-	album := !compact && !nativeOneAlbum(items)
+	album := !compact && !nativeOneAlbum(parts...)
+	if numbered || m.Route == "search" {
+		a.table = &nativeTable{scope: m.Route, parts: parts}
+		nativeFrameTables = append(nativeFrameTables, a.table)
+	}
 	ui.Column(c).Children(func() {
 		if numbered && !compact {
 			ui.Row(c).Height(36).PaddingX(16).Gap(16).AlignItems(ui.Center).TextColor(p.secondary).Children(func() {
@@ -1913,24 +2084,33 @@ func nativeTrackList(c *ui.Context, items []catalog.Item, m *UIModel, a ViewActi
 			})
 			ui.Box(c).Height(1).Margin(0, 0, 8).Background(p.line)
 		}
-		for j, item := range items {
-			nativeTrack(c.Key(fmt.Sprintf("list-%d", j)), item, offset+j, m, a, p, mode, compact, album)
+		j := 0
+		for _, items := range parts {
+			for _, item := range items {
+				nativeTrack(c.Key(fmt.Sprintf("list-%d", j)), item, offset+j, m, a, p, mode, compact, album)
+				j++
+			}
 		}
 	})
 }
 
 // nativeOneAlbum reports whether every row comes from the same album, as on
 // an album's own page, where an Album column would repeat its title.
-func nativeOneAlbum(items []catalog.Item) bool {
-	if len(items) == 0 || items[0].Album == "" {
-		return false
-	}
-	for _, item := range items[1:] {
-		if item.Album != items[0].Album {
-			return false
+func nativeOneAlbum(parts ...[]catalog.Item) bool {
+	var first string
+	for _, items := range parts {
+		for _, item := range items {
+			if first == "" {
+				if first = item.Album; first == "" {
+					return false
+				}
+			}
+			if item.Album != first {
+				return false
+			}
 		}
 	}
-	return true
+	return first != ""
 }
 
 func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a ViewActions, p nativePalette, mode nativeTrackMode, compact, album bool) {
@@ -1985,10 +2165,25 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 				if mode == nativeTrackRow {
 					subtitle = nativeResultSubtitle(item, m, a)
 				}
-				artist := ui.Text(c, subtitle).FontSize(tokenSizeMeta).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
-				if hovered {
-					artist.TextColor(p.text)
+				line := func() {
+					artist := ui.Text(c, subtitle).FontSize(tokenSizeMeta).TextColor(p.secondary).MaxLines(1).Ellipsis("…")
+					if hovered {
+						artist.TextColor(p.text)
+					}
 				}
+				if m.downloadStates[item.ID] != downloads.Complete {
+					line()
+					return
+				}
+				// A downloaded song says so before its artist, in the
+				// glyph the collection's toggle fills with.
+				ui.Row(c).MinWidth(0).Gap(4).AlignItems(ui.Center).Children(func() {
+					mark := ui.Icon(c, nativeIcons["download-fill"]).Size(12, 12).Shrink(0).TextColor(p.secondary)
+					if hovered {
+						mark.TextColor(p.text)
+					}
+					line()
+				})
 			})
 		})
 		if album {
@@ -2011,7 +2206,13 @@ func nativeTrack(c *ui.Context, item catalog.Item, index int, m *UIModel, a View
 			ui.Text(c, duration).Width(48).Shrink(0).FontSize(tokenSizeMeta).TextColor(p.secondary).TextAlign(ui.End)
 		}
 	})
-	b.ContextMenu(nativeTrackMenu(item, m, a))
+	if a.table != nil && item.ID != "" {
+		if nativeSelectableTrack(c, b, item, index, m, a, p, b.Clicked()) {
+			return
+		}
+	} else {
+		nativeTrackMenu(c, b, item, m, a, p)
+	}
 	if b.Clicked() {
 		if mode == nativeTrackQueue {
 			a.PlayQueue(index)
@@ -2059,6 +2260,9 @@ func nativePlayerBarContent(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 				}
 				nativeTrackCaption(c, m, a, p)
 			})
+			if a.Download != nil && m.Current.ID != "" {
+				nativeTrackMenu(c, info, m.Current, m, a, p)
+			}
 			if info.Clicked() {
 				m.Panel = !showing
 			}
@@ -2070,7 +2274,7 @@ func nativePlayerBarContent(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 				a.Like()
 			}
 		})
-		ui.Column(c).Width(min(722, width*0.38)).Shrink(0).Gap(4).AlignItems(ui.Stretch).Children(func() {
+		ui.Column(c).Width(nativeCenterColumn(width)).Shrink(0).Gap(4).AlignItems(ui.Stretch).Children(func() {
 			ui.Row(c).Height(40).Gap(16).AlignItems(ui.Center).Justify(ui.Center).Children(func() {
 				if nativeModeButton(c, "shuffle", a.Tr("shellShuffle"), p, m.Shuffle, 32).Disabled(len(m.Queue) < 2).Clicked() {
 					a.Shuffle()
@@ -2100,7 +2304,7 @@ func nativePlayerBarContent(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 			}
 			nativeVolume(c, m, a, p, width > 1000, !nativeFloatingWanted(m, width))
 			if width > 1000 {
-				nativeIconButton(c, "more", a.Tr("shellMore"), p, false, 32).Disabled(m.Current.ID == "").Menu(nativeTrackMenu(m.Current, m, a))
+				nativeMenuButton(c, &m.barMenu, "more", a.Tr("shellMore"), p, 32, m, m.Current.ID == "", func() []nativeMenuItem { return nativeTrackItems(m.Current, m, a) })
 			}
 			if nativeIconButton(c, "expand", a.Tr("shellImmersive"), p, m.Immersive, 32).Clicked() {
 				m.Immersive = !m.Immersive
@@ -2618,6 +2822,7 @@ func nativePanelBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) 
 	// As the lyrics beside it: rows past an edge fade, while more lies beyond.
 	st := a.viewportScroll
 	scroll.Effect(nativeEdgeFade{top: st.Y > 0.5, bottom: st.Y < st.MaxY-0.5})
+	a.table = &nativeTable{scope: nativeQueueScope, parts: [][]catalog.Item{m.Queue}}
 	return scroll.Children(func() {
 		for i, item := range m.Queue {
 			nativeTrack(c.Key(fmt.Sprintf("queue-%d", i)), item, i, m, a, p, nativeTrackQueue, true, false)
@@ -2960,9 +3165,27 @@ const nativeFadeBelowSize = 40
 // scroll, or after the pointer comes over it, before fading.
 const nativeScrollbarIdle = time.Second
 
+// nativeScrollGrabs are the scrollbars held down; any release lets them go.
+var nativeScrollGrabs []*nativeScrollbarState
+
+// nativeReleaseScrollGrabs is the window root's watch for a release, which
+// ends a scrollbar drag wherever the pointer went.
+func nativeReleaseScrollGrabs(ev ui.InputEvent) {
+	if ev.Kind == ui.InputPointerUp && ev.Button == 0 {
+		for _, s := range nativeScrollGrabs {
+			s.grabbed = false
+		}
+		nativeScrollGrabs = nativeScrollGrabs[:0]
+	}
+}
+
 type nativeScrollbarState struct {
-	x, y           float32
-	over, gliding  bool
+	x, y          float32
+	over, gliding bool
+	// grabbed holds from a press on the bar's strip until its release:
+	// the thumb stays in its grabbed colour wherever the drag takes the
+	// pointer, as a held thumb does.
+	grabbed        bool
 	active, hidden time.Time
 	// keyTo is where the keys sent the scroller, while keyGlide holds: a
 	// key held down heads on from there, not from where the glide is.
@@ -3099,9 +3322,25 @@ func nativeScrollbar(c *ui.Context, scroll ui.Element, st *ui.ScrollState, p nat
 		}})
 	}
 	strip := float32(nativeScrollbarWidth + 6) // MyGo's grab strip
-	onBar := over && (st.MaxY > 0 && (c.Direction() == ui.RightToLeft && px <= strip || c.Direction() != ui.RightToLeft && px >= box.W-strip) ||
-		st.MaxX > 0 && py >= box.H-strip)
-	show := onBar
+	onStrip := func(x, y float32) bool {
+		return x >= 0 && y >= 0 && x <= box.W && y <= box.H &&
+			(st.MaxY > 0 && (c.Direction() == ui.RightToLeft && x <= strip || c.Direction() != ui.RightToLeft && x >= box.W-strip) ||
+				st.MaxX > 0 && y >= box.H-strip)
+	}
+	onBar := over && onStrip(px, py)
+	// MyGo's bar takes the press, so the scroller isn't Pressed: watch for
+	// a press on the strip, and for its release anywhere in the window
+	// (nativeView's root lets every grab go).
+	scroll.ObserveInput(func(ev ui.InputEvent) {
+		if ev.Kind == ui.InputPointerDown && ev.Button == 0 && onStrip(ev.X, ev.Y) {
+			s.grabbed = true
+			nativeScrollGrabs = append(nativeScrollGrabs, s)
+		}
+	})
+	if s.grabbed {
+		s.active = now
+	}
+	show := onBar || s.grabbed
 	if idle := now.Sub(s.active); !onBar && idle < nativeScrollbarIdle {
 		show = true
 		c.After(nativeScrollbarIdle - idle)
@@ -3124,7 +3363,7 @@ func nativeScrollbar(c *ui.Context, scroll ui.Element, st *ui.ScrollState, p nat
 		}
 	}
 	thumb := p.track
-	if onBar {
+	if onBar || s.grabbed {
 		thumb = p.muted
 	}
 	rtl := c.Direction() == ui.RightToLeft
@@ -3303,18 +3542,41 @@ func (backdropLayer) PaintEffect(p *ui.Painter, box ui.Rect, content *ui.Bitmap,
 	}, ui.ImageOptions{})
 }
 
-func nativeTrackMenu(item catalog.Item, m *UIModel, a ViewActions) func(*ui.Menu) {
-	return func(menu *ui.Menu) {
-		if item.ID != "" {
-			if menu.Item(a.Tr("shellPlay")).Chosen() {
-				a.Play(item)
-			}
-			if menu.Item(a.Tr("nativeAddToQueue")).Disabled(a.QueueAppend == nil).Chosen() {
-				a.QueueAppend(item)
-			}
-		} else if menu.Item(item.Title).Chosen() {
-			a.openCollection(m, item)
+// nativeTrackMenu gives target an item's menu: a song's actions, or the way
+// into a collection.
+func nativeTrackMenu(c *ui.Context, target ui.Element, item catalog.Item, m *UIModel, a ViewActions, p nativePalette) {
+	nativeContextMenu(c, target, m, p, func() []nativeMenuItem { return nativeTrackItems(item, m, a) })
+}
+
+func nativeTrackItems(item catalog.Item, m *UIModel, a ViewActions) []nativeMenuItem {
+	if item.ID == "" {
+		return []nativeMenuItem{{label: item.Title, run: func() { a.openCollection(m, item) }}}
+	}
+	items := []nativeMenuItem{
+		{label: a.Tr("shellPlay"), run: func() { a.Play(item) }},
+		{label: a.Tr("nativeAddToQueue"), disabled: a.QueueAppend == nil, run: func() { a.QueueAppend(item) }},
+	}
+	if a.Download != nil {
+		switch m.downloadStates[item.ID] {
+		case "":
+			items = append(items, nativeMenuItem{label: a.Tr("nativeDownloadTrack"), run: func() { a.Download(item) }})
+		case downloads.Complete:
+			items = append(items, nativeMenuItem{label: a.Tr("nativeDownloadRemove"), run: func() { a.DownloadRemove(item.ID) }})
+		default:
+			items = append(items, nativeMenuItem{label: a.Tr("nativeShowDownloads"), run: func() { a.Navigate("downloads") }})
 		}
+	}
+	return items
+}
+
+// nativeAccountItems is the account button's menu: who is signed in, then
+// the account's places, then signing out.
+func nativeAccountItems(m *UIModel, a ViewActions, status string) []nativeMenuItem {
+	return []nativeMenuItem{
+		{label: status, disabled: true},
+		{label: a.Tr("shellAccountManage"), divider: true, run: a.Account},
+		{label: a.Tr("shellSettings"), run: func() { m.Settings = true }},
+		{label: a.Tr("shellSignOut"), divider: true, run: a.SignOut},
 	}
 }
 
@@ -3336,6 +3598,18 @@ func (m *UIModel) focusSearch() {
 	m.Immersive, m.Panel, m.FocusSearch = false, false, true
 	// Drop the floating dialog immediately so the next keystroke goes to search.
 	m.floating = nativeFloatState{}
+}
+
+// nativeShowLibrary is Cmd+L and View › Library: where the window has room
+// for the library panel, it shows the panel, unfolded; elsewhere it opens
+// the Library page, the only full view of the library there.
+func nativeShowLibrary(c *ui.Context, m *UIModel, a ViewActions) {
+	m.Immersive = false
+	if width, _ := c.Size(); width > 1180 {
+		m.SidebarCollapsed = false
+		return
+	}
+	a.Navigate("library")
 }
 
 func nativeKeyboard(c *ui.Context, m *UIModel, a ViewActions) {
@@ -3376,8 +3650,7 @@ func nativeKeyboard(c *ui.Context, m *UIModel, a ViewActions) {
 		a.Navigate("home")
 	}
 	if c.Shortcut(ui.Cmd, ui.KeyL) {
-		m.Immersive = false
-		a.Navigate("library")
+		nativeShowLibrary(c, m, a)
 	}
 	if c.Shortcut(0, ui.KeyEscape) {
 		if m.VideoFullScreen {
@@ -3392,6 +3665,8 @@ func nativeKeyboard(c *ui.Context, m *UIModel, a ViewActions) {
 			m.Immersive = false
 		} else if m.Panel {
 			m.Panel = false
+		} else if m.selection.route != "" {
+			m.selection.clear()
 		}
 	}
 }
@@ -3646,7 +3921,7 @@ func nativeExpandedTransport(c *ui.Context, m *UIModel, a ViewActions, p nativeP
 				a.Like()
 			}
 			nativeVolume(c, m, a, p, true, true)
-			nativeIconButton(c, "more", a.Tr("shellMore"), p, false, 32).Disabled(m.Current.ID == "").Menu(nativeTrackMenu(m.Current, m, a))
+			nativeMenuButton(c, &m.sheetMenu, "more", a.Tr("shellMore"), p, 32, m, m.Current.ID == "", func() []nativeMenuItem { return nativeTrackItems(m.Current, m, a) })
 		})
 	})
 }
@@ -3678,5 +3953,5 @@ func nativePlaybackNotice(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 
 // nativeAwaitingAccount reports a track load held until restoration settles.
 func nativeAwaitingAccount(m *UIModel) bool {
-	return m.PlaybackLoading && m.PlaybackError == "" && nativeRestoring(m)
+	return m.PlaybackLoading && m.PlaybackError == "" && nativeRestoring(m) && m.downloadStates[m.Current.ID] != downloads.Complete
 }

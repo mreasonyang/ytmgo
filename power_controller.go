@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"time"
-
-	"github.com/egoist/mygo"
 )
 
 func (a *desktop) suspendForPower() {
@@ -18,9 +16,7 @@ func (a *desktop) suspendForPower() {
 	if a.playCancel != nil {
 		a.playCancel()
 	}
-	if a.seekCancel != nil {
-		a.seekCancel()
-	}
+	a.cancelSeek()
 	if a.prepareCancel != nil {
 		a.prepareCancel()
 	}
@@ -67,12 +63,7 @@ func (a *desktop) resumeAfterPower() {
 				a.model.PlaybackError = ""
 				a.endedHandled = false
 				a.prepareNext()
-				state := a.player.Snapshot()
-				playback := mygo.PlaybackPaused
-				if state.Playing {
-					playback = mygo.PlaybackPlaying
-				}
-				mygo.NowPlaying.SetPlayback(playback, state.Position)
+				a.applyPlaybackState(a.player.Snapshot())
 			}
 		})
 	}()

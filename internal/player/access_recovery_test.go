@@ -22,7 +22,7 @@ func TestAccessRecoveryReResolvesAtBookmarkAndIsBounded(t *testing.T) {
 	p := testPlayer()
 	defer p.Close()
 	var resolves, refreshes, releases atomic.Int32
-	p.resolve = func(context.Context, string) (media, error) {
+	p.resolve = func(context.Context, audioTrack) (media, error) {
 		resolves.Add(1)
 		return media{Duration: time.Minute, release: func() { releases.Add(1) }}, nil
 	}
@@ -47,6 +47,30 @@ func TestAccessRecoveryReResolvesAtBookmarkAndIsBounded(t *testing.T) {
 	}
 	if resolves.Load() != 3 || refreshes.Load() != 2 {
 		t.Fatal("explicit retry failed to refresh resolution state")
+	}
+}
+
+func TestCurrentTrackRecoveryKeepsPreparedNext(t *testing.T) {
+	p := testPlayer()
+	defer p.Close()
+	ctx := t.Context()
+	if err := p.Load(ctx, "aaaaaaaaaaa"); err != nil {
+		t.Fatal(err)
+	}
+	if err := p.Prepare(ctx, "bbbbbbbbbbb"); err != nil {
+		t.Fatal(err)
+	}
+	next := p.prepared.decoder
+	denyCurrentDecoder(p)
+	if state := p.Snapshot(); !state.Loading {
+		t.Fatal("current stream did not enter recovery")
+	}
+	waitForPlaybackChange(t, p, func(state State) bool { return !state.Loading })
+	if err := p.Load(ctx, "bbbbbbbbbbb"); err != nil {
+		t.Fatal(err)
+	}
+	if p.session.decoder != next {
+		t.Fatal("recovering the previous track discarded the prepared decoder")
 	}
 }
 
@@ -87,7 +111,7 @@ func TestSeekDeniedReResolvesAndKeepsPausedIntent(t *testing.T) {
 	p := testPlayer()
 	defer p.Close()
 	var opens, resolves, refreshes atomic.Int32
-	p.resolve = func(context.Context, string) (media, error) {
+	p.resolve = func(context.Context, audioTrack) (media, error) {
 		resolves.Add(1)
 		return media{Duration: time.Minute}, nil
 	}
@@ -118,7 +142,7 @@ func TestProofRetryRefreshesBeforeResolution(t *testing.T) {
 	p := testPlayer()
 	defer p.Close()
 	var count atomic.Int32
-	p.resolve = func(context.Context, string) (media, error) {
+	p.resolve = func(context.Context, audioTrack) (media, error) {
 		if count.Add(1) == 1 {
 			return media{}, errors.New("region_unavailable")
 		}
@@ -138,7 +162,7 @@ func TestAccessRecoveryBudgetReturnsAfterHealthyPlayback(t *testing.T) {
 	p := testPlayer()
 	defer p.Close()
 	var resolves atomic.Int32
-	p.resolve = func(context.Context, string) (media, error) {
+	p.resolve = func(context.Context, audioTrack) (media, error) {
 		resolves.Add(1)
 		return media{Duration: time.Minute}, nil
 	}
@@ -215,7 +239,7 @@ func TestFreshURLFirstOpenDenialHasOneExtraAttempt(t *testing.T) {
 			p := testPlayer()
 			defer p.Close()
 			var opens, resolves, releases atomic.Int32
-			p.resolve = func(context.Context, string) (media, error) {
+			p.resolve = func(context.Context, audioTrack) (media, error) {
 				resolves.Add(1)
 				return media{Duration: time.Minute, release: func() { releases.Add(1) }}, nil
 			}
@@ -319,7 +343,7 @@ func TestSeekSupersedesInitialResolution(t *testing.T) {
 	defer p.Close()
 	entered := make(chan struct{})
 	var resolves atomic.Int32
-	p.resolve = func(ctx context.Context, _ string) (media, error) {
+	p.resolve = func(ctx context.Context, _ audioTrack) (media, error) {
 		if resolves.Add(1) == 1 {
 			close(entered)
 			<-ctx.Done()
@@ -372,7 +396,7 @@ func TestSeekAfterCancellingDeniedSeekRecovery(t *testing.T) {
 						}
 						return nil
 					}
-					p.resolve = func(ctx context.Context, _ string) (media, error) {
+					p.resolve = func(ctx context.Context, _ audioTrack) (media, error) {
 						if resolves.Add(1) == 2 && stage == "resolve" {
 							return media{}, block(ctx)
 						}
@@ -500,7 +524,7 @@ func TestCancelledSeekRecoveryCannotReviveRetiredTrack(t *testing.T) {
 					t.Fatal(err)
 				}
 			case "new load":
-				p.resolve = func(context.Context, string) (media, error) { return media{}, context.Canceled }
+				p.resolve = func(context.Context, audioTrack) (media, error) { return media{}, context.Canceled }
 				if err := p.Load(context.Background(), "bbbbbbbbbbb"); !errors.Is(err, context.Canceled) {
 					t.Fatalf("replacement load = %v, want cancellation", err)
 				}

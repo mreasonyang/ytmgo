@@ -98,7 +98,7 @@ func parsePage(response map[string]any) (Page, pageCursor, error) {
 	return parsePageForStream(response, false, PlaylistSectionUnknown)
 }
 
-func parsePageForStream(response map[string]any, likedMusicRoot bool, source PlaylistSection) (Page, pageCursor, error) {
+func parsePageForStream(response map[string]any, collectionRoot bool, source PlaylistSection) (Page, pageCursor, error) {
 	page := Page{Items: []Item{}, Shelves: []Shelf{}}
 	contents, hasContents := response["contents"]
 	continuationContents, hasContinuation := response["continuationContents"]
@@ -188,7 +188,7 @@ func parsePageForStream(response map[string]any, likedMusicRoot bool, source Pla
 						}
 					}
 					section := PlaylistSectionUnknown
-					if playlistShelf && (likedMusicRoot || source == PlaylistSectionTracks) {
+					if playlistShelf && (collectionRoot || source == PlaylistSectionTracks) {
 						hasTrackShelf = true
 						section = PlaylistSectionTracks
 					}
@@ -229,7 +229,7 @@ func parsePageForStream(response map[string]any, likedMusicRoot bool, source Pla
 	walk(contents, 0)
 	walk(continuationContents, 0)
 	walk(actions, 0)
-	if likedMusicRoot || source != PlaylistSectionUnknown {
+	if collectionRoot || source != PlaylistSectionUnknown {
 		// A playlist shelf owns the tracks, even without a title or cursor.
 		// Its siblings and the outer cursor belong to the extra sections.
 		// Bare continuation rows inherit the cursor that produced them.

@@ -485,20 +485,6 @@ func (msgs Messages) TrayQuit() string {
 	return Catalog.Format(msgs.locale, "trayQuit", nil)
 }
 
-// AboutMessage says "ytmGO · {version}"
-// in the language the app shows.
-//
-// About dialog headline.
-func AboutMessage(version string) string { return In(i18n.Locale()).AboutMessage(version) }
-
-// AboutMessage says "ytmGO · {version}"
-// in the language of msgs.
-//
-// About dialog headline.
-func (msgs Messages) AboutMessage(version string) string {
-	return Catalog.Format(msgs.locale, "aboutMessage", map[string]any{"version": version})
-}
-
 // AboutDetail says "An independent music client built with MyGo.\nMusic and accounts are provided by YouTube Music.\n\nGlobal play / pause: …"
 // in the language the app shows.
 //
@@ -2587,21 +2573,41 @@ func (msgs Messages) NativeAccountSessionError() string {
 	return Catalog.Format(msgs.locale, "nativeAccountSessionError", nil)
 }
 
-// NativeSignOutConfirm says "Sign out of ytmGO and remove its saved session? Your browser will remain signed in."
+// NativeSignOutConfirm says "Sign out of ytmGO and remove this account’s saved session and downloaded songs from this device?"
 // in the language the app shows.
 func NativeSignOutConfirm() string { return In(i18n.Locale()).NativeSignOutConfirm() }
 
-// NativeSignOutConfirm says "Sign out of ytmGO and remove its saved session? Your browser will remain signed in."
+// NativeSignOutConfirm says "Sign out of ytmGO and remove this account’s saved session and downloaded songs from this device?"
 // in the language of msgs.
 func (msgs Messages) NativeSignOutConfirm() string {
 	return Catalog.Format(msgs.locale, "nativeSignOutConfirm", nil)
 }
 
-// NativeAbout says "Native MyGo interface and audio playback. Music catalogue provided by YouTube Music."
+// NativeSignOutTitle says "Sign out of ytmGO"
+// in the language the app shows.
+func NativeSignOutTitle() string { return In(i18n.Locale()).NativeSignOutTitle() }
+
+// NativeSignOutTitle says "Sign out of ytmGO"
+// in the language of msgs.
+func (msgs Messages) NativeSignOutTitle() string {
+	return Catalog.Format(msgs.locale, "nativeSignOutTitle", nil)
+}
+
+// NativeSignOutButton says "Sign out"
+// in the language the app shows.
+func NativeSignOutButton() string { return In(i18n.Locale()).NativeSignOutButton() }
+
+// NativeSignOutButton says "Sign out"
+// in the language of msgs.
+func (msgs Messages) NativeSignOutButton() string {
+	return Catalog.Format(msgs.locale, "nativeSignOutButton", nil)
+}
+
+// NativeAbout says "Native MyGo interface and audio playback. Music catalogue provided by YouTube\u00a0Music."
 // in the language the app shows.
 func NativeAbout() string { return In(i18n.Locale()).NativeAbout() }
 
-// NativeAbout says "Native MyGo interface and audio playback. Music catalogue provided by YouTube Music."
+// NativeAbout says "Native MyGo interface and audio playback. Music catalogue provided by YouTube\u00a0Music."
 // in the language of msgs.
 func (msgs Messages) NativeAbout() string {
 	return Catalog.Format(msgs.locale, "nativeAbout", nil)
@@ -2625,6 +2631,16 @@ func NativeAddToQueue() string { return In(i18n.Locale()).NativeAddToQueue() }
 // in the language of msgs.
 func (msgs Messages) NativeAddToQueue() string {
 	return Catalog.Format(msgs.locale, "nativeAddToQueue", nil)
+}
+
+// NativeQueueRemove says "Remove from queue"
+// in the language the app shows.
+func NativeQueueRemove() string { return In(i18n.Locale()).NativeQueueRemove() }
+
+// NativeQueueRemove says "Remove from queue"
+// in the language of msgs.
+func (msgs Messages) NativeQueueRemove() string {
+	return Catalog.Format(msgs.locale, "nativeQueueRemove", nil)
 }
 
 // NativeVideo says "Video"
@@ -3177,6 +3193,348 @@ func NativeShortcutUnavailable() string { return In(i18n.Locale()).NativeShortcu
 // in the language of msgs.
 func (msgs Messages) NativeShortcutUnavailable() string {
 	return Catalog.Format(msgs.locale, "nativeShortcutUnavailable", nil)
+}
+
+// NativeDownloads says "Downloads"
+// in the language the app shows.
+func NativeDownloads() string { return In(i18n.Locale()).NativeDownloads() }
+
+// NativeDownloads says "Downloads"
+// in the language of msgs.
+func (msgs Messages) NativeDownloads() string {
+	return Catalog.Format(msgs.locale, "nativeDownloads", nil)
+}
+
+// NativeDownloadTrack says "Download song"
+// in the language the app shows.
+func NativeDownloadTrack() string { return In(i18n.Locale()).NativeDownloadTrack() }
+
+// NativeDownloadTrack says "Download song"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadTrack() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadTrack", nil)
+}
+
+// NativeDownloadCollection says "Download tracks"
+// in the language the app shows.
+func NativeDownloadCollection() string { return In(i18n.Locale()).NativeDownloadCollection() }
+
+// NativeDownloadCollection says "Download tracks"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadCollection() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadCollection", nil)
+}
+
+// NativeDownloadsEmpty says "Your downloaded songs and queued downloads will appear here."
+// in the language the app shows.
+func NativeDownloadsEmpty() string { return In(i18n.Locale()).NativeDownloadsEmpty() }
+
+// NativeDownloadsEmpty says "Your downloaded songs and queued downloads will appear here."
+// in the language of msgs.
+func (msgs Messages) NativeDownloadsEmpty() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadsEmpty", nil)
+}
+
+// NativeDownloadStorage says "Audio storage used"
+// in the language the app shows.
+func NativeDownloadStorage() string { return In(i18n.Locale()).NativeDownloadStorage() }
+
+// NativeDownloadStorage says "Audio storage used"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadStorage() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadStorage", nil)
+}
+
+// NativeDownloadWaiting says "Queued downloads are waiting for a connection to YouTube Music with this profile."
+// in the language the app shows.
+func NativeDownloadWaiting() string { return In(i18n.Locale()).NativeDownloadWaiting() }
+
+// NativeDownloadWaiting says "Queued downloads are waiting for a connection to YouTube Music with this profile."
+// in the language of msgs.
+func (msgs Messages) NativeDownloadWaiting() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadWaiting", nil)
+}
+
+// NativeDownloadPreparing says "Loading tracks…"
+// in the language the app shows.
+func NativeDownloadPreparing() string { return In(i18n.Locale()).NativeDownloadPreparing() }
+
+// NativeDownloadPreparing says "Loading tracks…"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadPreparing() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadPreparing", nil)
+}
+
+// NativeDownloadQueued says "Queued"
+// in the language the app shows.
+func NativeDownloadQueued() string { return In(i18n.Locale()).NativeDownloadQueued() }
+
+// NativeDownloadQueued says "Queued"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadQueued() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadQueued", nil)
+}
+
+// NativeDownloadPaused says "Paused"
+// in the language the app shows.
+func NativeDownloadPaused() string { return In(i18n.Locale()).NativeDownloadPaused() }
+
+// NativeDownloadPaused says "Paused"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadPaused() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadPaused", nil)
+}
+
+// NativeDownloading says "Downloading"
+// in the language the app shows.
+func NativeDownloading() string { return In(i18n.Locale()).NativeDownloading() }
+
+// NativeDownloading says "Downloading"
+// in the language of msgs.
+func (msgs Messages) NativeDownloading() string {
+	return Catalog.Format(msgs.locale, "nativeDownloading", nil)
+}
+
+// NativeDownloaded says "Downloaded"
+// in the language the app shows.
+func NativeDownloaded() string { return In(i18n.Locale()).NativeDownloaded() }
+
+// NativeDownloaded says "Downloaded"
+// in the language of msgs.
+func (msgs Messages) NativeDownloaded() string {
+	return Catalog.Format(msgs.locale, "nativeDownloaded", nil)
+}
+
+// NativeDownloadRemove says "Remove download"
+// in the language the app shows.
+func NativeDownloadRemove() string { return In(i18n.Locale()).NativeDownloadRemove() }
+
+// NativeDownloadRemove says "Remove download"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadRemove() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadRemove", nil)
+}
+
+// NativeSelectedCount says "{count} selected"
+// in the language the app shows.
+func NativeSelectedCount(count string) string { return In(i18n.Locale()).NativeSelectedCount(count) }
+
+// NativeSelectedCount says "{count} selected"
+// in the language of msgs.
+func (msgs Messages) NativeSelectedCount(count string) string {
+	return Catalog.Format(msgs.locale, "nativeSelectedCount", map[string]any{"count": count})
+}
+
+// NativeDownloadSongs says "Download songs"
+// in the language the app shows.
+func NativeDownloadSongs() string { return In(i18n.Locale()).NativeDownloadSongs() }
+
+// NativeDownloadSongs says "Download songs"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadSongs() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadSongs", nil)
+}
+
+// NativeDownloadRemoveSongs says "Remove downloads"
+// in the language the app shows.
+func NativeDownloadRemoveSongs() string { return In(i18n.Locale()).NativeDownloadRemoveSongs() }
+
+// NativeDownloadRemoveSongs says "Remove downloads"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadRemoveSongs() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadRemoveSongs", nil)
+}
+
+// NativeDownloadRemoveAll says "Remove all downloads…"
+// in the language the app shows.
+func NativeDownloadRemoveAll() string { return In(i18n.Locale()).NativeDownloadRemoveAll() }
+
+// NativeDownloadRemoveAll says "Remove all downloads…"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadRemoveAll() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadRemoveAll", nil)
+}
+
+// NativeDownloadRemoveAllTitle says "Remove all downloads"
+// in the language the app shows.
+func NativeDownloadRemoveAllTitle() string { return In(i18n.Locale()).NativeDownloadRemoveAllTitle() }
+
+// NativeDownloadRemoveAllTitle says "Remove all downloads"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadRemoveAllTitle() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadRemoveAllTitle", nil)
+}
+
+// NativeDownloadRemoveAllConfirm says "Remove every downloaded and queued song from this device? This frees {size}. You can download them again at any time."
+// in the language the app shows.
+func NativeDownloadRemoveAllConfirm(size string) string {
+	return In(i18n.Locale()).NativeDownloadRemoveAllConfirm(size)
+}
+
+// NativeDownloadRemoveAllConfirm says "Remove every downloaded and queued song from this device? This frees {size}. You can download them again at any time."
+// in the language of msgs.
+func (msgs Messages) NativeDownloadRemoveAllConfirm(size string) string {
+	return Catalog.Format(msgs.locale, "nativeDownloadRemoveAllConfirm", map[string]any{"size": size})
+}
+
+// NativeDownloadRemoveAllButton says "Remove all"
+// in the language the app shows.
+func NativeDownloadRemoveAllButton() string { return In(i18n.Locale()).NativeDownloadRemoveAllButton() }
+
+// NativeDownloadRemoveAllButton says "Remove all"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadRemoveAllButton() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadRemoveAllButton", nil)
+}
+
+// NativeDownloadPause says "Pause download"
+// in the language the app shows.
+func NativeDownloadPause() string { return In(i18n.Locale()).NativeDownloadPause() }
+
+// NativeDownloadPause says "Pause download"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadPause() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadPause", nil)
+}
+
+// NativeShowDownloads says "Go to Downloads"
+// in the language the app shows.
+func NativeShowDownloads() string { return In(i18n.Locale()).NativeShowDownloads() }
+
+// NativeShowDownloads says "Go to Downloads"
+// in the language of msgs.
+func (msgs Messages) NativeShowDownloads() string {
+	return Catalog.Format(msgs.locale, "nativeShowDownloads", nil)
+}
+
+// NativeDownloadResume says "Resume download"
+// in the language the app shows.
+func NativeDownloadResume() string { return In(i18n.Locale()).NativeDownloadResume() }
+
+// NativeDownloadResume says "Resume download"
+// in the language of msgs.
+func (msgs Messages) NativeDownloadResume() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadResume", nil)
+}
+
+// NativeDownloadNetworkError says "Couldn’t download the audio. Retry when connected."
+// in the language the app shows.
+func NativeDownloadNetworkError() string { return In(i18n.Locale()).NativeDownloadNetworkError() }
+
+// NativeDownloadNetworkError says "Couldn’t download the audio. Retry when connected."
+// in the language of msgs.
+func (msgs Messages) NativeDownloadNetworkError() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadNetworkError", nil)
+}
+
+// NativeDownloadMediaError says "The downloaded audio is incomplete or damaged."
+// in the language the app shows.
+func NativeDownloadMediaError() string { return In(i18n.Locale()).NativeDownloadMediaError() }
+
+// NativeDownloadMediaError says "The downloaded audio is incomplete or damaged."
+// in the language of msgs.
+func (msgs Messages) NativeDownloadMediaError() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadMediaError", nil)
+}
+
+// NativeDownloadStorageError says "Couldn’t access download storage. Check disk space and permissions."
+// in the language the app shows.
+func NativeDownloadStorageError() string { return In(i18n.Locale()).NativeDownloadStorageError() }
+
+// NativeDownloadStorageError says "Couldn’t access download storage. Check disk space and permissions."
+// in the language of msgs.
+func (msgs Messages) NativeDownloadStorageError() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadStorageError", nil)
+}
+
+// NativeDownloadKeyError says "Couldn’t unlock the offline key. Check access to your system key store."
+// in the language the app shows.
+func NativeDownloadKeyError() string { return In(i18n.Locale()).NativeDownloadKeyError() }
+
+// NativeDownloadKeyError says "Couldn’t unlock the offline key. Check access to your system key store."
+// in the language of msgs.
+func (msgs Messages) NativeDownloadKeyError() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadKeyError", nil)
+}
+
+// NativeDownloadCollectionError says "Couldn’t load all tracks. Open the collection and try again."
+// in the language the app shows.
+func NativeDownloadCollectionError() string { return In(i18n.Locale()).NativeDownloadCollectionError() }
+
+// NativeDownloadCollectionError says "Couldn’t load all tracks. Open the collection and try again."
+// in the language of msgs.
+func (msgs Messages) NativeDownloadCollectionError() string {
+	return Catalog.Format(msgs.locale, "nativeDownloadCollectionError", nil)
+}
+
+// NativeAudioQuality says "Audio quality"
+// in the language the app shows.
+func NativeAudioQuality() string { return In(i18n.Locale()).NativeAudioQuality() }
+
+// NativeAudioQuality says "Audio quality"
+// in the language of msgs.
+func (msgs Messages) NativeAudioQuality() string {
+	return Catalog.Format(msgs.locale, "nativeAudioQuality", nil)
+}
+
+// NativeAudioQualityHint says "Applies the next time you load a song."
+// in the language the app shows.
+func NativeAudioQualityHint() string { return In(i18n.Locale()).NativeAudioQualityHint() }
+
+// NativeAudioQualityHint says "Applies the next time you load a song."
+// in the language of msgs.
+func (msgs Messages) NativeAudioQualityHint() string {
+	return Catalog.Format(msgs.locale, "nativeAudioQualityHint", nil)
+}
+
+// NativeAudioQualitySaver says "Data saver"
+// in the language the app shows.
+func NativeAudioQualitySaver() string { return In(i18n.Locale()).NativeAudioQualitySaver() }
+
+// NativeAudioQualitySaver says "Data saver"
+// in the language of msgs.
+func (msgs Messages) NativeAudioQualitySaver() string {
+	return Catalog.Format(msgs.locale, "nativeAudioQualitySaver", nil)
+}
+
+// NativeAudioQualityStandard says "Standard"
+// in the language the app shows.
+func NativeAudioQualityStandard() string { return In(i18n.Locale()).NativeAudioQualityStandard() }
+
+// NativeAudioQualityStandard says "Standard"
+// in the language of msgs.
+func (msgs Messages) NativeAudioQualityStandard() string {
+	return Catalog.Format(msgs.locale, "nativeAudioQualityStandard", nil)
+}
+
+// NativeAudioQualityBest says "Highest available"
+// in the language the app shows.
+func NativeAudioQualityBest() string { return In(i18n.Locale()).NativeAudioQualityBest() }
+
+// NativeAudioQualityBest says "Highest available"
+// in the language of msgs.
+func (msgs Messages) NativeAudioQualityBest() string {
+	return Catalog.Format(msgs.locale, "nativeAudioQualityBest", nil)
+}
+
+// NativeAudioQualitySaved says "Saved. Applies the next time you load a song."
+// in the language the app shows.
+func NativeAudioQualitySaved() string { return In(i18n.Locale()).NativeAudioQualitySaved() }
+
+// NativeAudioQualitySaved says "Saved. Applies the next time you load a song."
+// in the language of msgs.
+func (msgs Messages) NativeAudioQualitySaved() string {
+	return Catalog.Format(msgs.locale, "nativeAudioQualitySaved", nil)
+}
+
+// NativeAudioQualitySaveError says "Couldn’t save. Your previous quality is still selected. Try again."
+// in the language the app shows.
+func NativeAudioQualitySaveError() string { return In(i18n.Locale()).NativeAudioQualitySaveError() }
+
+// NativeAudioQualitySaveError says "Couldn’t save. Your previous quality is still selected. Try again."
+// in the language of msgs.
+func (msgs Messages) NativeAudioQualitySaveError() string {
+	return Catalog.Format(msgs.locale, "nativeAudioQualitySaveError", nil)
 }
 
 // NativeVideoQuality says "Video quality"

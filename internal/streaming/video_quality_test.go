@@ -35,7 +35,7 @@ func TestVideoFormatRespectsQualityAndAvailableSources(t *testing.T) {
 		{"only larger sources", []int{1080, 720}, 360, 720},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			f, err := chooseFormat(qualityFixture(test.sources...), "video", test.choice)
+			f, err := chooseFormat(qualityFixture(test.sources...), "video", formatPreference{videoHeight: test.choice})
 			if err != nil || f.height != test.want {
 				t.Fatalf("selected height=%d error=%v; want %d", f.height, err, test.want)
 			}

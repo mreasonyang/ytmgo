@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/egoist/mygo/ui"
 	"strings"
 	"testing"
 )
@@ -28,12 +29,29 @@ func TestDevelopmentBuildCannotEnableUpdates(t *testing.T) {
 }
 
 func TestNativeAboutShowsDevelopmentIdentity(t *testing.T) {
-	options := developmentAboutOptions()
-	if !strings.Contains(options.ApplicationVersion, "DEV") || options.ApplicationName != "ytmGO Dev" {
-		t.Fatal("native About panel must distinguish development builds")
+	label := applicationBuildLabel()
+	b := currentBuildIdentity()
+	if !strings.Contains(label, "DEV") || (b.Branch != "" && !strings.Contains(label, b.Branch)) {
+		t.Fatalf("the build line %q must distinguish development builds", label)
 	}
-	about := applicationMenuWithUpdates(updateMenuItem).Submenu[0]
+	opened := false
+	about := applicationMenuWithUpdates(updateMenuItem, func() { opened = true }).Submenu[0]
 	if about.Role != "" || about.Click == nil {
-		t.Fatal("native default About action would hide development identity")
+		t.Fatal("the app menu's About must open the app's own About, not the system panel")
+	}
+	about.Click(about, nil)
+	if !opened {
+		t.Fatal("the app menu's About opened nothing")
+	}
+	// The app's About shows that line.
+	m, a := nativeViewFixture()
+	m.Version, m.About = label, true
+	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, 1440, 900)
+	tt.Frame()
+	if !tt.HasText(label) {
+		t.Fatalf("About does not show the build %q", label)
+	}
+	if err := tt.Click(a.Tr("buttonOK")); err != nil || m.About {
+		t.Fatalf("OK did not close About (%v)", err)
 	}
 }

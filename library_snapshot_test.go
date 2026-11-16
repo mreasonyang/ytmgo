@@ -168,7 +168,16 @@ func TestLibraryClickKeepsRowCoversDuringRefresh(t *testing.T) {
 			}
 			a.Artwork = func(src string, edge int, _ artworkPriority) ui.ImageSource { return a.artworkPeek(src, edge) }
 			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, &app.model, a) }, test.width, 800)
-			if err := tt.Click(a.Tr("shellNavLibrary")); err != nil || app.model.Route != "library" {
+			// The Library tab, narrow; wide, the panel is the library and
+			// the page is reached by route.
+			var err error
+			if test.width <= 760 {
+				err = tt.Click(a.Tr("shellNavLibrary"))
+			} else {
+				app.navigate("library")
+				tt.Frame()
+			}
+			if err != nil || app.model.Route != "library" {
 				t.Fatalf("Library click failed: %v", err)
 			}
 			checkRows := func() {

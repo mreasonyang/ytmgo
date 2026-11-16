@@ -35,7 +35,7 @@ func (p *Player) observeAccessProgressLocked(position time.Duration) {
 // available again. The bookmark and play/pause intent survive recovery.
 // Called with p.mu held; all process/network work runs outside that lock.
 func (p *Player) recoverAccessLocked() {
-	at, id, info := p.state.Position, p.videoID, p.media
+	at, track, info := p.state.Position, p.currentTrack, p.media
 	ctx, gen, old, err := p.beginLocked(context.Background(), at, p.wantPlay, false)
 	if err != nil {
 		return
@@ -43,21 +43,22 @@ func (p *Player) recoverAccessLocked() {
 	p.accessRecoveries++
 	p.media = nil
 	p.seekReloadable = true
-	p.clearPreparedLocked()
+	// Only the current stream was denied. The queued track owns its own
+	// lease and decoder, and a resolver refresh preserves existing leases.
 	go func() {
 		defer p.ops.Done()
 		old.close()
 		releaseMedia(info)
-		_ = p.resolveFresh(ctx, gen, id, at)
+		_ = p.resolveFresh(ctx, gen, track, at)
 	}()
 }
 
-func (p *Player) resolveFresh(ctx context.Context, gen uint64, id string, at time.Duration) error {
-	return p.resolveFreshAttempts(ctx, gen, id, at, 2)
+func (p *Player) resolveFresh(ctx context.Context, gen uint64, track audioTrack, at time.Duration) error {
+	return p.resolveFreshAttempts(ctx, gen, track, at, 2)
 }
 
-func (p *Player) resolveFreshAttempts(ctx context.Context, gen uint64, id string, at time.Duration, attempts int) error {
-	if p.refresh != nil {
+func (p *Player) resolveFreshAttempts(ctx context.Context, gen uint64, track audioTrack, at time.Duration, attempts int) error {
+	if p.refresh != nil && !p.downloads.Has(track.id) {
 		if err := p.refresh(ctx); err != nil {
 			return p.fail(gen, err)
 		}
@@ -69,7 +70,7 @@ func (p *Player) resolveFreshAttempts(ctx context.Context, gen uint64, id string
 		if err := ctx.Err(); err != nil {
 			return p.fail(gen, err)
 		}
-		info, err := p.resolve(ctx, id)
+		info, err := p.resolve(ctx, track)
 		if err != nil {
 			return p.fail(gen, err)
 		}

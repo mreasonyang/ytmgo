@@ -37,13 +37,13 @@ func TestAccountMembershipSwitchKeepsPlayingAndReleasesPrefetch(t *testing.T) {
 		t.Fatal("fixture preparation failed")
 	}
 	p.mu.Lock()
-	current, media, prepared := p.session, p.media, p.prepared
+	current, media := p.session, p.media
 	p.mu.Unlock()
 	if err := p.SetAccount(context.Background(), accountFixture(true, 1)); err != nil {
 		t.Fatal("membership switch failed")
 	}
 	select {
-	case <-prepared.retired:
+	case <-p.preparedRetired:
 	case <-time.After(time.Second):
 		t.Fatal("prefetch did not retire")
 	}
@@ -197,7 +197,7 @@ func TestInitialAccountRestoreBlocksResolutionWithoutWarming(t *testing.T) {
 	p.accountInitialized = make(chan struct{})
 	p.configure = func(context.Context, AccountSession) error { return nil }
 	var resolves atomic.Int64
-	p.resolve = func(context.Context, string) (media, error) {
+	p.resolve = func(context.Context, audioTrack) (media, error) {
 		resolves.Add(1)
 		return media{Duration: time.Minute}, nil
 	}

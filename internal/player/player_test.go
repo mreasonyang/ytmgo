@@ -135,6 +135,62 @@ func waitPlayerCondition(t *testing.T, ready func() bool) {
 	}
 }
 
+func waitForPlaybackChange(t *testing.T, p *Player, ready func(State) bool) State {
+	t.Helper()
+	changes := p.Changes()
+	timeout := time.NewTimer(2 * time.Second)
+	defer timeout.Stop()
+	for {
+		select {
+		case <-changes:
+			if state := p.Snapshot(); ready(state) {
+				return state
+			}
+		case <-timeout.C:
+			t.Fatal("playback change was not delivered")
+		}
+	}
+}
+
+func TestReplacedOutputEndIgnored(t *testing.T) {
+	p := testPlayer()
+	defer p.Close()
+	if err := p.Load(t.Context(), "aaaaaaaaaaa"); err != nil {
+		t.Fatal(err)
+	}
+	changes := p.Changes()
+	requireChange := func() {
+		t.Helper()
+		select {
+		case <-changes:
+		default:
+			t.Fatal("operation did not announce its state change")
+		}
+	}
+	requireChange() // First subscriber observes the existing session.
+	previous := p.session
+	if err := p.Load(t.Context(), "bbbbbbbbbbb"); err != nil {
+		t.Fatal(err)
+	}
+	requireChange()         // The load and install share a single pending notification.
+	p.outputEnded(previous) // Already dispatched before removal of its listener.
+	select {
+	case <-changes:
+		t.Fatal("superseded output notified the current track")
+	default:
+	}
+	if err := p.Pause(); err != nil {
+		t.Fatal(err)
+	}
+	requireChange()
+	p.outputEnded(p.session)
+	select {
+	case <-changes:
+		t.Fatal("paused output notified an end")
+	default:
+	}
+}
+
 func TestPreparedTrackTransfersDecoderAndLease(t *testing.T) {
 	p := testPlayer()
 	defer p.Close()

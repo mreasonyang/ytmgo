@@ -51,6 +51,59 @@ func waitVideo(t *testing.T, condition func() bool) {
 	t.Fatal("video worker did not reach expected state")
 }
 
+func TestVideoPresentationChanges(t *testing.T) {
+	v := testVideo()
+	defer v.Close()
+	resolved := make(chan error, 1)
+	v.resolve = func(ctx context.Context, _ string, _ int) (videoMedia, error) {
+		select {
+		case err := <-resolved:
+			return videoMedia{media: media{Duration: time.Minute}, width: 4, height: 2}, err
+		case <-ctx.Done():
+			return videoMedia{}, ctx.Err()
+		}
+	}
+	start := func() {
+		t.Helper()
+		if err := v.Start(t.Context(), "aaaaaaaaaaa", func() time.Duration { return 0 }, func() bool { return false }); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// The desktop watcher can subscribe after Start has already published.
+	start()
+	changes := v.Changes()
+	changed := func() VideoState {
+		t.Helper()
+		select {
+		case <-changes:
+			return v.Snapshot()
+		case <-time.After(2 * time.Second):
+			t.Fatal("video state changed without waking its presenter")
+			return VideoState{}
+		}
+	}
+	if state := changed(); !state.Loading || state.Frame != nil {
+		t.Fatal("missing initial loading state")
+	}
+	resolved <- nil
+	if state := changed(); state.Frame == nil || state.Loading || state.Error != "" {
+		t.Fatal("first frame did not wake the presenter")
+	}
+	v.Stop()
+	if state := changed(); state.Frame != nil || state.Loading || state.Error != "" {
+		t.Fatal("stopped session retained presentation state")
+	}
+	start()
+	if state := changed(); !state.Loading {
+		t.Fatal("replacement session did not publish loading")
+	}
+	resolved <- errors.New("synthetic upstream failure")
+	if state := changed(); state.Error != "video_resolution_failed" || state.Loading {
+		t.Fatal("resolution failure did not wake the presenter")
+	}
+}
+
 func TestVideoDimensionsBoundMemory(t *testing.T) {
 	for _, quality := range videoquality.Options() {
 		for _, dimensions := range [][2]int{{3840, 2160}, {1920, 1080}, {640, 480}, {1080, 1920}, {64, 36}} {

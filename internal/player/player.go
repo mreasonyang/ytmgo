@@ -48,6 +48,7 @@ type Player struct {
 	cancel              context.CancelFunc
 	closed, wantPlay    bool
 	state               State
+	changes             chan struct{}
 	media               *media
 	session             *session
 	prepared            *preparedTrack
@@ -91,17 +92,50 @@ type preparedTrack struct {
 }
 
 type session struct {
-	output  *audio.Player
-	decoder *pcmDecoder
-	base    time.Duration
+	output            *audio.Player
+	decoder           *pcmDecoder
+	base              time.Duration
+	removeEndListener func()
 }
 
 func (s *session) close() {
 	if s != nil {
+		s.removeEndListener()
 		// MyGo closes a decoder from its decoding goroutine. Unblock any pipe
 		// read first so that replacing/closing a stalled stream always finishes.
 		s.output.Close()
 		s.decoder.Close()
+	}
+}
+
+// Changes wakes a single consumer to read Snapshot after playback changes.
+// The first subscription gets an initial wakeup. Pending changes coalesce;
+// the consumer uses its own context to stop waiting.
+func (p *Player) Changes() <-chan struct{} {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.changes == nil {
+		p.changes = make(chan struct{}, 1)
+		p.notifyChangedLocked()
+	}
+	return p.changes
+}
+
+func (p *Player) notifyChangedLocked() {
+	select {
+	case p.changes <- struct{}{}:
+	default:
+	}
+}
+
+func (p *Player) outputEnded(s *session) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	// MyGo dispatches asynchronously. A seek or skip can have replaced
+	// this session by the time its callback runs. Snapshot distinguishes a
+	// natural end from a failed decoder once the output has drained.
+	if p.session == s && p.wantPlay {
+		p.notifyChangedLocked()
 	}
 }
 
@@ -390,6 +424,7 @@ func (p *Player) beginLocked(ctx context.Context, at time.Duration, play, clear 
 	p.wantPlay = play
 	p.state.Position, p.state.Loading, p.state.Playing = at, true, false
 	p.state.Error, p.state.ErrorDetails, p.state.Ended = "", FailureDetails{}, false
+	p.notifyChangedLocked()
 	return ctx, p.gen, old, nil
 }
 
@@ -430,7 +465,9 @@ func (p *Player) installDecoder(ctx context.Context, gen uint64, info media, d *
 		p.cancel = nil
 	}
 	out := audio.NewPlayer(d).SetVolume(p.state.Volume)
-	p.media, p.session = &info, &session{out, d, at}
+	s := &session{output: out, decoder: d, base: at}
+	s.removeEndListener = out.OnEnd(func() { p.outputEnded(s) })
+	p.media, p.session = &info, s
 	p.seekReloadable = false
 	p.accessHealthyFrom = 0
 	p.state.Duration, p.state.Loading, p.state.Video = info.Duration, false, info.Video
@@ -439,6 +476,7 @@ func (p *Player) installDecoder(ctx context.Context, gen uint64, info media, d *
 	if p.wantPlay {
 		out.Play()
 	}
+	p.notifyChangedLocked()
 	return nil
 }
 
@@ -453,6 +491,7 @@ func (p *Player) fail(gen uint64, err error) error {
 		p.cancel = nil
 	}
 	p.state.Loading, p.state.Playing = false, false
+	p.notifyChangedLocked()
 	if errors.Is(err, context.Canceled) {
 		return err
 	}
@@ -500,6 +539,7 @@ func (p *Player) PlayContext(ctx context.Context) error {
 	}
 	if p.session != nil && !ended {
 		p.session.output.Play()
+		p.notifyChangedLocked()
 		p.mu.Unlock()
 		return nil
 	}
@@ -529,15 +569,19 @@ func (p *Player) Pause() error {
 		return ErrClosed
 	}
 	p.observeAccessPlaybackLocked()
-	p.wantPlay = false
 	if p.suspended != nil {
 		p.suspended.play = false
 	}
 	if p.session != nil {
+		if p.wantPlay && !p.session.output.Playing() && p.session.decoder.eof.Load() && !p.session.decoder.failed.Load() {
+			p.state.Ended = true
+		}
 		p.session.output.Pause()
 		p.accessHealthyFrom = p.session.output.Position()
 	}
+	p.wantPlay = false
 	p.state.Playing = false
+	p.notifyChangedLocked()
 	return nil
 }
 
@@ -560,6 +604,7 @@ func (p *Player) Stop() error {
 	p.clearPreparedLocked()
 	p.state.Position, p.state.Playing, p.state.Loading, p.state.Ended = 0, false, false, false
 	p.state.Error, p.state.ErrorDetails = "", FailureDetails{}
+	p.notifyChangedLocked()
 	p.mu.Unlock()
 	old.close()
 	releaseMedia(oldMedia)
@@ -588,6 +633,7 @@ func (p *Player) SeekContext(ctx context.Context, at time.Duration) error {
 			at = min(at, max(p.suspended.duration-time.Millisecond, 0))
 		}
 		p.suspended.position, p.state.Position = at, at
+		p.notifyChangedLocked()
 		p.mu.Unlock()
 		return p.ResumeFromSuspend(ctx)
 	}
@@ -648,6 +694,7 @@ func (p *Player) SetVolume(v float64) {
 	if p.session != nil {
 		p.session.output.SetVolume(p.state.Volume)
 	}
+	p.notifyChangedLocked()
 }
 
 func (p *Player) Snapshot() State {
@@ -679,9 +726,14 @@ func (p *Player) Snapshot() State {
 			p.state.Playing = false
 			s.output.Pause()
 			p.wantPlay = false
+			p.notifyChangedLocked()
 		}
 	}
-	return p.state
+	state := p.state
+	// Keep the internal end marker for a manual restart, but a pause that
+	// wins the race with a queued end notification must suppress auto-next.
+	state.Ended = state.Ended && p.wantPlay
+	return state
 }
 
 func (p *Player) Close() {
@@ -705,11 +757,12 @@ func (p *Player) Close() {
 	}
 	old := p.session
 	oldMedia := p.media
-	p.session, p.media = nil, nil
+	p.session, p.media, p.wantPlay = nil, nil, false
 	p.seekReloadable = false
 	p.suspended, p.sleeping = nil, false
 	p.clearPreparedLocked()
 	p.state.Playing, p.state.Loading = false, false
+	p.notifyChangedLocked()
 	p.mu.Unlock()
 	old.close()
 	releaseMedia(oldMedia)

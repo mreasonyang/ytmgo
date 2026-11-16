@@ -92,6 +92,7 @@ func (p *Player) SetAccount(ctx context.Context, next AccountSession) error {
 			p.cancel = nil
 		}
 		p.state.Loading = false
+		p.notifyChangedLocked()
 	}
 	p.clearPreparedLocked()
 	var old *session

@@ -90,6 +90,7 @@ type Video struct {
 	frame                image.Image
 	error                string
 	errorDetails         FailureDetails
+	changes              chan struct{}
 	policy               videoPlaybackPolicy
 }
 
@@ -137,6 +138,7 @@ func (v *Video) StartWithQuality(ctx context.Context, id string, quality int, po
 	v.cancel, v.loading, v.error, v.frame = cancel, true, "", nil
 	v.errorDetails = FailureDetails{}
 	v.sequence++
+	v.notifyLocked()
 	v.mu.Unlock()
 	if previous != nil {
 		previous()
@@ -154,6 +156,44 @@ func (v *Video) Frame() (image.Image, uint64) {
 	v.mu.RLock()
 	defer v.mu.RUnlock()
 	return v.frame, v.sequence
+}
+
+// Changes wakes the presenter when a frame or its loading/error state changes.
+// A slow presenter can read the latest snapshot without queuing old frames.
+func (v *Video) Changes() <-chan struct{} {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	if v.changes == nil {
+		v.changes = make(chan struct{}, 1)
+		if v.sequence != 0 {
+			v.notifyLocked()
+		}
+	}
+	return v.changes
+}
+
+func (v *Video) notifyLocked() {
+	select {
+	case v.changes <- struct{}{}:
+	default:
+	}
+}
+
+type VideoState struct {
+	Frame        image.Image
+	Number       uint64
+	Loading      bool
+	Error        string
+	ErrorDetails FailureDetails
+}
+
+func (v *Video) Snapshot() VideoState {
+	v.mu.RLock()
+	defer v.mu.RUnlock()
+	return VideoState{
+		Frame: v.frame, Number: v.sequence, Loading: v.loading,
+		Error: v.error, ErrorDetails: v.errorDetails.Sanitized(),
+	}
 }
 
 func (v *Video) Error() string { v.mu.RLock(); defer v.mu.RUnlock(); return v.error }
@@ -179,6 +219,7 @@ func (v *Video) stop(close bool) {
 	v.cancel, v.frame, v.loading, v.error = nil, nil, false, ""
 	v.errorDetails = FailureDetails{}
 	v.sequence++
+	v.notifyLocked()
 	v.mu.Unlock()
 	if cancel != nil {
 		cancel()
@@ -189,8 +230,9 @@ func (v *Video) stop(close bool) {
 func (v *Video) run(ctx context.Context, generation uint64, id string, quality int, position func() time.Duration, playing func() bool) {
 	defer func() {
 		v.mu.Lock()
-		if generation == v.generation {
+		if generation == v.generation && v.loading {
 			v.loading = false
+			v.notifyLocked()
 		}
 		v.mu.Unlock()
 	}()
@@ -420,6 +462,7 @@ func (v *Video) present(ctx context.Context, generation uint64, decoder *videoDe
 					v.frame, v.loading, v.error = pending.image, false, ""
 					v.errorDetails = FailureDetails{}
 					v.sequence++
+					v.notifyLocked()
 				}
 				v.mu.Unlock()
 				hasFrame, pending = true, nil
@@ -458,6 +501,7 @@ func (v *Video) fail(generation uint64, category string, details ...FailureDetai
 		if len(details) == 1 {
 			v.errorDetails = details[0].Sanitized()
 		}
+		v.notifyLocked()
 	}
 }
 

@@ -43,7 +43,8 @@ func (p *Player) recoverAccessLocked() {
 	p.accessRecoveries++
 	p.media = nil
 	p.seekReloadable = true
-	p.clearPreparedLocked()
+	// Only the current stream was denied. The queued track owns its own
+	// lease and decoder, and a resolver refresh preserves existing leases.
 	go func() {
 		defer p.ops.Done()
 		old.close()

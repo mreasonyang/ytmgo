@@ -52,6 +52,9 @@ type desktop struct {
 	restoredTrack                   bool // shown paused until the first explicit play
 	diagnosticPath                  string
 	acceptanceProbe                 *acceptanceProbe
+	playbackErrorCategory           string
+	playbackErrorDetails            player.FailureDetails
+	nextProgressFrame               time.Time
 	model                           UIModel
 	catalog                         *catalog.Client
 	player                          *player.Player
@@ -261,8 +264,16 @@ func main() {
 		a.initGlobalShortcut(filepath.Join(dataDir, "global-shortcut"))
 		a.navigate("home")
 		a.startAccountPolling()
-		go a.pollPlayback()
-		go a.pollVideo()
+		if a.player != nil {
+			go a.watchPlayback()
+			if a.acceptanceProbe != nil {
+				go a.samplePlayback()
+			}
+		}
+		if a.downloads != nil {
+			go a.watchDownloads()
+		}
+		go a.watchVideo()
 	})
 	if err = mygo.App.Run(); err != nil {
 		a.cancel()
@@ -306,6 +317,14 @@ func (a *desktop) updateArtworkScale() {
 }
 
 func (a *desktop) view(c *ui.Context) {
+	if a.windowVisible && a.model.Playing && !a.loadPending && a.player != nil {
+		now := c.Now()
+		if !now.Before(a.nextProgressFrame) {
+			a.model.Position = a.player.Snapshot().Position.Seconds()
+			a.nextProgressFrame = now.Add(350 * time.Millisecond)
+		}
+		c.After(a.nextProgressFrame.Sub(now))
+	}
 	frame := artworkFrame{cache: a.art}
 	nativeView(c, &a.model, a.actions(frame.get))
 	a.prefetchNextCover(&frame)
@@ -341,74 +360,73 @@ func (a *desktop) actions(artwork func(string, int, artworkPriority) ui.ImageSou
 	return actions
 }
 
-func (a *desktop) pollPlayback() {
-	t := time.NewTicker(350 * time.Millisecond)
-	defer t.Stop()
-	var previous player.State
-	diagnosticCategory := "ready"
-	var diagnosticDetails player.FailureDetails
+func (a *desktop) watchPlayback() {
+	watchPlaybackChanges(a.ctx, a.player.Changes(), func() player.State {
+		var state player.State
+		a.post(func() {
+			state = a.player.Snapshot()
+			a.applyPlaybackState(state)
+		})
+		return state
+	})
+}
+
+// The native mixer wakes us at the track boundary. Only an active session
+// needs a watchdog for missed notifications or an audio device failure.
+func watchPlaybackChanges(ctx context.Context, changes <-chan struct{}, refresh func() player.State) {
+	var watchdog <-chan time.Time
 	for {
 		select {
-		case <-a.ctx.Done():
+		case <-ctx.Done():
 			return
-		case <-t.C:
-			if a.downloads != nil {
-				select {
-				case <-a.downloads.Changes():
-					a.post(a.refreshDownloads)
-				default:
-				}
-			}
-			if a.player == nil {
-				continue
-			}
-			current := a.player.Snapshot()
-			a.acceptanceProbe.observe(time.Now(), current)
-			if current == previous {
-				continue
-			}
-			previous = current
-			a.post(func() {
-				if a.loadPending || a.restoredTrack {
-					return
-				}
-				state := a.player.Snapshot()
-				a.learnVideo(state)
-				a.model.Playing = state.Playing
-				a.model.PlaybackLoading = state.Loading
-				a.model.Position = state.Position.Seconds()
-				if state.Duration > 0 {
-					a.model.Duration = state.Duration.Seconds()
-				}
-				if state.Error != "" {
-					if diagnosticCategory != state.Error || diagnosticDetails != state.ErrorDetails {
-						recordPlaybackDiagnostic(a.diagnosticPath, "audio", state.Error, state.ErrorDetails)
-						diagnosticCategory = state.Error
-						diagnosticDetails = state.ErrorDetails
-					}
-					a.playbackFailure(state)
-				} else if !state.Loading && state.Playing {
-					a.model.PlaybackError = ""
-					if diagnosticCategory != "ready" {
-						recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
-						diagnosticCategory = "ready"
-						diagnosticDetails = player.FailureDetails{}
-					}
-				}
-				if state.Ended && !a.endedHandled {
-					a.endedHandled = true
-					if a.model.Repeat == 2 {
-						a.resume()
-					} else {
-						a.next()
-					}
-				}
-				playState := mygo.PlaybackPaused
-				if state.Playing {
-					playState = mygo.PlaybackPlaying
-				}
-				mygo.NowPlaying.SetPlayback(playState, state.Position)
-			})
+		case <-changes:
+		case <-watchdog:
+		}
+		state := refresh()
+		watchdog = nil
+		if state.Playing || state.Loading {
+			watchdog = time.After(5 * time.Second)
+		}
+	}
+}
+
+// Run on the UI thread. Native events and the watchdog both read the current
+// session; foreground completions reconcile again after releasing their guard.
+func (a *desktop) applyPlaybackState(state player.State) {
+	if a.loadPending || a.restoredTrack || a.model.Current.ID == "" {
+		return
+	}
+	a.learnVideo(state)
+	a.model.Playing, a.model.PlaybackLoading = state.Playing, state.Loading
+	a.model.Position = state.Position.Seconds()
+	if state.Duration > 0 {
+		a.model.Duration = state.Duration.Seconds()
+	}
+	if state.Error != "" {
+		if a.playbackErrorCategory != state.Error || a.playbackErrorDetails != state.ErrorDetails {
+			recordPlaybackDiagnostic(a.diagnosticPath, "audio", state.Error, state.ErrorDetails)
+			a.playbackErrorCategory, a.playbackErrorDetails = state.Error, state.ErrorDetails
+		}
+		a.playbackFailure(state)
+	} else if state.Playing && !state.Loading {
+		a.model.PlaybackError = ""
+		if a.playbackErrorCategory != "" {
+			recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
+			a.playbackErrorCategory, a.playbackErrorDetails = "", player.FailureDetails{}
+		}
+	}
+	playState := mygo.PlaybackPaused
+	if state.Playing {
+		playState = mygo.PlaybackPlaying
+	}
+	mygo.NowPlaying.SetPlayback(playState, state.Position)
+	if state.Ended && state.Error == "" && !a.endedHandled &&
+		a.seekCancel == nil && a.resumeCancel == nil && !a.powerPlaybackSuspended {
+		a.endedHandled = true
+		if a.model.Repeat == 2 {
+			a.resume()
+		} else {
+			a.next()
 		}
 	}
 }

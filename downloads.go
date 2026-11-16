@@ -5,6 +5,7 @@ import (
 
 	"path/filepath"
 	"strings"
+	"time"
 
 	"ytmgo/internal/catalog"
 	"ytmgo/internal/downloads"
@@ -46,6 +47,25 @@ func (a *desktop) downloadsOnline(loggedIn bool, scope string) {
 	}
 	mine := a.downloads.Scope()
 	a.downloads.Online((loggedIn && scope == mine) || (!loggedIn && mine == downloads.Guest))
+}
+
+// Updates can arrive for every downloaded chunk. Refresh immediately, then
+// let a burst coalesce without waking the desktop when the library is idle.
+func (a *desktop) watchDownloads() {
+	changes := a.downloads.Changes()
+	for {
+		select {
+		case <-a.ctx.Done():
+			return
+		case <-changes:
+			a.post(a.refreshDownloads)
+		}
+		select {
+		case <-a.ctx.Done():
+			return
+		case <-time.After(350 * time.Millisecond):
+		}
+	}
 }
 
 func (a *desktop) refreshDownloads() {
@@ -169,9 +189,7 @@ func (a *desktop) removeDownload(id string) {
 		if a.playCancel != nil {
 			a.playCancel()
 		}
-		if a.seekCancel != nil {
-			a.seekCancel()
-		}
+		a.cancelSeek()
 		a.playGeneration++
 		a.loadPending, a.model.PlaybackLoading, a.model.Playing = false, false, false
 		_ = a.player.Stop()

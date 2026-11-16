@@ -3,8 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
 	"testing"
+	"testing/synctest"
+	"time"
+
 	"ytmgo/internal/catalog"
+	"ytmgo/internal/player"
 )
 
 func TestExpiredContinuationKeepsPageAndPlaybackUntilReload(t *testing.T) {
@@ -47,6 +52,79 @@ func TestPauseInvalidatesQueuedResume(t *testing.T) {
 		t.Fatal("pause did not invalidate the queued resume")
 	}
 	a.pause()
+}
+
+// Fake time lets a missed notification exercise the real watchdog without
+// depending on the audio device, the UI main loop or wall-clock scheduling.
+func TestPlaybackWatchdogOnlyWhileActive(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		ctx, cancel := context.WithCancel(t.Context())
+		defer cancel()
+		changes := make(chan struct{}, 1)
+		var state atomic.Pointer[player.State]
+		state.Store(&player.State{})
+		var reads atomic.Int32
+		go watchPlaybackChanges(ctx, changes, func() player.State {
+			reads.Add(1)
+			return *state.Load()
+		})
+		readCount := func(want int32) {
+			t.Helper()
+			synctest.Wait()
+			if got := reads.Load(); got != want {
+				t.Fatalf("snapshot count = %d, want %d", got, want)
+			}
+		}
+		changes <- struct{}{}
+		readCount(1)
+		time.Sleep(time.Minute)
+		readCount(1)
+
+		state.Store(&player.State{Loading: true})
+		changes <- struct{}{}
+		readCount(2)
+		time.Sleep(5 * time.Second)
+		readCount(3)
+		state.Store(&player.State{Playing: true})
+		changes <- struct{}{}
+		readCount(4)
+		state.Store(&player.State{Ended: true})
+		time.Sleep(5 * time.Second)
+		readCount(5)
+		time.Sleep(time.Minute)
+		readCount(5)
+	})
+}
+
+func TestDesktopDefersTrackEndUntilForegroundWorkFinishes(t *testing.T) {
+	for _, hold := range []string{"load", "seek", "resume", "suspend"} {
+		t.Run(hold, func(t *testing.T) {
+			current := catalog.Item{ID: "aaaaaaaaaaa"}
+			a := &desktop{model: UIModel{Current: current, Queue: []catalog.Item{current}}}
+			switch hold {
+			case "load":
+				a.loadPending = true
+			case "seek":
+				a.seekCancel = func() {}
+			case "resume":
+				a.resumeCancel = func() {}
+			case "suspend":
+				a.powerPlaybackSuspended = true
+			}
+			end := player.State{Ended: true, Position: time.Second, Duration: time.Second}
+			a.applyPlaybackState(end)
+			if a.endedHandled {
+				t.Fatal("consumed the end during a foreground operation")
+			}
+			a.loadPending, a.powerPlaybackSuspended = false, false
+			a.cancelSeek()
+			a.cancelResume()
+			a.applyPlaybackState(end)
+			if !a.endedHandled {
+				t.Fatal("lost the end when the foreground operation finished")
+			}
+		})
+	}
 }
 
 func TestPlayableQueueKeepsOrderAndExcludesBrowseDestinations(t *testing.T) {

@@ -39,8 +39,8 @@ func nativeLyricIndices(lines []catalog.LyricLine, seconds float64) (active, tar
 	return -1, i
 }
 
-// The general playback model is polled for controls and metadata. Lyrics need
-// the audio clock at the moment they are drawn, especially at cue boundaries.
+// Lyrics need the audio clock at the moment they are drawn, especially at
+// cue boundaries between progress-bar updates.
 // Never extrapolate wall time: a starved decoder's audible position stands still.
 func (a *desktop) lyricsClock() (float64, bool) {
 	if a.player == nil || a.loadPending || a.restoredTrack {

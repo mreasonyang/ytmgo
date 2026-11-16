@@ -604,9 +604,7 @@ func (a *desktop) prepareAccountPlayback(next player.AccountSession, newIdentity
 			if a.playCancel != nil {
 				a.playCancel()
 			}
-			if a.seekCancel != nil {
-				a.seekCancel()
-			}
+			a.cancelSeek()
 			a.cancelResume()
 			a.playGeneration++
 			a.loadPending = false
@@ -828,9 +826,7 @@ func (a *desktop) signOutConfirmed() {
 	if a.prepareCancel != nil {
 		a.prepareCancel()
 	}
-	if a.seekCancel != nil {
-		a.seekCancel()
-	}
+	a.cancelSeek()
 	a.cancelResume()
 	a.preparedID = ""
 	a.playGeneration++

@@ -50,6 +50,7 @@ func (p *Player) Suspend() error {
 	p.seekReloadable = false
 	p.clearPreparedLocked()
 	p.state.Position, p.state.Playing, p.state.Loading, p.state.Ended = at, false, false, false
+	p.notifyChangedLocked()
 	previous := p.suspendDone
 	done := make(chan struct{})
 	p.suspendDone = done

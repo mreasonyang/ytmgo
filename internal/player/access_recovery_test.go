@@ -50,6 +50,30 @@ func TestAccessRecoveryReResolvesAtBookmarkAndIsBounded(t *testing.T) {
 	}
 }
 
+func TestCurrentTrackRecoveryKeepsPreparedNext(t *testing.T) {
+	p := testPlayer()
+	defer p.Close()
+	ctx := t.Context()
+	if err := p.Load(ctx, "aaaaaaaaaaa"); err != nil {
+		t.Fatal(err)
+	}
+	if err := p.Prepare(ctx, "bbbbbbbbbbb"); err != nil {
+		t.Fatal(err)
+	}
+	next := p.prepared.decoder
+	denyCurrentDecoder(p)
+	if state := p.Snapshot(); !state.Loading {
+		t.Fatal("current stream did not enter recovery")
+	}
+	waitForPlaybackChange(t, p, func(state State) bool { return !state.Loading })
+	if err := p.Load(ctx, "bbbbbbbbbbb"); err != nil {
+		t.Fatal(err)
+	}
+	if p.session.decoder != next {
+		t.Fatal("recovering the previous track discarded the prepared decoder")
+	}
+}
+
 func TestAccessRecoveryIsCancelledByStop(t *testing.T) {
 	p := testPlayer()
 	defer p.Close()

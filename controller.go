@@ -409,9 +409,7 @@ func (a *desktop) startTrackAt(it catalog.Item, at time.Duration) {
 	if a.playCancel != nil {
 		a.playCancel()
 	}
-	if a.seekCancel != nil {
-		a.seekCancel()
-	}
+	a.cancelSeek()
 	a.playGeneration++
 	a.preparedID = ""
 	generation := a.playGeneration
@@ -462,7 +460,9 @@ func (a *desktop) startTrackAt(it catalog.Item, at time.Duration) {
 			if errors.Is(err, context.Canceled) {
 				// A seek may replace an in-flight load of this same track.
 				// Its newer player generation owns the bookmark and loading UI.
-				a.model.PlaybackLoading = a.player.Snapshot().Loading
+				state := a.player.Snapshot()
+				a.model.PlaybackLoading = state.Loading
+				a.applyPlaybackState(state)
 				return
 			}
 			if err != nil && ctx.Err() == nil {
@@ -475,10 +475,10 @@ func (a *desktop) startTrackAt(it catalog.Item, at time.Duration) {
 			} else if err == nil {
 				a.endedHandled = false
 				state := a.player.Snapshot()
-				a.learnVideo(state)
 				recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 				mygo.NowPlaying.Set(mygo.NowPlayingInfo{Title: it.Title, Artist: it.Artist, Album: it.Album, Duration: state.Duration, Position: state.Position, State: mygo.PlaybackPlaying, Commands: mygo.MediaPlay | mygo.MediaPause | mygo.MediaNext | mygo.MediaPrevious | mygo.MediaSeek})
 				a.prepareNext()
+				a.applyPlaybackState(state)
 			}
 		})
 	}()
@@ -632,7 +632,11 @@ func (a *desktop) repeat() {
 	a.invalidate()
 }
 func (a *desktop) previous() {
-	if a.model.Position > 3 {
+	position := a.model.Position
+	if a.player != nil && !a.restoredTrack && !a.loadPending {
+		position = a.player.Snapshot().Position.Seconds()
+	}
+	if position > 3 {
 		a.seek(0)
 		return
 	}
@@ -666,6 +670,13 @@ func (a *desktop) toggle() {
 
 func (a *desktop) retryPlayback() {
 	a.startTrackAt(a.model.Current, time.Duration(a.model.Position*float64(time.Second)))
+}
+
+func (a *desktop) cancelSeek() {
+	if a.seekCancel != nil {
+		a.seekCancel()
+		a.seekCancel = nil
+	}
 }
 
 func (a *desktop) cancelResume() {
@@ -716,6 +727,7 @@ func (a *desktop) resume() {
 				a.model.PlaybackError = ""
 				recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 				a.endedHandled = false
+				a.applyPlaybackState(a.player.Snapshot())
 			}
 		})
 	}()
@@ -791,9 +803,7 @@ func (a *desktop) seek(seconds float64) {
 	a.model.PlaybackError = ""
 	generation := a.playGeneration
 	a.seekGeneration++
-	if a.seekCancel != nil {
-		a.seekCancel()
-	}
+	a.cancelSeek()
 	ctx, cancel := context.WithCancel(a.ctx)
 	a.seekCancel = cancel
 	if a.prepareCancel != nil {
@@ -806,12 +816,14 @@ func (a *desktop) seek(seconds float64) {
 		err := a.player.SeekContext(ctx, time.Duration(seconds*float64(time.Second)))
 		a.post(func() {
 			if generation == a.playGeneration && seekGeneration == a.seekGeneration {
+				a.seekCancel = nil
 				if err != nil && !errors.Is(err, context.Canceled) {
 					a.playbackFailure(a.player.Snapshot())
 				} else if err == nil {
 					a.endedHandled = false
 					recordPlaybackDiagnostic(a.diagnosticPath, "audio", "ready")
 					a.prepareNext()
+					a.applyPlaybackState(a.player.Snapshot())
 				}
 			}
 		})

@@ -92,20 +92,6 @@ func TestMutedVolumeSurvivesNaturalEndAndPreparedNext(t *testing.T) {
 		close(done)
 		return &pcmDecoder{reader: stream, input: stream, cancel: func() {}, wait: done, length: int64(frames), checkLength: true}, nil
 	}
-	waitForNaturalEnd := func() {
-		// Let MyGo consume the PCM, including its timed null output on a
-		// machine with no audio device. Polling Snapshot while it drains
-		// would exercise the separate output-unavailable path, which
-		// intentionally pauses playback before EOF on headless CI.
-		waitPlayerCondition(t, func() bool {
-			p.mu.Lock()
-			defer p.mu.Unlock()
-			return p.session != nil && !p.session.output.Playing() && p.session.decoder.eof.Load()
-		})
-		if !p.Snapshot().Ended {
-			t.Fatal("consumed PCM did not reach natural end")
-		}
-	}
 	ctx := context.Background()
 	p.SetVolume(.31)
 	if err := p.Load(ctx, "aaaaaaaaaaa"); err != nil {
@@ -115,12 +101,22 @@ func TestMutedVolumeSurvivesNaturalEndAndPreparedNext(t *testing.T) {
 	if err := p.Prepare(ctx, "bbbbbbbbbbb"); err != nil {
 		t.Fatal(err)
 	}
-	waitForNaturalEnd()
+	waitForPlaybackChange(t, p, func(state State) bool { return state.Ended })
 	assertPlayerVolume(t, p, 0, true)
+	prepared := p.prepared.decoder
 	if err := p.Load(ctx, "bbbbbbbbbbb"); err != nil {
 		t.Fatal(err)
 	}
+	if p.session.decoder != prepared {
+		t.Fatal("natural transition reopened the prepared decoder")
+	}
 	assertPlayerVolume(t, p, 0, true)
-	waitForNaturalEnd()
+	waitForPlaybackChange(t, p, func(state State) bool { return state.Ended })
+	if err := p.Pause(); err != nil {
+		t.Fatal(err)
+	}
+	if state := p.Snapshot(); state.Ended {
+		t.Fatal("pause after native end failed to suppress automatic advance")
+	}
 	assertPlayerVolume(t, p, 0, true)
 }

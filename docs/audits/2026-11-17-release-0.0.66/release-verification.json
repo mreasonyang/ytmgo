@@ -1,0 +1,442 @@
+{
+  "status": "PASS_FOR_DOCUMENTED_SCOPE",
+  "version": "0.0.66",
+  "source": "29422e3403c85caa1a2d597c90eb05ea5d78b89b",
+  "release_url": "https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.66",
+  "published_at": "2026-11-17T02:13:31Z",
+  "pull_request": "https://github.com/mreasonyang/ytmgo/pull/2",
+  "workflows": {
+    "macos": "https://github.com/mreasonyang/ytmgo/actions/runs/43939080948",
+    "desktop": "https://github.com/mreasonyang/ytmgo/actions/runs/44001402135",
+    "upgrade": "https://github.com/mreasonyang/ytmgo/actions/runs/44001442562",
+    "homebrew_update": "https://github.com/mreasonyang/homebrew-taps/actions/runs/44001448030",
+    "homebrew_install": "https://github.com/mreasonyang/homebrew-taps/actions/runs/44001668979"
+  },
+  "macos_bundles": [
+    {
+      "architecture": "arm64",
+      "apple_signature": true,
+      "stapled_ticket": true,
+      "gatekeeper": true,
+      "minimum_macos": "13.0",
+      "binaries": [
+        {
+          "path": "Contents/Resources/login/ytmgo Account Login.app/Contents/MacOS/ytmgo-account-login",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ffmpeg",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ytmgo-playback-host",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/MacOS/ytmGO",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        }
+      ],
+      "build": {
+        "version": "0.0.66",
+        "build_number": "37",
+        "kind": "release",
+        "commit": "29422e3403c85caa1a2d597c90eb05ea5d78b89b",
+        "branch": "main",
+        "dirty": false,
+        "updates_enabled": true
+      },
+      "executable_sha256": "4ed37508f4589e03e5b27daf64f3e8dba3c99fb12185e780453facd365d1bb14"
+    },
+    {
+      "architecture": "amd64",
+      "apple_signature": true,
+      "stapled_ticket": true,
+      "gatekeeper": true,
+      "minimum_macos": "13.0",
+      "binaries": [
+        {
+          "path": "Contents/Resources/login/ytmgo Account Login.app/Contents/MacOS/ytmgo-account-login",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ffmpeg",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ytmgo-playback-host",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/MacOS/ytmGO",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        }
+      ]
+    }
+  ],
+  "macos_ci_acceptance": [
+    {
+      "version": "0.0.66",
+      "commit": "29422e3403c85caa1a2d597c90eb05ea5d78b89b",
+      "architecture": "amd64",
+      "minimum_macos": "13.0",
+      "host_macos": "15.7.9",
+      "native_smoke": true,
+      "signed": true,
+      "archive_sha256": "290b5996c3bcf3cde6d16f872d844827731edfa67d1c6ee2331932a62ae7939b",
+      "binaries": [
+        {
+          "path": "Contents/Resources/login/ytmgo Account Login.app/Contents/MacOS/ytmgo-account-login",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ffmpeg",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ytmgo-playback-host",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/MacOS/ytmGO",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        }
+      ]
+    },
+    {
+      "version": "0.0.66",
+      "commit": "29422e3403c85caa1a2d597c90eb05ea5d78b89b",
+      "architecture": "arm64",
+      "minimum_macos": "13.0",
+      "host_macos": "27.0.1",
+      "native_smoke": true,
+      "signed": true,
+      "archive_sha256": "a2e93ec846b765f1d39ebc9e305d54c3974e206702f81e2b0cc9b7a5305ec96c",
+      "binaries": [
+        {
+          "path": "Contents/Resources/login/ytmgo Account Login.app/Contents/MacOS/ytmgo-account-login",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ffmpeg",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ytmgo-playback-host",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/MacOS/ytmGO",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        }
+      ]
+    }
+  ],
+  "production_upgrade": {
+    "baseline_version": "0.0.65",
+    "baseline_source": "d72c744e6444423d0c6d7a5a4972588aba65709a",
+    "baseline_zip_sha256": "f5c00c33daed1de3c9df30cfbd38923289caa9330eff29718fb76b5303bd43cc",
+    "baseline": {
+      "apple_signature": true,
+      "stapled_ticket": true,
+      "gatekeeper": true,
+      "version": "0.0.65",
+      "cli_version": "0.0.65",
+      "executable_sha256": "c76e1b9d6967c3be376f66dfe182798620e4f33736c44f950782599b97699f45"
+    },
+    "stable_version": "0.0.66",
+    "stable_source": "29422e3403c85caa1a2d597c90eb05ea5d78b89b",
+    "stable_zip_sha256": "a2e93ec846b765f1d39ebc9e305d54c3974e206702f81e2b0cc9b7a5305ec96c",
+    "checked": {
+      "available": true,
+      "available_version": "0.0.66",
+      "enabled": true,
+      "version": "0.0.65"
+    },
+    "staged": {
+      "available": true,
+      "available_version": "0.0.66",
+      "enabled": true,
+      "install_staged": true,
+      "version": "0.0.65"
+    },
+    "installed": {
+      "apple_signature": true,
+      "stapled_ticket": true,
+      "gatekeeper": true,
+      "version": "0.0.66",
+      "cli_version": "0.0.66",
+      "executable_sha256": "4ed37508f4589e03e5b27daf64f3e8dba3c99fb12185e780453facd365d1bb14"
+    },
+    "bundle_matches_public_zip": true,
+    "scope": "isolated released bundles; production feed; maintenance CLI; no account store initialized",
+    "runner": {
+      "macos": "27.0.1",
+      "architecture": "arm64"
+    },
+    "workflow_url": "https://github.com/mreasonyang/ytmgo/actions/runs/44001442562"
+  },
+  "homebrew_cask": {
+    "version": "0.0.66",
+    "cask_blob_sha": "932d4d4e4dd767fdc4ee9684a88f698273c667b8",
+    "arm64_zip_digest_matches": true,
+    "amd64_zip_digest_matches": true
+  },
+  "homebrew_installation": [
+    {
+      "version": "0.0.66",
+      "commit": "34088b2ee48a9a53915c26f908f6cf83c3196b39",
+      "architecture": "amd64",
+      "minimum_macos": "13.0",
+      "host_macos": "15.7.9",
+      "native_smoke": true,
+      "signed": true,
+      "archive_sha256": null,
+      "binaries": [
+        {
+          "path": "Contents/Resources/login/ytmgo Account Login.app/Contents/MacOS/ytmgo-account-login",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ffmpeg",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ytmgo-playback-host",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/MacOS/ytmGO",
+          "architecture": "x86_64",
+          "minimum_macos": "13.0"
+        }
+      ]
+    },
+    {
+      "version": "0.0.66",
+      "commit": "34088b2ee48a9a53915c26f908f6cf83c3196b39",
+      "architecture": "arm64",
+      "minimum_macos": "13.0",
+      "host_macos": "27.0.1",
+      "native_smoke": true,
+      "signed": true,
+      "archive_sha256": null,
+      "binaries": [
+        {
+          "path": "Contents/Resources/login/ytmgo Account Login.app/Contents/MacOS/ytmgo-account-login",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ffmpeg",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/Resources/runtime/ytmgo-playback-host",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        },
+        {
+          "path": "Contents/MacOS/ytmGO",
+          "architecture": "arm64",
+          "minimum_macos": "13.0"
+        }
+      ]
+    }
+  ],
+  "homebrew_receipt_commit_field": "The receipt commit is the tap workflow revision, not the application source. The application is bound to the release through the verified cask ZIP digests and signed release metadata.",
+  "macos_ci_receipts_match_public_archives": true,
+  "public_assets": {
+    "result": "pass",
+    "version": "0.0.66",
+    "source": "29422e3403c85caa1a2d597c90eb05ea5d78b89b",
+    "complete": true,
+    "url": "https://github.com/mreasonyang/ytmgo/releases/tag/v0.0.66",
+    "assets": [
+      {
+        "name": "SHA256SUMS",
+        "size": 936,
+        "sha256": "a35dc3f6abf1dbcf4a40788f0b301d5bd18c2c53cbfbb72973b152387db17619"
+      },
+      {
+        "name": "SHA256SUMS-linux-amd64",
+        "size": 366,
+        "sha256": "e1df3f2575b766d9e179418675c12235c7b9e19ceb1920269748d2d29f4007da"
+      },
+      {
+        "name": "SHA256SUMS-windows-amd64",
+        "size": 475,
+        "sha256": "8326f7027131aeac9274459cd01ded46e98f3c6859fa8573e421f343e891ea13"
+      },
+      {
+        "name": "build-amd64.json",
+        "size": 315,
+        "sha256": "4b6a3ec91a7e90f43089aa557c3e86ce5ef98d197b7c7e656ad44b8c22c4ad65"
+      },
+      {
+        "name": "build-linux-amd64.json",
+        "size": 595,
+        "sha256": "c08fa7fd5c87c89a9af4b7892d79fb558838478ef5407eb97b813fbac5489c91"
+      },
+      {
+        "name": "build-windows-amd64.json",
+        "size": 597,
+        "sha256": "812e9ff162a4b01d6d9a76af7e44e76748eec851645a1938cfc02198e4578569"
+      },
+      {
+        "name": "build.json",
+        "size": 315,
+        "sha256": "c0ade3366d9142c7a98dffd634409c23b45bf4c79f48a3183364e68247089220"
+      },
+      {
+        "name": "update-darwin-amd64.json",
+        "size": 377,
+        "sha256": "04e7c37557fdb88c2796fe9c12f7ca3c6bf19342d8d76f9a94fa7348e9dc028d"
+      },
+      {
+        "name": "update-darwin-arm64.json",
+        "size": 377,
+        "sha256": "9f528bf42fad0bc5d3b436f54184b9f33ae7be86b371e482fa502e5e40cdd9e0"
+      },
+      {
+        "name": "update-linux-amd64.json",
+        "size": 378,
+        "sha256": "407fc6d3e5535e0aecc2d3c24b6cc61a2c0f2be6beb71cbcdd35f345798ae138"
+      },
+      {
+        "name": "update-windows-amd64.json",
+        "size": 380,
+        "sha256": "996018b3498026d2f07574969c0e208173535e9602d4557250986fe31104538e"
+      },
+      {
+        "name": "ytmgo-0.0.66-amd64-notarized.dmg",
+        "size": 25937776,
+        "sha256": "4ebf47adfea277d760e52d988e199f94f8680b2589b7e23fd8c59be839e08688"
+      },
+      {
+        "name": "ytmgo-0.0.66-amd64-notarized.zip",
+        "size": 25405999,
+        "sha256": "290b5996c3bcf3cde6d16f872d844827731edfa67d1c6ee2331932a62ae7939b"
+      },
+      {
+        "name": "ytmgo-0.0.66-arm64-notarized.dmg",
+        "size": 24615071,
+        "sha256": "d81d6e294931be388d5fc0fc970d098e1e4ad1d8c8d660e48f3d87731fa4db0c"
+      },
+      {
+        "name": "ytmgo-0.0.66-arm64-notarized.zip",
+        "size": 24272399,
+        "sha256": "a2e93ec846b765f1d39ebc9e305d54c3974e206702f81e2b0cc9b7a5305ec96c"
+      },
+      {
+        "name": "ytmgo-0.0.66-darwin-amd64.tar.gz",
+        "size": 24698975,
+        "sha256": "d8966fbb2e5a1280acbd71ed984960ba0f41b2383f9a2377d94c0b36a539d0da"
+      },
+      {
+        "name": "ytmgo-0.0.66-darwin-arm64.tar.gz",
+        "size": 23674182,
+        "sha256": "ed4a2da0d831b39fd9943672fdbfdcfecad47cedf474841d661d15c4091c9221"
+      },
+      {
+        "name": "ytmgo-0.0.66-linux-amd64.tar.gz",
+        "size": 24045827,
+        "sha256": "b12851afe180680c8071d4a8214af25aab2c320c636ffdd5b1e212da87b00821"
+      },
+      {
+        "name": "ytmgo-0.0.66-windows-amd64.tar.gz",
+        "size": 23668757,
+        "sha256": "1d448abad64d0cc9fde76fc78c812729e54e116420ae94c9ca7ec07b90561028"
+      },
+      {
+        "name": "ytmgo-0.0.66-windows-amd64.zip",
+        "size": 24689791,
+        "sha256": "afa44a9f188d68b0a70fdfb4e5ccdd6408664d94aace54d2c3d97d82e13a67fe"
+      },
+      {
+        "name": "ytmgo-setup-0.0.66-amd64.exe",
+        "size": 20969026,
+        "sha256": "565738e8664a40fd36d9c96bef8ee4850f7854ca21bf8dc1f4ee3d322e1defcc"
+      },
+      {
+        "name": "ytmgo_0.0.66_amd64.deb",
+        "size": 24281794,
+        "sha256": "7f6c6e9786b642b6a72cae75e64ae6785acd06b2f1eb67cd0a1eb5af1abf50e7"
+      }
+    ],
+    "signed_update_targets": [
+      "darwin-arm64",
+      "darwin-amd64",
+      "windows-amd64",
+      "linux-amd64"
+    ]
+  },
+  "desktop_acceptance": [
+    {
+      "version": "0.0.66",
+      "commit": "29422e3403c85caa1a2d597c90eb05ea5d78b89b",
+      "platform": "windows-amd64",
+      "architecture": "amd64",
+      "native_build": true,
+      "os_code_signed": false,
+      "signed_updates": true,
+      "bundled_files": 547,
+      "native_smoke": true,
+      "packaging_tools_commit": "d7ced9845e45d048adb15ab2135a5b3e03b94b93",
+      "license_notice_overlay": [],
+      "run_url": "https://github.com/mreasonyang/ytmgo/actions/runs/44001402135",
+      "installed_cli_version": "0.0.66",
+      "smoke_scope": "native installer, installed resources, startup in an empty account profile; no signed-in E2E"
+    },
+    {
+      "version": "0.0.66",
+      "commit": "29422e3403c85caa1a2d597c90eb05ea5d78b89b",
+      "platform": "linux-amd64",
+      "architecture": "amd64",
+      "native_build": true,
+      "os_code_signed": false,
+      "signed_updates": true,
+      "bundled_files": 774,
+      "native_smoke": true,
+      "packaging_tools_commit": "d7ced9845e45d048adb15ab2135a5b3e03b94b93",
+      "license_notice_overlay": [],
+      "run_url": "https://github.com/mreasonyang/ytmgo/actions/runs/44001402135",
+      "installed_cli_version": "0.0.66",
+      "smoke_scope": "native installer, installed resources, startup in an empty account profile; no signed-in E2E"
+    }
+  ],
+  "notarization_recovery": {
+    "diagnostic_workflow": "https://github.com/mreasonyang/ytmgo/actions/runs/43998862258",
+    "initial_remote_category": "access_denied",
+    "initial_http_status": 403,
+    "user_handled": "Apple Developer account homepage agreement",
+    "existing_credentials_validation": "passed",
+    "credentials_rotated": false,
+    "successful_macos_publication_attempt": 4
+  },
+  "scope_limits": [
+    "Windows/Linux receipts cover native installation, resources and startup in empty profiles; no signed-in account/audio/UI E2E or long-running use is claimed.",
+    "The Windows installer is not Authenticode signed. Update archives use Ed25519 signatures.",
+    "Local application E2E covered an ad-hoc signed development candidate; its exact source and remaining limitations are recorded separately in local-e2e.json."
+  ]
+}

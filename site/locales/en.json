@@ -134,7 +134,7 @@
   "faq.smartscreen.q": "Why does Windows warn me about the installer?",
   "faq.smartscreen.a": "The installer isn't Authenticode-signed yet, so SmartScreen may ask you to confirm. Updates delivered inside the app are still verified with an Ed25519 signature before they install.",
   "faq.updates.q": "How do updates work?",
-  "faq.updates.a": "ytmGO checks shortly after it starts and then once a day, and lets you install, postpone or skip each update. With Homebrew you can also run brew upgrade --cask --greedy. A Linux .deb install updates when you install the newer .deb with apt.",
+  "faq.updates.a": "ytmGO checks shortly after it starts and then once a day, and lets you install, postpone or skip each update. To check now, choose Check for Updates… in Settings › About or the app menu. With Homebrew you can also run brew upgrade --cask --greedy. A Linux .deb install updates when you install the newer .deb with apt.",
   "faq.data.q": "What does ytmGO keep on my computer?",
   "faq.data.a": "Only what it needs to start where you left off: the encrypted session, a snapshot of your library, your place in the queue and your preferences. Songs you download stay too, their audio encrypted, with their lyrics and covers. Other covers that YouTube marks as public are cached for up to a day; your avatar never is.",
 

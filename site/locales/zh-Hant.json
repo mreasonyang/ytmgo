@@ -134,7 +134,7 @@
   "faq.smartscreen.q": "為什麼 Windows 會對|安裝程式|發出警告？",
   "faq.smartscreen.a": "安裝程式尚未經 Authenticode 簽署，因此 SmartScreen 可能請你確認。透過應用程式內更新下載的檔案，在安裝前仍會驗證 Ed25519 簽章。",
   "faq.updates.q": "如何更新？",
-  "faq.updates.a": "ytmGO 會在啟動後不久檢查一次更新，之後每天檢查一次，每個更新都可以選擇安裝、稍後或略過。使用 Homebrew 也可以執行 brew upgrade --cask --greedy。Linux 的 .deb 安裝需用 apt 安裝新版 .deb 來更新。",
+  "faq.updates.a": "ytmGO 會在啟動後不久檢查一次更新，之後每天檢查一次，每個更新都可以選擇安裝、稍後或略過。想立即檢查，可在「設定 › 關於」或應用程式選單中選擇「檢查更新項目…」。使用 Homebrew 也可以執行 brew upgrade --cask --greedy。Linux 的 .deb 安裝需用 apt 安裝新版 .deb 來更新。",
   "faq.data.q": "ytmGO 會在|我的電腦上|保存什麼？",
   "faq.data.a": "只保存從上次位置繼續所需的內容：加密的工作階段、音樂庫快照、播放佇列中的位置與你的偏好設定。你下載的歌曲也會保留，音訊加密保存，並附帶歌詞與封面。其他 YouTube 標示為公開的封面最多快取一天，你的大頭貼從不快取。",
 

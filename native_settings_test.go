@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"runtime"
 	"strings"
 	"testing"
@@ -194,5 +195,65 @@ func TestNativeShortcutsLeadBackToSettings(t *testing.T) {
 	tt.Frame()
 	if _, ok := tt.Find(a.Tr("shellBackToSettings")); ok {
 		t.Fatal("Keyboard shortcuts from the Help menu offers Back to nothing")
+	}
+}
+
+// Check for Updates… is in Settings › About, beside the version, in every
+// language and at the narrowest window; a build that doesn't update itself
+// says so there instead.
+func TestNativeSettingsChecksForUpdates(t *testing.T) {
+	for _, width := range []int{380, 1440} {
+		for _, locale := range []string{"en", "ja", "zh-Hans", "zh-Hant"} {
+			m, a, _ := nativeSettingsFixture(width, 2000)
+			m.Language, m.Version = locale, "0.0.67"
+			checks := 0
+			a.CheckUpdates = func() { checks++ }
+			tt := ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, 2000)
+			tt.Frame()
+			// The wide sheet scrolls; About is at its end.
+			if r, ok := tt.Find(a.Tr("nativeSettingsGeneral")); ok {
+				tt.Scroll(r.X+r.W/2, r.Y+40, 0, 2000)
+				tt.Frame()
+			}
+			nativeSnapshot(t, tt, "settings-updates-"+locale+"-"+fmt.Sprint(width))
+			label := a.Tr("nativeCheckUpdates")
+			button, ok := tt.Find(label)
+			if !ok {
+				t.Fatalf("%s %d: no Check for Updates…", locale, width)
+			}
+			version, ok := tt.Find(a.TrArgs("nativeSettingsVersion", map[string]any{"version": m.Version}))
+			if !ok {
+				t.Fatalf("%s %d: no version", locale, width)
+			}
+			name, _ := tt.Find(a.Tr("appName"))
+			if version.H > 24 || name.H > 24 || button.X+button.W > float32(width) {
+				t.Fatalf("%s %d: the name %v or version %v wraps, or the button %v is cut", locale, width, name, version, button)
+			}
+			// Wide, the button is beside the version; narrow, under it.
+			if beside := button.X >= version.X+version.W; beside != (width > 600) {
+				t.Fatalf("%s %d: the button %v against the version %v", locale, width, button, version)
+			}
+			if tt.HasText(a.Tr("menuDevelopmentUpdatesDisabled")) {
+				t.Fatalf("%s %d: an updating build says updates are off", locale, width)
+			}
+			if err := tt.Click(label); err != nil {
+				t.Fatal(err)
+			}
+			if checks != 1 {
+				t.Fatalf("%s %d: the button did not check", locale, width)
+			}
+
+			a.CheckUpdates = nil
+			tt = ui.NewTester(func(c *ui.Context) { nativeView(c, m, a) }, width, 2000)
+			tt.Frame()
+			if r, ok := tt.Find(a.Tr("nativeSettingsGeneral")); ok {
+				tt.Scroll(r.X+r.W/2, r.Y+40, 0, 2000)
+				tt.Frame()
+			}
+			if _, ok := tt.Find(label); ok || !tt.HasText(a.Tr("menuDevelopmentUpdatesDisabled")) {
+				t.Fatalf("%s %d: a development build offers a check it can't make", locale, width)
+			}
+			nativeSnapshot(t, tt, "settings-updates-dev-"+locale+"-"+fmt.Sprint(width))
+		}
 	}
 }

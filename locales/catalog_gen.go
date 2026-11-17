@@ -3752,3 +3752,13 @@ func MenuDevelopmentUpdatesDisabled() string {
 func (msgs Messages) MenuDevelopmentUpdatesDisabled() string {
 	return Catalog.Format(msgs.locale, "menuDevelopmentUpdatesDisabled", nil)
 }
+
+// NativeCheckUpdates says "Check for Updates…"
+// in the language the app shows.
+func NativeCheckUpdates() string { return In(i18n.Locale()).NativeCheckUpdates() }
+
+// NativeCheckUpdates says "Check for Updates…"
+// in the language of msgs.
+func (msgs Messages) NativeCheckUpdates() string {
+	return Catalog.Format(msgs.locale, "nativeCheckUpdates", nil)
+}

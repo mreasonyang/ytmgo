@@ -280,20 +280,50 @@ func nativeSettingsPage(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 			m.revealShortcut = false
 		}
 		ui.Column(c).Gap(8).Children(func() {
-			nativeSettingsGroup(c, p, a.Tr("nativeSettingsAbout"), 64, func() {
-				ui.Row(c).Padding(12, 16).Gap(16).AlignItems(ui.Center).Children(func() {
-					nativeSettingTile(c, "play", p.accent, p.onAccent)
-					ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
-						ui.Text(c, a.Tr("appName")).FontWeight(700)
-						if m.Version != "" {
-							ui.Text(c, a.TrArgs("nativeSettingsVersion", map[string]any{"version": m.Version})).FontSize(tokenSizeMeta).TextColor(p.secondary)
-						}
-					})
-				})
-			})
+			nativeSettingsGroup(c, p, a.Tr("nativeSettingsAbout"), 64, func() { nativeAboutSettings(c, m, a, p, narrow) })
 			ui.Text(c, a.Tr("shellFooter")).FontSize(tokenSizeMicro).LineHeight(1.5).PaddingX(4).TextColor(p.muted)
 		})
 	}}
+}
+
+// nativeAboutSettings names the app and its version, and offers Check for
+// Updates…, as the menu does; a build that doesn't update itself says so
+// there instead. Narrow, the button goes under the text, as a setting's
+// control does (nativeSettingRow).
+func nativeAboutSettings(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, narrow bool) {
+	text := func() ui.Element {
+		return ui.Row(c).MinWidth(0).Gap(16).AlignItems(ui.Center).Children(func() {
+			nativeSettingTile(c, "play", p.accent, p.onAccent)
+			ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
+				ui.Text(c, a.Tr("appName")).FontWeight(700)
+				if m.Version != "" {
+					ui.Text(c, a.TrArgs("nativeSettingsVersion", map[string]any{"version": m.Version})).FontSize(tokenSizeMeta).TextColor(p.secondary)
+				}
+				if a.CheckUpdates == nil {
+					ui.Text(c, a.Tr("menuDevelopmentUpdatesDisabled")).FontSize(tokenSizeMeta).LineHeight(1.4).TextColor(p.secondary)
+				}
+			})
+		})
+	}
+	check := func() {
+		if nativePill(c, a.Tr("nativeCheckUpdates"), p, false).Clicked() {
+			a.CheckUpdates()
+		}
+	}
+	switch {
+	case a.CheckUpdates == nil:
+		ui.Row(c).Padding(12, 16).Children(func() { text().Grow(1) })
+	case narrow:
+		ui.Column(c).Padding(12, 16).Gap(12).Children(func() {
+			text()
+			ui.Row(c).Children(check)
+		})
+	default:
+		ui.Row(c).Padding(12, 16).Gap(16).AlignItems(ui.Center).Children(func() {
+			text().Grow(1).Basis(0)
+			ui.Row(c).Shrink(0).Children(check)
+		})
+	}
 }
 
 // nativeAccountSettings states the account and its plan (the status names

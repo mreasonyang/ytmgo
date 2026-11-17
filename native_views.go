@@ -161,12 +161,15 @@ type ViewActions struct {
 	SetShortcut                   func(string)
 	// AppMenu fills the application menu button, where a hidden title bar
 	// leaves the window no menu bar (Linux, Windows); nil hides the button.
-	AppMenu              func(*ui.Menu)
-	artViewport          ui.Rect
-	viewportScroll       *ui.ScrollState
-	secondaryArtwork     bool
-	table                *nativeTable   // the track table a row is in, for choosing several
-	AppIcon              ui.ImageSource // the app icon, for About
+	AppMenu          func(*ui.Menu)
+	artViewport      ui.Rect
+	viewportScroll   *ui.ScrollState
+	secondaryArtwork bool
+	table            *nativeTable   // the track table a row is in, for choosing several
+	AppIcon          ui.ImageSource // the app icon, for About
+	// CheckUpdates opens the update window, as Check for Updates… in the
+	// menu does; nil in a build that doesn't update itself.
+	CheckUpdates         func()
 	collection           nativeCollectionMatch
 	artworkScale         float64
 	artworkDX, artworkDY float32

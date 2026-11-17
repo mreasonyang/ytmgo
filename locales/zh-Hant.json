@@ -299,5 +299,6 @@
   "nativeAccountLoginCancelled": "已取消登入。",
   "nativePlaybackAccessDenied": "音訊串流存取遭拒。請檢查網路或代理，然後重試以重新取得音訊串流。",
   "nativePlaybackAccessDeniedHTTP": "音訊串流存取遭拒（HTTP {status}）。請檢查網路或代理，然後重試以重新取得音訊串流。",
-  "menuDevelopmentUpdatesDisabled": "開發建置不接收更新"
+  "menuDevelopmentUpdatesDisabled": "開發建置不接收更新",
+  "nativeCheckUpdates": "檢查更新項目…"
 }

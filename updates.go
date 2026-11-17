@@ -58,6 +58,13 @@ func updateMenuItem() *mygo.MenuItem {
 	return updater.MenuItem()
 }
 
+// checkForUpdates is Settings › About's Check for Updates…, the menu item's
+// action.
+func checkForUpdates() {
+	setupUpdater()
+	updater.CheckForUpdates()
+}
+
 // applicationMenuWithUpdates is macOS's app menu. Its About opens the app's
 // own About (nativeAbout), as the Help menu's does, not the system panel.
 func applicationMenuWithUpdates(newUpdateItem func() *mygo.MenuItem, showAbout func()) *mygo.MenuItem {

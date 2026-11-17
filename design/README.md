@@ -581,8 +581,9 @@ tooltip. The website uses icons only on actions and platform names.
   the same look: `surface`, the release notes on `raised` with a hairline,
   pill buttons with Install inverted, spacing on the grid. It opens from
   Check for Updates…, in the app menu (Help, outside macOS) and in
-  Settings › About, a plain pill beside the version (under it, narrow); a
-  build that doesn't update itself says so there instead of the button.
+  Settings › About, a plain pill beside the version (under it, narrow). A
+  build that doesn't update itself keeps the menu item, disabled, and says
+  why in Settings › About instead of the button.
 - **Menus:** a song's menu (right-click, More) and the account's are the
   app's own, drawn in the window as its other popovers: `raised`, a
   hairline, the `popover` elevation, radius `control`, 4 in; items 36 high,

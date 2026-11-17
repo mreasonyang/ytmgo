@@ -4,6 +4,7 @@ import (
 	"github.com/egoist/mygo/ui"
 	"strings"
 	"testing"
+	"ytmgo/locales"
 )
 
 func TestBuildIdentityDistinguishesDevelopmentFromRelease(t *testing.T) {
@@ -25,6 +26,10 @@ func TestDevelopmentBuildCannotEnableUpdates(t *testing.T) {
 	item := updateMenuItem()
 	if !item.Disabled || item.Click != nil {
 		t.Fatal("development update action must not invoke the updater")
+	}
+	// It keeps its name, so it is found where it always is.
+	if item.Label != locales.NativeCheckUpdates() {
+		t.Fatalf("the development build's update item reads %q", item.Label)
 	}
 }
 

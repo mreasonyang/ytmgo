@@ -50,9 +50,12 @@ func applicationVersion() string {
 
 func applicationBuildLabel() string { return currentBuildIdentity().displayVersion() }
 
+// updateMenuItem is Check for Updates…. A build that doesn't update itself
+// keeps the item where people look for it, disabled; Settings › About says
+// why.
 func updateMenuItem() *mygo.MenuItem {
 	if buildKind != "release" {
-		return &mygo.MenuItem{Label: locales.MenuDevelopmentUpdatesDisabled(), Disabled: true}
+		return &mygo.MenuItem{Label: locales.NativeCheckUpdates(), Disabled: true}
 	}
 	setupUpdater()
 	return updater.MenuItem()

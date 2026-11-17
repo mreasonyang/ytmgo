@@ -55,20 +55,60 @@ def disk_image_failure_category(output):
     return "disk_image_tool_error"
 
 
+def notary_failure_category(output):
+    """Keep only fixed categories; notarytool may echo account identifiers."""
+    output = output.lower()
+    status = re.search(rb"\b(?:http(?: status)?(?: code)?|status(?: code)?)\s*[:=]?\s*([1-5][0-9]{2})\b", output)
+    if status:
+        code = int(status[1])
+        if code == 401:
+            return "authentication_rejected"
+        if code == 403:
+            return "access_denied"
+        if code == 429:
+            return "rate_limited"
+        if code >= 500:
+            return "service_unavailable"
+    for phrases, category in (
+        ((b"invalid credentials", b"username or password is incorrect", b"authentication failed"), "authentication_rejected"),
+        ((b"timed out", b"timeout"), "network_timeout"),
+        ((b"could not resolve", b"cannot find host", b"hostname could not be found"), "dns_failed"),
+        ((b"ssl", b"tls", b"certificate verification", b"certificate for this server"), "tls_failed"),
+        ((b"network connection", b"could not connect", b"connection refused", b"network is unreachable"), "connection_failed"),
+        ((b"not a tty", b"inappropriate ioctl", b"unable to read password"), "prompt_input_failed"),
+        ((b"keychain",), "keychain_failed"),
+    ):
+        if any(phrase in output for phrase in phrases):
+            return category
+    return "notary_tool_error"
+
+
 def run(args, stage, capture=False, input_bytes=None):
     # Credentials go only to the intended Apple tools. Child build/packaging
     # commands do not inherit the signing secrets, and no command or raw output
     # is logged. CalledProcessError must never escape with its argv attached.
     child_env = {key: value for key, value in os.environ.items() if key not in SECRET_NAMES}
     disk_image_tool = Path(args[0]).name == "hdiutil"
-    result = subprocess.run(
-        [str(arg) for arg in args], cwd=ROOT, env=child_env,
-        stdout=subprocess.PIPE if capture else subprocess.DEVNULL,
-        stderr=subprocess.PIPE if disk_image_tool else subprocess.DEVNULL, check=False, input=input_bytes,
-    )
+    notary_validation = stage == "Notarization credential validation"
+    options = {"timeout": 120} if notary_validation else {}
+    try:
+        result = subprocess.run(
+            [str(arg) for arg in args], cwd=ROOT, env=child_env,
+            stdout=subprocess.PIPE if capture or notary_validation else subprocess.DEVNULL,
+            stderr=subprocess.PIPE if disk_image_tool or notary_validation else subprocess.DEVNULL,
+            check=False, input=input_bytes, **options,
+        )
+    except subprocess.TimeoutExpired:
+        if notary_validation:
+            raise PackageError(stage + " failed (validation_timeout)") from None
+        raise
     if result.returncode:
         if disk_image_tool:
             raise DiskImageError(stage, disk_image_failure_category(result.stderr), result.returncode)
+        if notary_validation:
+            output = (result.stderr or b"") + b"\n" + (result.stdout or b"")
+            raise PackageError(stage + " failed (" + notary_failure_category(output) +
+                               ", exit " + str(result.returncode) + ")")
         raise PackageError(stage + " failed")
     return result.stdout if capture else b""
 

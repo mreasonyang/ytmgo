@@ -13,7 +13,9 @@ import (
 
 	"github.com/egoist/mygo/ui"
 
+	"ytmgo/internal/audioquality"
 	"ytmgo/internal/catalog"
+	"ytmgo/internal/downloads"
 )
 
 // motionTester is a tester with motion on, as the app runs: the layout
@@ -772,5 +774,137 @@ func TestLibraryHeadingFoldsThePanel(t *testing.T) {
 	tt.Key(ui.Cmd, ui.KeyL)
 	if m.Route != "library" {
 		t.Fatalf("the rail alone: Cmd-L opened %q, want the Library page", m.Route)
+	}
+}
+
+// Into immersive mode the library and docked Now Playing fade where they
+// are, under the page growing over their room: nothing of them is drawn
+// over the player bar on the way, as when the panels' row, after the
+// global bar left, was taken for a new one and its panels left from the
+// player bar's place.
+func TestImmersiveLeavesThePlayerBarAlone(t *testing.T) {
+	m, a := nativeViewFixture()
+	m.Panel = true
+	tt := motionTester(m, a, 1440, 900)
+	tt.Frame()
+	m.Immersive = true
+	var frames []*image.RGBA
+	for i := 0; i < 6; i++ {
+		tt.Advance(tokenMotionMorph / 8)
+		tt.Frame()
+		frames = append(frames, tt.Image())
+	}
+	tt.Advance(tokenMotionMorph)
+	tt.Frame()
+	settled := tt.Image()
+	bar := image.Rect(0, 900-nativePlayerHeight, 1440, 900)
+	for i, f := range frames {
+		if n := changedPixels(f.SubImage(bar), settled.SubImage(bar)); n > 0 {
+			t.Fatalf("frame %d: %d pixels drawn over the player bar on the way", i+1, n)
+		}
+	}
+	// The page grows from where it was: a third of the way, the library's
+	// place is not yet all page.
+	page := settled.RGBAAt(60, 600)
+	if early := frames[1].RGBAAt(60, 600); early == page {
+		t.Fatal("the page took the library's place at once instead of growing over it")
+	}
+}
+
+// Dialogs and sheets come and go alike, over the fast motion: the scrim
+// fades with the panel as it drops into place, and both go as they came
+// rather than vanishing in a frame. Floating Now Playing rises over the base
+// motion; at rest, every one of them dims the window by the same scrim.
+func TestDialogsComeAndGoAlike(t *testing.T) {
+	scrims := map[string]int{}
+	for _, d := range []struct {
+		name string
+		d    time.Duration
+		set  func(*UIModel, bool)
+	}{
+		{"confirm", tokenMotionFast, func(m *UIModel, on bool) {
+			m.confirm = nil
+			if on {
+				m.confirm = &nativeConfirmation{title: "Remove all downloads", body: "Songs", action: "Remove"}
+			}
+		}},
+		{"about", tokenMotionFast, func(m *UIModel, on bool) { m.About = on }},
+		{"settings", tokenMotionFast, func(m *UIModel, on bool) { m.Settings = on }},
+		{"now-playing", tokenMotionBase, func(m *UIModel, on bool) { m.Panel = on }},
+	} {
+		t.Run(d.name, func(t *testing.T) {
+			m, a := nativeViewFixture()
+			m.Panel = false
+			tt := motionTester(m, a, 1000, 900)
+			tt.Frame()
+			before := tt.Image()
+			d.set(m, true)
+			tt.Frame()
+			// The ease is quick to start: an eighth in is a good part of the way.
+			tt.Advance(d.d / 8)
+			tt.Frame()
+			early := tt.Image()
+			tt.Advance(d.d)
+			tt.Frame()
+			open := tt.Image()
+			// A point of the library rail, under the scrim only.
+			at := func(img *image.RGBA) int { c := img.RGBAAt(30, 600); return int(c.R) + int(c.G) + int(c.B) }
+			if !(at(early) < at(before) && at(early) > at(open)) {
+				t.Fatalf("an eighth in, the scrim is %d, not between %d and %d", at(early), at(before), at(open))
+			}
+			scrims[d.name] = at(open)
+			d.set(m, false)
+			tt.Frame()
+			tt.Advance(d.d / 8)
+			tt.Frame()
+			if at(tt.Image()) <= at(open) {
+				t.Fatal("closing, it vanished or stayed instead of fading")
+			}
+			tt.Advance(d.d)
+			tt.Frame()
+			if n := changedPixels(tt.Image(), before); n > 0 {
+				t.Fatalf("closed, %d pixels differ from before it opened", n)
+			}
+		})
+	}
+	for name, v := range scrims {
+		if v != scrims["confirm"] {
+			t.Errorf("%s dims the window to %d, a confirmation to %d", name, v, scrims["confirm"])
+		}
+	}
+}
+
+// Downloads opens as a collection does: its header is a collection's, and
+// the library entry's cover travels into it, ending where the layout puts
+// it; the page's wash blends to its teal on the way.
+func TestDownloadsCoverTravelsIntoItsHeader(t *testing.T) {
+	m, a := nativeViewFixture()
+	m.Panel = false
+	m.Downloads = []downloads.Entry{{Item: m.Queue[1], State: downloads.Complete, Quality: audioquality.Standard, Bytes: 1 << 20, Total: 1 << 20}}
+	a.Download, a.DownloadPause, a.DownloadRemove = func(catalog.Item) {}, func(string, bool) {}, func(string) {}
+	a.Navigate = func(r string) { m.Route = r; m.Page = catalog.Page{Title: "Downloads"} }
+	tt := motionTester(m, a, 1440, 900)
+	tt.Frame()
+	home := tt.Image().RGBAAt(1300, 80)
+	if err := tt.Click(a.Tr("nativeDownloads")); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(tokenMotionMorph / 3)
+	tt.Frame()
+	early := tt.Image()
+	tt.Advance(tokenMotionMorph)
+	tt.Frame()
+	settled := tt.Image()
+	wash := func(c color.RGBA) [3]int { return [3]int{int(c.R), int(c.G), int(c.B)} }
+	if e, h, s := wash(early.RGBAAt(1300, 80)), wash(home), wash(settled.RGBAAt(1300, 80)); e == h || e == s {
+		t.Fatalf("the wash %v did not blend from %v to %v", e, h, s)
+	}
+	m.instantMotion = true
+	tt.Frame()
+	if n := changedPixels(settled, tt.Image()); n > 0 {
+		t.Fatalf("the cover's journey ended %d pixels off the layout", n)
+	}
+	if n := changedPixels(early, settled); n == 0 {
+		t.Fatal("the page cut to its header: nothing was on its way a third through")
 	}
 }

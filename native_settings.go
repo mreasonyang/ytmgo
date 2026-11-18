@@ -51,26 +51,35 @@ type nativeSheetPage struct {
 // the next page's size, while the pages slide past and the titles cross.
 // Close, Escape and a click outside close it. Each page opens at its top.
 func nativeSheets(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width, height float32) {
-	if !m.Settings {
+	switch {
+	case m.Shortcuts:
+		m.sheetShown = "shortcuts"
+	case m.Settings:
+		m.sheetShown = "settings"
+	}
+	want := m.Settings || m.Shortcuts
+	shown, arrived := nativePresence(c, &m.sheetMotion, want, m.instantMotion, nativeDialogMotion)
+	// A page's state resets once it is gone, not while it fades.
+	if !m.Settings && (!shown || m.sheetShown != "settings") {
 		m.AudioQualityNotice = ""
 		m.settingsScroll.Y = 0
 	}
-	if !m.Shortcuts {
+	if !m.Shortcuts && (!shown || m.sheetShown != "shortcuts") {
 		m.shortcutsScroll.Y = 0
 		m.shortcutsFromSettings = false
 	}
-	var page nativeSheetPage
-	switch {
-	case m.Shortcuts:
-		page = nativeShortcutsPage(c, m, a, p)
-	case m.Settings:
-		page = nativeSettingsPage(c, m, a, p)
-	default:
+	if !shown {
+		m.sheetShown = ""
 		return
 	}
+	// Closed, it goes as it came, showing the page it showed.
+	page := nativeSettingsPage(c, m, a, p)
+	if m.sheetShown == "shortcuts" {
+		page = nativeShortcutsPage(c, m, a, p)
+	}
 	open := true
-	nativeSheet(c, &open, page, a, p, width, height, m.instantMotion)
-	if !open {
+	nativeSheet(c, &open, page, a, p, width, height, m.instantMotion, arrived)
+	if !open && want {
 		m.Settings, m.Shortcuts = false, false
 	}
 }
@@ -83,7 +92,7 @@ type nativeSheetMotion struct {
 	since time.Time
 }
 
-func nativeSheet(c *ui.Context, open *bool, sheetPage nativeSheetPage, a ViewActions, p nativePalette, width, height float32, still bool) {
+func nativeSheet(c *ui.Context, open *bool, sheetPage nativeSheetPage, a ViewActions, p nativePalette, width, height float32, still bool, shown float32) {
 	compact := width <= 760
 	sheet := min(sheetPage.maxWidth, width-48)
 	titleSize := float32(tokenSizeH3)
@@ -92,7 +101,8 @@ func nativeSheet(c *ui.Context, open *bool, sheetPage nativeSheetPage, a ViewAct
 	}
 	still = still || c.Preferences().ReduceMotion
 	ui.DialogBase(c, open, func(backdrop, panel ui.Element) {
-		backdrop.Background(p.scrim)
+		// It comes and goes as the dialogs do (nativeArrive).
+		nativeArrive(backdrop, panel, p, shown)
 		// A dialog is laid out over the window, after MyGo's transitions, so
 		// the sheet moves itself: its width heads for the next page's, and
 		// the next page slides in from its side and fades in as it does.

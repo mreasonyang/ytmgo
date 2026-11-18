@@ -11,17 +11,17 @@ import (
 // build (with DEV, the branch and the commit in development builds), what
 // the app is, and one inverted OK.
 func nativeAbout(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) {
-	if !m.About {
+	shown, arrived := nativePresence(c, &m.aboutMotion, m.About, m.instantMotion, nativeDialogMotion)
+	if !shown {
 		return
 	}
 	open := true
 	ui.DialogBase(c, &open, func(backdrop, panel ui.Element) {
-		backdrop.Background(p.scrim)
+		nativeArrive(backdrop, panel, p, arrived)
 		panel.Width(min(360, nativeGridFloor(width-48))).Padding(32, 24, 24).Radius(tokenRadiusSheet).Background(p.surface).Border(1, p.line).Label(a.Tr("menuAbout"))
 		if !p.dark {
 			panel.Shadow(tokenShadowDialog.args(p))
 		}
-		nativeAppear(c, panel, m.instantMotion)
 		panel.Children(func() {
 			ui.Column(c).Gap(24).AlignItems(ui.Center).Children(func() {
 				ui.Column(c).Gap(12).AlignItems(ui.Center).Children(func() {

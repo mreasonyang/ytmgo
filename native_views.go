@@ -89,9 +89,12 @@ type UIModel struct {
 	// it is docked now.
 	wasImmersive, immersiveFromDock, docked bool
 	immersiveAt                             time.Time
-	floating                                nativeFloatState // the floating Now Playing sheet's motion
-	volumeKeyedAt                           time.Time        // a key last changed the volume: show it
-	theaterFromPanel                        bool             // the video filled the view from Now Playing: it goes back there
+	floating                                nativeFloatState    // the floating Now Playing sheet's motion
+	sheetMotion, confirmMotion, aboutMotion nativeFloatState    // the sheet's and the dialogs' coming and going
+	sheetShown                              string              // the sheet page showing, kept while it leaves
+	confirmShown                            *nativeConfirmation // the question showing, kept while it leaves
+	volumeKeyedAt                           time.Time           // a key last changed the volume: show it
+	theaterFromPanel                        bool                // the video filled the view from Now Playing: it goes back there
 }
 
 // Saved-account restoration as the view presents it; account.go owns the
@@ -282,7 +285,7 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 			// It rises from the bottom, where the mini player and the player
 			// bar that open it are, and sinks back there as it closes. A dialog
 			// lies over the window, after MyGo's transitions: it moves itself.
-			backdrop.Background(p.scrim.Alpha(float32(p.scrim.A) / 255 * arrived))
+			backdrop.Background(p.scrim.Alpha(arrived))
 			panel.Width(panelWidth).Height(min(height-100, 760)).Radius(tokenRadiusPanel).Background(p.surface).Shadow(tokenShadowHero.args(p)).Clip().
 				Translate(0, nativeFloatRise*(1-arrived)).Opacity(arrived).Children(func() {
 				nativeNowPlaying(c, m, a, p, panelWidth, true, firstPlayback).Fill()
@@ -310,18 +313,34 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 		// header moves out of the panel to take the bar's place instead.
 		top, header := float32(tokenProductFrameGap), float32(0)
 		if !m.Immersive {
-			nativeTopbar(c, m, a, p, width)
+			nativeTopbar(c.Key("global-bar"), m, a, p, width)
 			top = 0
 		} else if c.TitleBar().Height > 0 {
-			header = nativeImmersiveHeader(c, m, a, p, width)
+			header = nativeImmersiveHeader(c.Key("immersive-header"), m, a, p, width)
 			top = 0
 		}
 		// Panels sit a frame gap from every edge, the player bar's too: flush
 		// against it their bottom corners would sit on the bar's colour.
-		row := ui.Row(c).Grow(1).MinHeight(0).AlignItems(ui.Stretch).Gap(tokenProductFrameGap).Padding(top, tokenProductFrameGap, tokenProductFrameGap)
+		// Keyed, as the bars before and after it: immersive mode drops the
+		// global bar, and by position the row would be a new one, its panels
+		// leaving from the player bar's place and the page not growing.
+		row := ui.Row(c.Key("panels")).Grow(1).MinHeight(0).AlignItems(ui.Stretch).Gap(tokenProductFrameGap).Padding(top, tokenProductFrameGap, tokenProductFrameGap)
 		docked := nativeDockedNowPlaying(m, width)
 		m.docked = docked
 		pageWidth := nativePageWidth(m, width)
+		// Into immersive mode, docked Now Playing fades where it is as the
+		// page grows over it, its cover and card flying on: sliding out, a
+		// second copy of them crossed the window.
+		if m.Immersive && nativeImmersing(c, m) {
+			row.ChildExit(ui.Motion{})
+		}
+		// The row moves into the global bar's room with immersive mode's
+		// morph, and back, as the panels in it do: at once, the page panel,
+		// which moves within it, jumped by the bar's height before it started
+		// growing. (A transition takes from the frame before it, so it is
+		// always set.)
+		row.Transition(nativePanelMoves(c, m))
+		var pagePanel ui.Element
 		row.Children(func() {
 			if !m.Immersive {
 				nativeLibrary(c, m, a, p, width)
@@ -330,14 +349,12 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 			// once and at its pace: with Now Playing coming or going and the
 			// library to the rail and back over the base motion, and over
 			// immersive mode's morph as it fades the library and the bar.
-			pagePanel := ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Radius(tokenRadiusPanel).Background(p.surface).Clip().Transition(nativePanelMoves(c, m))
+			pagePanel = ui.Column(c.Key("page-panel")).Grow(1).MinWidth(0).MinHeight(0).Radius(tokenRadiusPanel).Background(p.surface).Clip().Transition(nativePanelMoves(c, m))
 			pagePanel.Children(func() {
 				nativeBackdrop(c, m, a, p)
 				var scrolled *ui.ScrollState
 				nativePageWash(nativePageLayer(c), m, a, p, &scrolled).Children(func() {
-					if m.Immersive {
-						nativeImmersive(c, m, a, p, width, height-nativePlayerHeight-top-header-tokenProductFrameGap, header == 0)
-					} else {
+					if !m.Immersive {
 						scrolled = nativeContent(c, m, a, p, false, pageWidth)
 						m.pageScroll = scrolled
 					}
@@ -356,8 +373,65 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 				nativeNowPlaying(c.Key("now-playing-docked"), m, a, p, nativePanelWidth, false, false).Width(nativePanelWidth).Shrink(0).Transition(dock)
 			}
 		})
-		nativePlayerBar(c, m, a, p, width).Height(nativePlayerHeight).Shrink(0)
+		// Immersive mode's stage is where the page will be, from the start:
+		// the page panel grows into that room beneath it, while the cover
+		// and the card fly to places that hold still. Laid out in the
+		// growing panel, their places drifted with its edges, and the card
+		// swung out before it came in. It stays, empty, outside immersive
+		// mode, so that what comes into it fades in (and out) as its
+		// transitions say: a parent that appears brings its children at
+		// once. It follows the panel row, pulled up over the page's place by
+		// its margins so that it takes no room: absolute, it would come
+		// after the player bar in the order of keys and screen readers,
+		// which follow painting.
+		stage := ui.Rect{X: tokenProductFrameGap, Y: header + top, W: width - 2*tokenProductFrameGap, H: height - nativePlayerHeight - top - header - tokenProductFrameGap}
+		e := ui.Column(c.Key("immersive-stage")).AlignSelf(ui.Start).Shrink(0).Width(stage.W).Height(stage.H).Margin(-(stage.H + tokenProductFrameGap), 0, tokenProductFrameGap, stage.X).Radius(tokenRadiusPanel).Clip()
+		if !m.Immersive {
+			e.PassThrough()
+		}
+		if m.Immersive {
+			nativeStageClip(c, e, m, stage, pagePanel)
+			// Its content fades in as one: inside, all of it is new, and a
+			// new element's own Enter needs a parent the last frame showed.
+			// Leaving, it goes over the fast motion: the page is back at once
+			// beneath it, and a slow fade wrote the title over its shelves.
+			// The cover and the card fly, from their own opacity.
+			stageFade := nativeFadeLong
+			stageFade.ExitDuration = tokenMotionFast
+			e.Children(func() {
+				ui.Column(c.Key("immersive")).Fill().Transition(stageFade).Children(func() {
+					nativeImmersive(c, m, a, p, width, stage.H, header == 0)
+				})
+			})
+		}
+		nativePlayerBar(c.Key("player-bar"), m, a, p, width).Height(nativePlayerHeight).Shrink(0)
 	})
+}
+
+// nativeGrowth is where the page was as immersive mode came, at.
+type nativeGrowth struct {
+	at   time.Time
+	from ui.Rect
+}
+
+// nativeStageClip clips immersive mode's stage to the page panel as it
+// grows into it, from where the page was: what doesn't fly (the header,
+// the title, the switch) shows within the panel, not over the library and
+// the bar fading beside it. The panel grows over the morph along the
+// ease, and so does the clip.
+func nativeStageClip(c *ui.Context, e ui.Element, m *UIModel, stage ui.Rect, page ui.Element) {
+	grows := ui.Local(e, "grows-from", func() nativeGrowth { return nativeGrowth{} })
+	if grows.at != m.immersiveAt {
+		grows.at, grows.from = m.immersiveAt, page.Bounds()
+	}
+	from := grows.from
+	if !nativeImmersing(c, m) || from.W <= 0 || from.H <= 0 {
+		return
+	}
+	k := float32(c.Now().Sub(m.immersiveAt)) / float32(tokenMotionMorph)
+	left := 1 - tokenMotionEase(max(0, min(1, k)))
+	e.ClipInset(max(0, from.Y-stage.Y)*left, max(0, stage.X+stage.W-from.X-from.W)*left, max(0, stage.Y+stage.H-from.Y-from.H)*left, max(0, from.X-stage.X)*left, tokenRadiusPanel)
+	c.AnimationFrame()
 }
 
 // nativeCompactFrame follows Spotify's phone layout: one full-bleed page, a
@@ -499,6 +573,18 @@ func nativeCollectionSource(m *UIModel, button ui.Element, item catalog.Item) na
 	return nativeCollectionMatch{route: m.Route, button: button.ID(), id: item.BrowseID}
 }
 
+// nativeDownloadsMatch is the id of Downloads, the library's own
+// collection, whose page is its route rather than a browse page.
+const nativeDownloadsMatch = "downloads"
+
+// opens reports whether route is the page the matched entry opens.
+func (match nativeCollectionMatch) opens(route string) bool {
+	if match.id == nativeDownloadsMatch {
+		return route == "downloads"
+	}
+	return match.id != "" && route == "browse:"+match.id
+}
+
 func (a ViewActions) openCollection(m *UIModel, item catalog.Item) {
 	m.openedCover = a.collection
 	a.Open(item)
@@ -508,14 +594,21 @@ func (match nativeCollectionMatch) art(art ui.Element) ui.Element {
 	if match.id == "" {
 		return art
 	}
-	return art.Transition(nativeLong(nativeMatch(match)))
+	// It flies over the window, as immersive mode's cover does: within the
+	// page's clip, a cover from the library panel showed nowhere at first,
+	// then slid in from the page's edge.
+	t := nativeFlight(nativeMatch(match))
+	// Downloads' cover is drawn, its glyph sized to it: it scales whole,
+	// or the glyph of one size showed through the other on the way.
+	t.ScaleContent = match.id == nativeDownloadsMatch
+	return art.Transition(t)
 }
 
 func (a ViewActions) collectionArt(c *ui.Context, item catalog.Item, size, radius float32, m *UIModel, p nativePalette) ui.Element {
 	// The sidebar stays on screen beside the header. Give its ordinary
 	// thumbnail a separate identity while the detail owns the match. On
 	// Back the returning thumbnail can then take the match from the header.
-	if a.collection.id != "" && a.collection.button == m.openedCover.button && m.Route == "browse:"+a.collection.id {
+	if a.collection.button == m.openedCover.button && a.collection.opens(m.Route) {
 		return nativeArtwork(c.Key("open-collection-thumbnail"), item.Artwork, size, radius, a, p).Transition(nativeLong(nativeMoves))
 	}
 	return a.collection.art(nativeArtwork(c, item.Artwork, size, radius, a, p))
@@ -1020,6 +1113,7 @@ type nativeFloatState struct {
 	open  bool
 	since time.Time
 	from  float32
+	d     time.Duration // the whole movement; zero is the base motion
 }
 
 // arrival is the current fraction of the opening movement. A reversal starts
@@ -1029,7 +1123,11 @@ func (s nativeFloatState) arrival(now time.Time) float32 {
 	if s.open {
 		to, distance = 1, 1-s.from
 	}
-	d := time.Duration(float64(tokenMotionBase) * float64(distance))
+	whole := s.d
+	if whole == 0 {
+		whole = tokenMotionBase
+	}
+	d := time.Duration(float64(whole) * float64(distance))
 	if s.since.IsZero() || d == 0 || now.Sub(s.since) >= d {
 		return to
 	}
@@ -1044,21 +1142,41 @@ func nativeFloatingWanted(m *UIModel, width float32) bool {
 }
 
 func nativeFloating(c *ui.Context, m *UIModel, width float32) (bool, float32) {
-	s := &m.floating
-	want := nativeFloatingWanted(m, width)
+	still := m.instantMotion || m.Immersive || width > 1180
+	return nativePresence(c, &m.floating, nativeFloatingWanted(m, width), still, tokenMotionBase)
+}
+
+// nativePresence keeps something that comes and goes over the window (a
+// sheet, a dialog) on screen while it arrives and while it leaves, over d:
+// it reports whether to show it and how far it has arrived. A change of
+// mind part way turns it around from where it is.
+func nativePresence(c *ui.Context, s *nativeFloatState, want, still bool, d time.Duration) (bool, float32) {
 	now := c.Now()
-	if m.instantMotion || c.Preferences().ReduceMotion || m.Immersive || width > 1180 {
-		*s = nativeFloatState{open: want}
+	if still || c.Preferences().ReduceMotion {
+		*s = nativeFloatState{open: want, d: d}
 	}
 	arrived := s.arrival(now)
 	if want != s.open {
-		*s = nativeFloatState{open: want, from: arrived, since: now}
+		*s = nativeFloatState{open: want, from: arrived, since: now, d: d}
 	}
 	if (want && arrived < 1) || (!want && arrived > 0) {
 		c.AnimationFrame()
 		return true, arrived
 	}
 	return want, arrived
+}
+
+// nativeDialogMotion is how a dialog comes and goes: as popovers open, over
+// the fast motion, its scrim fading with it.
+const nativeDialogMotion = tokenMotionFast
+
+// nativeArrive places a dialog arrived of the way in: from 4 above and
+// transparent, as nativeAppear brings popovers, and back as it leaves.
+func nativeArrive(backdrop, panel ui.Element, p nativePalette, arrived float32) {
+	backdrop.Background(p.scrim.Alpha(arrived))
+	if arrived < 1 {
+		panel.Opacity(arrived).Translate(0, -4*(1-arrived))
+	}
 }
 
 // nativeDockSlide is how docked Now Playing comes and goes: across its own
@@ -1459,7 +1577,7 @@ func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, co
 	nativeScrollbar(c, scroll, scrolled, p, nativeFadeBelow(scrolled, p.surface))
 	nativeLoadNearEnd(c, scroll, m, a)
 	scroll.Children(func() {
-		if strings.HasPrefix(m.Route, "browse:") && m.Page.Title != "" {
+		if (strings.HasPrefix(m.Route, "browse:") && m.Page.Title != "") || m.Route == "downloads" {
 			nativeCollectionHeader(c, m, a, p, compact, inset, contentWidth)
 		} else if m.Page.Title != "" {
 			top := float32(32)
@@ -1729,8 +1847,22 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 // title and a primary play button over the page's colour wash.
 func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool, inset, contentWidth float32) {
 	cover := m.openedCover
-	if m.Route != "browse:"+cover.id {
+	if !cover.opens(m.Route) {
 		cover = nativeCollectionMatch{}
+	}
+	// Downloads is the library's own collection: its header is a
+	// collection's, its cover the library entry's, travelling in from it.
+	downloads := m.Route == "downloads"
+	pageTitle := m.Page.Title
+	if downloads && pageTitle == "" {
+		pageTitle = a.Tr("nativeDownloads")
+	}
+	hasArt := downloads || m.Page.Artwork != ""
+	artwork := func(size float32) ui.Element {
+		if downloads {
+			return cover.art(nativeDownloadsCover(c, size, tokenRadiusControl))
+		}
+		return cover.art(nativeArtwork(c, m.Page.Artwork, size, tokenRadiusControl, a, p))
 	}
 	if contentWidth == 0 {
 		contentWidth = 960
@@ -1738,7 +1870,7 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 	_, height := c.Size()
 	short := height < 760
 	title := func(size float32) {
-		nativeDisplay(ui.Text(c, m.Page.Title).FontSize(size).LineHeight(nativeDisplayLeading(m.Page.Title)).MaxLines(2).Ellipsis("…").Role(ui.RoleHeading), m.Page.Title, size)
+		nativeDisplay(ui.Text(c, pageTitle).FontSize(size).LineHeight(nativeDisplayLeading(pageTitle)).MaxLines(2).Ellipsis("…").Role(ui.RoleHeading), pageTitle, size)
 		if creator := strings.TrimSpace(m.Page.Creator); creator != "" && !nativeMetadataHasCreator(m.Page.Subtitle, creator) {
 			ui.Text(c, creator).FontSize(tokenSizeSmall).FontWeight(600).MaxLines(1).Ellipsis("…")
 		}
@@ -1748,15 +1880,15 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 	}
 	if compact && short {
 		ui.Row(c).Padding(8, inset, 0).Gap(16).AlignItems(ui.Center).Children(func() {
-			if m.Page.Artwork != "" {
-				cover.art(nativeArtwork(c, m.Page.Artwork, min(96, contentWidth*0.25), tokenRadiusControl, a, p).Shrink(0))
+			if hasArt {
+				artwork(min(96, contentWidth*0.25)).Shrink(0)
 			}
 			ui.Column(c).Grow(1).MinWidth(0).Gap(8).Children(func() { title(24) })
 		})
 	} else if compact {
 		ui.Column(c).Padding(8, inset, 0).Gap(12).Children(func() {
-			if m.Page.Artwork != "" {
-				nativeCollectionCover(cover.art(nativeArtwork(c, m.Page.Artwork, min(contentWidth-2*inset-64, 224), tokenRadiusControl, a, p).AlignSelf(ui.Center)), p)
+			if hasArt {
+				nativeCollectionCover(artwork(min(contentWidth-2*inset-64, 224)).AlignSelf(ui.Center), p)
 			}
 			title(26)
 		})
@@ -1770,8 +1902,8 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 			art, top, font = 112, 16, 32
 		}
 		ui.Row(c).Padding(top, inset, 0).Gap(24).AlignItems(ui.End).Children(func() {
-			if m.Page.Artwork != "" {
-				nativeCollectionCover(cover.art(nativeArtwork(c, m.Page.Artwork, art, tokenRadiusControl, a, p)), p)
+			if hasArt {
+				nativeCollectionCover(artwork(art), p)
 			}
 			ui.Column(c).Grow(1).MinWidth(0).Gap(12).Children(func() {
 				title(font)
@@ -1779,7 +1911,7 @@ func nativeCollectionHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePa
 		})
 	}
 	items := playableItems(m.Page.Items)
-	if len(items) == 0 {
+	if len(items) == 0 || downloads {
 		return
 	}
 	inPage := false
@@ -2840,7 +2972,9 @@ func nativeImmersiveHeader(c *ui.Context, m *UIModel, a ViewActions, p nativePal
 	if a.AppMenu != nil {
 		buttons++
 	}
-	nativeTitleBarRow(c, bar).Height(height).Padding(12, right, 12, left).Gap(4).AlignItems(ui.Center).Children(func() {
+	// It takes the global bar's place as that fades, and fades in as it
+	// does.
+	nativeTitleBarRow(c, bar).Height(height).Padding(12, right, 12, left).Gap(4).AlignItems(ui.Center).Transition(nativeFadeLong).Children(func() {
 		nativeAppMenuButton(c, a, p, 40)
 		if nativeIconButton(c, "chevron-down", a.Tr("shellExitImmersive"), p, false, 40).Clicked() {
 			m.Immersive = false
@@ -3126,7 +3260,21 @@ func nativePageWash(layer ui.Element, m *UIModel, a ViewActions, p nativePalette
 			tint, ok = a.ArtworkTint(m.Page.Artwork)
 		}
 	}
-	if !ok {
+	// A page without colour fades the last one out, rather than towards
+	// black.
+	last := ui.Local(layer, "wash-colour", func() ui.Color { return tint })
+	if ok {
+		*last = tint
+	} else {
+		tint = last.Alpha(0)
+	}
+	// From page to page the wash blends to the next one's colour over the
+	// morph, arriving with a collection's cover rather than flashing in
+	// under it; the page itself shows at once.
+	if !m.instantMotion {
+		tint = layer.AnimateColor("page-wash", tint, ui.Animation{Duration: tokenMotionMorph, Ease: tokenMotionEase})
+	}
+	if tint.A == 0 {
 		return layer
 	}
 	return nativeScrollingWash(layer, tint, nativeWashStrength(p), nativeWashHeight, scrolled)

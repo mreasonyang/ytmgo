@@ -474,6 +474,12 @@ func collectionMarker(a *ViewActions, width int) func(*ui.Tester, ui.Rect) image
 	}
 }
 
+// nearRect reports whether a's edges are each within d of b's.
+func nearRect(a, b image.Rectangle, d int) bool {
+	near := func(x, y int) bool { return x-y <= d && y-x <= d }
+	return !a.Empty() && near(a.Min.X, b.Min.X) && near(a.Min.Y, b.Min.Y) && near(a.Max.X, b.Max.X) && near(a.Max.Y, b.Max.Y)
+}
+
 func TestHomeCollectionUsesTheClickedCopy(t *testing.T) {
 	for _, width := range []int{420, 1440} {
 		for _, openTile := range []bool{true, false} {
@@ -506,7 +512,12 @@ func TestHomeCollectionUsesTheClickedCopy(t *testing.T) {
 				if m.Route != "browse:"+item.BrowseID {
 					t.Fatal("the collection did not open")
 				}
-				if start := marker(tt, page); start != clicked {
+				// It starts where the clicked cover was. The cover flies over the
+				// window, drawn where it is to the fraction of a pixel, while in
+				// place it is snapped to whole ones: on a layout off the grid
+				// (macOS's fonts give one) its first frame may blend an edge row
+				// that the in-place cover filled, a pixel short of its box.
+				if start := marker(tt, page); !nearRect(start, clicked, 1) {
 					t.Fatalf("header started at %v, clicked %v", start, clicked)
 				}
 				tt.Advance(tokenMotionMorph)

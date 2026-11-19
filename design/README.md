@@ -437,8 +437,22 @@ tooltip. The website uses icons only on actions and platform names.
     each goes one way, with no swing past its place: docked Now Playing,
     their destination on the way back, fades in where it is rather than
     sliding in under them.
+    The page grows from where it was (the panels' row moving into the
+    bar's room with it), and what doesn't fly (its header, the title, the
+    switch) fades in within it, clipped to it as it grows, at the places it
+    will keep; docked Now Playing fades where it is under it rather than
+    sliding out. Back out, that goes over `fast`, the page being back at
+    once beneath it.
   - Opening a collection, its header shows at once from the card, and the
-    card's cover travels into it (`morph`); Back carries it home.
+    card's cover travels into it (`morph`), flying over the window, so a
+    library row's cover is seen leaving the library; Back carries it
+    home. Downloads is the library's own collection: its cover, drawn,
+    travels the same way, scaling whole. The page's wash blends to the
+    next page's colour over `morph`, arriving with the cover.
+  - Sheets and dialogs come and go alike, over `fast`: the scrim fades as
+    the panel drops 4 into place, as popovers do, and both go as they came,
+    showing what they showed. Floating Now Playing rises 64 instead, over
+    `base`. All dim the window by the one scrim.
   - Settings and Keyboard shortcuts are one sheet: its frame takes the
     next page's width as the pages slide, Settings from the left.
   - Track changes: covers cross-fade, titles rise 8 into place over the
@@ -448,7 +462,7 @@ tooltip. The website uses icons only on actions and platform names.
     4 into place as they fade in.
 - Only opacity and transforms animate, except a shared element's frame
   (a cover or a card on its journey) and a sheet's or panel's size, which
-  morph.
+  morph, and colours that blend (a cover's, a page's wash).
 - Reduced motion, the website player's pause, and no JavaScript all show
   the final state immediately. Nothing is ever hidden waiting for motion.
 
@@ -517,7 +531,8 @@ tooltip. The website uses icons only on actions and platform names.
   a diagonal from the teal to the slate tint under the filled download
   glyph in white (the glyph that marks downloaded songs), its page washed
   in teal; its subtitle what's under way or the space it takes; a compact Library page leads with it.
-- **Downloads page:** track rows. The download's state takes the Album
+- **Downloads page:** a collection header (its cover, at the header's
+  size and radius `control`, then the title; no play button), then track rows. The download's state takes the Album
   column (an error beside the attention glyph); its control (pause, resume,
   retry) and remove end the row. A finished download has no control: its
   row plays it. Above them, the space they take and a neutral "Remove all

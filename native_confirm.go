@@ -15,19 +15,24 @@ type nativeConfirmation struct {
 
 // nativeConfirm shows m.confirm while it is set.
 func nativeConfirm(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, width float32) {
-	q := m.confirm
-	if q == nil {
+	if m.confirm != nil {
+		m.confirmShown = m.confirm
+	}
+	shown, arrived := nativePresence(c, &m.confirmMotion, m.confirm != nil, m.instantMotion, nativeDialogMotion)
+	if !shown || m.confirmShown == nil {
+		m.confirmShown = nil
 		return
 	}
+	// Answered, it goes as it came, showing the question it asked.
+	q, leaving := m.confirmShown, m.confirm == nil
 	open, chosen := true, false
 	ui.DialogBase(c, &open, func(backdrop, panel ui.Element) {
-		backdrop.Background(p.scrim)
+		nativeArrive(backdrop, panel, p, arrived)
 		panel.Width(min(400, nativeGridFloor(width-48))).Padding(24).Radius(tokenRadiusSheet).Background(p.surface).Border(1, p.line).Label(q.title)
 		// As the sheets: on the dark scrim a shadow can't be seen.
 		if !p.dark {
 			panel.Shadow(tokenShadowDialog.args(p))
 		}
-		nativeAppear(c, panel, m.instantMotion)
 		panel.Children(func() {
 			ui.Column(c).Gap(24).Children(func() {
 				ui.Column(c).Gap(8).Children(func() {
@@ -47,7 +52,7 @@ func nativeConfirm(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, wi
 			})
 		})
 	})
-	if open {
+	if open || leaving {
 		return
 	}
 	m.confirm = nil

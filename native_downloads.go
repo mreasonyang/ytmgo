@@ -42,8 +42,15 @@ func nativeDownloadsEntry(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 	} else if b.Hovered() {
 		b.Background(p.hover)
 	}
+	// Its cover travels into the page's header as a collection's does
+	// (nativeCollectionHeader); while the page shows, the header has it.
+	from := nativeCollectionMatch{route: m.Route, button: b.ID(), id: nativeDownloadsMatch}
 	b.Children(func() {
-		nativeDownloadsCover(c, 48)
+		if from.button == m.openedCover.button && from.opens(m.Route) {
+			nativeDownloadsCover(c.Key("open-downloads-thumbnail"), 48, tokenRadiusArt).Transition(nativeLong(nativeMoves))
+		} else {
+			from.art(nativeDownloadsCover(c, 48, tokenRadiusArt))
+		}
 		if !full {
 			return
 		}
@@ -53,6 +60,7 @@ func nativeDownloadsEntry(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 		})
 	})
 	if b.Clicked() {
+		m.openedCover = from
 		a.Navigate("downloads")
 	}
 	// As the library's rows: a tip beside it in the rail, which shows no
@@ -67,8 +75,8 @@ func nativeDownloadsEntry(c *ui.Context, m *UIModel, a ViewActions, p nativePale
 // download glyph, the one that marks downloaded songs, in white as on any
 // cover, whatever the appearance (the dark palette's text, as on the
 // video's stage).
-func nativeDownloadsCover(c *ui.Context, size float32) ui.Element {
-	return ui.Box(c).Size(size, size).Shrink(0).Radius(tokenRadiusArt).
+func nativeDownloadsCover(c *ui.Context, size, radius float32) ui.Element {
+	return ui.Box(c).Size(size, size).Shrink(0).Radius(radius).
 		LinearGradient(ui.LinearGradient{From: nativeDownloadsTint, To: nativeDownloadsTintTo, Angle: 135, Oklab: true}).
 		TextColor(palette(true).text).Center().Children(func() {
 		ui.Icon(c, nativeIcons["download-fill"]).Size(nativeGrid(size*0.6), nativeGrid(size*0.6)) // as large as Liked Music's heart

@@ -109,11 +109,27 @@ func (c *artworkCache) artworkRoom() int {
 		c.smallPreviews.bytes - c.browsePreviews.bytes
 }
 
+func (c *artworkCache) previewEvictionRoom(covers *downloads.CoverIndex, now time.Time) (available, protected int) {
+	available = c.artworkRoom() + c.smallPreviews.bytes + c.browsePreviews.bytes
+	protected = c.smallPreviews.protectedPreviewBytes(covers, now) + c.browsePreviews.protectedPreviewBytes(covers, now)
+	return
+}
+
+func (c *artworkCache) prefetchBlocked(e *artEntry, covers *downloads.CoverIndex, now time.Time) bool {
+	if e.prefetchUncacheable {
+		return true
+	}
+	if e.prefetchDeferredBytes == 0 || e.prefetchDeferredBytes <= c.artworkRoom() {
+		return false
+	}
+	available, protected := c.previewEvictionRoom(covers, now)
+	return protected > 0 && e.prefetchDeferredBytes > available-protected
+}
+
 func (c *artworkCache) makeArtworkRoom(charge int, reclaimProtected bool, covers *downloads.CoverIndex, now time.Time) (room, deferred bool) {
 	if !reclaimProtected && charge > c.artworkRoom() {
 		// Check before evicting previews so a deferred load leaves them intact.
-		available := c.artworkRoom() + c.smallPreviews.bytes + c.browsePreviews.bytes
-		protected := c.smallPreviews.protectedPreviewBytes(covers, now) + c.browsePreviews.protectedPreviewBytes(covers, now)
+		available, protected := c.previewEvictionRoom(covers, now)
 		if charge > available-protected {
 			return false, charge <= available
 		}

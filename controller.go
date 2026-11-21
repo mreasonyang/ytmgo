@@ -79,8 +79,11 @@ func signedOutLibraryPage(tr func(string) string) catalog.Page {
 func (a *desktop) loadPage(route, q string, record bool) {
 	if record {
 		a.protectReturnPage()
+		a.beginPagePresentation()
+	} else {
+		// Reload replaces the artwork capture within the same scroll visit.
+		a.resetPageArtworkView()
 	}
-	a.beginPagePresentation()
 	if a.pageCancel != nil {
 		a.pageCancel()
 	}

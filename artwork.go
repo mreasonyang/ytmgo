@@ -48,24 +48,25 @@ const (
 // Rendition charges include the encoded backing and, until first paint, the
 // base pixels plus possible mipmaps. Preview pools charge their own pixels.
 type artEntry struct {
-	bitmap             *ui.Bitmap
-	tint               ui.Color // the cover's colour for the interface, when tinted
-	tinted             bool
-	staged             bool // a preview whose rendition has yet to paint in a browse view
-	returnPreview      bool // eviction preference for a preview from the last view
-	bytes              int
-	pixelBytes         int
-	firstPaint         uint64
-	peeked             bool // Draw may have restored CPU pixels after submit
-	used               uint64
-	version            artworkVersion
-	withdrawn          bool // a newer job revoked this in-flight HTTP response
-	cancel             context.CancelFunc
-	failures           int
-	retryAt            time.Time
-	freshUntil         time.Time
-	local              bool // bitmap came from the selected download, independent of HTTP freshness
-	prefetchSuppressed bool // only try again when requested for display
+	bitmap                *ui.Bitmap
+	tint                  ui.Color // the cover's colour for the interface, when tinted
+	tinted                bool
+	staged                bool // a preview whose rendition has yet to paint in a browse view
+	returnPreview         bool // eviction preference for a preview from the last view
+	bytes                 int
+	pixelBytes            int
+	firstPaint            uint64
+	peeked                bool // Draw may have restored CPU pixels after submit
+	used                  uint64
+	version               artworkVersion
+	withdrawn             bool // a newer job revoked this in-flight HTTP response
+	cancel                context.CancelFunc
+	failures              int
+	retryAt               time.Time
+	freshUntil            time.Time
+	local                 bool // bitmap came from the selected download, independent of HTTP freshness
+	prefetchUncacheable   bool // only try again when requested for display
+	prefetchDeferredBytes int  // rendition charge from a prefetch blocked by return previews
 }
 
 type artworkPool struct {
@@ -288,7 +289,7 @@ func (f *artworkFrame) get(raw string, requestedEdge int, priority artworkPriori
 	}
 	f.markSeen(key, priority)
 	entry := c.entry(key)
-	if priority == artPrefetch && entry != nil && entry.prefetchSuppressed {
+	if priority == artPrefetch && entry != nil && entry.prefetchUncacheable {
 		return nil
 	}
 	c.expirePixels(key, entry)
@@ -517,9 +518,9 @@ func (f *artworkFrame) submit() bool {
 			if f.wanted[key] != priority || len(c.queue) >= artworkQueueLimit || !key.matches(covers) {
 				continue
 			}
-			// A prefetch can finish after get recorded demand for this frame.
+			// Recheck prefetch after pixel release and any completion since get.
 			if e := c.entry(key); e != nil && (e.cancel != nil || e.bitmap != nil || now.Before(e.retryAt) ||
-				(priority == artPrefetch && e.prefetchSuppressed)) {
+				(priority == artPrefetch && c.prefetchBlocked(e, covers, now))) {
 				continue
 			}
 			c.queue = append(c.queue, artDemand{key, priority})
@@ -749,6 +750,7 @@ func (c *artworkCache) finish(d artDemand, e *artEntry, art decoded) {
 	current := pool.entries[d.artRequest] == e
 	e.cancel()
 	e.cancel = nil
+	e.prefetchDeferredBytes = 0
 	covers, unlockCovers := c.downloadCovers.LockCovers()
 	if current && !d.matches(covers) {
 		pool.bytes -= e.bytes
@@ -762,7 +764,7 @@ func (c *artworkCache) finish(d artDemand, e *artEntry, art decoded) {
 	if current && wanted && job.priority == artPrefetch && uncacheable {
 		// Remember this outcome in the LRU so prefetch stays idle. A visible
 		// request can still load the image immediately for display.
-		e.prefetchSuppressed = true
+		e.prefetchUncacheable = true
 		current = false
 	}
 	if current {
@@ -789,7 +791,7 @@ func (c *artworkCache) finish(d artDemand, e *artEntry, art decoded) {
 		}
 		if deferred && wanted {
 			// Space reserved for a return preview is a scheduling decision.
-			e.prefetchSuppressed = true
+			e.prefetchDeferredBytes = charge
 			e.retryAt = time.Time{}
 			current = false
 		} else if bitmap == nil {
@@ -807,7 +809,7 @@ func (c *artworkCache) finish(d artDemand, e *artEntry, art decoded) {
 			e.tint, e.tinted = art.tint, art.tinted
 			e.freshUntil = art.freshUntil
 			e.local = art.local
-			e.prefetchSuppressed = false
+			e.prefetchUncacheable = false
 			e.failures = 0
 			e.retryAt = time.Time{}
 			e.pixelBytes = pixels

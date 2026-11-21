@@ -204,15 +204,23 @@ func TestArtworkReturnPreviewFormalAdmissionAtTotalBudget(t *testing.T) {
 		expired bool
 	}{
 		{"ordinary", false, false},
-		{"expired", true, true},
-		{"protected", true, false},
+		{"already-expired", true, true},
+		{"visible-upgrade", true, false},
+		{"protection-cleared", true, false},
+		{"budget-freed", true, false},
+		{"protection-expired", true, false},
+		{"no-store-on-resume", true, false},
 	} {
 		t.Run(scenario.name, func(t *testing.T) {
 			c := artworkTestCache(t, nil)
 			var requests atomic.Int64
 			c.client.Transport = artworkTransport(func(*http.Request) (*http.Response, error) {
-				requests.Add(1)
-				return artworkHTTPResponse(data, http.Header{"Cache-Control": {"public, max-age=3600"}}), nil
+				count := requests.Add(1)
+				policy := "public, max-age=3600"
+				if scenario.name == "no-store-on-resume" && count >= 3 {
+					policy = "no-store"
+				}
+				return artworkHTTPResponse(data, http.Header{"Cache-Control": {policy}}), nil
 			})
 			sourceArtworkFrame(c, raw, edge, artPrimary)
 			c.workers.Wait()
@@ -253,23 +261,58 @@ func TestArtworkReturnPreviewFormalAdmissionAtTotalBudget(t *testing.T) {
 				t.Fatal("prefetch did not create a player-pool entry")
 			}
 			if scenario.mark && !scenario.expired {
-				if c.smallPreviews.entries[key] == nil || entry.bitmap != nil || entry.failures != 0 || !entry.retryAt.IsZero() {
+				if c.smallPreviews.entries[key] == nil || entry.bitmap != nil || entry.failures != 0 ||
+					!entry.retryAt.IsZero() || entry.prefetchDeferredBytes != charge {
 					t.Fatal("deferral reclaimed a protected preview or counted as a load failure")
 				}
 				pending.submit()
-				sourceArtworkFrame(c, next, 768, artPrefetch)
-				c.workers.Wait()
+				for range 3 {
+					sourceArtworkFrame(c, next, 768, artPrefetch)
+					c.workers.Wait()
+				}
 				if got := requests.Load(); got != 2 {
 					t.Fatalf("deferred prefetch ran again: %d requests", got)
 				}
-				sourceArtworkFrame(c, next, 768, artPlayer)
+				priority := artPrefetch
+				switch scenario.name {
+				case "visible-upgrade":
+					priority = artPlayer
+				case "protection-cleared", "no-store-on-resume":
+					c.setReturnPreviews(nil)
+				case "budget-freed":
+					if !c.browse.evictOldest(c.visible) {
+						t.Fatal("could not free formal cache space")
+					}
+				case "protection-expired":
+					c.smallPreviews.entries[key].freshUntil = time.Now().Add(-time.Second)
+				}
+				sourceArtworkFrame(c, next, 768, priority)
 				c.workers.Wait()
 				if got := requests.Load(); got != 3 {
-					t.Fatalf("player did not immediately retry the deferred prefetch: %d requests", got)
+					t.Fatalf("expected the first eligible frame to retry: %d requests", got)
+				}
+				if scenario.name == "no-store-on-resume" {
+					for range 3 {
+						sourceArtworkFrame(c, next, 768, artPrefetch)
+						c.workers.Wait()
+					}
+					if requests.Load() != 3 || entry.bitmap != nil || !entry.prefetchUncacheable || entry.prefetchDeferredBytes != 0 {
+						t.Fatal("no-store result was reused or repeatedly prefetched")
+					}
+					assertArtworkAccounting(t, c)
+					return
 				}
 			}
-			if entry.bitmap == nil || c.smallPreviews.entries[key] != nil || c.artworkRoom() != 0 {
-				t.Fatal("formal admission could not reclaim the preview at the total budget")
+			if entry.bitmap == nil || entry.prefetchDeferredBytes != 0 {
+				t.Fatal("formal rendition was not admitted")
+			}
+			preview := c.smallPreviews.entries[key]
+			if scenario.name == "budget-freed" {
+				if preview == nil || !preview.returnPreview {
+					t.Fatal("prefetch reclaimed protection despite having room")
+				}
+			} else if preview != nil || c.artworkRoom() != 0 {
+				t.Fatal("formal admission did not reclaim the preview at the total budget")
 			}
 			assertArtworkAccounting(t, c)
 		})

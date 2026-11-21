@@ -104,6 +104,7 @@ func (u artworkHTTPUpstream) RoundTrip(req *http.Request) (*http.Response, error
 		res.Body.Close()
 		return nil, context.Canceled
 	}
+	u.cache.observeArtworkResponse(req.Context(), res)
 	if res.StatusCode == http.StatusNotModified {
 		if artworkProhibitedResponse(res.Header) || (len(res.Header.Values("Cache-Control")) > 0 && !artworkPublicResponse(res.Header)) {
 			res.Header.Set("Cache-Control", "no-store")

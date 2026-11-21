@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"image"
 	"image/color"
 	"image/png"
 	"math"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -844,6 +846,127 @@ func TestNativeArtworkOnlyRequestsVisibleCovers(t *testing.T) {
 	}
 	if len(requested) > 32 {
 		t.Fatalf("scroll requested too many offscreen covers: %d", len(requested))
+	}
+}
+
+func TestNativeCoverKeepsDisplayedResponseWithinSizeBucket(t *testing.T) {
+	const first = "https://i.ytimg.com/first"
+	const second = "https://i.ytimg.com/second"
+	for _, policy := range []struct {
+		control    string
+		returnCode int
+	}{
+		{"no-store", http.StatusOK},
+		{"public, no-cache", http.StatusNotModified},
+	} {
+		t.Run(policy.control, func(t *testing.T) {
+			cache := artworkTestCache(t, nil)
+			cache.disk = &artworkDisk{dir: t.TempDir()}
+			t.Cleanup(cache.workers.Wait)
+			firstInk := color.RGBA{70, 155, 220, 255}
+			secondInk := color.RGBA{220, 90, 70, 255}
+			bodies := make(map[string][]byte)
+			for path, ink := range map[string]color.RGBA{"/first": firstInk, "/second": secondInk} {
+				var data bytes.Buffer
+				if err := png.Encode(&data, tintFill(128, 128, func(int, int) color.RGBA { return ink })); err != nil {
+					t.Fatal(err)
+				}
+				bodies[path] = data.Bytes()
+			}
+			var responses []string
+			cache.client.Transport = artworkTransport(func(req *http.Request) (*http.Response, error) {
+				path := req.URL.Path
+				etag := fmt.Sprintf("%q", path)
+				h := http.Header{"Cache-Control": {policy.control}, "Etag": {etag}}
+				if req.Header.Get("If-None-Match") == etag {
+					responses = append(responses, path+"=304")
+					return &http.Response{StatusCode: http.StatusNotModified, Header: h, Body: http.NoBody}, nil
+				}
+				responses = append(responses, path+"=200")
+				return artworkHTTPResponse(bodies[path], h), nil
+			})
+			const width, height = 240, 220
+			src, size, scale := first, float32(144), 2.0
+			var tt *ui.Tester
+			var inspect func(color.RGBA)
+			lastSource := ""
+			pixel := func() color.RGBA {
+				r, ok := tt.Find("cover")
+				if !ok {
+					t.Fatal("cover missing from the viewport")
+				}
+				return tt.Image().RGBAAt(int(r.X+r.W/2), int(r.Y+r.H/2))
+			}
+			observe := func() {
+				if inspect != nil && lastSource == src {
+					inspect(pixel())
+				}
+			}
+			tt = ui.NewTester(func(c *ui.Context) {
+				observe()
+				frame := cache.beginFrame()
+				scroll := ui.Scroll(c).Fill()
+				a := nativeArtworkViewport(c, ViewActions{Artwork: frame.get, artworkPeek: frame.peek, artworkScale: scale}, scroll)
+				scroll.Children(func() {
+					nativeCover(c, src, size, 8, a, palette(true), artPrimary).Label("cover")
+					ui.Box(c).Height(600).Shrink(0)
+				})
+				if frame.submit() {
+					c.Invalidate()
+				}
+				lastSource = src
+			}, width, height)
+			assertLoaded := func(want color.RGBA, wantResponses string) {
+				t.Helper()
+				cache.workers.Wait()
+				tt.Frame()
+				if got := pixel(); got != want {
+					t.Fatalf("settled cover pixel = %v, want %v", got, want)
+				}
+				cache.workers.Wait()
+				if got := strings.Join(responses, ","); got != wantResponses {
+					t.Fatalf("origin responses = %s, want %s", got, wantResponses)
+				}
+			}
+			assertLoaded(firstInk, "/first=200")
+			inspect = func(got color.RGBA) {
+				if got != firstInk {
+					t.Fatalf("same-bucket resize to %g DIP at %gx painted %v, want %v", size, scale, got, firstInk)
+				}
+			}
+			for _, resize := range []struct {
+				size  float32
+				scale float64
+			}{{156, 2}, {156, 1.5}, {144, 2}} {
+				size, scale = resize.size, resize.scale
+				tt.Frame()
+				observe()
+				assertLoaded(firstInk, "/first=200")
+			}
+
+			src = second
+			inspect = func(got color.RGBA) {
+				if got == firstInk {
+					t.Fatal("new source painted the previous cover")
+				}
+			}
+			tt.Frame()
+			observe()
+			assertLoaded(secondInk, "/first=200,/second=200")
+
+			src = first
+			inspect = nil
+			tt.Frame()
+			want := fmt.Sprintf("/first=200,/second=200,/first=%d", policy.returnCode)
+			assertLoaded(firstInk, want)
+			tt.Scroll(80, 90, 0, 400)
+			tt.Frame()
+			if cache.visible[artRequest{url: first, edge: 384}] {
+				t.Fatal("scrolled-out cover is still counted as visible")
+			}
+			tt.Scroll(80, 90, 0, -400)
+			assertLoaded(firstInk, fmt.Sprintf("%s,/first=%d", want, policy.returnCode))
+		})
 	}
 }
 

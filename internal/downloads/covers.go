@@ -13,15 +13,28 @@ import (
 	"strconv"
 	"strings"
 	"sync/atomic"
+
+	"ytmgo/internal/catalog"
 )
 
 const coverBytesLimit = 4 << 20
 
 var coverSize = regexp.MustCompile(`=(?:w\d+-h\d+|s\d+)([^/?]*)$`)
 
-// CoverURLAtSize rewrites only the size in the path of recognized image CDNs.
-// Query parameters and other transformation options identify the resource.
+func isSystemCoverURL(u *url.URL) bool {
+	return !u.ForceQuery && (strings.EqualFold(u.Host, "gstatic.com") || strings.EqualFold(u.Host, "www.gstatic.com")) &&
+		catalog.IsSystemArtworkURL(u)
+}
+
+// CoverURLAtSize uses the final host for supported system covers and rewrites
+// the size of recognized CDN images. Other resource options stay intact.
 func CoverURLAtSize(raw string, u *url.URL, edge int) string {
+	if u.Host != "www.gstatic.com" && isSystemCoverURL(u) {
+		// The bare host redirects here. HTTP cache entries use this final URL.
+		result := *u
+		result.Host = "www.gstatic.com"
+		return result.String()
+	}
 	host := strings.ToLower(u.Hostname())
 	if host != "googleusercontent.com" && !strings.HasSuffix(host, ".googleusercontent.com") &&
 		host != "ggpht.com" && !strings.HasSuffix(host, ".ggpht.com") {
@@ -44,9 +57,14 @@ func coverURL(raw string) string {
 	if err != nil || u.Host == "" || u.Scheme != "https" || u.User != nil || u.Port() != "" {
 		return raw
 	}
-	u.Host = strings.ToLower(u.Host)
-	u.Fragment, u.RawFragment = "", ""
-	return CoverURLAtSize(u.String(), u, 768)
+	indexURL := *u
+	indexURL.Host = strings.ToLower(u.Host)
+	indexURL.Fragment, indexURL.RawFragment = "", ""
+	// Do not let index cleanup publish an unsupported URL under the shared key.
+	if (u.Fragment != "" || u.Host != indexURL.Host) && isSystemCoverURL(&indexURL) && !isSystemCoverURL(u) {
+		return raw
+	}
+	return CoverURLAtSize(indexURL.String(), &indexURL, 768)
 }
 
 // ErrInvalidCover means the selected version is missing, changed or unusable.

@@ -2049,13 +2049,13 @@ func nativeCover(c *ui.Context, src string, size, radius float32, a ViewActions,
 			return
 		}
 
-		// Visibility belongs to this rendition, even if a different cover
-		// occupied the same layout slot in the previous frame.
+		// Keep visibility while the same rendition changes its layout size.
+		// A different source or size bucket starts with its own visibility.
 		type rendition struct {
-			src  string
-			edge int
+			src    string
+			bucket int
 		}
-		picture := ui.Box(c.Key(rendition{src, edge})).Fill().PassThrough()
+		picture := ui.Box(c.Key(rendition{src, artworkBucket(edge)})).Fill().PassThrough()
 		wasVisible := picture.InView()
 		var artwork ui.ImageSource
 		if wasVisible && a.Artwork != nil {

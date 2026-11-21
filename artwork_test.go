@@ -446,10 +446,11 @@ func TestSystemArtworkReachesDownloaderWithoutCDNSizeRewrite(t *testing.T) {
 	t.Cleanup(func() { cancel(); c.workers.Wait() })
 	data := artworkTestPNG(t, 16, 16)
 	const raw = "https://gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png"
+	const canonical = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png"
 	const mix = "https://music.youtube.com/image/synthetic-system-mix?r=synthetic-image-option"
 	c.client.Transport = artworkTransport(func(req *http.Request) (*http.Response, error) {
-		if (req.URL.String() != raw && req.URL.String() != mix) || req.Header.Get("Cookie") != "" || req.Header.Get("Authorization") != "" {
-			t.Error("system cover was rewritten or carried account credentials")
+		if (req.URL.String() != canonical && req.URL.String() != mix) || req.Header.Get("Cookie") != "" || req.Header.Get("Authorization") != "" {
+			t.Error("system cover used an unexpected URL or carried account credentials")
 		}
 		return &http.Response{StatusCode: http.StatusOK, ContentLength: int64(len(data)), Body: io.NopCloser(bytes.NewReader(data))}, nil
 	})

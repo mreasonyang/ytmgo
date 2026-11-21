@@ -325,8 +325,8 @@ func (a *desktop) view(c *ui.Context) {
 		}
 		c.After(a.nextProgressFrame.Sub(now))
 	}
-	frame := artworkFrame{cache: a.art}
-	nativeView(c, &a.model, a.actions(frame.get))
+	frame := a.art.beginFrame()
+	nativeView(c, &a.model, a.actions(&frame))
 	a.prefetchNextCover(&frame)
 	if frame.submit() {
 		c.Invalidate()
@@ -337,14 +337,15 @@ func (a *desktop) view(c *ui.Context) {
 func (a *desktop) prefetchNextCover(frame *artworkFrame) {
 	if frame.playerEdge > 0 && a.preparedID != "" {
 		next := nextPreparedTrack(a.model.Queue, a.queueIndex, a.model.Repeat)
-		if next.ID == a.preparedID && next.Artwork != "" && next.Artwork != a.model.Current.Artwork {
+		if next.ID == a.preparedID && next.Artwork != "" &&
+			frame.key(next.Artwork, frame.playerEdge, artPrefetch) != frame.key(a.model.Current.Artwork, frame.playerEdge, artPlayer) {
 			frame.get(next.Artwork, frame.playerEdge, artPrefetch)
 		}
 	}
 }
 
-func (a *desktop) actions(artwork func(string, int, artworkPriority) ui.ImageSource) ViewActions {
-	actions := ViewActions{artworkScale: a.artworkScale, artworkPeek: a.art.peek, LyricsClock: a.lyricsClock, BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, QueueRemove: a.removeFromQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, FullScreen: a.setVideoFullScreen, SetAudioQuality: a.setAudioQuality, SetVideoQuality: a.setVideoQuality, SetLyricsExpanded: a.setLyricsExpanded, RetryPlayback: a.retryPlayback, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: artwork, ArtworkTint: a.art.tint}
+func (a *desktop) actions(frame *artworkFrame) ViewActions {
+	actions := ViewActions{artworkScale: a.artworkScale, artworkPeek: frame.peek, artworkReplayed: frame.replayed, artworkRevision: frame.covers.Revocation(), LyricsClock: a.lyricsClock, BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, QueueRemove: a.removeFromQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, FullScreen: a.setVideoFullScreen, SetAudioQuality: a.setAudioQuality, SetVideoQuality: a.setVideoQuality, SetLyricsExpanded: a.setLyricsExpanded, RetryPlayback: a.retryPlayback, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: frame.get, ArtworkTint: frame.tint}
 	actions.AppIcon = a.appIcon()
 	if a.downloads != nil {
 		actions.Download = a.downloadItem

@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sync"
+	"sync/atomic"
 
 	"ytmgo/internal/accountsession"
 	"ytmgo/internal/audioquality"
@@ -53,6 +54,8 @@ type job struct {
 	life        context.Context
 	revoke      context.CancelFunc
 	removeAfter string
+	coverURL    string
+	coverOrder  uint64
 }
 
 type Remote struct {
@@ -73,7 +76,11 @@ type Manager struct {
 	online              bool
 	jobs                []*job
 	byID                map[string]*job
-	byCover             map[string]string
+	covers              atomic.Pointer[CoverIndex]
+	coverMu             sync.RWMutex
+	coverJobs           map[string][]*job
+	coverOrder          uint64
+	coverChanges        chan struct{}
 	active              *job
 	activeDir           string
 	abort               context.CancelFunc
@@ -93,7 +100,7 @@ func New(parent context.Context, root string, secrets accountsession.Secrets, re
 	}
 	ctx, cancel := context.WithCancel(parent)
 	m := &Manager{ctx: ctx, cancel: cancel, root: root, secrets: secrets, resolve: resolve, extras: extras,
-		done: make(chan struct{}), wake: make(chan struct{}, 1), changes: make(chan struct{}, 1)}
+		done: make(chan struct{}), wake: make(chan struct{}, 1), changes: make(chan struct{}, 1), coverChanges: make(chan struct{}, 1)}
 	scope := Guest
 	if data, err := os.ReadFile(filepath.Join(root, "selection")); err == nil {
 		scope = string(data)
@@ -181,7 +188,7 @@ func (m *Manager) load(scope string) error {
 		if rec.State == Complete && (!rec.Format.valid() || size != diskSize(rec.Total) || len(rec.Wrapped) != 32+recordOverhead) {
 			rec.State, rec.Failure = Failed, "media"
 		}
-		j := &job{record: rec}
+		j := &job{record: rec, coverURL: coverURL(rec.Item.Artwork), coverOrder: uint64(len(jobs))}
 		jobs = append(jobs, j)
 		ids[j.Item.ID] = j
 	}
@@ -198,7 +205,8 @@ func (m *Manager) load(scope string) error {
 	for _, j := range jobs {
 		j.life, j.revoke = context.WithCancel(m.ctx)
 	}
-	m.indexCovers()
+	m.coverOrder = uint64(len(jobs))
+	m.loadCovers()
 	return nil
 }
 
@@ -206,15 +214,6 @@ func (m *Manager) Scope() string {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.scope
-}
-
-func (m *Manager) indexCovers() {
-	m.byCover = make(map[string]string)
-	for _, j := range m.jobs {
-		if j.HasCover && j.State == Complete {
-			m.byCover[j.Item.Artwork] = filepath.Join(m.assetDir(j), "cover")
-		}
-	}
 }
 
 // Switch publishes the new library before deleting explicitly abandoned account
@@ -236,7 +235,8 @@ func (m *Manager) Switch(scope string, forget bool) error {
 	for _, j := range oldJobs {
 		j.revoke()
 	}
-	m.scope, m.jobs, m.byID, m.byCover = "", nil, nil, nil
+	m.scope, m.jobs, m.byID = "", nil, nil
+	m.clearCovers()
 	signal(m.changes)
 	if err := preference.WriteFile(filepath.Join(m.root, "selection"), []byte(scope)); err != nil {
 		return ErrStorage
@@ -303,6 +303,8 @@ func (m *Manager) Enqueue(scope string, items []catalog.Item, q audioquality.Qua
 		rand.Read(id[:])
 		j := &job{record: record{Entry: Entry{Item: it, Quality: q.Normalize(), State: Queued}, Asset: hex.EncodeToString(id[:])}}
 		j.life, j.revoke = context.WithCancel(m.ctx)
+		j.coverURL, j.coverOrder = coverURL(it.Artwork), m.coverOrder
+		m.coverOrder++
 		m.jobs = append(m.jobs, j)
 		m.byID[it.ID] = j
 	}
@@ -368,7 +370,7 @@ func (m *Manager) Remove(id string) error {
 		break
 	}
 	delete(m.byID, id)
-	m.indexCovers()
+	m.removeCover(j)
 	j.revoke()
 	if m.active == j && m.abort != nil {
 		j.removeAfter = m.assetDir(j)
@@ -440,7 +442,7 @@ func (m *Manager) damaged(j *job, life context.Context) {
 	j.revoke()
 	j.life, j.revoke = context.WithCancel(m.ctx)
 	j.State, j.Failure = Failed, "media"
-	m.indexCovers()
+	m.removeCover(j)
 	_ = m.save()
 	signal(m.changes)
 }
@@ -460,14 +462,16 @@ func (m *Manager) Lyrics(id string) (catalog.LyricsResult, bool) {
 }
 
 func (m *Manager) Cover(raw string) []byte {
-	if raw == "" {
-		return nil
-	}
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if path := m.byCover[raw]; path != "" {
-		b, _ := os.ReadFile(path)
-		return b
+	for m.ctx.Err() == nil {
+		a := m.Covers().Source(raw).Asset
+		if a == nil {
+			break
+		}
+		b, err := a.Read(m.ctx)
+		if !errors.Is(err, ErrInvalidCover) {
+			return b
+		}
+		a.Reject(m.ctx)
 	}
 	return nil
 }

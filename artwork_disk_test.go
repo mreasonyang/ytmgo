@@ -31,7 +31,7 @@ func loadHTTPArtwork(t *testing.T, dir, raw string, upstream artworkTransport) *
 	c.client.Transport = upstream
 	requestTestArtwork(c, raw, 384)
 	c.workers.Wait()
-	if e := c.entry(artRequest{artworkRequestAt(raw, 384), 384}); e == nil || e.bitmap == nil {
+	if e := c.entry(artRequest{url: artworkRequestAt(raw, 384), edge: 384}); e == nil || e.bitmap == nil {
 		t.Fatal("HTTP cache did not produce a decoded image")
 	}
 	return c
@@ -88,7 +88,7 @@ func TestArtworkHTTPChangedETagReplacesImage(t *testing.T) {
 	})
 	loadHTTPArtwork(t, dir, raw, upstream)
 	c := loadHTTPArtwork(t, dir, raw, upstream)
-	if w, _ := c.entry(artRequest{raw, 384}).bitmap.Size(); w != 64 {
+	if w, _ := c.entry(artRequest{url: raw, edge: 384}).bitmap.Size(); w != 64 {
 		t.Fatal("changed ETag kept the old image")
 	}
 }
@@ -122,7 +122,7 @@ func TestArtworkHTTPNoCacheAlsoRevalidatesResidentPixels(t *testing.T) {
 		t.Fatal("resident pixels bypassed no-cache validation after leaving the viewport")
 	}
 	c.workers.Wait()
-	if requests != 2 || c.entry(artRequest{raw, 384}).bitmap == nil {
+	if requests != 2 || c.entry(artRequest{url: raw, edge: 384}).bitmap == nil {
 		t.Fatal("resident image was not revalidated")
 	}
 }
@@ -209,7 +209,7 @@ func TestArtworkHTTPVarySeparatesRepresentations(t *testing.T) {
 		return artworkHTTPResponse(artworkTestPNG(t, edge, 32), http.Header{"Cache-Control": {"public, max-age=3600"}, "Vary": {"Accept-Language"}}), nil
 	})
 	const raw = "https://i.ytimg.com/image"
-	client := c.artworkHTTPClient(artDemand{artRequest: artRequest{raw, 384}})
+	client := c.artworkHTTPClient(artDemand{artRequest: artRequest{url: raw, edge: 384}})
 	for _, language := range []string{"en", "ja", "en", "ja"} {
 		req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, raw, nil)
 		req.Header.Set("Accept-Language", language)
@@ -292,7 +292,7 @@ func TestArtworkHTTPNoStoreLeavesNoReusablePixels(t *testing.T) {
 	}
 	empty := artworkFrame{cache: c}
 	empty.submit()
-	if e := c.entry(artRequest{raw, 128}); e != nil && e.bitmap != nil {
+	if e := c.entry(artRequest{url: raw, edge: 128}); e != nil && e.bitmap != nil {
 		t.Fatal("no-store pixels survived after leaving the viewport")
 	}
 	if requestTestArtwork(c, raw, 128) != nil {
@@ -806,6 +806,27 @@ func TestArtworkHTTPPublicWithdrawalReplacesWithoutPersisting(t *testing.T) {
 	}
 }
 
+func TestArtworkHTTPInvalidWithdrawalDropsPublicRecord(t *testing.T) {
+	const raw = "https://i.ytimg.com/withdraw-invalid-body"
+	dir := t.TempDir()
+	prime := loadHTTPArtwork(t, dir, raw, func(*http.Request) (*http.Response, error) {
+		return artworkHTTPResponse(artworkTestPNG(t, 32, 32), http.Header{"Cache-Control": {"public, max-age=0"}, "Etag": {`"v1"`}}), nil
+	})
+	if _, err := prime.disk.Get(raw); err != nil {
+		t.Fatal("public record missing before withdrawal")
+	}
+	c := artworkTestCache(t, nil)
+	c.disk = &artworkDisk{dir: dir}
+	c.client.Transport = artworkTransport(func(*http.Request) (*http.Response, error) {
+		return artworkHTTPResponse([]byte("invalid image"), http.Header{"Cache-Control": {"no-store"}}), nil
+	})
+	requestTestArtwork(c, raw, 384)
+	c.workers.Wait()
+	if _, err := c.disk.Get(raw); err == nil {
+		t.Fatal("public record survived withdrawal with an invalid replacement")
+	}
+}
+
 func TestArtworkHTTPStorageFailureStillDisplaysImage(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "not-a-directory")
@@ -852,7 +873,7 @@ func TestArtworkHTTPVarySchemeChangeRetiresOldRepresentations(t *testing.T) {
 				return artworkHTTPResponse(artworkTestPNG(t, edge, 32), h), nil
 			})
 			const raw = "https://i.ytimg.com/vary-scheme-change"
-			client := c.artworkHTTPClient(artDemand{artRequest: artRequest{raw, 384}})
+			client := c.artworkHTTPClient(artDemand{artRequest: artRequest{url: raw, edge: 384}})
 			for i, lang := range []string{"en", "ja", "en", "ja"} {
 				req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, raw, nil)
 				req.Header.Set("Accept-Language", lang)

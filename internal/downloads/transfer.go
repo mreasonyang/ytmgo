@@ -67,8 +67,8 @@ func (m *Manager) run() {
 					j.State, j.Failure = Failed, "storage"
 				}
 			}
-			if j.State == Complete && j.HasCover && m.byID[j.Item.ID] == j {
-				m.byCover[j.Item.Artwork] = filepath.Join(dir, "cover")
+			if j.State == Complete && m.byID[j.Item.ID] == j {
+				m.addCover(j)
 			}
 			if j.removeAfter != "" {
 				_ = os.RemoveAll(j.removeAfter)

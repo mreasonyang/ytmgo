@@ -22,7 +22,7 @@ func (a *desktop) initDownloads(dataDir string) {
 	}
 	a.downloads = m
 	a.player.AttachDownloads(m)
-	a.art.pinned = m.Cover
+	a.art.downloadCovers = m
 	a.refreshDownloads()
 }
 
@@ -50,19 +50,25 @@ func (a *desktop) downloadsOnline(loggedIn bool, scope string) {
 }
 
 // Updates can arrive for every downloaded chunk. Refresh immediately, then
-// let a burst coalesce without waking the desktop when the library is idle.
+// let a burst coalesce. Source changes invalidate the window immediately.
 func (a *desktop) watchDownloads() {
 	changes := a.downloads.Changes()
+	covers := a.downloads.CoverChanges()
 	for {
 		select {
 		case <-a.ctx.Done():
 			return
+		case <-covers:
+			a.invalidate()
+			continue
 		case <-changes:
 			a.post(a.refreshDownloads)
 		}
 		select {
 		case <-a.ctx.Done():
 			return
+		case <-covers:
+			a.invalidate()
 		case <-time.After(350 * time.Millisecond):
 		}
 	}

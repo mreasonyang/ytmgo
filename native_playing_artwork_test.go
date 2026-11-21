@@ -196,9 +196,18 @@ func TestNativeArtworkRevocationDropsCurrentAndExitingSurfaces(t *testing.T) {
 			var tt *ui.Tester
 			redPixels := func() int {
 				frame := tt.Image()
+				width := frame.Bounds().Dx()
 				count := 0
 				for y := 0; y < frame.Bounds().Dy(); y++ {
-					for x := 0; x < frame.Bounds().Dx(); x++ {
+					for x := 0; x < width; x++ {
+						switch test.name {
+						case "now playing wash", "mini player wash":
+							// Sample the wash at the edges, outside text and controls.
+							// Windows subpixel glyphs can contain red on a neutral wash.
+							if x >= 12 && x < width-12 {
+								continue
+							}
+						}
 						c := frame.RGBAAt(x, y)
 						if int(c.R) > int(c.G)+8 && int(c.R) > int(c.B)+6 {
 							count++

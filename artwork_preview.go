@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"hash/maphash"
 	"image"
 	"net/http"
 	"strings"
@@ -12,6 +13,34 @@ import (
 	"github.com/egoist/mygo/ui"
 	"golang.org/x/image/draw"
 )
+
+type artworkVersion struct {
+	request uint64
+	body    uint64
+}
+
+type artworkAuthority struct {
+	artworkVersion
+	freshUntil time.Time
+}
+
+// An older request can supply pixels for the accepted body, but only while
+// the newer response authorizes reuse. Caller holds the cache lock.
+func (job *artworkLoad) responseVersion(art *decoded, now time.Time) (artworkVersion, bool) {
+	if job.newer.request == 0 {
+		return artworkVersion{request: job.started, body: art.bodyID}, true
+	}
+	if job.responseWithdrawn || art.bitmap == nil || job.newer.body != art.bodyID || !job.newer.freshUntil.After(now) {
+		return artworkVersion{}, false
+	}
+	art.freshUntil = job.newer.freshUntil
+	return job.newer.artworkVersion, true
+}
+
+var artworkBodySeed = maphash.MakeSeed()
+
+// Identify the original HTTP representation across sizes and disk reloads.
+func artworkBodyID(data []byte) uint64 { return maphash.Bytes(artworkBodySeed, data) }
 
 const (
 	artworkPreviewEdge    = 48
@@ -30,39 +59,86 @@ func (c *artworkCache) previewPool(key artRequest) *artworkPool {
 	return &c.browsePreviews
 }
 
-// A candidate pays for its pixels in the rendition pool until a browse view
-// uses it. From then on the preview LRU owns the pixels and their charge.
-func (c *artworkCache) rememberPreview(key artRequest, e *artEntry, now time.Time) {
-	if !e.reusable(now) {
-		return
-	}
-	p := c.previewPool(key)
-	cached := p.entries[key]
-	if e.preview == nil {
-		if cached != nil && cached.loadedAt == e.loadedAt {
-			c.clock++
-			cached.used = c.clock
-		}
-		return
-	}
+// Both staged and displayed previews borrow the space left by the three
+// rendition pools. Only formal bitmap admission can reclaim from both pools.
+func (c *artworkCache) artworkRoom() int {
+	return artworkMemoryBudget - c.small.bytes - c.browse.bytes - c.player.bytes -
+		c.smallPreviews.bytes - c.browsePreviews.bytes
+}
 
-	bitmap := e.preview
-	cost := artworkPixelCost(bitmap.Size())
-	e.preview = nil
-	e.bytes -= cost
-	c.pool(key).bytes -= cost
-	if cost > p.budget || p.limit == 0 {
+func (c *artworkCache) makeArtworkRoom(charge int) bool {
+	for charge > c.artworkRoom() {
+		pool := &c.smallPreviews
+		key, victim := pool.oldestPreview()
+		otherKey, other := c.browsePreviews.oldestPreview()
+		if other != nil && evictPreviewFirst(other, victim) {
+			pool, key, victim = &c.browsePreviews, otherKey, other
+		}
+		if victim == nil {
+			return false
+		}
+		pool.removePreview(key, victim)
+	}
+	return true
+}
+
+func evictPreviewFirst(e, other *artEntry) bool {
+	return other == nil || (e.staged && !other.staged) || (e.staged == other.staged && e.used < other.used)
+}
+
+func (p *artworkPool) oldestPreview() (key artRequest, oldest *artEntry) {
+	for candidate, e := range p.entries {
+		if evictPreviewFirst(e, oldest) {
+			key, oldest = candidate, e
+		}
+	}
+	return
+}
+
+func (c *artworkCache) stagePreview(key artRequest, art decoded, version artworkVersion, visibleBrowse bool) {
+	p := c.previewPool(key)
+	if old := p.entries[key]; old != nil {
+		if old.version.request > version.request {
+			return
+		}
+		if old.version.body == version.body && !old.staged {
+			old.version, old.freshUntil = version, art.freshUntil
+			return
+		}
+		p.removePreview(key, old)
+	}
+	cost := artworkPixelCost(art.preview.Size())
+	if cost > p.budget || cost > c.artworkRoom()+p.bytes || p.limit == 0 {
 		return
 	}
-	if cached != nil {
-		p.removePreview(key, cached)
-	}
-	for len(p.entries) >= p.limit || p.bytes+cost > p.budget {
-		p.evictOldest(nil)
+	for len(p.entries) >= p.limit || p.bytes+cost > p.budget || cost > c.artworkRoom() {
+		victimKey, victim := p.oldestPreview()
+		if victim == nil || (!victim.staged && !visibleBrowse) {
+			return
+		}
+		p.removePreview(victimKey, victim)
 	}
 	c.clock++
-	p.entries[key] = &artEntry{bitmap: bitmap, bytes: cost, local: e.local, freshUntil: e.freshUntil, loadedAt: e.loadedAt, used: c.clock}
+	p.entries[key] = &artEntry{
+		bitmap: art.preview, bytes: cost, local: art.local, freshUntil: art.freshUntil,
+		version: version, used: c.clock, staged: true,
+	}
 	p.bytes += cost
+}
+
+func (c *artworkCache) rememberPreview(key artRequest, e *artEntry, now time.Time, touch bool) {
+	preview := c.previewPool(key).entries[key]
+	if preview == nil || !e.reusable(now) || preview.version.body != e.version.body {
+		return
+	}
+	if preview.staged && preview.version.request != e.version.request {
+		return
+	}
+	if preview.staged || touch {
+		preview.staged = false
+		c.clock++
+		preview.used = c.clock
+	}
 }
 
 func (p *artworkPool) removePreview(key artRequest, e *artEntry) {
@@ -85,6 +161,9 @@ func (f *artworkFrame) cachedPreview(raw string, key artRequest, touch bool) *ui
 		if e := p.entries[candidate]; e != nil {
 			if !e.reusable(now) {
 				p.removePreview(candidate, e)
+				continue
+			}
+			if e.staged {
 				continue
 			}
 			if touch {
@@ -205,7 +284,10 @@ func (c *artworkCache) observeArtworkResponse(ctx context.Context, res *http.Res
 	defer unlockCovers()
 	if job := c.running[e]; job != nil && ctx.Err() == nil && !e.withdrawn &&
 		c.entry(job.artRequest) == e && job.matches(covers) {
-		c.revokeArtworkPreviews(job)
+		job.responseWithdrawn = true
+		if job.newer.request == 0 {
+			c.revokeArtworkPreviews(job)
+		}
 	}
 }
 
@@ -232,6 +314,36 @@ func artworkPreviewWithdrawn(res *http.Response) bool {
 	return false
 }
 
+// A newly accepted response supplies the deadline for every rendition of its
+// body at this URL. A changed body invalidates older renditions, even without
+// enough room to stage a new preview. Distinct sized CDN URLs stay separate.
+func (c *artworkCache) acceptArtworkBody(key artRequest, version artworkVersion, freshUntil time.Time) {
+	for _, edge := range artworkBuckets {
+		key.edge = edge
+		p := c.previewPool(key)
+		if old := p.entries[key]; old != nil && old.version.request <= version.request {
+			if old.version.body != version.body {
+				p.removePreview(key, old)
+			} else {
+				old.version, old.freshUntil = version, freshUntil
+			}
+		}
+		if old := c.entry(key); old != nil && old.bitmap != nil && old.version.request < version.request {
+			if old.version.body == version.body {
+				old.version, old.freshUntil = version, freshUntil
+			} else {
+				old.freshUntil = time.Time{}
+			}
+		}
+	}
+	for _, older := range c.running {
+		key.edge = older.edge
+		if older.started < version.request && older.newer.request < version.request && older.artRequest == key {
+			older.newer = artworkAuthority{version, freshUntil}
+		}
+	}
+}
+
 // Caller holds mu and the source index lock. Only the same effective HTTP
 // URL and source generation are affected, including unsized CDNs whose
 // several bitmap buckets use exactly the same HTTP representation.
@@ -240,18 +352,11 @@ func (c *artworkCache) revokeArtworkPreviews(job *artworkLoad) {
 	for _, edge := range artworkBuckets {
 		key.edge = edge
 		p := c.previewPool(key)
-		if e := p.entries[key]; e != nil && e.loadedAt <= job.started {
+		if e := p.entries[key]; e != nil && e.version.request <= job.started {
 			p.removePreview(key, e)
 		}
-		p = c.pool(key)
-		if e := p.entries[key]; e != nil && e.bitmap != nil && e.loadedAt <= job.started {
+		if e := c.entry(key); e != nil && e.bitmap != nil && e.version.request <= job.started {
 			e.freshUntil = time.Time{}
-			if e.preview != nil {
-				cost := artworkPixelCost(e.preview.Size())
-				e.preview = nil
-				e.bytes -= cost
-				p.bytes -= cost
-			}
 		}
 	}
 	for _, older := range c.running {

@@ -24,6 +24,9 @@ func requestArtworkPriority(c *artworkCache, raw string, edge int, priority artw
 
 func assertArtworkAccounting(t *testing.T, c *artworkCache) {
 	t.Helper()
+	if c.artworkRoom() < 0 {
+		t.Fatalf("combined artwork budget exceeded by %d bytes", -c.artworkRoom())
+	}
 	for name, pool := range map[string]*artworkPool{
 		"thumbnail": &c.small, "browse": &c.browse, "player": &c.player,
 		"thumbnail preview": &c.smallPreviews, "browse preview": &c.browsePreviews,
@@ -232,7 +235,10 @@ func TestArtworkFirstPaintReleasesPixelsAndRetainsEncodedIdentity(t *testing.T) 
 	e := c.entry(key)
 	bitmap := e.bitmap
 	before, pixels := e.bytes, e.pixelBytes
-	previewCost := artworkPixelCost(e.preview.Size())
+	previewCost := artworkPixelCost(artworkPreviewEdge, artworkPreviewEdge)
+	if preview := c.browsePreviews.entries[key]; preview == nil || !preview.staged || preview.bytes != previewCost {
+		t.Fatal("unpainted candidate did not pay in the preview pool")
+	}
 	if pixels != artworkPixelCost(384, 384) {
 		t.Fatal("initial charge excludes possible renderer mipmaps")
 	}
@@ -245,7 +251,7 @@ func TestArtworkFirstPaintReleasesPixelsAndRetainsEncodedIdentity(t *testing.T) 
 		t.Fatal("release frame changed bitmap")
 	}
 	f.submit()
-	if e.pixelBytes != 0 || e.bytes != before-pixels-previewCost || e.bytes <= 0 || c.browsePreviews.bytes != previewCost {
+	if e.pixelBytes != 0 || e.bytes != before-pixels || e.bytes <= 0 || c.browsePreviews.bytes != previewCost || c.browsePreviews.entries[key].staged {
 		t.Fatal("first paint did not leave only charged encoded backing")
 	}
 	if requestTestArtwork(c, raw, 384) != bitmap {

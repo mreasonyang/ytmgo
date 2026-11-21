@@ -8,11 +8,13 @@ import (
 	"image/color"
 	"image/jpeg"
 	"image/png"
+	"io"
 	"net/http"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/egoist/mygo/ui"
@@ -207,15 +209,15 @@ func TestArtworkPreviewLimitsAndEligibility(t *testing.T) {
 				return artworkHTTPResponse(data, http.Header{"Cache-Control": {policy}}), nil
 			})
 			const raw = "https://i.ytimg.com/preview-policy"
+			key := artRequest{url: raw, edge: 128}
 			sourceArtworkFrame(c, raw, 128, artPrimary)
 			c.workers.Wait()
-			if len(c.smallPreviews.entries) != 0 {
+			if preview := c.smallPreviews.entries[key]; preview != nil && !preview.staged {
 				t.Fatal("worker published a preview before a visible read")
 			}
 			requireArtworkSourceWidth(t, sourceArtworkFrame(c, raw, 128, artPrimary), 128)
-			key := artRequest{url: raw, edge: 128}
 			if policy != "public, max-age=3600" {
-				if len(c.smallPreviews.entries) != 0 || c.entry(key).preview != nil {
+				if len(c.smallPreviews.entries) != 0 {
 					t.Fatal("non-cacheable response retained a preview")
 				}
 				return
@@ -248,7 +250,7 @@ func TestArtworkPreviewLimitsAndEligibility(t *testing.T) {
 	sourceArtworkFrame(c, next, 384, artPrefetch)
 	c.workers.Wait()
 	if len(c.smallPreviews.entries) != 2 || len(c.browsePreviews.entries) != 1 ||
-		c.entry(artRequest{url: avatar, edge: 128, avatar: true}).preview != nil {
+		c.smallPreviews.entries[artRequest{url: avatar, edge: 128, avatar: true}] != nil {
 		t.Fatal("preview limits, avatar isolation, or prefetch isolation failed")
 	}
 	assertArtworkAccounting(t, c)
@@ -290,17 +292,20 @@ func TestArtworkPreviewAuthoritativeWithdrawal(t *testing.T) {
 		name   string
 		status int
 		policy string
+		age    string
 		revoke bool
 	}{
-		{"404", 404, "", true},
-		{"410", 410, "", true},
-		{"corrupt-no-store", 200, "no-store", true},
-		{"corrupt-without-public", 200, "max-age=3600", true},
-		{"corrupt-no-cache", 200, "public, no-cache", true},
-		{"304-no-store", 304, "no-store", true},
-		{"304-no-cache", 304, "public, no-cache", true},
-		{"transient-network-error", 0, "", false},
-		{"temporary-503", 503, "", false},
+		{"404", 404, "", "", true},
+		{"410", 410, "", "", true},
+		{"corrupt-no-store", 200, "no-store", "", true},
+		{"corrupt-without-public", 200, "max-age=3600", "", true},
+		{"corrupt-no-cache", 200, "public, no-cache", "", true},
+		{"304-no-store", 304, "no-store", "", true},
+		{"304-no-cache", 304, "public, no-cache", "", true},
+		{"304-aged", 304, "public, max-age=60", "60", true},
+		{"304-fresh", 304, "public, max-age=3600", "1", false},
+		{"transient-network-error", 0, "", "", false},
+		{"temporary-503", 503, "", "", false},
 	} {
 		t.Run(scenario.name, func(t *testing.T) {
 			c := artworkTestCache(t, nil)
@@ -315,6 +320,9 @@ func TestArtworkPreviewAuthoritativeWithdrawal(t *testing.T) {
 						return nil, errors.New("transient fixture error")
 					}
 					h := http.Header{"Cache-Control": {scenario.policy}}
+					if scenario.age != "" {
+						h.Set("Age", scenario.age)
+					}
 					res := artworkHTTPResponse([]byte("invalid cover"), h)
 					res.StatusCode = scenario.status
 					return res, nil
@@ -350,7 +358,7 @@ func TestArtworkPreviewAuthoritativeWithdrawal(t *testing.T) {
 			if c.smallPreviews.entries[smallKey] == nil {
 				t.Fatal("withdrawal crossed into a different CDN URL")
 			}
-			if scenario.revoke && scenario.policy != "public, no-cache" {
+			if scenario.revoke && scenario.age == "" && scenario.policy != "public, no-cache" {
 				if _, err := c.disk.Get(formalURL); err == nil {
 					t.Fatal("old public disk entry survived an authoritative withdrawal")
 				}
@@ -363,11 +371,94 @@ func TestArtworkPreviewAuthoritativeWithdrawal(t *testing.T) {
 	}
 }
 
+func TestArtworkPreviewReplacementWithoutPreviewRoom(t *testing.T) {
+	const raw = "https://i.ytimg.com/preview-replacement"
+	key := artRequest{url: raw, edge: 384}
+	oldBody := artworkPreviewFixture(t, 384, 8192, color.RGBA{200, 15, 15, 255})
+	newBody := artworkPreviewFixture(t, 384, 8192, color.RGBA{15, 15, 200, 255})
+	c := artworkTestCache(t, nil)
+	var gets atomic.Int32
+	c.client.Transport = artworkTransport(func(*http.Request) (*http.Response, error) {
+		body := oldBody
+		if gets.Add(1) > 1 {
+			body = newBody
+		}
+		return artworkHTTPResponse(body, http.Header{"Cache-Control": {"public, max-age=3600"}}), nil
+	})
+	sourceArtworkFrame(c, raw, 384, artPrimary)
+	c.workers.Wait()
+	sourceArtworkFrame(c, raw, 384, artPrimary)
+	artworkPreviewEvict(t, c, key)
+	oldPreview := c.peek(raw, 384)
+	requireArtworkSourceWidth(t, oldPreview, artworkPreviewEdge)
+	c.browsePreviews.budget = 0
+	if sourceArtworkFrame(c, raw, 384, artPrimary) != oldPreview {
+		t.Fatal("in-flight replacement could not use current preview")
+	}
+	c.workers.Wait()
+	requireArtworkSourceWidth(t, sourceArtworkFrame(c, raw, 384, artPrimary), 384)
+	if gets.Load() != 2 || c.browsePreviews.entries[key] != nil {
+		t.Fatal("replacement retained the previous body's preview")
+	}
+	artworkPreviewEvict(t, c, key)
+	if c.peek(raw, 384) != nil {
+		t.Fatal("evicting the replacement revived old artwork")
+	}
+}
+
+func TestArtworkPreviewYieldsAtCombinedBudget(t *testing.T) {
+	cost := artworkPixelCost(artworkPreviewEdge, artworkPreviewEdge)
+	data := artworkTestPNG(t, 128, 128)
+	downloaded, err := io.ReadAll(bytes.NewReader(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+	charge := cap(downloaded) + artworkPixelCost(128, 128)
+	c := artworkTestCache(t, data)
+	// Represent the settled retained charge at each pool's production limit.
+	// The incoming thumbnail fits without an eviction in the original pool.
+	for _, f := range []struct {
+		pool  *artworkPool
+		key   artRequest
+		bytes int
+	}{
+		{&c.small, artRequest{url: "small", edge: 128}, artworkSmallBudget - charge},
+		{&c.browse, artRequest{url: "browse", edge: 384}, artworkBrowseBudget},
+		{&c.player, artRequest{url: "player", edge: 768}, artworkPlayerBudget - cost},
+	} {
+		f.pool.entries[f.key] = &artEntry{bytes: f.bytes, local: true}
+		f.pool.bytes = f.bytes
+	}
+	art := decoded{preview: ui.NewBitmap(image.NewRGBA(image.Rect(0, 0, artworkPreviewEdge, artworkPreviewEdge))), local: true}
+	version := artworkVersion{request: 1}
+	displayed := artRequest{url: "displayed", edge: 384}
+	staged := artRequest{url: "staged", edge: 128}
+	c.stagePreview(displayed, art, version, true)
+	c.rememberPreview(displayed, &artEntry{local: true, version: version}, time.Now(), true)
+	c.stagePreview(staged, art, version, true)
+	if c.smallPreviews.entries[staged] == nil || c.browsePreviews.entries[displayed].staged {
+		t.Fatal("could not establish staged and displayed preview fixtures")
+	}
+	assertArtworkAccounting(t, c)
+	const raw = "https://i.ytimg.com/combined-budget-admission"
+	sourceArtworkFrame(c, raw, 128, artPrimary)
+	c.workers.Wait()
+	key := artRequest{url: raw, edge: 128}
+	if c.entry(key).bitmap == nil || len(c.small.entries) != 2 || c.small.bytes != artworkSmallBudget {
+		t.Fatal("preview pressure displaced a formal thumbnail")
+	}
+	if len(c.smallPreviews.entries) != 0 || c.browsePreviews.entries[displayed] == nil || c.artworkRoom() != 0 {
+		t.Fatal("formal admission did not reclaim the staged preview first at 80 MiB")
+	}
+	assertArtworkAccounting(t, c)
+}
+
 func TestArtworkPreviewWithdrawalOrdersOverlappingLoads(t *testing.T) {
-	for _, scenario := range []string{"newer-withdraws", "older-withdraws"} {
+	for _, scenario := range []string{"newer-withdraws", "older-withdraws", "newer-replaces"} {
 		t.Run(scenario, func(t *testing.T) {
 			c := artworkTestCache(t, nil)
 			data := artworkTestPNG(t, 384, 384)
+			newBody := artworkPreviewFixture(t, 384, 0, color.RGBA{15, 15, 200, 255})
 			const raw = "https://i.ytimg.com/preview-overlap"
 			started, release, finished := make(chan struct{}), make(chan struct{}), make(chan struct{}, 8)
 			unblock := sync.OnceFunc(func() { close(release) })
@@ -380,10 +471,13 @@ func TestArtworkPreviewWithdrawalOrdersOverlappingLoads(t *testing.T) {
 					close(started)
 					<-release
 				}
-				if (call == 2 && scenario == "newer-withdraws") || (call == 1 && scenario != "newer-withdraws") {
+				if (call == 2 && scenario == "newer-withdraws") || (call == 1 && scenario == "older-withdraws") {
 					res := artworkHTTPResponse(nil, nil)
 					res.StatusCode = http.StatusGone
 					return res, nil
+				}
+				if call == 2 && scenario == "newer-replaces" {
+					return artworkHTTPResponse(newBody, http.Header{"Cache-Control": {"public, max-age=3600"}}), nil
 				}
 				return artworkHTTPResponse(data, http.Header{"Cache-Control": {"public, max-age=3600"}}), nil
 			})
@@ -413,10 +507,111 @@ func TestArtworkPreviewWithdrawalOrdersOverlappingLoads(t *testing.T) {
 				}
 			} else {
 				artworkPreviewEvict(t, c, artRequest{url: raw, edge: 128})
-				requireArtworkSourceWidth(t, c.peek(raw, 128), artworkPreviewEdge)
+				requireArtworkSourceWidth(t, c.peek(raw, 384), artworkPreviewEdge)
 			}
 			assertArtworkAccounting(t, c)
 		})
+	}
+}
+
+func TestArtworkFreshnessFollowsNewestAcceptedRequest(t *testing.T) {
+	for _, ttl := range []struct {
+		name         string
+		older, newer int
+	}{
+		{"shortens", 600, 1},
+		{"extends", 1, 600},
+	} {
+		for _, usePreview := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/preview=%t", ttl.name, usePreview), func(t *testing.T) {
+				synctest.Test(t, func(t *testing.T) {
+					const raw = "https://i.ytimg.com/freshness-overlap"
+					c := artworkTestCache(t, nil)
+					data := artworkTestPNG(t, 768, 768)
+					releaseOlder := make(chan struct{})
+					unblock := sync.OnceFunc(func() { close(releaseOlder) })
+					defer unblock()
+					var requests atomic.Int32
+					c.client.Transport = artworkTransport(func(*http.Request) (*http.Response, error) {
+						seconds := ttl.older
+						switch requests.Add(1) {
+						case 2:
+							<-releaseOlder
+						case 3:
+							seconds = ttl.newer
+						}
+						h := http.Header{"Cache-Control": {fmt.Sprintf("public, max-age=%d", seconds)}}
+						return artworkHTTPResponse(data, h), nil
+					})
+
+					sourceArtworkFrame(c, raw, 128, artPrimary)
+					c.workers.Wait()
+					requireArtworkSourceWidth(t, sourceArtworkFrame(c, raw, 128, artPrimary), 128)
+					sourceArtworkFrame(c, raw, 768, artPlayer)
+					synctest.Wait() // The older large rendition has reached the transport barrier.
+					f := c.beginFrame()
+					f.get(raw, 768, artPlayer)
+					f.get(raw, 384, artPrimary)
+					f.submit()
+					synctest.Wait()
+					requireArtworkSourceWidth(t, c.peek(raw, 384), 384)
+					acceptedAt := time.Now()
+					time.Sleep(250 * time.Millisecond)
+					unblock()
+					c.workers.Wait()
+
+					f = c.beginFrame()
+					for _, edge := range artworkBuckets {
+						requireArtworkSourceWidth(t, f.get(raw, edge, artPrimary), edge)
+					}
+					f.submit()
+					if usePreview {
+						for _, edge := range artworkBuckets {
+							artworkPreviewEvict(t, c, artRequest{url: raw, edge: edge})
+						}
+					}
+					empty := c.beginFrame()
+					empty.submit() // The following reads represent re-entry into the viewport.
+					displayed := make(map[int]ui.ImageSource)
+					for _, edge := range artworkBuckets {
+						displayed[edge] = c.peek(raw, edge)
+					}
+
+					assertFresh := func() {
+						t.Helper()
+						f := c.beginFrame()
+						for _, edge := range artworkBuckets {
+							width := edge
+							if usePreview {
+								width = artworkPreviewEdge
+							}
+							got := f.peek(raw, edge)
+							requireArtworkSourceWidth(t, got, width)
+							if got != displayed[edge] || f.get(raw, edge, artPrimary) != got {
+								t.Fatalf("%d px fell back before the latest deadline", edge)
+							}
+						}
+					}
+					if ttl.newer > ttl.older {
+						time.Sleep(time.Until(acceptedAt.Add(2 * time.Second)))
+						assertFresh() // Both older deadlines are already in the past.
+					}
+					deadline := acceptedAt.Add(time.Duration(ttl.newer) * time.Second)
+					time.Sleep(time.Until(deadline) - time.Nanosecond)
+					assertFresh()
+					time.Sleep(time.Nanosecond)
+					f = c.beginFrame()
+					for _, edge := range artworkBuckets {
+						if f.peek(raw, edge) != nil || f.get(raw, edge, artPrimary) != nil {
+							t.Fatalf("%d px artwork survived the latest deadline", edge)
+						}
+					}
+					if n := requests.Load(); n != 3 {
+						t.Fatalf("expected three rendition requests, got %d", n)
+					}
+				})
+			})
+		}
 	}
 }
 

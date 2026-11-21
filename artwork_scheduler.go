@@ -16,11 +16,13 @@ const (
 
 type artworkLoad struct {
 	artDemand
-	entry      *artEntry
-	ctx        context.Context
-	permit     artworkPriority
-	started    uint64
-	graceUntil time.Time
+	entry             *artEntry
+	ctx               context.Context
+	permit            artworkPriority
+	started           uint64
+	newer             artworkAuthority // accepted response for the same effective URL
+	responseWithdrawn bool             // this request itself got a non-reusable response
+	graceUntil        time.Time
 }
 
 // A worker holds its permit until it exits, even if its entry was already
@@ -312,10 +314,15 @@ func (c *artworkCache) startDecoders() {
 			return true
 		}
 		job := waiter.job
-		if job != nil && !job.graceUntil.IsZero() &&
-			(!job.graceUntil.After(now) || (job.asset == nil && !waiter.freshUntil.After(now))) {
-			c.abandonLoad(job)
-			return true
+		if job != nil && !job.graceUntil.IsZero() {
+			freshUntil := waiter.freshUntil
+			if job.newer.request != 0 {
+				freshUntil = job.newer.freshUntil
+			}
+			if !job.graceUntil.After(now) || (job.asset == nil && !freshUntil.After(now)) {
+				c.abandonLoad(job)
+				return true
+			}
 		}
 		return false
 	})

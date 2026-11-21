@@ -37,6 +37,7 @@ const (
 	artworkSmallBudget    = 16 << 20
 	artworkBrowseBudget   = 48 << 20
 	artworkPlayerBudget   = 16 << 20
+	artworkMemoryBudget   = artworkSmallBudget + artworkBrowseBudget + artworkPlayerBudget
 	artworkDownloadLimit  = 4 << 20
 	artworkSourcePixels   = 4 << 20
 	artworkEdge           = 768
@@ -44,20 +45,20 @@ const (
 	artworkRetryMax       = time.Minute
 )
 
-// Cache charges include the encoded backing, a staged preview, and, until
-// first paint, the base pixels plus possible mipmaps. The renderer owns textures.
+// Rendition charges include the encoded backing and, until first paint, the
+// base pixels plus possible mipmaps. Preview pools charge their own pixels.
 type artEntry struct {
 	bitmap              *ui.Bitmap
-	preview             *ui.Bitmap // until this rendition first paints in a browse view
-	tint                ui.Color   // the cover's colour for the interface, when tinted
+	tint                ui.Color // the cover's colour for the interface, when tinted
 	tinted              bool
+	staged              bool // a preview whose rendition has yet to paint in a browse view
 	bytes               int
 	pixelBytes          int
 	firstPaint          uint64
 	peeked              bool // Draw may have restored CPU pixels after submit
 	used                uint64
-	loadedAt            uint64 // start order of the response behind this bitmap
-	withdrawn           bool   // a newer job revoked this in-flight HTTP response
+	version             artworkVersion
+	withdrawn           bool // a newer job revoked this in-flight HTTP response
 	cancel              context.CancelFunc
 	failures            int
 	retryAt             time.Time
@@ -369,9 +370,7 @@ func (f *artworkFrame) peek(raw string, requestedEdge int) ui.ImageSource {
 		e := c.entry(candidate)
 		if e != nil && e.bitmap != nil && e.reusable(now) {
 			e.peeked = true
-			if e.preview != nil {
-				c.rememberPreview(candidate, e, now)
-			}
+			c.rememberPreview(candidate, e, now, false)
 			return e.bitmap
 		}
 	}
@@ -436,7 +435,7 @@ func (f *artworkFrame) markSeen(key artRequest, priority artworkPriority) {
 // Schedule a frame so the renderer sees the bitmap before CPU pixels are released.
 func (f *artworkFrame) paint(key artRequest, e *artEntry, priority artworkPriority) {
 	if priority.browses() {
-		f.cache.rememberPreview(key, e, time.Now())
+		f.cache.rememberPreview(key, e, time.Now(), true)
 	}
 	if priority != artPrefetch && e.pixelBytes != 0 && e.firstPaint == 0 {
 		e.firstPaint = f.cache.frame
@@ -462,7 +461,7 @@ func (c *artworkCache) expirePixels(key artRequest, e *artEntry) {
 		return
 	}
 	c.pool(key).bytes -= e.bytes
-	e.bitmap, e.preview, e.bytes, e.pixelBytes, e.firstPaint, e.tinted = nil, nil, 0, 0, 0, false
+	e.bitmap, e.bytes, e.pixelBytes, e.firstPaint, e.tinted = nil, 0, 0, 0, false
 }
 
 func (f *artworkFrame) want(key artRequest, priority artworkPriority) {
@@ -567,7 +566,9 @@ func (c *artworkCache) download(ctx context.Context, d artDemand) ([]byte, http.
 		return nil, nil
 	}
 	defer res.Body.Close()
-	if client == c.client {
+	// V0.14 returns the stored body and the merged headers after a 304.
+	// Ordinary cache hits and stale-if-error responses carry no new authority.
+	if client == c.client || res.Header.Get("X-Httpcache-Status") == "REVALIDATED" {
 		c.observeArtworkResponse(ctx, res)
 	}
 	if res.StatusCode != http.StatusOK || res.ContentLength > artworkDownloadLimit {
@@ -588,6 +589,7 @@ type decoded struct {
 	tint         ui.Color
 	tinted       bool
 	freshUntil   time.Time
+	bodyID       uint64
 	local        bool
 	invalid      bool
 }
@@ -639,6 +641,9 @@ func (c *artworkCache) decodeResponse(ctx context.Context, e *artEntry, data []b
 	freshUntil := artworkFreshUntil(headers, time.Now())
 	art := c.decodePixels(ctx, e, data, d.edge, freshUntil, !d.avatar && !freshUntil.IsZero())
 	art.freshUntil = freshUntil
+	if art.bitmap != nil && !d.avatar {
+		art.bodyID = artworkBodyID(data)
+	}
 	return art
 }
 
@@ -691,7 +696,7 @@ func (c *artworkCache) decodePixels(ctx context.Context, e *artEntry, data []byt
 		return decoded{invalid: true}
 	}
 	art := decoded{bitmap: bitmap, encodedBytes: cap(data), tint: tint, tinted: tinted}
-	if preview && (freshUntil.IsZero() || freshUntil.After(time.Now())) {
+	if preview {
 		art.preview = newArtworkPreview(im, data)
 	}
 	return art
@@ -729,7 +734,9 @@ func (c *artworkCache) finish(d artDemand, e *artEntry, art decoded) {
 	job := c.running[e]
 	now := time.Now()
 	wanted := job.graceUntil.IsZero()
-	if e.withdrawn || job.ctx.Err() != nil || (!wanted && (!job.graceUntil.After(now) || bitmap == nil || (!art.local && !art.freshUntil.After(now)))) {
+	version, allowed := job.responseVersion(&art, now)
+	if e.withdrawn || job.ctx.Err() != nil || !allowed ||
+		(!wanted && (!job.graceUntil.After(now) || bitmap == nil || (!art.local && !art.freshUntil.After(now)))) {
 		c.abandonLoad(job)
 	}
 	delete(c.running, e)
@@ -746,6 +753,9 @@ func (c *artworkCache) finish(d artDemand, e *artEntry, art decoded) {
 		current = false
 	}
 	uncacheable := bitmap != nil && !art.local && !art.freshUntil.After(now)
+	if current && bitmap != nil && !uncacheable && d.asset == nil && !d.avatar && job.newer.request == 0 {
+		c.acceptArtworkBody(d.artRequest, version, art.freshUntil)
+	}
 	if current && wanted && job.priority == artPrefetch && uncacheable {
 		// Remember this outcome in the LRU so prefetch stays idle. A visible
 		// request can still load the image immediately for display.
@@ -753,28 +763,20 @@ func (c *artworkCache) finish(d artDemand, e *artEntry, art decoded) {
 		current = false
 	}
 	if current {
-		pixels, previewBytes := 0, 0
+		pixels, charge := 0, 0
 		if bitmap != nil {
 			// submit releases pixels on the view thread. Until then a background
 			// completion must pay their full cost without displacing useful covers.
 			pixels = artworkPixelCost(bitmap.Size())
-			charge := art.encodedBytes + pixels
+			charge = art.encodedBytes + pixels
 			for pool.bytes+charge > pool.budget {
 				if !wanted || !pool.evictOldest(c.visible) {
 					bitmap = nil
 					break
 				}
 			}
-			if bitmap != nil && art.preview != nil && !uncacheable {
-				cost := artworkPixelCost(art.preview.Size())
-				if wanted && job.priority.browses() && charge+cost <= pool.budget {
-					for pool.bytes+charge+cost > pool.budget && pool.evictOldest(c.visible) {
-						// Make room for the staged preview without evicting visible art.
-					}
-				}
-				if pool.bytes+charge+cost <= pool.budget {
-					e.preview, previewBytes = art.preview, cost
-				}
+			if bitmap != nil && !c.makeArtworkRoom(charge) {
+				bitmap = nil
 			}
 		}
 		if bitmap == nil {
@@ -788,7 +790,7 @@ func (c *artworkCache) finish(d artDemand, e *artEntry, art decoded) {
 			}
 		} else {
 			e.bitmap = bitmap
-			e.loadedAt = job.started
+			e.version = version
 			e.tint, e.tinted = art.tint, art.tinted
 			e.freshUntil = art.freshUntil
 			e.local = art.local
@@ -796,8 +798,11 @@ func (c *artworkCache) finish(d artDemand, e *artEntry, art decoded) {
 			e.failures = 0
 			e.retryAt = time.Time{}
 			e.pixelBytes = pixels
-			e.bytes = art.encodedBytes + pixels + previewBytes
+			e.bytes = charge
 			pool.bytes += e.bytes
+			if art.preview != nil && !uncacheable {
+				c.stagePreview(d.artRequest, art, version, wanted && job.priority.browses())
+			}
 		}
 		if wanted {
 			c.scheduleRetry(now)

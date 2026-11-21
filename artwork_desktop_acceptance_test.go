@@ -33,6 +33,9 @@ import (
 )
 
 func TestMain(m *testing.M) {
+	if directory := os.Getenv(artworkHistoryFixtureEnv); directory != "" {
+		os.Exit(runArtworkHistoryFixture(m, directory))
+	}
 	directory := os.Getenv("YTMGO_ARTWORK_DESKTOP_ACCEPTANCE_DIR")
 	// A copied QA bundle can be reopened by native automation after quitting.
 	// Keep that restart bound to the same isolated directory without relying

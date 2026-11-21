@@ -80,7 +80,11 @@ type UIModel struct {
 	revealShortcut                  bool            // bring the global shortcut row into view
 	shortcutsFromSettings           bool            // Keyboard shortcuts was opened from Settings: it leads back
 	pageScroll                      *ui.ScrollState // the page's scrolling, as last built
-	instantMotion                   bool            // every frame without animation, for tests of layout
+	pageScrollRevision              uint64          // scroll identity of this page visit
+	pageArtworkRevision             uint64          // invalidates capture from obsolete page content
+	pageViewport                    nativePageViewport
+	restorePageViewport             *nativePageViewport
+	instantMotion                   bool // every frame without animation, for tests of layout
 
 	openedCover nativeCollectionMatch // source of the collection opened in this window
 
@@ -154,6 +158,8 @@ type ViewActions struct {
 	artworkReplayed                                     func(string, ui.ImageSource)
 	artworkRevision                                     uint64
 	artworkState                                        *nativeArtworkWindow
+	artworkReturnView                                   *artworkReturnView
+	pageArtworkPaint                                    artworkReturnPaint
 	homeArtworkQA                                       *homeArtworkQA
 	homeArtworkPageQA                                   *homeArtworkQA // scoped to the home scroller's children
 	// ArtworkTint is the colour a loaded cover lends the interface.
@@ -172,6 +178,8 @@ type ViewActions struct {
 	AppMenu              func(*ui.Menu)
 	artViewport          ui.Rect
 	viewportScroll       *ui.ScrollState
+	pageScrollCapture    nativePageScrollCapture
+	pageReturnPainted    func(*nativePageViewport)
 	secondaryArtwork     bool
 	table                *nativeTable   // the track table a row is in, for choosing several
 	AppIcon              ui.ImageSource // the app icon, for About
@@ -208,6 +216,9 @@ const (
 
 func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 	a.artworkState = a.artworkWindow(c)
+	if a.artworkReturnView != nil {
+		a.artworkReturnView.begin(c.Root())
+	}
 	// Apply the default once. Opening either player view before the music starts
 	// also counts, so dismissing it while paused or loading is respected.
 	firstPlayback := m.Playing && !m.playbackViewSeen && !m.Panel && !m.Immersive
@@ -364,7 +375,6 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 				nativePageLayer(c).Children(func() {
 					if !m.Immersive {
 						scrolled = nativeContent(c, m, a, p, false, pageWidth)
-						m.pageScroll = scrolled
 					}
 				})
 			})
@@ -458,7 +468,6 @@ func nativeCompactFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 				} else {
 					nativeCompactTopbar(c, m, a, p, width)
 					scrolled = nativeContent(c, m, a, p, true, width)
-					m.pageScroll = scrolled
 				}
 			})
 		})
@@ -1578,15 +1587,48 @@ func nativeColumns(width, minWidth, gap float32) (int, float32) {
 // the page never lays out for the width it had a frame ago.
 func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool, contentWidth float32) *ui.ScrollState {
 	inset := nativeContentInset(compact)
-	scroll := ui.Scroll(c.Key("content-" + m.Route + "-" + m.Page.Title)).Grow(1).MinHeight(0).Label(a.Tr("shellContent"))
+	type pageKey struct {
+		route, title string
+		visit        uint64
+	}
+	scroll := ui.Scroll(c.Key(pageKey{m.Route, m.Page.Title, m.pageScrollRevision})).Grow(1).MinHeight(0).Label(a.Tr("shellContent"))
+	capture := nativePageScrollCapture{model: m, revision: m.pageArtworkRevision}
+	if !m.Loading && !(m.Error != "" && m.ErrorScope == errorCatalog) {
+		capture.restore = m.restorePageViewport
+		if capture.restore != nil {
+			nativeArtworkScrollState(scroll).scroll.Y = capture.restore.y
+		}
+	}
 	a = nativeArtworkViewport(c, a, scroll)
 	scrolled := a.viewportScroll
+	m.pageScroll = scrolled
+	a.pageScrollCapture = capture
+	scroll.Draw(func(*ui.Painter, ui.Rect) {
+		if capture.valid(scroll) {
+			v := &m.pageViewport
+			clear(v.shelves[:v.count])
+			v.y, v.count = scrolled.Y, 0
+		}
+	})
+	if a.artworkReturnView != nil {
+		a.pageArtworkPaint = a.artworkReturnView.paintPass()
+	}
 	if m.Route == "home" {
 		a.homeArtworkPageQA = a.homeArtworkQA.trackPage(scroll, scrolled)
 	}
 	// The page has no fixed header (its own scrolls away), so its top is
 	// the panel's edge; its foot fades, as the library's beside it does.
-	nativeScrollbar(c, scroll, scrolled, p, nativeFadeBelow(scrolled, p.surface))
+	fade := nativeFadeBelow(scrolled, p.surface)
+	under := fade
+	if capture.restore != nil && a.pageReturnPainted != nil {
+		under = func(painter *ui.Painter, r ui.Rect) {
+			fade(painter, r)
+			if capture.restore == m.restorePageViewport && capture.valid(scroll) {
+				a.pageReturnPainted(capture.restore)
+			}
+		}
+	}
+	nativeScrollbar(c, scroll, scrolled, p, under)
 	nativeLoadNearEnd(c, scroll, m, a)
 	scroll.Children(func() {
 		if (strings.HasPrefix(m.Route, "browse:") && m.Page.Title != "") || m.Route == "downloads" {
@@ -1628,7 +1670,7 @@ func nativeLoadNearEnd(c *ui.Context, scroller ui.Element, m *UIModel, a ViewAct
 		return
 	}
 	state := ui.Local(scroller, "continuation", func() nativeContinuation { return nativeContinuation{} })
-	scroll := ui.Local(scroller, "artwork-scroll", func() nativeArtworkScroll { return nativeArtworkScroll{} })
+	scroll := nativeArtworkScrollState(scroller)
 	view := scroller.Bounds()
 	if state.seen != token || view.H == 0 {
 		state.seen = token
@@ -1794,6 +1836,8 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 			continue
 		}
 		ui.Column(c.Key(fmt.Sprintf("shelf-%d", i))).Gap(12).Children(func() {
+			a := a
+			a.pageScrollCapture.shelf = nativeShelfKey{index: i, title: shelf.Title}
 			size := float32(tokenSizeH3)
 			nativeDisplay(ui.Text(c, shelf.Title).FontSize(size).MaxLines(1).Ellipsis("…").Role(ui.RoleHeading), shelf.Title, size)
 			switch {
@@ -2062,7 +2106,7 @@ func nativeCover(c *ui.Context, src string, size, radius float32, a ViewActions,
 			bucket int
 		}
 		picture := ui.Box(c.Key(rendition{src, artworkBucket(edge)})).Fill().PassThrough()
-		qa := a.homeArtworkPageQA
+		qa, page := a.homeArtworkPageQA, a.pageArtworkPaint
 		qa.trackCover(picture)
 		wasVisible := picture.InView()
 		var artwork ui.ImageSource
@@ -2101,6 +2145,7 @@ func nativeCover(c *ui.Context, src string, size, radius float32, a ViewActions,
 			}
 			if img != nil {
 				paint.Image(img, r, ui.Cover)
+				page.record(src, edge, img)
 				qa.paintedCover(picture, true)
 				return
 			}
@@ -2154,8 +2199,12 @@ type nativeArtworkScroll struct {
 	built  bool
 }
 
+func nativeArtworkScrollState(scroller ui.Element) *nativeArtworkScroll {
+	return ui.Local(scroller, "artwork-scroll", func() nativeArtworkScroll { return nativeArtworkScroll{} })
+}
+
 func nativeArtworkViewport(c *ui.Context, a ViewActions, scroller ui.Element) ViewActions {
-	state := ui.Local(scroller, "artwork-scroll", func() nativeArtworkScroll { return nativeArtworkScroll{} })
+	state := nativeArtworkScrollState(scroller)
 	scroller.TrackScroll(&state.scroll)
 	// Lyrics use these bounds to position their focus line in a parent
 	// scroll viewport. Artwork demand uses committed element visibility.
@@ -2184,10 +2233,64 @@ func nativeArtworkViewport(c *ui.Context, a ViewActions, scroller ui.Element) Vi
 	return a
 }
 
+type nativeShelfKey struct {
+	index int
+	title string
+}
+
+type nativeShelfPosition struct {
+	key nativeShelfKey
+	x   float32
+}
+
+// A paint records only the visible shelves that are horizontally scrolled.
+// Its size stays fixed as continuation pages add shelves.
+type nativePageViewport struct {
+	y       float32
+	count   int
+	shelves [32]nativeShelfPosition
+}
+
+func (v *nativePageViewport) shelfX(key nativeShelfKey) float32 {
+	for _, shelf := range v.shelves[:v.count] {
+		if shelf.key == key {
+			return shelf.x
+		}
+	}
+	return 0
+}
+
+type nativePageScrollCapture struct {
+	model    *UIModel
+	revision uint64
+	restore  *nativePageViewport
+	shelf    nativeShelfKey
+}
+
+func (capture nativePageScrollCapture) valid(scroller ui.Element) bool {
+	return capture.revision == capture.model.pageArtworkRevision && scroller.Valid() && scroller.InView()
+}
+
 func nativeShelfViewport(c *ui.Context, a ViewActions, scroller ui.Element) ViewActions {
 	page := a.viewportScroll
+	capture := a.pageScrollCapture
+	if capture.restore != nil {
+		nativeArtworkScrollState(scroller).scroll.X = capture.restore.shelfX(capture.shelf)
+	}
 	shelf := nativeArtworkViewport(c, a, scroller)
 	row := shelf.viewportScroll
+	if capture.model != nil {
+		scroller.Draw(func(*ui.Painter, ui.Rect) {
+			if row.X <= 0 || !capture.valid(scroller) {
+				return
+			}
+			v := &capture.model.pageViewport
+			if v.count < len(v.shelves) {
+				v.shelves[v.count] = nativeShelfPosition{capture.shelf, row.X}
+				v.count++
+			}
+		})
+	}
 	rtl := c.Direction() == ui.RightToLeft
 	scroller.HandleInput(func(ev ui.InputEvent) bool {
 		// Leave single-axis scrolling (including Shift+wheel) to MyGo.

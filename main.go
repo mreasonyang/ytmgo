@@ -53,6 +53,7 @@ type desktop struct {
 	diagnosticPath                  string
 	acceptanceProbe                 *acceptanceProbe
 	homeArtworkQA                   *homeArtworkQA
+	lastArtworkView                 artworkReturnView
 	playbackErrorCategory           string
 	playbackErrorDetails            player.FailureDetails
 	nextProgressFrame               time.Time
@@ -104,6 +105,7 @@ type desktop struct {
 	queueIndex                      int
 	history                         []historyEntry
 	historyIndex                    int
+	returnPage                      *pageReturn
 	browseParams                    string
 	quitting, endedHandled          bool
 	unmutedVolume                   float64
@@ -237,10 +239,18 @@ func main() {
 		a.window.OnResize(a.updateArtworkScale)
 		mygo.Screen.OnDisplaysChanged(a.updateArtworkScale)
 		a.windowVisible = true
+		showWindowContent := func() {
+			wasVisible := a.windowVisible
+			a.windowVisible = true
+			a.syncVideo()
+			if !wasVisible && a.model.restorePageViewport != nil {
+				a.invalidate()
+			}
+		}
 		a.window.OnHide(func() { a.cancelShortcut(); a.windowVisible = false; a.syncVideo() })
-		a.window.OnShow(func() { a.windowVisible = true; a.syncVideo() })
+		a.window.OnShow(showWindowContent)
 		a.window.OnMinimize(func() { a.cancelShortcut(); a.windowVisible = false; a.syncVideo() })
-		a.window.OnRestore(func() { a.windowVisible = true; a.syncVideo() })
+		a.window.OnRestore(showWindowContent)
 		// Leaving full screen any way (the window's button, the system's
 		// shortcut) ends the video's full screen view with it.
 		a.window.OnLeaveFullScreen(func() {
@@ -351,6 +361,8 @@ func (a *desktop) prefetchNextCover(frame *artworkFrame) {
 func (a *desktop) actions(frame *artworkFrame) ViewActions {
 	actions := ViewActions{artworkScale: a.artworkScale, artworkPeek: frame.peek, artworkReplayed: frame.replayed, artworkRevision: frame.covers.Revocation(), LyricsClock: a.lyricsClock, BeginShortcut: a.beginShortcut, CancelShortcut: a.cancelShortcut, SetShortcut: a.setShortcut, Tr: a.tr, TrArgs: a.trArgs, Navigate: a.navigate, Search: a.search, Open: a.openItem, Play: a.playItem, QueueAppend: a.appendQueue, QueueRemove: a.removeFromQueue, PlayQueue: a.playQueue, LoadMore: a.loadMore, Video: a.setVideo, FullScreen: a.setVideoFullScreen, SetAudioQuality: a.setAudioQuality, SetVideoQuality: a.setVideoQuality, SetLyricsExpanded: a.setLyricsExpanded, RetryPlayback: a.retryPlayback, Toggle: a.toggle, Next: a.next, Previous: a.previous, Like: a.like, Shuffle: a.shuffle, Repeat: a.repeat, Mute: a.mute, Back: func() { a.travel(-1) }, Forward: func() { a.travel(1) }, Reload: a.reload, RetryLibrary: a.retryLibrary, Account: a.signIn, SignOut: a.signOut, RestoreAccount: a.retryAccountRestore, SkipRestore: a.skipAccountRestore, Seek: a.seek, Volume: a.volume, Appearance: a.setAppearance, Language: a.setLanguage, Artwork: frame.get, ArtworkTint: frame.tint}
 	actions.AppIcon = a.appIcon()
+	actions.artworkReturnView = &a.lastArtworkView
+	actions.pageReturnPainted = a.finishPageReturn
 	if a.downloads != nil {
 		actions.Download = a.downloadItem
 		actions.DownloadCollection = a.downloadPage

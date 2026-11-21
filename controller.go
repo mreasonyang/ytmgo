@@ -77,6 +77,10 @@ func signedOutLibraryPage(tr func(string) string) catalog.Page {
 }
 
 func (a *desktop) loadPage(route, q string, record bool) {
+	if record {
+		a.protectReturnPage()
+	}
+	a.beginPagePresentation()
 	if a.pageCancel != nil {
 		a.pageCancel()
 	}
@@ -156,6 +160,7 @@ func (a *desktop) loadPage(route, q string, record bool) {
 				a.catalogFailure(err)
 				return
 			}
+			a.resetPageArtworkView()
 			a.model.Page = page
 			a.reconcileLikedMusic()
 			switch route {
@@ -229,12 +234,14 @@ func (a *desktop) finishLibrary(request *libraryRequest, page catalog.Page, err 
 	a.model.Loading = false
 	if err != nil {
 		if a.model.LibraryLoaded {
+			a.resetPageArtworkView()
 			a.model.Page = a.libraryDisplayPage()
 			return
 		}
 		a.catalogFailure(err)
 		return
 	}
+	a.resetPageArtworkView()
 	a.model.Page = a.libraryDisplayPage()
 	a.pushHistory(false)
 }
@@ -288,6 +295,9 @@ func (a *desktop) pushHistory(record bool) {
 		a.history = append(a.history[:end], entry)
 		if len(a.history) > 24 {
 			a.history = a.history[1:]
+			if a.returnPage != nil {
+				a.returnPage.index--
+			}
 		}
 		a.historyIndex = len(a.history) - 1
 	} else if a.historyIndex >= 0 {
@@ -298,6 +308,8 @@ func (a *desktop) pushHistory(record bool) {
 }
 
 func (a *desktop) invalidateHistory() {
+	a.clearReturnPage()
+	a.resetPageArtworkView()
 	for i := range a.history {
 		a.history[i].needsReload = true
 	}
@@ -305,9 +317,20 @@ func (a *desktop) invalidateHistory() {
 
 func (a *desktop) travel(delta int) {
 	i := a.historyIndex + delta
-	if i < 0 || i >= len(a.history) {
+	if delta == 0 || i < 0 || i >= len(a.history) {
 		return
 	}
+	switch {
+	case delta == 1:
+		a.protectReturnPage()
+	case delta == -1 && a.returnPage != nil && a.returnPage.index == i:
+		// The returning viewport releases the previews after its first paint.
+		a.model.restorePageViewport = &a.returnPage.viewport
+		a.returnPage = nil
+	default:
+		a.clearReturnPage()
+	}
+	a.beginPagePresentation()
 	if a.pageCancel != nil {
 		a.pageCancel()
 	}
@@ -342,6 +365,52 @@ func (a *desktop) travel(delta int) {
 		a.model.Page = a.libraryDisplayPage()
 	}
 	a.invalidate()
+}
+
+// The saved viewport belongs to the one history entry immediately behind
+// the current page. Updating the current entry during a load keeps it intact.
+type pageReturn struct {
+	index    int
+	viewport nativePageViewport
+}
+
+func (a *desktop) protectReturnPage() {
+	i := a.historyIndex
+	if i < 0 || i >= len(a.history) || a.history[i].route != a.model.Route {
+		a.clearReturnPage()
+		return
+	}
+	a.model.restorePageViewport = nil
+	a.returnPage = &pageReturn{index: i, viewport: a.model.pageViewport}
+	if a.art != nil {
+		a.art.setReturnPreviews(a.lastArtworkView.items())
+	}
+}
+
+func (a *desktop) clearReturnPage() {
+	a.returnPage = nil
+	a.model.restorePageViewport = nil
+	if a.art != nil {
+		a.art.setReturnPreviews(nil)
+	}
+}
+
+func (a *desktop) finishPageReturn(viewport *nativePageViewport) {
+	if a.windowVisible && viewport != nil && a.model.restorePageViewport == viewport {
+		a.clearReturnPage()
+	}
+}
+
+func (a *desktop) beginPagePresentation() {
+	a.model.pageScroll = nil
+	a.model.pageScrollRevision++
+	a.resetPageArtworkView()
+}
+
+func (a *desktop) resetPageArtworkView() {
+	a.lastArtworkView.reset()
+	a.model.pageArtworkRevision++
+	a.model.pageViewport = nativePageViewport{}
 }
 
 func (a *desktop) playItem(it catalog.Item) {
@@ -773,6 +842,7 @@ func (a *desktop) finishPageContinuation(generation uint64, page catalog.Page, r
 		return
 	}
 	if replace {
+		a.resetPageArtworkView()
 		a.model.Page = page
 	} else {
 		a.model.Page.Items = append(a.model.Page.Items, page.Items...)

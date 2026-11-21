@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"ytmgo/internal/downloads"
+
 	"github.com/egoist/mygo/ui"
 	"golang.org/x/image/draw"
 )
@@ -59,6 +61,47 @@ func (c *artworkCache) previewPool(key artRequest) *artworkPool {
 	return &c.browsePreviews
 }
 
+// Only the preview already associated with the painted bitmap gets an
+// eviction preference. The formal bitmap remains subject to its normal LRU.
+func (c *artworkCache) setReturnPreviews(items []artworkReturnCover) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for _, pool := range [...]*artworkPool{&c.smallPreviews, &c.browsePreviews} {
+		for _, e := range pool.entries {
+			e.returnPreview = false
+		}
+	}
+	if len(items) == 0 {
+		return
+	}
+	covers, unlockCovers := c.downloadCovers.LockCovers()
+	defer unlockCovers()
+	f := artworkFrame{cache: c, covers: covers}
+	now := time.Now()
+	for _, item := range items[:min(len(items), artworkReturnCoverLimit)] {
+		shown := item.bitmap.Value()
+		if shown == nil {
+			continue
+		}
+		for _, edge := range [...]int{artworkBucket(item.edge), artworkEdge, 384, 128} {
+			key := f.key(item.raw, edge, artPrimary)
+			preview := c.previewPool(key).entries[key]
+			if preview == nil || preview.staged || !preview.reusable(now) || !key.matches(covers) {
+				continue
+			}
+			// An exact pointer match also identifies a cross-bucket read.
+			if preview.bitmap != shown {
+				formal := c.entry(key)
+				if formal == nil || formal.bitmap != shown || !formal.reusable(now) || formal.version != preview.version {
+					continue
+				}
+			}
+			preview.returnPreview = true
+			break
+		}
+	}
+}
+
 // Both staged and displayed previews borrow the space left by the three
 // rendition pools. Only formal bitmap admission can reclaim from both pools.
 func (c *artworkCache) artworkRoom() int {
@@ -66,30 +109,62 @@ func (c *artworkCache) artworkRoom() int {
 		c.smallPreviews.bytes - c.browsePreviews.bytes
 }
 
-func (c *artworkCache) makeArtworkRoom(charge int) bool {
+func (c *artworkCache) makeArtworkRoom(charge int, reclaimProtected bool, covers *downloads.CoverIndex, now time.Time) (room, deferred bool) {
+	if !reclaimProtected && charge > c.artworkRoom() {
+		// Check before evicting previews so a deferred load leaves them intact.
+		available := c.artworkRoom() + c.smallPreviews.bytes + c.browsePreviews.bytes
+		protected := c.smallPreviews.protectedPreviewBytes(covers, now) + c.browsePreviews.protectedPreviewBytes(covers, now)
+		if charge > available-protected {
+			return false, charge <= available
+		}
+	}
 	for charge > c.artworkRoom() {
 		pool := &c.smallPreviews
-		key, victim := pool.oldestPreview()
-		otherKey, other := c.browsePreviews.oldestPreview()
-		if other != nil && evictPreviewFirst(other, victim) {
+		key, victim, protected := pool.oldestPreview(covers, now)
+		otherKey, other, otherProtected := c.browsePreviews.oldestPreview(covers, now)
+		if other != nil && evictPreviewFirst(other, otherProtected, victim, protected) {
 			pool, key, victim = &c.browsePreviews, otherKey, other
 		}
 		if victim == nil {
-			return false
+			return false, false
 		}
 		pool.removePreview(key, victim)
 	}
-	return true
+	return true, false
 }
 
-func evictPreviewFirst(e, other *artEntry) bool {
-	return other == nil || (e.staged && !other.staged) || (e.staged == other.staged && e.used < other.used)
+func (e *artEntry) protectedPreview(key artRequest, covers *downloads.CoverIndex, now time.Time) bool {
+	return e.returnPreview && e.reusable(now) && key.matches(covers)
 }
 
-func (p *artworkPool) oldestPreview() (key artRequest, oldest *artEntry) {
+func (p *artworkPool) protectedPreviewBytes(covers *downloads.CoverIndex, now time.Time) int {
+	var bytes int
+	for key, e := range p.entries {
+		if e.protectedPreview(key, covers, now) {
+			bytes += e.bytes
+		}
+	}
+	return bytes
+}
+
+func evictPreviewFirst(e *artEntry, protected bool, other *artEntry, otherProtected bool) bool {
+	if other == nil {
+		return true
+	}
+	if e.staged != other.staged {
+		return e.staged
+	}
+	if protected != otherProtected {
+		return !protected
+	}
+	return e.used < other.used
+}
+
+func (p *artworkPool) oldestPreview(covers *downloads.CoverIndex, now time.Time) (key artRequest, oldest *artEntry, protected bool) {
 	for candidate, e := range p.entries {
-		if evictPreviewFirst(e, oldest) {
-			key, oldest = candidate, e
+		keep := e.protectedPreview(candidate, covers, now)
+		if evictPreviewFirst(e, keep, oldest, protected) {
+			key, oldest, protected = candidate, e, keep
 		}
 	}
 	return
@@ -111,8 +186,9 @@ func (c *artworkCache) stagePreview(key artRequest, art decoded, version artwork
 	if cost > p.budget || cost > c.artworkRoom()+p.bytes || p.limit == 0 {
 		return
 	}
+	covers, now := c.currentCovers(), time.Now()
 	for len(p.entries) >= p.limit || p.bytes+cost > p.budget || cost > c.artworkRoom() {
-		victimKey, victim := p.oldestPreview()
+		victimKey, victim, _ := p.oldestPreview(covers, now)
 		if victim == nil || (!victim.staged && !visibleBrowse) {
 			return
 		}

@@ -64,6 +64,56 @@ func TestAccountPageLoadsAtPriorScrolledRoute(t *testing.T) {
 	}
 }
 
+func TestLibraryRetryKeepsPageScroll(t *testing.T) {
+	old := catalog.Page{Items: recoveryItems(0, 32)}
+	failed := &libraryRequest{}
+	m, actions := nativeViewFixture()
+	m.Route, m.SignedIn, m.LibraryLoaded = "library", true, true
+	m.Current, m.Queue, m.Playing = catalog.Item{}, nil, false
+	a := &desktop{ctx: t.Context(), historyIndex: -1, model: *m, libraryPage: &old, libraryRequest: failed}
+	a.model.Page = a.libraryDisplayPage()
+	a.pushHistory(true)
+	a.finishLibrary(failed, catalog.Page{}, catalog.ErrUnavailable)
+	actions.LoadMore, actions.RetryLibrary = nil, a.retryLibrary
+	// Compact layout gives Retry a single target, inside the page scroller.
+	tt := ui.NewTester(func(c *ui.Context) { nativeView(c, &a.model, actions) }, 720, 760)
+	content, ok := tt.Find(actions.Tr("shellContent"))
+	if !ok {
+		t.Fatal("Library scroller missing")
+	}
+	const offset = 56
+	tt.Scroll(content.X+content.W/2, content.Y+content.H/2, 0, offset)
+	scroll := a.model.pageScroll
+	if scroll == nil || scroll.Y != offset {
+		t.Fatal("fixture did not reach the expected Library scroll offset")
+	}
+
+	// Hold the catalog completion until the UI has drawn the Retry state.
+	pending := &libraryRequest{}
+	a.libraryRequest = pending
+	generation, revision := a.pageGeneration, a.model.pageArtworkRevision
+	if err := tt.Click(actions.Tr("buttonRetry")); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if a.pageGeneration != generation+1 || pending.pageGeneration != a.pageGeneration || a.model.pageArtworkRevision == revision {
+		t.Fatal("Retry did not refresh the current page and retire its previous artwork capture")
+	}
+	if a.model.pageViewport.y != offset || a.model.pageScroll != scroll {
+		t.Fatalf("Retry changed the painted Library scroll offset from %d to %g", offset, a.model.pageViewport.y)
+	}
+
+	fresh := catalog.Page{Items: recoveryItems(100, 32)}
+	a.finishLibrary(pending, fresh, nil)
+	tt.Frame()
+	if a.model.pageViewport.y != offset || a.model.pageScroll != scroll {
+		t.Fatalf("refresh completion changed the painted Library scroll offset from %d to %g", offset, a.model.pageViewport.y)
+	}
+	if !tt.HasText("Track 100") || a.model.LibraryCached || len(a.history) != 1 {
+		t.Fatal("refresh did not replace the cached contents within the existing history entry")
+	}
+}
+
 func TestLibraryRefreshKeepsExtentAndFilter(t *testing.T) {
 	items := make([]catalog.Item, 46)
 	for i := range items {

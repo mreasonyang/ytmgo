@@ -33,6 +33,9 @@ import (
 )
 
 func TestMain(m *testing.M) {
+	if directory := os.Getenv(artworkHistoryFixtureEnv); directory != "" {
+		os.Exit(runArtworkHistoryFixture(m, directory))
+	}
 	directory := os.Getenv("YTMGO_ARTWORK_DESKTOP_ACCEPTANCE_DIR")
 	// A copied QA bundle can be reopened by native automation after quitting.
 	// Keep that restart bound to the same isolated directory without relying
@@ -94,7 +97,7 @@ func artworkDesktopPNG(edge int) []byte {
 	return b.Bytes()
 }
 
-func artworkDesktopPages() (catalog.Page, catalog.Page, []catalog.Item) {
+func artworkDesktopPages(rows int) (catalog.Page, catalog.Page, []catalog.Item) {
 	item := func(i int, kind string) catalog.Item {
 		return catalog.Item{ID: fmt.Sprintf("fixture-%03d", i), BrowseID: fmt.Sprintf("fixture-%03d", i), Title: fmt.Sprintf("Artwork fixture %03d", i), Artist: "Isolated acceptance", Kind: kind, Artwork: fmt.Sprintf("https://lh3.googleusercontent.com/artwork-fixture-%03d=s80", i), Duration: 3 * time.Minute}
 	}
@@ -107,7 +110,7 @@ func artworkDesktopPages() (catalog.Page, catalog.Page, []catalog.Item) {
 		home.Shelves = append(home.Shelves, shelf)
 	}
 	list := catalog.Page{Title: "Long list acceptance"}
-	for i := range 240 {
+	for i := range rows {
 		list.Items = append(list.Items, item(100+i, "song"))
 	}
 	return home, list, []catalog.Item{item(1, "song"), item(2, "song"), item(3, "song")}
@@ -139,14 +142,18 @@ func runArtworkDesktopAcceptance(directory string) int {
 		stats.Bodies.Add(1)
 		return &http.Response{StatusCode: 200, Proto: "HTTP/1.1", ProtoMajor: 1, ProtoMinor: 1, Header: http.Header{"Cache-Control": {"public, max-age=86400"}}, Body: io.NopCloser(bytes.NewReader(bodies[edge])), ContentLength: int64(len(bodies[edge]))}, nil
 	})
-	home, list, queue := artworkDesktopPages()
+	home, list, queue := artworkDesktopPages(240)
 	model, actions := nativeViewFixture()
 	model.Current, model.Queue, model.Page, model.LibraryItems = queue[0], queue, home, nil
 	model.Playing, model.Panel, model.Immersive, model.SignedIn = false, false, false, false
+	model.instantMotion = false
 	model.Lyrics, model.Route = "Isolated artwork acceptance. No playback or account.", "home"
 	var window *mygo.Window
 	var sequence, current int
+	var scrollPositions int
+	var previousY float32
 	resetStats := func() {
+		scrollPositions = 0
 		stats.mu.Lock()
 		stats.Frames, stats.GPUFrames, stats.WarmRequests, stats.HDWarmRequests, stats.WarmPlaceholders, stats.BitmapChanges, stats.Durations = 0, 0, 0, 0, 0, 0, nil
 		stats.mu.Unlock()
@@ -155,13 +162,15 @@ func runArtworkDesktopAcceptance(directory string) int {
 		stats.mu.Lock()
 		durations := append([]float64(nil), stats.Durations...)
 		sort.Float64s(durations)
-		percentile := func(p float64) float64 {
+		percentile := func(p float64) any {
 			if len(durations) == 0 {
-				return 0
+				return nil
 			}
 			return durations[min(len(durations)-1, int(float64(len(durations)-1)*p))]
 		}
 		status := map[string]any{"sequence": sequence, "frames": stats.Frames, "gpu_frames": stats.GPUFrames, "other_log_count": stats.OtherLogs, "warm_requests": stats.WarmRequests, "hd_warm_requests": stats.HDWarmRequests, "warm_placeholders": stats.WarmPlaceholders, "bitmap_changes": stats.BitmapChanges, "body_downloads": stats.Bodies.Load(), "frame_p50_ms": percentile(.5), "frame_p95_ms": percentile(.95), "frame_p99_ms": percentile(.99), "frame_max_ms": percentile(1), "route": model.Route, "panel": model.Panel, "immersive": model.Immersive}
+		status["scroll_positions"] = scrollPositions
+		status["frames_over_60hz_budget"] = len(durations) - sort.SearchFloat64s(durations, 1000.0/60)
 		stats.mu.Unlock()
 		var memory runtime.MemStats
 		runtime.ReadMemStats(&memory)
@@ -188,8 +197,6 @@ func runArtworkDesktopAcceptance(directory string) int {
 				window.Invalidate()
 			}
 		}
-		actions.ArtworkTint = cache.tint
-		actions.artworkPeek = cache.peek
 		actions.Navigate = func(route string) {
 			model.Route = route
 			if route == "home" {
@@ -211,10 +218,12 @@ func runArtworkDesktopAcceptance(directory string) int {
 			}},
 		}))
 		window = mygo.NewWindow(mygo.WindowOptions{Title: "ytmGO Artwork QA — isolated fixture", Width: 1440, Height: 940, MinWidth: 380, MinHeight: 640, Content: ui.View(func(c *ui.Context) {
-			frame := artworkFrame{cache: cache}
+			frame := cache.beginFrame()
+			actions.ArtworkTint, actions.artworkPeek, actions.artworkReplayed = frame.tint, frame.peek, frame.replayed
+			actions.artworkRevision = frame.covers.Revocation()
 			actions.Artwork = func(raw string, requested int, priority artworkPriority) ui.ImageSource {
 				got := frame.get(raw, requested, priority)
-				key := artRequest{artworkRequestAt(raw, artworkBucket(requested)), artworkBucket(requested)}
+				key := artRequest{url: artworkRequestAt(raw, artworkBucket(requested)), edge: artworkBucket(requested)}
 				stats.mu.Lock()
 				if previous := stats.observed[key]; previous != 0 {
 					stats.WarmRequests++
@@ -236,6 +245,10 @@ func runArtworkDesktopAcceptance(directory string) int {
 				return got
 			}
 			nativeView(c, model, actions)
+			if st := model.pageScroll; st != nil && st.Y != previousY {
+				previousY = st.Y
+				scrollPositions++
+			}
 			if frame.submit() {
 				c.Invalidate()
 			}
@@ -254,10 +267,11 @@ func runArtworkDesktopAcceptance(directory string) int {
 				case <-ticker.C:
 					mygo.RunOnMain(func() {
 						var command struct {
-							Sequence      int
-							Action        string
-							Y             float32
-							Width, Height int
+							Sequence         int
+							Action           string
+							Y                float32
+							Width, Height    int
+							Rows, DurationMS int
 						}
 						data, err := os.ReadFile(filepath.Join(directory, "command.json"))
 						if err == nil && json.Unmarshal(data, &command) == nil && command.Sequence > sequence {
@@ -266,10 +280,13 @@ func runArtworkDesktopAcceptance(directory string) int {
 							case "home":
 								model.Route, model.Page, model.Immersive = "home", home, false
 							case "list":
+								if command.Rows == 240 || command.Rows == 1000 {
+									_, list, _ = artworkDesktopPages(command.Rows)
+								}
 								model.Route, model.Page, model.Immersive = "browse:fixture", list, false
 							case "scroll":
 								if model.pageScroll != nil {
-									model.pageScroll.ScrollTo(0, command.Y, ui.Animation{Duration: time.Millisecond})
+									model.pageScroll.ScrollTo(0, command.Y, ui.Animation{Duration: time.Duration(max(command.DurationMS, 1)) * time.Millisecond})
 								}
 							case "panel":
 								model.Panel, model.Immersive = !model.Panel, false

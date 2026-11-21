@@ -24,7 +24,13 @@ func requestArtworkPriority(c *artworkCache, raw string, edge int, priority artw
 
 func assertArtworkAccounting(t *testing.T, c *artworkCache) {
 	t.Helper()
-	for name, pool := range map[string]*artworkPool{"thumbnail": &c.small, "browse": &c.browse, "player": &c.player} {
+	if c.artworkRoom() < 0 {
+		t.Fatalf("combined artwork budget exceeded by %d bytes", -c.artworkRoom())
+	}
+	for name, pool := range map[string]*artworkPool{
+		"thumbnail": &c.small, "browse": &c.browse, "player": &c.player,
+		"thumbnail preview": &c.smallPreviews, "browse preview": &c.browsePreviews,
+	} {
 		if pool.bytes > pool.budget || len(pool.entries) > pool.limit {
 			t.Fatalf("%s cache limit exceeded: bytes=%d entries=%d", name, pool.bytes, len(pool.entries))
 		}
@@ -69,21 +75,21 @@ func TestArtworkWarmScrollRetainsHDBitmapWithoutPlaceholders(t *testing.T) {
 	for i := range count {
 		requestTestArtwork(c, raw(i), 384)
 		c.workers.Wait()
-		key := artRequest{artworkRequestAt(raw(i), 384), 384}
+		key := artRequest{url: artworkRequestAt(raw(i), 384), edge: 384}
 		originals[key] = c.entry(key).bitmap
 	}
 	// Any accidental restore blocks, making a same-frame fallback observable.
-	for range artworkDecoders {
-		c.decoding <- struct{}{}
-	}
+	c.mu.Lock()
+	c.decoding = artworkDecoders
+	c.mu.Unlock()
 	defer func() {
 		for range artworkDecoders {
-			<-c.decoding
+			c.releaseDecoder()
 		}
 	}()
 	for round := range 10 {
 		for i := range count {
-			key := artRequest{artworkRequestAt(raw(i), 384), 384}
+			key := artRequest{url: artworkRequestAt(raw(i), 384), edge: 384}
 			if got := requestTestArtwork(c, raw(i), 384); got != originals[key] {
 				t.Fatalf("warm return replaced or blanked HD bitmap: round=%d cover=%d", round, i)
 			}
@@ -175,7 +181,7 @@ func TestArtworkPoolsCannotEvictEachOther(t *testing.T) {
 			const raw = "https://lh3.googleusercontent.com/pool-victim=s80"
 			requestArtworkPriority(c, raw, victim, priority(victim))
 			c.workers.Wait()
-			key := artRequest{artworkRequestAt(raw, victim), victim}
+			key := artRequest{url: artworkRequestAt(raw, victim), edge: victim}
 			bitmap := c.entry(key).bitmap
 			for _, edge := range []int{128, 384, 768} {
 				if edge == victim {
@@ -205,7 +211,7 @@ func TestArtworkRenditionSharesPlayerAndBrowseBitmap(t *testing.T) {
 	f.get(raw, 384, artPlayer)
 	f.submit()
 	c.workers.Wait()
-	key := artRequest{artworkRequestAt(raw, 384), 384}
+	key := artRequest{url: artworkRequestAt(raw, 384), edge: 384}
 	bitmap := c.entry(key).bitmap
 	for range 5 {
 		f = artworkFrame{cache: c}
@@ -225,10 +231,14 @@ func TestArtworkFirstPaintReleasesPixelsAndRetainsEncodedIdentity(t *testing.T) 
 	const raw = "https://lh3.googleusercontent.com/release=s384"
 	requestTestArtwork(c, raw, 384)
 	c.workers.Wait()
-	key := artRequest{artworkRequestAt(raw, 384), 384}
+	key := artRequest{url: artworkRequestAt(raw, 384), edge: 384}
 	e := c.entry(key)
 	bitmap := e.bitmap
 	before, pixels := e.bytes, e.pixelBytes
+	previewCost := artworkPixelCost(artworkPreviewEdge, artworkPreviewEdge)
+	if preview := c.browsePreviews.entries[key]; preview == nil || !preview.staged || preview.bytes != previewCost {
+		t.Fatal("unpainted candidate did not pay in the preview pool")
+	}
 	if pixels != artworkPixelCost(384, 384) {
 		t.Fatal("initial charge excludes possible renderer mipmaps")
 	}
@@ -241,7 +251,7 @@ func TestArtworkFirstPaintReleasesPixelsAndRetainsEncodedIdentity(t *testing.T) 
 		t.Fatal("release frame changed bitmap")
 	}
 	f.submit()
-	if e.pixelBytes != 0 || e.bytes != before-pixels || e.bytes <= 0 {
+	if e.pixelBytes != 0 || e.bytes != before-pixels || e.bytes <= 0 || c.browsePreviews.bytes != previewCost || c.browsePreviews.entries[key].staged {
 		t.Fatal("first paint did not leave only charged encoded backing")
 	}
 	if requestTestArtwork(c, raw, 384) != bitmap {
@@ -347,7 +357,7 @@ func TestArtworkSimultaneousSizesShareNonResizableHTTPBody(t *testing.T) {
 		t.Fatalf("same public URL downloaded %d simultaneous bodies", requests.Load())
 	}
 	for _, edge := range []int{128, 384, 768} {
-		e := c.entry(artRequest{raw, edge})
+		e := c.entry(artRequest{url: raw, edge: edge})
 		if e == nil || e.bitmap == nil {
 			t.Fatal("shared body did not produce every requested rendition")
 		}
@@ -379,7 +389,7 @@ func TestArtworkEncodedAndTransientPixelPressureStayBounded(t *testing.T) {
 		raw := fmt.Sprintf("https://i.ytimg.com/encoded-pressure-%d", i)
 		requestTestArtwork(c, raw, 384)
 		c.workers.Wait()
-		e := c.entry(artRequest{raw, 384})
+		e := c.entry(artRequest{url: raw, edge: 384})
 		if e == nil || e.bitmap == nil || e.bytes-e.pixelBytes < len(encoded.Bytes()) {
 			t.Fatal("encoded backing was uncharged or current cover was rejected")
 		}

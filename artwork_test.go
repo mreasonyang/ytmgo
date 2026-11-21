@@ -50,7 +50,7 @@ func TestArtworkWorkRemainsBoundedWhileScrolling(t *testing.T) {
 		frame.get(fmt.Sprintf("https://i.ytimg.com/vi/item-%d/hqdefault.jpg", i), 128, artPrimary)
 	}
 	frame.submit()
-	for range artworkWorkers {
+	for range artworkBrowseWorkers {
 		select {
 		case <-started:
 		case <-time.After(2 * time.Second):
@@ -60,7 +60,7 @@ func TestArtworkWorkRemainsBoundedWhileScrolling(t *testing.T) {
 	c.mu.Lock()
 	entries, queued := len(c.small.entries)+len(c.browse.entries)+len(c.player.entries), len(c.queue)
 	c.mu.Unlock()
-	if len(frame.wanted) > artworkWorkers+artworkQueueLimit || entries > artworkWorkers || queued > artworkQueueLimit || maximum.Load() > artworkWorkers {
+	if len(frame.wanted) > artworkWorkers+artworkQueueLimit || entries > artworkBrowseWorkers || queued > artworkQueueLimit || maximum.Load() > artworkBrowseWorkers {
 		t.Fatalf("unbounded pending artwork: entries=%d queued=%d workers=%d", entries, queued, maximum.Load())
 	}
 	cancel()
@@ -89,12 +89,12 @@ func TestArtworkSchedulesPageBeforeSidebarAndDropsOldViewport(t *testing.T) {
 		frame.get(fmt.Sprintf("%s/side/%d", origin, i), 128, artSecondary)
 	}
 	frame.get(origin+"/side/0", 128, artPrimary)
-	for i := 1; i < artworkWorkers; i++ {
+	for i := 1; i < artworkBrowseWorkers; i++ {
 		frame.get(fmt.Sprintf("%s/page/%d", origin, i), 128, artPrimary)
 	}
 	frame.submit()
 	first := map[string]*http.Request{}
-	for range artworkWorkers {
+	for range artworkBrowseWorkers {
 		select {
 		case req := <-started:
 			path := req.URL.Path
@@ -106,11 +106,25 @@ func TestArtworkSchedulesPageBeforeSidebarAndDropsOldViewport(t *testing.T) {
 			t.Fatal("page did not use all available slots")
 		}
 	}
-	// A new viewport retains one in-flight cover and replaces everything else.
+	// The new viewport keeps the shared cover, drops the obsolete queue and
+	// never retains more than two invisible in-flight covers.
 	next := artworkFrame{cache: c}
 	next.get(origin+"/side/0", 128, artSecondary)
 	next.get(origin+"/new", 128, artPrimary)
 	next.submit()
+	survived := 0
+	for path, req := range first {
+		live := req.Context().Err() == nil
+		if path == "/side/0" && !live {
+			t.Fatal("the cover shared by both viewports was canceled")
+		}
+		if live {
+			survived++
+		}
+	}
+	if survived > 1+artworkGraceLimit {
+		t.Fatalf("%d in-flight covers survived the viewport change", survived)
+	}
 	select {
 	case req := <-started:
 		if req.URL.Path != "/new" {
@@ -118,11 +132,6 @@ func TestArtworkSchedulesPageBeforeSidebarAndDropsOldViewport(t *testing.T) {
 		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("new page waited behind obsolete requests")
-	}
-	for path, req := range first {
-		if (req.Context().Err() == nil) != (path == "/side/0") {
-			t.Fatalf("wrong request survived the viewport change: %s", path)
-		}
 	}
 }
 
@@ -146,7 +155,7 @@ func TestArtworkSidebarLeavesCapacityForLatePage(t *testing.T) {
 	}
 	render(false)
 	c.mu.Lock()
-	active := c.active
+	active := c.work(true).total
 	c.mu.Unlock()
 	if active != artworkSecondaryLimit {
 		t.Fatalf("%d simultaneous sidebar requests", active)
@@ -184,8 +193,8 @@ func TestArtworkLargeCoversLeaveSlotsForListThumbnails(t *testing.T) {
 	frame.submit()
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.active != artworkWorkers || c.largeActive != artworkLargeLimit {
-		t.Fatalf("unexpected mix of in-flight covers: %d total, %d large", c.active, c.largeActive)
+	if work := c.work(true); work.total != artworkBrowseWorkers || work.large != artworkBrowseLarge {
+		t.Fatalf("unexpected mix of in-flight covers: %d total, %d large", work.total, work.large)
 	}
 }
 
@@ -194,6 +203,7 @@ func TestArtworkCanceledLoadCannotReplaceRevisitedCover(t *testing.T) {
 	c := artworkTestCache(t, data)
 	original := c.client.Transport
 	first := make(chan struct{})
+	canceled := make(chan struct{})
 	release := make(chan struct{})
 	unblock := sync.OnceFunc(func() { close(release) })
 	defer unblock()
@@ -202,6 +212,7 @@ func TestArtworkCanceledLoadCannotReplaceRevisitedCover(t *testing.T) {
 		if attempts.Add(1) == 1 {
 			close(first)
 			<-r.Context().Done()
+			close(canceled)
 			// Hold the old failure until after the replacement is cached.
 			select {
 			case <-release:
@@ -222,18 +233,24 @@ func TestArtworkCanceledLoadCannotReplaceRevisitedCover(t *testing.T) {
 	}
 	empty := artworkFrame{cache: c}
 	empty.submit()
+	select {
+	case <-canceled:
+	case <-time.After(2 * time.Second):
+		t.Fatal("offscreen load never expired without another frame")
+	}
 	requestTestArtwork(c, raw, 128)
 	select {
 	case <-completed:
 	case <-time.After(2 * time.Second):
 		t.Fatal("revisited cover did not load")
 	}
-	if requestTestArtwork(c, raw, 128) == nil {
+	replacement := requestTestArtwork(c, raw, 128)
+	if replacement == nil {
 		t.Fatal("replacement did not publish its bitmap")
 	}
 	unblock()
 	c.workers.Wait()
-	if requestTestArtwork(c, raw, 128) == nil || attempts.Load() != 2 || len(completed) != 0 {
+	if requestTestArtwork(c, raw, 128) != replacement || attempts.Load() != 2 || len(completed) != 0 {
 		t.Fatal("obsolete result replaced the image, retried, or requested a redraw")
 	}
 }
@@ -429,10 +446,11 @@ func TestSystemArtworkReachesDownloaderWithoutCDNSizeRewrite(t *testing.T) {
 	t.Cleanup(func() { cancel(); c.workers.Wait() })
 	data := artworkTestPNG(t, 16, 16)
 	const raw = "https://gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png"
+	const canonical = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png"
 	const mix = "https://music.youtube.com/image/synthetic-system-mix?r=synthetic-image-option"
 	c.client.Transport = artworkTransport(func(req *http.Request) (*http.Response, error) {
-		if (req.URL.String() != raw && req.URL.String() != mix) || req.Header.Get("Cookie") != "" || req.Header.Get("Authorization") != "" {
-			t.Error("system cover was rewritten or carried account credentials")
+		if (req.URL.String() != canonical && req.URL.String() != mix) || req.Header.Get("Cookie") != "" || req.Header.Get("Authorization") != "" {
+			t.Error("system cover used an unexpected URL or carried account credentials")
 		}
 		return &http.Response{StatusCode: http.StatusOK, ContentLength: int64(len(data)), Body: io.NopCloser(bytes.NewReader(data))}, nil
 	})

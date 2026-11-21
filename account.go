@@ -761,14 +761,16 @@ func (a *desktop) clearAccountContent() {
 		a.pageCancel()
 	}
 	a.pageGeneration++
+	a.clearReturnPage()
+	a.beginPagePresentation()
 	a.resetLibrary()
 	a.model.Page = catalog.Page{}
-	a.model.pageScroll = nil
 	a.model.Loading = false
 	a.model.Error = ""
 	a.model.ErrorScope = ""
 	a.history = nil
 	a.historyIndex = -1
+	a.model.CanBack, a.model.CanForward = false, false
 }
 
 func (a *desktop) clearAccountPlayback() {

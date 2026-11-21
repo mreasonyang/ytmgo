@@ -80,7 +80,11 @@ type UIModel struct {
 	revealShortcut                  bool            // bring the global shortcut row into view
 	shortcutsFromSettings           bool            // Keyboard shortcuts was opened from Settings: it leads back
 	pageScroll                      *ui.ScrollState // the page's scrolling, as last built
-	instantMotion                   bool            // every frame without animation, for tests of layout
+	pageScrollRevision              uint64          // scroll identity of this page visit
+	pageArtworkRevision             uint64          // invalidates capture from obsolete page content
+	pageViewport                    nativePageViewport
+	restorePageViewport             *nativePageViewport
+	instantMotion                   bool // every frame without animation, for tests of layout
 
 	openedCover nativeCollectionMatch // source of the collection opened in this window
 
@@ -151,6 +155,13 @@ type ViewActions struct {
 	Appearance, Language                                func(string)
 	Artwork                                             func(string, int, artworkPriority) ui.ImageSource
 	artworkPeek                                         func(string, int) ui.ImageSource
+	artworkReplayed                                     func(string, ui.ImageSource)
+	artworkRevision                                     uint64
+	artworkState                                        *nativeArtworkWindow
+	artworkReturnView                                   *artworkReturnView
+	pageArtworkPaint                                    artworkReturnPaint
+	homeArtworkQA                                       *homeArtworkQA
+	homeArtworkPageQA                                   *homeArtworkQA // scoped to the home scroller's children
 	// ArtworkTint is the colour a loaded cover lends the interface.
 	ArtworkTint                   func(string) (ui.Color, bool)
 	Video                         func(bool)
@@ -167,6 +178,8 @@ type ViewActions struct {
 	AppMenu              func(*ui.Menu)
 	artViewport          ui.Rect
 	viewportScroll       *ui.ScrollState
+	pageScrollCapture    nativePageScrollCapture
+	pageReturnPainted    func(*nativePageViewport)
 	secondaryArtwork     bool
 	table                *nativeTable   // the track table a row is in, for choosing several
 	AppIcon              ui.ImageSource // the app icon, for About
@@ -202,6 +215,10 @@ const (
 )
 
 func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
+	a.artworkState = a.artworkWindow(c)
+	if a.artworkReturnView != nil {
+		a.artworkReturnView.begin(c.Root())
+	}
 	// Apply the default once. Opening either player view before the music starts
 	// also counts, so dismissing it while paused or loading is respected.
 	firstPlayback := m.Playing && !m.playbackViewSeen && !m.Panel && !m.Immersive
@@ -248,7 +265,8 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 		dark = false
 	}
 	c.SetTheme(nativeTheme(dark))
-	c.Root().ObserveInput(nativeReleaseScrollGrabs)
+	root := c.Root().ObserveInput(nativeReleaseScrollGrabs)
+	a.homeArtworkQA.observeInput(root)
 	if m.showLibrary {
 		m.showLibrary = false
 		nativeShowLibrary(c, m, a)
@@ -353,10 +371,10 @@ func nativeDesktopFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 			pagePanel.Children(func() {
 				nativeBackdrop(c, m, a, p)
 				var scrolled *ui.ScrollState
-				nativePageWash(nativePageLayer(c), m, a, p, &scrolled).Children(func() {
+				nativePageWash(c, m, a, p, &scrolled)
+				nativePageLayer(c).Children(func() {
 					if !m.Immersive {
 						scrolled = nativeContent(c, m, a, p, false, pageWidth)
-						m.pageScroll = scrolled
 					}
 				})
 			})
@@ -443,13 +461,13 @@ func nativeCompactFrame(c *ui.Context, m *UIModel, a ViewActions, p nativePalett
 		ui.Column(c).Grow(1).MinWidth(0).MinHeight(0).Background(p.surface).Clip().Children(func() {
 			nativeBackdrop(c, m, a, p)
 			var scrolled *ui.ScrollState
-			nativePageWash(nativePageLayer(c), m, a, p, &scrolled).Children(func() {
+			nativePageWash(c, m, a, p, &scrolled)
+			nativePageLayer(c).Children(func() {
 				if m.Immersive {
 					nativeImmersive(c, m, a, p, width, height-nativeExpandedBar-nativeCompactTabbar, true)
 				} else {
 					nativeCompactTopbar(c, m, a, p, width)
 					scrolled = nativeContent(c, m, a, p, true, width)
-					m.pageScroll = scrolled
 				}
 			})
 		})
@@ -1569,12 +1587,48 @@ func nativeColumns(width, minWidth, gap float32) (int, float32) {
 // the page never lays out for the width it had a frame ago.
 func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, compact bool, contentWidth float32) *ui.ScrollState {
 	inset := nativeContentInset(compact)
-	scroll := ui.Scroll(c.Key("content-" + m.Route + "-" + m.Page.Title)).Grow(1).MinHeight(0).Label(a.Tr("shellContent"))
+	type pageKey struct {
+		route, title string
+		visit        uint64
+	}
+	scroll := ui.Scroll(c.Key(pageKey{m.Route, m.Page.Title, m.pageScrollRevision})).Grow(1).MinHeight(0).Label(a.Tr("shellContent"))
+	capture := nativePageScrollCapture{model: m, revision: m.pageArtworkRevision}
+	if !m.Loading && !(m.Error != "" && m.ErrorScope == errorCatalog) {
+		capture.restore = m.restorePageViewport
+		if capture.restore != nil {
+			nativeArtworkScrollState(scroll).scroll.Y = capture.restore.y
+		}
+	}
 	a = nativeArtworkViewport(c, a, scroll)
 	scrolled := a.viewportScroll
+	m.pageScroll = scrolled
+	a.pageScrollCapture = capture
+	scroll.Draw(func(*ui.Painter, ui.Rect) {
+		if capture.valid(scroll) {
+			v := &m.pageViewport
+			clear(v.shelves[:v.count])
+			v.y, v.count = scrolled.Y, 0
+		}
+	})
+	if a.artworkReturnView != nil {
+		a.pageArtworkPaint = a.artworkReturnView.paintPass()
+	}
+	if m.Route == "home" {
+		a.homeArtworkPageQA = a.homeArtworkQA.trackPage(scroll, scrolled)
+	}
 	// The page has no fixed header (its own scrolls away), so its top is
 	// the panel's edge; its foot fades, as the library's beside it does.
-	nativeScrollbar(c, scroll, scrolled, p, nativeFadeBelow(scrolled, p.surface))
+	fade := nativeFadeBelow(scrolled, p.surface)
+	under := fade
+	if capture.restore != nil && a.pageReturnPainted != nil {
+		under = func(painter *ui.Painter, r ui.Rect) {
+			fade(painter, r)
+			if capture.restore == m.restorePageViewport && capture.valid(scroll) {
+				a.pageReturnPainted(capture.restore)
+			}
+		}
+	}
+	nativeScrollbar(c, scroll, scrolled, p, under)
 	nativeLoadNearEnd(c, scroll, m, a)
 	scroll.Children(func() {
 		if (strings.HasPrefix(m.Route, "browse:") && m.Page.Title != "") || m.Route == "downloads" {
@@ -1616,7 +1670,7 @@ func nativeLoadNearEnd(c *ui.Context, scroller ui.Element, m *UIModel, a ViewAct
 		return
 	}
 	state := ui.Local(scroller, "continuation", func() nativeContinuation { return nativeContinuation{} })
-	scroll := ui.Local(scroller, "artwork-scroll", func() nativeArtworkScroll { return nativeArtworkScroll{} })
+	scroll := nativeArtworkScrollState(scroller)
 	view := scroller.Bounds()
 	if state.seen != token || view.H == 0 {
 		state.seen = token
@@ -1782,6 +1836,8 @@ func nativePageContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette
 			continue
 		}
 		ui.Column(c.Key(fmt.Sprintf("shelf-%d", i))).Gap(12).Children(func() {
+			a := a
+			a.pageScrollCapture.shelf = nativeShelfKey{index: i, title: shelf.Title}
 			size := float32(tokenSizeH3)
 			nativeDisplay(ui.Text(c, shelf.Title).FontSize(size).MaxLines(1).Ellipsis("…").Role(ui.RoleHeading), shelf.Title, size)
 			switch {
@@ -2019,42 +2075,120 @@ func nativeArtwork(c *ui.Context, src string, size, radius float32, a ViewAction
 }
 
 func nativeCover(c *ui.Context, src string, size, radius float32, a ViewActions, p nativePalette, priority artworkPriority) ui.Element {
-	box := ui.Box(c).Size(size, size).Shrink(0).Radius(radius).Clip().Center()
-	var artwork ui.ImageSource
-	if a.Artwork != nil && src != "" && priority == artPlayer {
-		artwork = a.Artwork(src, a.artworkPixels(size), artPlayer)
-	} else if a.Artwork != nil && src != "" {
-		bounds := box.Bounds()
-		unmeasured := bounds.W == 0 || bounds.H == 0
-		if unmeasured {
-			// Bounds describe the previous layout; resolve a new cover on the
-			// next frame, once we know whether its scroll containers reveal it.
-			c.Invalidate()
-		} else {
-			viewport := a.artViewport
-			if a.viewportScroll == nil {
-				viewport.W, viewport.H = c.Size()
+	box := ui.Box(c).Size(size, size).Shrink(0).Radius(radius).Clip().Center().Background(p.highlight)
+	edge := a.artworkPixels(size)
+	side := min(size*0.4, 48)
+	return box.Children(func() {
+		if priority == artPlayer {
+			var artwork ui.ImageSource
+			if src != "" && a.Artwork != nil {
+				artwork = a.Artwork(src, edge, artPlayer)
 			}
-			bounds.X -= a.artworkDX
-			bounds.Y -= a.artworkDY
-			visible := nativeIntersection(bounds, viewport)
-			if visible.W > 0 && visible.H > 0 {
-				artwork = a.Artwork(src, a.artworkPixels(size), priority)
+			ui.Box(c.Key(a.artworkRevision)).Fill().Center().Clip().Children(func() {
+				if artwork != nil {
+					image := ui.Box(c.Key(artwork)).Fill().PassThrough().Transition(nativeCrossfade)
+					a.drawArtwork(c, image, func(paint *ui.Painter, r ui.Rect) { paint.Image(artwork, r, ui.Cover) })
+				} else {
+					ui.Icon(c, nativeIcons["note"]).Size(side, side).TextColor(p.muted)
+				}
+			})
+			return
+		}
+		if src == "" || a.Artwork == nil && a.artworkPeek == nil {
+			ui.Icon(c, nativeIcons["note"]).Size(side, side).TextColor(p.muted)
+			return
+		}
+
+		// Keep visibility while the same rendition changes its layout size.
+		// A different source or size bucket starts with its own visibility.
+		type rendition struct {
+			src    string
+			bucket int
+		}
+		picture := ui.Box(c.Key(rendition{src, artworkBucket(edge)})).Fill().PassThrough()
+		qa, page := a.homeArtworkPageQA, a.pageArtworkPaint
+		qa.trackCover(picture)
+		wasVisible := picture.InView()
+		var artwork ui.ImageSource
+		if wasVisible && a.Artwork != nil {
+			artwork = a.Artwork(src, edge, priority)
+		}
+		request := !wasVisible && a.Artwork != nil
+		window := a.artworkWindow(c)
+		peek, replayed, muted, revision := a.artworkPeek, a.artworkReplayed, p.muted, a.artworkRevision
+		// The child paints inside the parent's rounded clip. After commit,
+		// InView includes the clips outside an offscreen effect's layer.
+		picture.Draw(func(paint *ui.Painter, r ui.Rect) {
+			if window.revision != revision {
+				return
 			}
-		}
-		if artwork == nil && unmeasured && a.artworkPeek != nil {
-			artwork = a.artworkPeek(src, a.artworkPixels(size))
-		}
+			if !picture.Valid() {
+				// A matched transition replays the clicked card at its old
+				// position. Only replay the image that card already displayed.
+				if artwork != nil {
+					paint.Image(artwork, r, ui.Cover)
+					if replayed != nil {
+						replayed(src, artwork)
+					}
+				}
+				return
+			}
+			if !picture.InView() {
+				return
+			}
+			if request {
+				window.invalidate()
+			}
+			img := artwork
+			if img == nil && peek != nil {
+				img = peek(src, edge)
+			}
+			if img != nil {
+				paint.Image(img, r, ui.Cover)
+				page.record(src, edge, img)
+				qa.paintedCover(picture, true)
+				return
+			}
+			paint.Icon(nativeIcons["note"], ui.Rect{X: r.X + (r.W-side)/2, Y: r.Y + (r.H-side)/2, W: side, H: side}, muted)
+			qa.paintedCover(picture, false)
+		})
+	})
+}
+
+// One rebuild is enough to pick up all newly visible covers. Keep the
+// revision in window state so draw callbacks copied by exit transitions
+// also stop painting when the local source is revoked.
+type nativeArtworkWindow struct {
+	pass        ui.Element
+	services    ui.Services
+	revision    uint64
+	invalidated bool
+}
+
+func (a ViewActions) artworkWindow(c *ui.Context) *nativeArtworkWindow {
+	if a.artworkState != nil {
+		return a.artworkState
 	}
-	return box.Background(p.highlight).Children(func() {
-		if artwork != nil && priority == artPlayer {
-			// The playing cover: the next one fades in over it, keyed by
-			// its image, as the track changes.
-			ui.Image(c.Key(artwork), artwork).Fill().Fit(ui.Cover).Transition(nativeCrossfade)
-		} else if artwork != nil {
-			ui.Image(c, artwork).Fill().Fit(ui.Cover)
-		} else {
-			ui.Icon(c, nativeIcons["note"]).Size(min(size*0.4, 48), min(size*0.4, 48)).TextColor(p.muted)
+	root := c.Root()
+	state := ui.Local(root, "artwork-window", func() nativeArtworkWindow { return nativeArtworkWindow{services: c.Services()} })
+	if state.pass != root {
+		state.pass, state.revision, state.invalidated = root, a.artworkRevision, false
+	}
+	return state
+}
+
+func (w *nativeArtworkWindow) invalidate() {
+	if !w.invalidated {
+		w.invalidated = true
+		w.services.Invalidate()
+	}
+}
+
+func (a ViewActions) drawArtwork(c *ui.Context, e ui.Element, draw func(*ui.Painter, ui.Rect)) {
+	state, revision := a.artworkWindow(c), a.artworkRevision
+	e.Draw(func(p *ui.Painter, r ui.Rect) {
+		if state.revision == revision {
+			draw(p, r)
 		}
 	})
 }
@@ -2062,13 +2196,18 @@ func nativeCover(c *ui.Context, src string, size, radius float32, a ViewActions,
 type nativeArtworkScroll struct {
 	scroll ui.ScrollState
 	x, y   float32
+	built  bool
+}
+
+func nativeArtworkScrollState(scroller ui.Element) *nativeArtworkScroll {
+	return ui.Local(scroller, "artwork-scroll", func() nativeArtworkScroll { return nativeArtworkScroll{} })
 }
 
 func nativeArtworkViewport(c *ui.Context, a ViewActions, scroller ui.Element) ViewActions {
-	state := ui.Local(scroller, "artwork-scroll", func() nativeArtworkScroll { return nativeArtworkScroll{} })
+	state := nativeArtworkScrollState(scroller)
 	scroller.TrackScroll(&state.scroll)
-	// Bounds come from the last layout. The parent scroll displacement
-	// moves this viewport; its own displacement moves only its contents.
+	// Lyrics use these bounds to position their focus line in a parent
+	// scroll viewport. Artwork demand uses committed element visibility.
 	bounds := scroller.Bounds()
 	bounds.X -= a.artworkDX
 	bounds.Y -= a.artworkDY
@@ -2080,11 +2219,12 @@ func nativeArtworkViewport(c *ui.Context, a ViewActions, scroller ui.Element) Vi
 		a.artworkDX += dx
 		a.artworkDY += state.scroll.Y - state.y
 		state.x, state.y = state.scroll.X, state.scroll.Y
-		c.Invalidate()
+		a.artworkWindow(c).invalidate()
 	}
-	if bounds.W == 0 || bounds.H == 0 {
-		c.Invalidate()
+	if !state.built && (bounds.W == 0 || bounds.H == 0) {
+		a.artworkWindow(c).invalidate()
 	}
+	state.built = true
 	if a.viewportScroll == nil {
 		a.artViewport.W, a.artViewport.H = c.Size()
 	}
@@ -2093,10 +2233,64 @@ func nativeArtworkViewport(c *ui.Context, a ViewActions, scroller ui.Element) Vi
 	return a
 }
 
+type nativeShelfKey struct {
+	index int
+	title string
+}
+
+type nativeShelfPosition struct {
+	key nativeShelfKey
+	x   float32
+}
+
+// A paint records only the visible shelves that are horizontally scrolled.
+// Its size stays fixed as continuation pages add shelves.
+type nativePageViewport struct {
+	y       float32
+	count   int
+	shelves [32]nativeShelfPosition
+}
+
+func (v *nativePageViewport) shelfX(key nativeShelfKey) float32 {
+	for _, shelf := range v.shelves[:v.count] {
+		if shelf.key == key {
+			return shelf.x
+		}
+	}
+	return 0
+}
+
+type nativePageScrollCapture struct {
+	model    *UIModel
+	revision uint64
+	restore  *nativePageViewport
+	shelf    nativeShelfKey
+}
+
+func (capture nativePageScrollCapture) valid(scroller ui.Element) bool {
+	return capture.revision == capture.model.pageArtworkRevision && scroller.Valid() && scroller.InView()
+}
+
 func nativeShelfViewport(c *ui.Context, a ViewActions, scroller ui.Element) ViewActions {
 	page := a.viewportScroll
+	capture := a.pageScrollCapture
+	if capture.restore != nil {
+		nativeArtworkScrollState(scroller).scroll.X = capture.restore.shelfX(capture.shelf)
+	}
 	shelf := nativeArtworkViewport(c, a, scroller)
 	row := shelf.viewportScroll
+	if capture.model != nil {
+		scroller.Draw(func(*ui.Painter, ui.Rect) {
+			if row.X <= 0 || !capture.valid(scroller) {
+				return
+			}
+			v := &capture.model.pageViewport
+			if v.count < len(v.shelves) {
+				v.shelves[v.count] = nativeShelfPosition{capture.shelf, row.X}
+				v.count++
+			}
+		})
+	}
 	rtl := c.Direction() == ui.RightToLeft
 	scroller.HandleInput(func(ev ui.InputEvent) bool {
 		// Leave single-axis scrolling (including Shift+wheel) to MyGo.
@@ -2104,6 +2298,7 @@ func nativeShelfViewport(c *ui.Context, a ViewActions, scroller ui.Element) View
 		if ev.Kind != ui.InputScroll || ev.DX == 0 || ev.DY == 0 {
 			return false
 		}
+		a.homeArtworkPageQA.manualInput()
 		if math.Abs(float64(ev.DY)) >= math.Abs(float64(ev.DX)) {
 			page.Y = max(0, min(page.MaxY, page.Y+ev.DY))
 		} else {
@@ -2505,7 +2700,19 @@ func nativeMiniPlayer(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 		}
 		// Corners nest: card 16, the info button 12 four in, its art 8. Its
 		// colour blends to the next cover's, as the washes do.
-		ui.Column(c).Height(tokenProductMiniPlayer).Radius(tokenRadiusPanel).Background(card).Clip().Transition(ui.ElementTransition{Duration: tokenMotionSlow, Ease: tokenMotionEase, Colors: true}).Children(func() {
+		mini := ui.Column(c).Height(tokenProductMiniPlayer).Radius(tokenRadiusPanel).Clip()
+		mini.Children(func() {
+			wash := nativeArtworkWashLayer(c, a)
+			card = wash.AnimateColor("mini-player", card, ui.Animation{Duration: tokenMotionSlow, Ease: tokenMotionEase})
+			state, revision := a.artworkWindow(c), a.artworkRevision
+			// One rounded fill preserves the card edge during tint transitions.
+			mini.Draw(func(paint *ui.Painter, r ui.Rect) {
+				color := p.raised
+				if state.revision == revision {
+					color = card
+				}
+				paint.Fill(r, color, tokenRadiusPanel)
+			})
 			ui.Row(c).Grow(1).PaddingX(4).Gap(4).AlignItems(ui.Center).Children(func() {
 				info := ui.ButtonBase(c).Grow(1).MinWidth(0).Height(48).Padding(4).Gap(8).Justify(ui.Start).Radius(tokenRadiusControl).Label(a.Tr("shellOpenNowPlaying")).Children(func() {
 					nativePlayerArtwork(c, m.Current.Artwork, 40, tokenRadiusArt, a, p)
@@ -2767,11 +2974,11 @@ func nativeNowPlaying(c *ui.Context, m *UIModel, a ViewActions, p nativePalette,
 	}
 	return ui.Column(c).Background(p.surface).Radius(tokenRadiusPanel).MinHeight(0).Clip().Children(func() {
 		var scrolled *ui.ScrollState
-		layer := nativePageLayer(c).Padding(16).Gap(gap)
-		if tint, ok := nativePlayingTintOn(layer, m, a); ok {
-			nativeScrollingWash(layer, tint, nativeWashStrength(p), nativeNowPlayingWashHeight, &scrolled)
+		wash := nativeArtworkWashLayer(c, a)
+		if tint, ok := nativePlayingTintOn(wash, m, a); ok {
+			nativeScrollingWash(c, wash, a, tint, nativeWashStrength(p), nativeNowPlayingWashHeight, &scrolled)
 		}
-		layer.Children(func() { scrolled = nativeNowPlayingBody(c, m, a, p, width, overlay, revealLyrics, windowHeight, gap) })
+		nativePageLayer(c).Padding(16).Gap(gap).Children(func() { scrolled = nativeNowPlayingBody(c, m, a, p, width, overlay, revealLyrics, windowHeight, gap) })
 	})
 }
 
@@ -3229,18 +3436,21 @@ func nativePresentation(m *UIModel) nativePresentationKey {
 	}
 }
 
-// nativeBackdrop washes the top of the page in colour: the blurred cover of a
-// collection, the current track's cover in immersive mode, or a stable tint
-// for pages without artwork.
+// nativeBackdrop fills the top of immersive mode with the playing cover's
+// blurred colours.
 func nativeBackdrop(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 	// Immersive mode is the one place the cover itself fills the view, a
 	// fixed ambience behind everything. Pages wash in nativePageWash.
-	if !m.Immersive || m.Current.Artwork == "" || a.Artwork == nil {
-		return
-	}
-	if artwork := a.Artwork(m.Current.Artwork, artworkEdge, artPlayer); artwork != nil {
-		nativeCoverBlur(c, artwork).HeightPercent(25).Opacity(nativeWashStrength(p) * 0.7)
-	}
+	// An exiting blur belongs to the source that produced it. Dropping its
+	// unanimated parent also drops any exit animation still in flight.
+	type backdropRevision uint64
+	ui.Box(c.Key(backdropRevision(a.artworkRevision))).Absolute().Left(0).Top(0).WidthPercent(100).HeightPercent(100).PassThrough().Children(func() {
+		if m.Immersive && m.Current.Artwork != "" && a.Artwork != nil {
+			if artwork := a.Artwork(m.Current.Artwork, artworkEdge, artPlayer); artwork != nil {
+				nativeCoverBlur(c, a, artwork).HeightPercent(25).Opacity(nativeWashStrength(p) * 0.7)
+			}
+		}
+	})
 }
 
 // nativePageWash colours the top of a page: a collection in its cover's
@@ -3249,10 +3459,11 @@ func nativeBackdrop(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
 // rather than staying under the list: it is painted beneath the page layer's
 // children (the compact top bar included) and moved by the content's scroll
 // position, read when it paints, so it never lags a frame behind.
-func nativePageWash(layer ui.Element, m *UIModel, a ViewActions, p nativePalette, scrolled **ui.ScrollState) ui.Element {
+func nativePageWash(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, scrolled **ui.ScrollState) {
 	if m.Immersive {
-		return layer
+		return
 	}
+	layer := nativeArtworkWashLayer(c, a)
 	tint, ok := nativeHeaderTint(m.Route), true
 	if m.Page.Artwork != "" {
 		tint, ok = ui.Color{}, false
@@ -3274,10 +3485,9 @@ func nativePageWash(layer ui.Element, m *UIModel, a ViewActions, p nativePalette
 	if !m.instantMotion {
 		tint = layer.AnimateColor("page-wash", tint, ui.Animation{Duration: tokenMotionMorph, Ease: tokenMotionEase})
 	}
-	if tint.A == 0 {
-		return layer
+	if tint.A > 0 {
+		nativeScrollingWash(c, layer, a, tint, nativeWashStrength(p), nativeWashHeight, scrolled)
 	}
-	return nativeScrollingWash(layer, tint, nativeWashStrength(p), nativeWashHeight, scrolled)
 }
 
 // nativeScrollEdges marks a scrolling list under a fixed header, as the
@@ -3579,8 +3789,8 @@ func nativeScrollbarThumbs(r ui.Rect, st *ui.ScrollState, rtl bool) []ui.Rect {
 // children, moved up by the scroll position *scrolled holds once it is set
 // (read when it paints, so it never lags a frame): a wash belongs to what
 // it heads and scrolls away with it.
-func nativeScrollingWash(layer ui.Element, tint ui.Color, strength, height float32, scrolled **ui.ScrollState) ui.Element {
-	return layer.Draw(func(painter *ui.Painter, r ui.Rect) {
+func nativeScrollingWash(c *ui.Context, layer ui.Element, a ViewActions, tint ui.Color, strength, height float32, scrolled **ui.ScrollState) {
+	a.drawArtwork(c, layer, func(painter *ui.Painter, r ui.Rect) {
 		y := float32(0)
 		if *scrolled != nil {
 			y = (*scrolled).Y
@@ -3600,9 +3810,11 @@ const nativeWashHeight = 320
 // and an opacity. Blur a small layer, then draw it at the final size without
 // a transform: a transformed child makes MyGo allocate a full-size RGBA mask
 // for the rounded parent clip, which would erase the smaller canvas's savings.
-func nativeCoverBlur(c *ui.Context, artwork ui.ImageSource) ui.Element {
+func nativeCoverBlur(c *ui.Context, a ViewActions, artwork ui.ImageSource) ui.Element {
 	layer := ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(25).Effect(backdropLayer{}).PassThrough().Transition(nativeFadeLong)
-	layer.Children(func() { ui.Image(c, artwork).Fill().Fit(ui.Cover).Blur(17.5).PassThrough() })
+	layer.Children(func() {
+		a.drawArtwork(c, ui.Box(c).Fill().Blur(17.5).PassThrough(), func(paint *ui.Painter, r ui.Rect) { paint.Image(artwork, r, ui.Cover) })
+	})
 	return layer
 }
 
@@ -3666,12 +3878,21 @@ func nativeWashStrength(p nativePalette) float32 {
 // the playing cover's colour, runs down from its top.
 const nativeNowPlayingWashHeight = 360
 
+// Keep cover-derived colours and their animations on a decorative element.
+// Revoking a local cover retires its colour without resetting controls or scroll.
+func nativeArtworkWashLayer(c *ui.Context, a ViewActions) ui.Element {
+	type washRevision uint64
+	return ui.Box(c.Key(washRevision(a.artworkRevision))).Absolute().Left(0).Top(0).WidthPercent(100).HeightPercent(100).PassThrough()
+}
+
 // nativePlayerWash glows the playing cover's colour behind the player bar's
 // track, fading out toward the transport: what's playing carries colour.
 func nativePlayerWash(c *ui.Context, m *UIModel, a ViewActions, p nativePalette) {
-	wash := ui.Box(c).Absolute().Left(0).Top(0).WidthPercent(100).HeightPercent(100).PassThrough()
+	wash := nativeArtworkWashLayer(c, a)
 	if tint, ok := nativePlayingTintOn(wash, m, a); ok {
-		wash.LinearGradient(ui.LinearGradient{From: nativeWashOf(tint, nativeWashStrength(p)*tokenWashBar), To: tint.Alpha(0), Angle: 90, End: 0.4})
+		a.drawArtwork(c, wash, func(paint *ui.Painter, r ui.Rect) {
+			paint.FillGradient(r, ui.LinearGradient{From: nativeWashOf(tint, nativeWashStrength(p)*tokenWashBar), To: tint.Alpha(0), Angle: 90, End: 0.4}, 0)
+		})
 	}
 }
 

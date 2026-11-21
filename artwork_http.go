@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
 	"image"
 	"io"
@@ -51,7 +52,7 @@ func (s artworkHTTPStore) Set(key string, data []byte) error {
 }
 
 func (c *artworkCache) artworkHTTPClient(d artDemand) *http.Client {
-	if c.disk == nil || d.priority == artAvatar || artworkDiskKey(d.url) == "" {
+	if c.disk == nil || d.avatar || artworkDiskKey(d.url) == "" {
 		return c.client
 	}
 	c.httpOnce.Do(func() {
@@ -66,6 +67,12 @@ func (c *artworkCache) artworkHTTPClient(d artDemand) *http.Client {
 // Keep the artwork-specific admission/size boundary outside the HTTP cache.
 // The component handles freshness, Vary, validators and 304 merging itself.
 type artworkHTTPUpstream struct{ cache *artworkCache }
+type artworkSourceKey struct{}
+
+func (u artworkHTTPUpstream) eligible(req *http.Request) bool {
+	source, tracked := req.Context().Value(artworkSourceKey{}).(artRequest)
+	return req.Context().Err() == nil && (!tracked || source.matches(u.cache.currentCovers()))
+}
 
 var errArtworkResponse = errors.New("artwork_response_rejected")
 
@@ -93,20 +100,29 @@ func (u artworkHTTPUpstream) RoundTrip(req *http.Request) (*http.Response, error
 			res.Header.Set("Expires", "Thu, 01 Jan 1970 00:00:00 GMT")
 		}
 	}
+	if !u.eligible(req) {
+		res.Body.Close()
+		return nil, context.Canceled
+	}
+	u.cache.observeArtworkResponse(req.Context(), res)
 	if res.StatusCode == http.StatusNotModified {
 		if artworkProhibitedResponse(res.Header) || (len(res.Header.Values("Cache-Control")) > 0 && !artworkPublicResponse(res.Header)) {
 			res.Header.Set("Cache-Control", "no-store")
 		}
 		return res, nil
 	}
-	if res.StatusCode != http.StatusOK || artworkDiskKey(req.URL.String()) == "" || !artworkPublicResponse(res.Header) {
+	if res.StatusCode != http.StatusOK {
 		res.Header.Set("Cache-Control", "no-store")
-		if res.StatusCode == http.StatusOK || res.StatusCode == http.StatusNotFound || res.StatusCode == http.StatusGone {
+		if res.StatusCode == http.StatusNotFound || res.StatusCode == http.StatusGone {
 			_ = u.cache.disk.Delete(urlkey.Normalize(req.URL))
 		}
-	}
-	if res.StatusCode != http.StatusOK {
 		return res, nil
+	}
+	// A current response withdraws its public predecessor as soon as the
+	// headers arrive, even when the replacement body is unreadable.
+	if artworkDiskKey(req.URL.String()) == "" || !artworkPublicResponse(res.Header) {
+		res.Header.Set("Cache-Control", "no-store")
+		_ = u.cache.disk.Delete(urlkey.Normalize(req.URL))
 	}
 	defer res.Body.Close()
 	if res.ContentLength > artworkDownloadLimit {
@@ -119,6 +135,11 @@ func (u artworkHTTPUpstream) RoundTrip(req *http.Request) (*http.Response, error
 	cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
 	if err != nil || cfg.Width < 1 || cfg.Height < 1 || cfg.Width > 4096 || cfg.Height > 4096 || cfg.Width*cfg.Height > artworkSourcePixels {
 		return nil, errArtworkResponse
+	}
+	// A response from a superseded or canceled worker must not refill the
+	// public cache that a later HTTP fallback will consult.
+	if !u.eligible(req) {
+		return nil, context.Canceled
 	}
 	res.Body = io.NopCloser(bytes.NewReader(data))
 	res.ContentLength = int64(len(data))

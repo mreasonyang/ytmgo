@@ -10,7 +10,93 @@ import (
 	"time"
 
 	"github.com/egoist/mygo/ui"
+	"ytmgo/internal/catalog"
 )
+
+func TestHomeArtworkQAColdBlockedNativeView(t *testing.T) {
+	model, actions := nativeViewFixture()
+	model.Loading, model.SignedIn, model.LibraryLoaded = true, true, true
+	model.Playing = false
+	model.LibraryItems = model.Page.Shelves[1].Items[:1]
+	model.Page = catalog.Page{}
+	var q homeArtworkQA
+	artwork := actions.Artwork
+	player, sidebar := 0, 0
+	actions.Artwork = func(src string, edge int, priority artworkPriority) ui.ImageSource {
+		image := artwork(src, edge, priority)
+		if priority == artPlayer && image != nil {
+			player++
+		}
+		return image
+	}
+	actions.artworkPeek = func(src string, edge int) ui.ImageSource {
+		image := artwork(src, edge, artPrimary)
+		if src == model.LibraryItems[0].Artwork && edge == 48 && image != nil {
+			sidebar++
+		}
+		return image
+	}
+	tt := ui.NewTester(func(c *ui.Context) {
+		a := actions
+		a.homeArtworkQA = &q
+		q.prepareFrame(c, func() string {
+			if model.Loading {
+				return "home_not_ready"
+			}
+			return ""
+		}, 1, 1)
+		nativeView(c, model, a)
+	}, 1440, 900)
+	if player == 0 || sidebar == 0 || q.frameReady || q.paint != nil {
+		t.Fatalf("blocked startup: player=%d sidebar=%d ready=%t samples=%d", player, sidebar, q.frameReady, len(q.paint))
+	}
+	model.Loading = false
+	tt.Frame()
+	tt.Advance(2 * homeQAFrame)
+	if len(q.previousHot) != 1 {
+		t.Fatalf("want only the home shortcut counted, got %d samples", len(q.previousHot))
+	}
+}
+
+func TestHomeArtworkQAIgnoresReplayedAndUnregisteredCovers(t *testing.T) {
+	model, actions := nativeViewFixture()
+	var q homeArtworkQA
+	open, replays, unregistered := true, 0, 0
+	art := model.Current.Artwork
+	actions.artworkReplayed = func(string, ui.ImageSource) { replays++ }
+	tt := ui.NewTester(func(c *ui.Context) {
+		q.prepareFrame(c, func() string { return "" }, 1, 1)
+		scroll := ui.Scroll(c).Fill()
+		a := nativeArtworkViewport(c, actions, scroll)
+		a.homeArtworkPageQA = q.trackPage(scroll, a.viewportScroll)
+		scroll.Children(func() {
+			if open {
+				ui.Box(c.Key("leaving")).Size(64, 64).Transition(nativeFadeLong).Children(func() {
+					nativeCover(c, art, 64, 8, a, palette(true), artPrimary)
+				})
+			}
+			stray := ui.Box(c.Key("unregistered")).Size(64, 64)
+			stray.Draw(func(p *ui.Painter, r ui.Rect) {
+				if !stray.Valid() || !stray.InViewAmount(0.6) {
+					return
+				}
+				p.Image(actions.Artwork(art, 64, artPrimary), r, ui.Cover)
+				unregistered++
+				q.paintedCover(stray, true)
+			})
+		})
+	}, 200, 200)
+	tt.Advance(2 * homeQAFrame)
+	if len(q.previousHot) != 1 || unregistered == 0 {
+		t.Fatalf("registration: samples=%d stray paints=%d", len(q.previousHot), unregistered)
+	}
+	open = false
+	tt.Frame()
+	tt.Advance(tokenMotionSlow / 4)
+	if replays == 0 || len(q.previousHot) != 0 {
+		t.Fatalf("departed cover: replays=%d samples=%d", replays, len(q.previousHot))
+	}
+}
 
 func TestHomeArtworkQA(t *testing.T) {
 	for _, tc := range []struct {

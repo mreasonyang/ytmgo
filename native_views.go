@@ -155,6 +155,7 @@ type ViewActions struct {
 	artworkRevision                                     uint64
 	artworkState                                        *nativeArtworkWindow
 	homeArtworkQA                                       *homeArtworkQA
+	homeArtworkPageQA                                   *homeArtworkQA // scoped to the home scroller's children
 	// ArtworkTint is the colour a loaded cover lends the interface.
 	ArtworkTint                   func(string) (ui.Color, bool)
 	Video                         func(bool)
@@ -1580,7 +1581,9 @@ func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, co
 	scroll := ui.Scroll(c.Key("content-" + m.Route + "-" + m.Page.Title)).Grow(1).MinHeight(0).Label(a.Tr("shellContent"))
 	a = nativeArtworkViewport(c, a, scroll)
 	scrolled := a.viewportScroll
-	a.homeArtworkQA = a.homeArtworkQA.trackPage(scroll, scrolled)
+	if m.Route == "home" {
+		a.homeArtworkPageQA = a.homeArtworkQA.trackPage(scroll, scrolled)
+	}
 	// The page has no fixed header (its own scrolls away), so its top is
 	// the panel's edge; its foot fades, as the library's beside it does.
 	nativeScrollbar(c, scroll, scrolled, p, nativeFadeBelow(scrolled, p.surface))
@@ -2059,7 +2062,8 @@ func nativeCover(c *ui.Context, src string, size, radius float32, a ViewActions,
 			bucket int
 		}
 		picture := ui.Box(c.Key(rendition{src, artworkBucket(edge)})).Fill().PassThrough()
-		a.homeArtworkQA.trackCover(picture)
+		qa := a.homeArtworkPageQA
+		qa.trackCover(picture)
 		wasVisible := picture.InView()
 		var artwork ui.ImageSource
 		if wasVisible && a.Artwork != nil {
@@ -2097,11 +2101,11 @@ func nativeCover(c *ui.Context, src string, size, radius float32, a ViewActions,
 			}
 			if img != nil {
 				paint.Image(img, r, ui.Cover)
-				a.homeArtworkQA.paintedCover(picture, true)
+				qa.paintedCover(picture, true)
 				return
 			}
 			paint.Icon(nativeIcons["note"], ui.Rect{X: r.X + (r.W-side)/2, Y: r.Y + (r.H-side)/2, W: side, H: side}, muted)
-			a.homeArtworkQA.paintedCover(picture, false)
+			qa.paintedCover(picture, false)
 		})
 	})
 }
@@ -2191,7 +2195,7 @@ func nativeShelfViewport(c *ui.Context, a ViewActions, scroller ui.Element) View
 		if ev.Kind != ui.InputScroll || ev.DX == 0 || ev.DY == 0 {
 			return false
 		}
-		a.homeArtworkQA.manualInput()
+		a.homeArtworkPageQA.manualInput()
 		if math.Abs(float64(ev.DY)) >= math.Abs(float64(ev.DX)) {
 			page.Y = max(0, min(page.MaxY, page.Y+ev.DY))
 		} else {

@@ -83,6 +83,7 @@ type homeArtworkQA struct {
 	scroll, anchor                 *ui.ScrollState
 	viewport                       ui.Element
 	covers                         map[uint64]homeQACover
+	warmNodes                      map[uint64]ui.Element
 	previousHot, paint             map[uint64]homeQAPaint
 	waiting                        string
 }
@@ -173,6 +174,7 @@ func (a *desktop) prepareHomeArtworkQA(c *ui.Context, actions *ViewActions) {
 func (q *homeArtworkQA) prepareFrame(c *ui.Context, blocked func() string, page, account uint64) {
 	q.scroll, q.viewport = nil, ui.Element{}
 	q.frameReady, q.paintedFrame = false, false
+	clear(q.warmNodes)
 	if q.phase != homeQAWarm && (q.page != page || q.account != account) {
 		q.end("inconclusive", "page_changed")
 		return
@@ -191,6 +193,7 @@ func (q *homeArtworkQA) prepareFrame(c *ui.Context, blocked func() string, page,
 	}
 	if q.paint == nil {
 		q.paint = make(map[uint64]homeQAPaint)
+		q.warmNodes = make(map[uint64]ui.Element)
 	}
 	q.frameReady = true
 	q.waiting = "insufficient_hot"
@@ -265,10 +268,18 @@ func (q *homeArtworkQA) trackPage(view ui.Element, scroll *ui.ScrollState) *home
 }
 
 func (q *homeArtworkQA) trackCover(view ui.Element) {
-	if q == nil || q.ended || q.phase == homeQAWarm {
+	if q == nil || q.ended || !q.frameReady || !q.viewport.Valid() || !view.Valid() {
 		return
 	}
 	id := view.ID()
+	if q.phase == homeQAWarm {
+		// The warm-up must see the same pictures across successive frames.
+		// Bound the registry to previously visible nodes of this pass.
+		if len(q.warmNodes) < homeQAMaxHot && view.InView() {
+			q.warmNodes[id] = view
+		}
+		return
+	}
 	if cover, ok := q.covers[id]; ok {
 		cover.node = view
 		q.covers[id] = cover
@@ -276,17 +287,18 @@ func (q *homeArtworkQA) trackCover(view ui.Element) {
 }
 
 func (q *homeArtworkQA) paintedCover(view ui.Element, image bool) {
-	if q == nil || q.ended || q.paintedFrame || !view.InViewAmount(0.6) {
+	if q == nil || q.ended || !q.frameReady || q.paintedFrame || !view.Valid() || !view.InViewAmount(0.6) {
 		return
 	}
 	id := view.ID()
 	if q.phase == homeQAWarm {
-		if image && len(q.paint) < homeQAMaxHot {
+		if image && q.warmNodes[id] == view {
 			q.paint[id] = homeQAImage
 		}
 		return
 	}
-	if q.phase == homeQABack && q.covers[id].left {
+	cover := q.covers[id]
+	if q.phase == homeQABack && cover.left && cover.node == view {
 		if image {
 			q.paint[id] |= homeQAImage
 		} else {
@@ -428,7 +440,7 @@ func (q *homeArtworkQA) end(state, reason string) {
 		return
 	}
 	q.ended, q.result.State, q.result.Reason, q.result.Phase = true, state, reason, q.phase
-	q.covers, q.paint, q.previousHot = nil, nil, nil
+	q.covers, q.warmNodes, q.paint, q.previousHot = nil, nil, nil, nil
 	if q.finish != nil {
 		finish := q.finish
 		q.finish = nil

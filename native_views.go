@@ -154,6 +154,7 @@ type ViewActions struct {
 	artworkReplayed                                     func(string, ui.ImageSource)
 	artworkRevision                                     uint64
 	artworkState                                        *nativeArtworkWindow
+	homeArtworkQA                                       *homeArtworkQA
 	// ArtworkTint is the colour a loaded cover lends the interface.
 	ArtworkTint                   func(string) (ui.Color, bool)
 	Video                         func(bool)
@@ -252,7 +253,8 @@ func nativeView(c *ui.Context, m *UIModel, a ViewActions) {
 		dark = false
 	}
 	c.SetTheme(nativeTheme(dark))
-	c.Root().ObserveInput(nativeReleaseScrollGrabs)
+	root := c.Root().ObserveInput(nativeReleaseScrollGrabs)
+	a.homeArtworkQA.observeInput(root)
 	if m.showLibrary {
 		m.showLibrary = false
 		nativeShowLibrary(c, m, a)
@@ -1578,6 +1580,7 @@ func nativeContent(c *ui.Context, m *UIModel, a ViewActions, p nativePalette, co
 	scroll := ui.Scroll(c.Key("content-" + m.Route + "-" + m.Page.Title)).Grow(1).MinHeight(0).Label(a.Tr("shellContent"))
 	a = nativeArtworkViewport(c, a, scroll)
 	scrolled := a.viewportScroll
+	a.homeArtworkQA = a.homeArtworkQA.trackPage(scroll, scrolled)
 	// The page has no fixed header (its own scrolls away), so its top is
 	// the panel's edge; its foot fades, as the library's beside it does.
 	nativeScrollbar(c, scroll, scrolled, p, nativeFadeBelow(scrolled, p.surface))
@@ -2056,6 +2059,7 @@ func nativeCover(c *ui.Context, src string, size, radius float32, a ViewActions,
 			bucket int
 		}
 		picture := ui.Box(c.Key(rendition{src, artworkBucket(edge)})).Fill().PassThrough()
+		a.homeArtworkQA.trackCover(picture)
 		wasVisible := picture.InView()
 		var artwork ui.ImageSource
 		if wasVisible && a.Artwork != nil {
@@ -2093,9 +2097,11 @@ func nativeCover(c *ui.Context, src string, size, radius float32, a ViewActions,
 			}
 			if img != nil {
 				paint.Image(img, r, ui.Cover)
+				a.homeArtworkQA.paintedCover(picture, true)
 				return
 			}
 			paint.Icon(nativeIcons["note"], ui.Rect{X: r.X + (r.W-side)/2, Y: r.Y + (r.H-side)/2, W: side, H: side}, muted)
+			a.homeArtworkQA.paintedCover(picture, false)
 		})
 	})
 }
@@ -2185,6 +2191,7 @@ func nativeShelfViewport(c *ui.Context, a ViewActions, scroller ui.Element) View
 		if ev.Kind != ui.InputScroll || ev.DX == 0 || ev.DY == 0 {
 			return false
 		}
+		a.homeArtworkQA.manualInput()
 		if math.Abs(float64(ev.DY)) >= math.Abs(float64(ev.DX)) {
 			page.Y = max(0, min(page.MaxY, page.Y+ev.DY))
 		} else {

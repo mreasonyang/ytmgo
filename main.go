@@ -52,6 +52,7 @@ type desktop struct {
 	restoredTrack                   bool // shown paused until the first explicit play
 	diagnosticPath                  string
 	acceptanceProbe                 *acceptanceProbe
+	homeArtworkQA                   *homeArtworkQA
 	playbackErrorCategory           string
 	playbackErrorDetails            player.FailureDetails
 	nextProgressFrame               time.Time
@@ -264,6 +265,7 @@ func main() {
 		a.initGlobalShortcut(filepath.Join(dataDir, "global-shortcut"))
 		a.navigate("home")
 		a.startAccountPolling()
+		a.startHomeArtworkQA()
 		if a.player != nil {
 			go a.watchPlayback()
 			if a.acceptanceProbe != nil {
@@ -326,7 +328,9 @@ func (a *desktop) view(c *ui.Context) {
 		c.After(a.nextProgressFrame.Sub(now))
 	}
 	frame := a.art.beginFrame()
-	nativeView(c, &a.model, a.actions(&frame))
+	actions := a.actions(&frame)
+	a.prepareHomeArtworkQA(c, &actions)
+	nativeView(c, &a.model, actions)
 	a.prefetchNextCover(&frame)
 	if frame.submit() {
 		c.Invalidate()

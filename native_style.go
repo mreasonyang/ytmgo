@@ -9,8 +9,16 @@ import "github.com/egoist/mygo/ui"
 // elevated surfaces and white text. Coral (accent) means play and nothing
 // else; attention marks errors and warnings. The values are generated from
 // design/tokens.json into native_tokens_gen.go.
-// nativeScrollbarWidth is a scroll bar's thickness, MyGo's and ours.
-const nativeScrollbarWidth = 8
+// nativeScrollbarWidth is a scroll bar's expanded thickness, MyGo's and ours;
+// nativeScrollbarRestWidth is its resting thickness while scrolling or fading,
+// before the pointer enters its strip to grab it.
+const (
+	nativeScrollbarWidth     = 8
+	nativeScrollbarRestWidth = 6
+	// nativeScrollbarEdgeInset adds 1 px to MyGo's 3 px side margin, putting
+	// vertical bars 4 px in from a panel's edge on the 4 px grid.
+	nativeScrollbarEdgeInset = 1
+)
 
 type nativePalette struct {
 	base, surface, raised, input, highlight ui.Color

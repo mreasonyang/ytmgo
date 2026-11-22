@@ -155,7 +155,11 @@ func nativeSheet(c *ui.Context, open *bool, sheetPage nativeSheetPage, a ViewAct
 				})
 				list := ui.Scroll(c.Key("body-"+sheetPage.key)).Grow(1).MinHeight(0).Padding(12, 24, 32, 24).Gap(24).TrackScroll(sheetPage.scroll).
 					Translate(sheetPage.side*(1-arrived), 0).Opacity(arrived)
-				nativeScrollEdges(c, list, sheetPage.scroll, p, p.surface)
+				bottomRadius := float32(tokenRadiusSheet)
+				if compact {
+					bottomRadius = 0
+				}
+				nativeScrollEdges(c, list, sheetPage.scroll, p, p.surface, bottomRadius)
 				list.Children(func() {
 					sheetPage.body(sheet-48 < nativeSettingsStack)
 				})

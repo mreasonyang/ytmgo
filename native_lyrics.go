@@ -162,7 +162,7 @@ func nativeLyricsBody(c *ui.Context, m *UIModel, a ViewActions, p nativePalette)
 		scroll.HandleInput(func(ev ui.InputEvent) bool {
 			return state.dragInput(ev, m, a)
 		})
-		nativeScrollbar(c, scroll, &state.scroll, p, nil, func() {
+		nativeScrollbar(c, scroll, &state.scroll, p, nativeScrollbarCorners{}, nil, func() {
 			// Keyboard scrolling uses the same ScrollTo as playback. Give
 			// the reader control as soon as their key starts a scroll.
 			state.follow, state.gliding = false, false

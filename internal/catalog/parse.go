@@ -305,8 +305,13 @@ func shelfTitle(shelf map[string]any) string {
 	return ""
 }
 
+var itemRendererKinds = [...]string{
+	"musicResponsiveListItemRenderer", "musicTwoRowItemRenderer", "musicMultiRowListItemRenderer",
+	"playlistPanelVideoRenderer", "musicNavigationButtonRenderer",
+}
+
 func directItem(node map[string]any) []Item {
-	for _, kind := range []string{"musicResponsiveListItemRenderer", "musicTwoRowItemRenderer", "playlistPanelVideoRenderer", "musicNavigationButtonRenderer"} {
+	for _, kind := range itemRendererKinds {
 		if renderer, ok := node[kind].(map[string]any); ok {
 			if item, valid := parseItem(renderer, kind); valid {
 				return []Item{item}
@@ -330,7 +335,7 @@ func collectItems(value any) []Item {
 				walk(child, depth+1)
 			}
 		case map[string]any:
-			for _, kind := range []string{"musicResponsiveListItemRenderer", "musicTwoRowItemRenderer", "playlistPanelVideoRenderer", "musicNavigationButtonRenderer"} {
+			for _, kind := range itemRendererKinds {
 				if renderer, ok := node[kind].(map[string]any); ok {
 					if item, valid := parseItem(renderer, kind); valid {
 						items = append(items, item)
@@ -409,6 +414,11 @@ func parseItem(renderer map[string]any, rendererKind string) (Item, bool) {
 	for _, run := range arrayAt(title, "runs") {
 		endpoints = append(endpoints, at(run, "navigationEndpoint"))
 	}
+	// A podcast row's title can link to the episode detail. The row's own
+	// tap command plays the episode from the show.
+	if tap := renderer["onTap"]; rendererKind == "musicMultiRowListItemRenderer" && videoIDPattern.MatchString(textAt(tap, "watchEndpoint", "videoId")) {
+		endpoints = []any{tap}
+	}
 	// A card's main browse destination takes precedence over the overlay's
 	// play command: clicking an album or playlist opens its track list.
 	for _, endpoint := range endpoints {
@@ -439,8 +449,11 @@ func parseItem(renderer map[string]any, rendererKind string) (Item, bool) {
 			watch := at(endpoint, "watchEndpoint")
 			if id := textAt(watch, "videoId"); videoIDPattern.MatchString(id) {
 				item.ID = id
-				if kind := textAt(watch, "watchEndpointMusicSupportedConfigs", "watchEndpointMusicConfig", "musicVideoType"); kind == "MUSIC_VIDEO_TYPE_OMV" || kind == "MUSIC_VIDEO_TYPE_UGC" {
+				switch textAt(watch, "watchEndpointMusicSupportedConfigs", "watchEndpointMusicConfig", "musicVideoType") {
+				case "MUSIC_VIDEO_TYPE_OMV", "MUSIC_VIDEO_TYPE_UGC":
 					item.Kind = "video"
+				case "MUSIC_VIDEO_TYPE_PODCAST_EPISODE":
+					item.Kind = "episode"
 				}
 				break
 			}

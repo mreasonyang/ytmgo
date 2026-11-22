@@ -110,6 +110,53 @@ func TestPagePreservesGroupingAndBrowseDestinations(t *testing.T) {
 	}
 }
 
+func TestPageParsesPodcastEpisodes(t *testing.T) {
+	episode := func(id, title string) object {
+		return object{
+			"title": object{"runs": []any{object{
+				"text": title, "navigationEndpoint": browseEndpoint("MPED"+id, "MUSIC_PAGE_TYPE_NON_MUSIC_AUDIO_TRACK_PAGE"),
+			}}},
+			"subtitle": words("24:10"),
+			"onTap": object{"watchEndpoint": object{
+				"videoId": id,
+				"watchEndpointMusicSupportedConfigs": object{"watchEndpointMusicConfig": object{
+					"musicVideoType": "MUSIC_VIDEO_TYPE_PODCAST_EPISODE",
+				}},
+			}},
+			"thumbnail": object{"thumbnails": []any{object{"url": "https://lh3.googleusercontent.com/episode"}}},
+		}
+	}
+	first := episode("abc123DEF_-", "First episode")
+	hidden := episode("hidden00000", "Unavailable episode")
+	hidden["isPlayable"] = false
+	wrap := func(row object) object { return object{"musicMultiRowListItemRenderer": row} }
+	shelf := object{"musicShelfRenderer": object{"contents": []any{wrap(first), wrap(hidden)}}}
+	response := object{"contents": object{"twoColumnBrowseResultsRenderer": object{
+		"tabs": []any{object{"tabRenderer": object{"content": object{
+			"musicResponsiveHeaderRenderer": object{"title": words("Example show")},
+		}}}},
+		"secondaryContents": object{"sectionListRenderer": object{"contents": []any{shelf}}},
+	}}}
+	page, _, err := parsePage(response)
+	if err != nil || page.Title != "Example show" || len(page.Shelves) != 1 || len(page.Items) != 1 {
+		t.Fatalf("podcast detail did not preserve its episode list: %+v, %v", page, err)
+	}
+	want := Item{
+		ID: "abc123DEF_-", Title: "First episode", Kind: "episode",
+		Duration: 1450 * time.Second, Artwork: "https://lh3.googleusercontent.com/episode",
+	}
+	if page.Items[0] != want || len(page.Shelves[0].Items) != 1 || page.Shelves[0].Items[0] != want {
+		t.Fatalf("wrong podcast episode: %+v", page.Items[0])
+	}
+
+	next, _, err := parsePage(object{"onResponseReceivedActions": []any{object{
+		"appendContinuationItemsAction": object{"continuationItems": []any{wrap(episode("def456ABC_-", "Next episode"))}},
+	}}})
+	if err != nil || len(next.Items) != 1 || next.Items[0].ID != "def456ABC_-" || next.Items[0].Kind != "episode" {
+		t.Fatalf("podcast continuation did not preserve its episode: %+v, %v", next, err)
+	}
+}
+
 func TestCardShelfAndSelectedSearchTab(t *testing.T) {
 	card := object{"musicCardShelfRenderer": object{"header": object{"musicCardShelfHeaderBasicRenderer": object{"title": words("Top result")}}, "title": words("Get Lucky"), "subtitle": words("Song • Artist"), "navigationEndpoint": object{"watchEndpoint": object{"videoId": "abc123DEF_-"}}, "contents": []any{responsiveSong("def456ABC_-", "Related")}}}
 	response := object{"contents": object{"tabbedSearchResultsRenderer": object{"tabs": []any{
